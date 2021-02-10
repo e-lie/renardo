@@ -3,5 +3,13 @@ SynthDef.new(\video,
 	var osc, env;
 	freq = In.kr(bus, 1);
 	osc = Mix(osc) * 0.5;
-	ReplaceOut.ar(bus, osc)}).add;
+	ReplaceOut.ar(bus, osc)
+},
+metadata: (
+	credit: "Credit",
+	modified_by: "Modifier",
+	decription: "Description",
+	category: \category,
+	tags: [\tag, \tag]
+)).add;
 

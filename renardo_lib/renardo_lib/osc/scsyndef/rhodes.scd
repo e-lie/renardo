@@ -9,4 +9,12 @@ SynthDef.new(\rhodes, {
 	osc = Mix(osc*env*amp) * 0.3;
 	osc = Pan2.ar(osc, pan);
 	ReplaceOut.ar(bus, osc)
-}).add;
+},
+metadata: (
+	credit: "unknown",
+	modified_by: "Jens Meisner",
+	description: "",
+	category: \piano,
+	tags: [\pitched, \keyboard, \mda_piano]
+	)
+).add;
