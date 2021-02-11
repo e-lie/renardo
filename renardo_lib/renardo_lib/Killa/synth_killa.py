@@ -244,7 +244,7 @@ vibass = FileSynthDef("vibass")
 vibass.add()
 
 vinsine = FileSynthDef("vinsine")
-visine.add()
+vinsine.add()
 
 windmaker = FileSynthDef("windmaker")
 windmaker.add()

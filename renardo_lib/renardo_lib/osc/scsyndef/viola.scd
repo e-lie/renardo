@@ -13,9 +13,9 @@ SynthDef.new(\viola, {
 	ReplaceOut.ar(bus, osc)
 },
 metadata: (
-	credit: "Credit",
-	modified_by: "Modifier",
+	credit: "",
+	modified_by: "",
 	decription: "Description",
-	category: \category,
-	tags: [\tag, \tag]
+	category: \strings,
+	tags: [\violin, \tag]
 )).add;
