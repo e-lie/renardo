@@ -192,9 +192,6 @@ strings.add()
 sosbell = FileSynthDef("sosbell")
 sosbell.add()
 
-soundin = FileSynthDef("soundin")
-soundin.add()
-
 sputter = FileSynthDef("sputter")
 sputter.add()
 

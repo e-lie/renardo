@@ -1,4 +1,4 @@
-SynthDef.new(\audioin, {
+SynthDef.new(\audioin,{
 	|amp=1, sus=1, pan=0, freq=0, vib=0, fmod=0, rate=0, bus=0, blur=1, beat_dur=1, atk=0.01, decay=0.01, rel=0.01, peak=1, level=0.8, channel=1|
 	var osc, env;
 	sus = sus * blur;
@@ -12,9 +12,9 @@ SynthDef.new(\audioin, {
 	ReplaceOut.ar(bus, osc)
 },
 metadata: (
-	credit: "Credit",
-	modified_by: "Modifier",
-	decription: "Description",
-	category: \category,
-	tags: [\tag, \tag]
+	credit: "",
+	modified_by: "Jens Meisner",
+	decription: "SynthDef to open channel to microphone",
+	category: \utils,
+	tags: [\microphone, \linein]
 )).add;
