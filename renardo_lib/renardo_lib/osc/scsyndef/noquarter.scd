@@ -35,7 +35,7 @@ SynthDef.new(\noquarter, {
 	osc = (osc / 2.3).tanh;
 	// Another resonant LPF
 	osc = MoogFF.ar(in: osc, freq: XLine.ar(freq*150, freq*30, 0.1), gain:  0.1);
-	osc = Pan2.ar(osc, pan) * amp;
+	osc = Pan2.ar(osc, pan) * amp * 0.3;
 	ReplaceOut.ar(bus, osc)
 },
 metadata: (
