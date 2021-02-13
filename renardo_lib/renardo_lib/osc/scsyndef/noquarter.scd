@@ -1,6 +1,6 @@
 SynthDef.new(\noquarter, {
 	// Standard Arguments
-	|bus = 0, freq = 440, amp = 1, pan = 0, fmod=0, atk = 0, sus=1, rel = 1, curve = -1|
+	|bus = 0, freq = 440, amp = 1, pan = 0, fmod=0, atk = 0.1, sus=1, rel = 1, curve = -1|
 	var subfreq, env, pluck, tri, sin, sub, click, osc, subenv;
 	freq = In.kr(bus, 1);
 	freq = [freq, freq+fmod];
@@ -35,7 +35,7 @@ SynthDef.new(\noquarter, {
 	osc = (osc / 2.3).tanh;
 	// Another resonant LPF
 	osc = MoogFF.ar(in: osc, freq: XLine.ar(freq*150, freq*30, 0.1), gain:  0.1);
-	osc = Pan2.ar(osc, pan);
+	osc = Pan2.ar(osc, pan) * amp;
 	ReplaceOut.ar(bus, osc)
 },
 metadata: (
