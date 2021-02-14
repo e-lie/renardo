@@ -7,7 +7,8 @@ SynthDef.new(\moogbass, {
 	filterenv = EnvGen.ar(envelope: Env.asr(atk, sus, rel), gate: gate);
 	filter =  MoogFF.ar(in: osc, freq: cutoff * (1.0 + (0.8 * filterenv)), gain: gain);
 	env = EnvGen.ar(envelope: Env.adsr(atk, 1.2, sus, rel, amp), gate: gate, doneAction: 0);
-	osc = (0.9 * filter + (0.3 * filter.distort)) * env * amp;
+	osc = (0.9 * filter + (0.3 * filter.distort));
+	osc = osc * env * amp * 0.3;
 	osc = Pan2.ar(osc, pan);
 	ReplaceOut.ar(bus, osc)
 },
