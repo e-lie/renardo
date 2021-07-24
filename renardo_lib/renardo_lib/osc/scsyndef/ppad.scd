@@ -8,7 +8,7 @@ SynthDef.new(\ppad, {
 	osc1 = SinOsc.ar(freq + LFNoise0.ar([400,160]).range(2,24).round(2));
 	osc = Mix.ar([osc,osc1]).tanh / 3;
 	osc = osc + BPF.ar(PinkNoise.ar([0.4,0.8]),freq,0.1);
-	osc = osc * env * amp;
+	osc = osc * env * amp * 0.3;
 	osc = Pan2.ar(osc,pan);
 	ReplaceOut.ar(bus,osc)
 },

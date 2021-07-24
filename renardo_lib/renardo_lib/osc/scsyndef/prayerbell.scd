@@ -1,17 +1,17 @@
 SynthDef.new(\prayerbell, {
-	|bus = 0, singSwitch = 0, freq = 0, amp = 1, fmod=0, decayScale = 0.6, lag = 3, pan = 0|
-	var osc, input, first, freqScale, mallet, sing;
+	|bus=0, freq = 0, amp = 1, fmod=0, decayscale=0.6, singswitch=0, lag=3, pan=0|
+	var osc, input, first, freqscale, mallet, sing;
 	freq = In.kr(bus, 1);
 	freq = [freq, freq+fmod];
-	freqScale = freq / 2434;
-	freqScale = Lag3.kr(freqScale, lag);
-	decayScale = Lag3.kr(decayScale, lag);
-	mallet = LPF.ar(in: Impulse.ar(0)!2,freq: 8000 * freqScale);
-	sing = LPF.ar(in: {PinkNoise.ar * Integrator.kr(singSwitch * 0.001, 0.999).linexp(0, 1, 0.01, 1)}!2 * amp, freq:2434 * freqScale);
+	freqscale = freq / 2434;
+	freqscale = Lag3.kr(freqscale, lag);
+	decayscale = Lag3.kr(decayscale, lag);
+	mallet = LPF.ar(in: Impulse.ar(0)!2,freq: 8000 * freqscale);
+	sing = LPF.ar(in: {PinkNoise.ar * Integrator.kr(singswitch * 0.001, 0.999).linexp(0, 1, 0.01, 1)}!2 * amp, freq:2434 * freqscale);
 	sing = sing + Dust.ar(0.15);
-	sing = LPF.ar(sing, 10000 * freqScale);
+	sing = LPF.ar(sing, 10000 * freqscale);
 	sing = sing * LFNoise1.kr(0.5).range(-45, -30).dbamp;
-	input = mallet/2 + (singSwitch.clip(0, 1) * sing);
+	input = mallet/2 + (singswitch.clip(0, 1) * sing);
 	osc = DynKlank.ar(
 		specificationsArrayRef: `[
 			// Array of filter frequencies
@@ -46,8 +46,8 @@ SynthDef.new(\prayerbell, {
 			],
 			// Array of filter decay times
 			[
-				20 * freqScale.pow(0.2),
-				20 * freqScale.pow(0.2),
+				20 * freqscale.pow(0.2),
+				20 * freqscale.pow(0.2),
 				5,
 				5,
 				0.6,
@@ -58,16 +58,15 @@ SynthDef.new(\prayerbell, {
 				0.5,
 				0.4,
 				0.6
-			] * freqScale.reciprocal.pow(0.5)
+			] * freqscale.reciprocal.pow(0.5)
 		],
 		input: input,
-		freqscale: freqScale,
+		freqscale: freqscale,
 		freqoffset: 0,
-		decayscale: decayScale
+		decayscale: decayscale
 	);
-	osc = Mix.ar(osc) * 0.3;
+	osc = osc * amp * 0.4;
 	DetectSilence.ar(osc,doneAction: 0);
-	osc = osc * amp;
 	osc = Pan2.ar(osc,pan);
 	ReplaceOut.ar(bus,osc)
 },

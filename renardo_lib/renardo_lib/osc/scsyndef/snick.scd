@@ -3,11 +3,11 @@ SynthDef.new(\snick, {
 	var osc, env;
 	sus = sus * blur;
 	freq = In.kr(bus, 1);
-	freq = [freq, freq+fmod];
+	freq = [freq, freq + fmod];
 	osc=(LFPar.ar(freq, mul: 1) * Blip.ar(((rate + 1) * 4)));
-	env=EnvGen.ar(Env.perc(attackTime: 0.01,releaseTime: sus,level: amp,curve: 0), doneAction: 0);
-	osc=(osc * env);
-	osc = Mix(osc) * 0.5;
+	env=EnvGen.ar(Env.perc(attackTime: atk, releaseTime: sus, level: amp, curve: 0), doneAction: 0);
+	osc= osc * env * amp;
+	osc = Mix(osc) * 0.4;
 	osc = Pan2.ar(osc, pan);
 	ReplaceOut.ar(bus, osc)
 },

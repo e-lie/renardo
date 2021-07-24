@@ -1,8 +1,8 @@
 SynthDef.new(\strings, {
 	//Standard Definitions
-	|bus = 0, freq = 440, amp = 1, gate = 1, pan = 0, fmod=0, freqLag = 0.9, atk = 0.1, sus = 1, rel = 0.2,
+	|bus = 0, freq = 440, amp = 1, gate = 1, pan = 0, fmod=0, atk = 0.1, sus = 1, rel = 0.2,
 	//Other Controls (mix ranges from 0 - 1)
-	rq = 0.012, combHarmonic = 4, sawHarmonic = 1.5, mix = 0.33|
+	freqlag = 0.9, rq = 0.012, combharm = 4, sawharm = 1.5, mix = 0.33|
 	var env, osc, combFreq;
 	freq = In.kr(bus, 1);
 	freq = [freq, freq+fmod];
@@ -12,8 +12,8 @@ SynthDef.new(\strings, {
 	osc = (osc * (1 - mix)) + PinkNoise.ar(180 * mix);
 	osc = CombL.ar(osc, combFreq, combFreq, -1); //Try positive 1 for decay time as well.
 	osc = Resonz.ar(osc, Lag.kr(in: freq, lagTime: freqLag), rq).abs;
-	osc = Limiter.ar(osc, amp * 1/3);
-	osc = Mix.ar(osc * env * amp);
+	osc = Mix.ar(osc) * env * amp;
+	osc = Limiter.ar(osc, amp * 0.1);
 	osc = Pan2.ar(osc, pan);
 	ReplaceOut.ar(bus, osc)
 },

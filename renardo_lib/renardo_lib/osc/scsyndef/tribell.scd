@@ -8,8 +8,8 @@ SynthDef.new(\tribell,{
 	osc2 = Mix(LFTri.ar((freq.cpsmidi + [11.9, 12.1]).midicps));
 	filter = RHPF.ar((osc1 + (osc2 * 0.8)) * 0.4, cutoff, rq);
 	env = EnvGen.ar(envelope: Env.perc(atk, sus + rel, amp), gate: gate, doneAction: 0);
-	osc = filter * env;
-	osc = Mix(osc) * 0.2;
+	osc = Mix(osc);
+	osc = filter * env * amp * 0.3;
 	osc = Pan2.ar(osc, pan);
 	ReplaceOut.ar(bus, osc)
 },

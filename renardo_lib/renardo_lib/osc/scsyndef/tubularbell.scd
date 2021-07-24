@@ -1,8 +1,9 @@
 SynthDef.new(\tubularbell, {
-	|freq = 440, amp = 1, pan = 0, bus = 0, fmod = 0, atk = 0.1, sus=1, rel = 9, exciterRel = 0.05|
+	|freq=440, amp=1, pan=0, bus=0, fmod=0, atk=0.1, sus=1, rel=9, exciterRel=0.05|
 	var env, osc, exciter;
 	freq = In.kr(bus, 1);
 	freq = [freq, freq+fmod];
+	amp = amp / 10;
 	env = Env.perc(atk, exciterRel, 0.05).kr;
 	exciter = GrayNoise.ar(env);
 	osc = DynKlank.ar(
@@ -16,9 +17,9 @@ SynthDef.new(\tubularbell, {
 		freqscale: freq,
 		decayscale: sus + rel
 	);
-	osc = LPF.ar(osc, freq * 9.5);
+	osc = Mix.ar(osc);
+	osc = osc * amp * 0.4;
 	DetectSilence.ar(in: osc, amp: 0.001, time: 0.5, doneAction: 0);
-	osc = osc * amp * 0.3;
 	osc = Pan2.ar(osc, pan);
 	ReplaceOut.ar(bus, osc)
 },

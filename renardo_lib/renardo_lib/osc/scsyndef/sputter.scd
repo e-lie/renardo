@@ -2,9 +2,9 @@ SynthDef.new(\sputter, {
 	//Standard Values
 	|bus = 0, pan = 0, amp = 1, freq = 440, fmod = 0, atk = 0.1, sus = 1, rel = 2.5, crv = -6,
 	// Modulation Controls
-	pw = 0.5, noiseDepth = 0.05, pwmRate = 12, pwmDepth = 0.15,
+	pw = 0.5, noisedepth = 0.05, pwmrate = 12, pwmdepth = 0.15,
 	// Resonator controls
-	resStartFreq = 2000, resFreqL = 500, resFreqR = 5000, resAtk = 0.5,
+	resstartf = 2000, rlf = 500, rrf = 5000, ratk = 0.5,
 	// Other Controls (all go from 0 to 1, except for method from 0 to 4)
 	method = 0, gateSwitch = 1, gateThresh = 0.5, stereoWidth = 0.75|
 	var env, envNoise, resControl, pwm, osc, res;

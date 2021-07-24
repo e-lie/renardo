@@ -9,7 +9,7 @@ SynthDef.new(\risseto, {
 	durs = [11, 10, 7, 6, 4, 3.4, 3, 2.2, 2, 1.1, 1] / 11;
 	amps = durs.linlin(1, 11, 0.2, 1);
 	env = Env.linen(attackTime: atk, sustainTime: sus, releaseTime: durs * rel, level: amps).kr(doneAction: 0);
-	osc = Pulse.ar(Mix.ar([freq, partials])) * env * amp / 11;
+	osc = Pulse.ar(Mix.ar([freq, partials])) * env * amp / 13;
 	osc = RLPF.ar(in: osc, freq: freq * LFPulse.ar(pulsefreq).range(2, 4), rq: SinOsc.ar(LFNoise2.kr(1).range(4, 9)).range(0.1, 0.3));
 	osc = LPF.ar(osc, 12000);
 	osc = Limiter.ar(Mix.ar(osc));

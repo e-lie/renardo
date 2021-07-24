@@ -7,7 +7,7 @@ SynthDef.new(\pianovel, {
 	osc = TwoPole.ar(osc, 200,0.5, mul:0.5) + osc/2;
 	env = EnvGen.ar(Env(times: [sus],levels: [(amp * 0.5), (amp * 0.5)],curve: 'step'), doneAction: 0);
 	DetectSilence.ar(osc, 0.01, doneAction:2);
-	osc = Mix(osc) * env * amp;
+	osc = Mix(osc) * env * amp * 0.5;
 	osc = Pan2.ar(osc,pan);
 	ReplaceOut.ar(bus,osc);
 },

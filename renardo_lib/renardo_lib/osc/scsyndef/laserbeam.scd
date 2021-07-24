@@ -4,9 +4,9 @@ SynthDef.new(\laserbeam, {
 	freq = In.kr(bus, 1);
 	freq = [freq, freq+fmod];
 	freqenv = EnvGen.ar(Env([4, 0.5, 1, 1], [atk, 0.01, 1.0]));
-	env = EnvGen.ar(Env([atk, sus, 0.0], [atk, sus, 0.1]),levelScale: amp * 2, doneAction: 0);
+	env = EnvGen.ar(Env([atk, sus, 0.0], [atk, sus, 0.1]),levelScale: amp, doneAction: 0);
 	osc = LFTri.ar(freq: freq * freqenv);
-	osc = osc * env * amp;
+	osc = osc * env * amp * 0.2;
 	osc = Pan2.ar(osc,pan);
 	ReplaceOut.ar(bus,osc)
 },

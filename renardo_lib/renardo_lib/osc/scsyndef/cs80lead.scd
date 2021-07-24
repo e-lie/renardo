@@ -1,4 +1,4 @@
-SynthDef.new("cs80lead", {
+SynthDef.new(\cs80lead, {
 	//Standard Values
 	|bus = 0, freq = 440, amp = 1, gate = 1.0, pan = 0, fmod = 0,
 	//Amplitude Controls
@@ -18,12 +18,12 @@ SynthDef.new("cs80lead", {
 	freq = Line.kr(start: freq * ratio, end: freq, dur: glide);
 	freq = freq * vib;
 	//See beatings.scd for help with dtune
-	osc = Saw.ar([freq, freq * (1 + dtune)], mul: env * amp);
+	osc = Saw.ar([freq, freq * (1 + dtune)], mul: env * amp * 0.05);
 	osc = Mix.ar(osc);
 	//Sending it through an LPF: (Keep ffreq below nyquist!!)
 	ffreq = max(fenv * freq * 12, cutoff) + 100;
 	osc = LPF.ar(osc, ffreq);
-	osc = Mix(osc) * amp * 0.1;
+	osc = Mix(osc);
 	osc = Pan2.ar(osc, pan);
 	ReplaceOut.ar(bus, osc)
 },

@@ -8,7 +8,7 @@ SynthDef.new(\arpy, {
 	amp=(amp * 2);
 	freq=(freq + [0, 0.5]);
 	osc=LPF.ar(Impulse.ar(freq), 3000);
-	env=EnvGen.ar(Env.perc(attackTime: 0.01,releaseTime: (sus * 0.25),level: amp,curve: 0), doneAction: 0);
+	env=EnvGen.ar(Env.perc(attackTime: atk,releaseTime: (sus * 0.25),level: amp,curve: 0), doneAction: 0);
 	osc=(osc * env);
 	osc = Mix(osc) * 0.5;
 	osc = Pan2.ar(osc, pan);

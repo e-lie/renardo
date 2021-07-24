@@ -12,7 +12,7 @@ SynthDef.new(\harp,{
 	octave = Pluck.ar(in: exciter, trig: trig, maxdelaytime: 0.02, //only change this if freq goes below 20hz
 	        delaytime: 1/(2*freq), decaytime: decaytime, coef: coef, mul: (1 - blend));
 	osc = Mix.ar(root + octave);
-	osc = osc * env;
+	osc = osc * env * amp * 0.5;
     DetectSilence.ar(in: osc, doneAction: 0);
 	osc = Pan2.ar(osc, pan);
 	ReplaceOut.ar(bus,osc)
