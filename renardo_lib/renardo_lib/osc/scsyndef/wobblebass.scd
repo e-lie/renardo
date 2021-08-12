@@ -5,17 +5,7 @@ SynthDef.new(\wobblebass, {
 	freq = In.kr(bus, 1);
 	freq = [freq, freq+fmod];
 	freq = freq / 2;
-	osc = MoogVCF.ar(in: (
-			Pulse.ar([freq * offnote1, freq], mul:0.5) +
-			PinkNoise.ar(LFNoise0.ar(2).range(0, 1.0)) +
-			Saw.ar([freq, freq * offnote2], mul: 2)
-		).clip2(1),
-		fco: LFCub.kr(
-			freq: LFPulse.kr(0.5, iphase, width: 0.25).range(
-				modfreqlo, modfreqhi)).exprange(40, wfmax),
-		res: reso,
-		mul: 1
-	);
+	osc = MoogVCF.ar(in: (Pulse.ar([freq * offnote1, freq], mul:0.5) + PinkNoise.ar(LFNoise0.ar(2).range(0, 1.0)) + Saw.ar([freq, freq * offnote2], mul: 2)).clip2(1), fco: LFCub.kr(freq: LFPulse.kr(0.5, iphase, width: 0.25).range(modfreqlo, modfreqhi)).exprange(40, wfmax), res: reso, mul: 1);
 	env = EnvGen.ar(Env.linen(atk, sus, rel, curve: \sin), doneAction: 0);
 	osc = Mix(osc);
 	osc = osc * env * amp * 0.2;

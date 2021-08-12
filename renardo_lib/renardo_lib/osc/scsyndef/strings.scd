@@ -6,12 +6,12 @@ SynthDef.new(\strings, {
 	var env, osc, combFreq;
 	freq = In.kr(bus, 1);
 	freq = [freq, freq+fmod];
-	combFreq = 1 / (Lag.kr(in: freq, lagTime: freqLag / 2) * combHarmonic);
+	combFreq = 1 / (Lag.kr(in: freq, lagTime: freqlag / 2) * combharm);
 	env = Env.linen(atk, sus, rel, curve: \sin).kr(gate: gate, doneAction: 0);
-	osc = SyncSaw.ar(syncFreq: freq * WhiteNoise.kr().range(1/1.025, 1.025), sawFreq: freq * sawHarmonic, mul: 8);
+	osc = SyncSaw.ar(syncFreq: freq * WhiteNoise.kr().range(1/1.025, 1.025), sawFreq: freq * sawharm, mul: 8);
 	osc = (osc * (1 - mix)) + PinkNoise.ar(180 * mix);
 	osc = CombL.ar(osc, combFreq, combFreq, -1); //Try positive 1 for decay time as well.
-	osc = Resonz.ar(osc, Lag.kr(in: freq, lagTime: freqLag), rq).abs;
+	osc = Resonz.ar(osc, Lag.kr(in: freq, lagTime: freqlag), rq).abs;
 	osc = Mix.ar(osc) * env * amp;
 	osc = Limiter.ar(osc, amp * 0.1);
 	osc = Pan2.ar(osc, pan);

@@ -6,7 +6,7 @@ SynthDef.new(\scatter, {
 	freq = [freq, freq+fmod];
 	osc = ((Saw.ar(freq, mul: 0.3) + VarSaw.ar((freq + [offnote1, offnote2]), mul: 0.3))) + LFNoise2.ar(freq, mul:0.3);
 	env = EnvGen.kr(Env.asr(atk, sus, rel, curve: \lin), doneAction: 0);
-	osc = osc * env * amp
+	osc = osc * env * amp;
 	osc = Mix(osc) * 0.3;
 	osc = Pan2.ar(osc, pan);
 	ReplaceOut.ar(bus, osc)
