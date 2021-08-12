@@ -3,8 +3,9 @@ SynthDef.new(\pink, {
 	var osc, env;
 	freq = In.kr(bus, 1);
 	freq = [freq, freq+fmod];
-	osc = PinkNoise.ar() + PulseDPW(freq, freq, mul: 0.2);
-	env = EnvGen.ar(Env.new([1, 1], [1, 1]), doneAction:1);
+	//osc = PinkNoise.ar() + PulseDPW(freq, freq, mul: 0.2);
+	osc = PinkNoise.ar();
+	env = EnvGen.ar(Env.new([1, 1], [1, 1]), doneAction: 0);
 	osc = (osc * env * amp);
 	osc = Mix(osc) * 0.25;
 	osc = Pan2.ar(osc, pan);
