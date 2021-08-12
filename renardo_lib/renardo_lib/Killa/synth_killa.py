@@ -89,7 +89,7 @@ donkysub.add()
 donorgan = FileSynthDef("donorgan")
 donorgan.add()
 
-dopple = FileSynthDef("dropple")
+dopple = FileSynthDef("dopple")
 dopple.add()
 
 drone = FileSynthDef("drone")
