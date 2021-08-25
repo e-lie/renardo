@@ -28,6 +28,7 @@ setup(
         'renardo_lib.Utils',
         'renardo_lib.ServerManager',
         'FoxDot.lib.Killa',
+        'FoxDot.lib.Crashserver',
     ],
     long_description=long_description,
     long_description_content_type="text/markdown",
