@@ -164,9 +164,6 @@ hnoise.add()
 hoover = FileSynthDef("hoover")
 hoover.add()
 
-hydra = FileSynthDef("hydra")
-hydra.add()
-
 kalimba = FileSynthDef("kalimba")
 kalimba.add()
 
