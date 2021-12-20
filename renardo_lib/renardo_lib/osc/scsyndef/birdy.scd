@@ -15,7 +15,7 @@ SynthDef(\birdy,{
 	osc2 = Formlet.ar(osc2, freq, convIn.abs*0.1, rand.abs);
 	osc2 = Normalizer.ar(osc2, 0.9, 0.1) * convIn.abs * LFPulse.kr(LFPulse.kr(rand.abs), 0, rand.abs);
 	osc = Mix([osc/2, osc2]);
-	osc = osc * env * amp * 0.4;
+	osc = osc * env * amp * 0.2;
 	osc = Pan2.ar(osc, pan);
 	ReplaceOut.ar(bus,osc)
 },

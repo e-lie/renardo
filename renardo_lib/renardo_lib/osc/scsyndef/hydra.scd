@@ -1,5 +1,5 @@
-SynthDef.new(\video,
-	{|amp=1, sus=1, pan=0, freq=0, vib=0, fmod=0, rate=0, bus=0,
+SynthDef.new(\video, {
+	arg amp=1, sus=1, pan=0, freq=0, vib=0, fmod=0, rate=0, bus=0,
 		brightness=0,
 		contrast=0,
 		color=0,
@@ -35,9 +35,9 @@ SynthDef.new(\video,
 		diff=0,
 		layer=0,
 		mask=0,
-		mult=0,
-	|
+		mult=0;
 	var osc, env;
 	freq = In.kr(bus, 1);
 	osc = Mix(osc) * 0.5;
-	ReplaceOut.ar(bus, osc)}).add;
+	ReplaceOut.ar(bus, osc)
+}).add;

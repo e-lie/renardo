@@ -19,5 +19,4 @@ metadata: (
 	decription: "Description",
 	category: \category,
 	tags: [\tag, \tag]
-)
-).add;
+)).add;
