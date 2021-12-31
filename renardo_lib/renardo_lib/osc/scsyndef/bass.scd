@@ -7,7 +7,7 @@ SynthDef.new(\bass, {
 	freq=(freq / 4);
 	amp=(amp * 0.8);
 	osc=((LFTri.ar(freq, mul: amp) + VarSaw.ar(freq, width: (rate / 10), mul: amp)) + SinOscFB.ar(freq, mul: (amp / 2)));
-	env=EnvGen.ar(Env.perc(attackTime: atk, releaseTime: max((atk + decay + rel), sus - (atk + decay + rel)), level: amp, curve: 'lin'), doneAction: 0);
+	env=EnvGen.ar(Env([0, peak, level, level, 0], [atk, decay, max((atk + decay + rel), sus - (atk + decay + rel)), rel], curve:\sin), doneAction: 0);
 	osc=(osc * env);
 	osc = Mix(osc) * 0.5;
 	osc = Pan2.ar(osc, pan);
