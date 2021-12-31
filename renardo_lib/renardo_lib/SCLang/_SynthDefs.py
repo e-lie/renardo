@@ -74,12 +74,6 @@ with SynthDef("bass") as bass:
     bass.osc  = LFTri.ar(bass.freq, mul=bass.amp) + VarSaw.ar(bass.freq, width=bass.rate / 10, mul=bass.amp) + SinOscFB.ar(bass.freq, mul=bass.amp / 2)
     bass.env  = Env.perc(atk=0.02, curve="'lin'", )
 
-with SynthDef("dirt") as dirt:
-    dirt.freq = dirt.freq / 4
-    dirt.amp  = dirt.amp / 2
-    dirt.osc  = LFSaw.ar(dirt.freq, mul=dirt.amp) + VarSaw.ar(dirt.freq + 1, width=0.85, mul=dirt.amp) + SinOscFB.ar(dirt.freq - 1, mul=dirt.amp/2)
-    dirt.env  = Env.perc()
-
 with SynthDef("crunch") as crunch:
     crunch.amp = crunch.amp * 0.5
     crunch.osc = LFNoise0.ar(Crackle.kr(1.95) * crunch.freq * 15, mul=crunch.amp)
@@ -375,6 +369,9 @@ if SC3_PLUGINS:
     piano.add()
 
 # SynthDefs read from file
+dirt = FileSynthDef('dirt')
+dirt.add()
+
 sawbass = FileSynthDef('sawbass')
 sawbass.add()
 
