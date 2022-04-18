@@ -1,5 +1,5 @@
-SynthDef.new(\pitchshifter,
-{|bus, shift, shiftsize|
+SynthDef.new(\pitchshifter, {
+arg bus, shift, shiftsize;
 var osc;
 osc = In.ar(bus, 2);
 osc = PitchShift.ar(osc, shiftsize, shift, 0.02, 0.01);

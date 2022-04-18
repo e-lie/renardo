@@ -2,7 +2,7 @@ SynthDef.new(\tek,
 {|bus, tek, tekr, tekd|
 var osc,osc_low,osc_med,osc_high,osc_base,lfo;
 osc = In.ar(bus, 2);
-lfo = SinOsc.ar(0.5, phase: 0, mul: 50, add: 800);
+lfo = SinOsc.ar(0.5, phase: 0, mul: 5, add: 1);
 osc = In.ar(bus, 2);
 osc_base = osc;
 osc_low = LPF.ar(osc, lfo) * 1;
