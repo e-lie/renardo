@@ -1,6 +1,6 @@
 SynthDef.new(\wsaw, {
-	|bus=0, amp=1, gate=1, pan=0, fmod=0, spread=0.8, freq=0, atk = 0.01, sus = 1, rel = 0.3,
-	iphase1=0.4, iphase2=0.5, iphase3=0.0, offnote1=1, offnote2=0.99, offnote3=1.005|
+	arg bus=0, amp=1, gate=1, pan=0, fmod=0, spread=0.8, freq=0, atk = 0.01, sus = 1, rel = 0.3,
+	iphase1=0.4, iphase2=0.5, iphase3=0.0, offnote1=1, offnote2=0.99, offnote3=1.005;
 	var osc, env, osc1, osc2, osc3;
 	freq = In.kr(bus, 1);
 	freq = [freq, freq+fmod];

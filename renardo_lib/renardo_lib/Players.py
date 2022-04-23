@@ -124,7 +124,7 @@
 
 from copy import copy, deepcopy
 
-from renardo_lib.Settings import SamplePlayer, LoopPlayer
+from renardo_lib.Settings import SamplePlayer, LoopPlayer, SYNTHDEF_DIR
 from renardo_lib.SCLang.SynthDef import SynthDefProxy, SynthDef, SynthDefs
 from renardo_lib.Effects import FxList
 from renardo_lib.Buffers import Samples
@@ -143,6 +143,7 @@ class EmptyPlayer(object):
     """
     def __init__(self, name):
         self.name = name
+
     def __repr__(self):
         return "<{} - Unassigned>".format(self.name)
     
@@ -331,8 +332,13 @@ class Player(Repeatable):
 
     @classmethod
     def get_attributes(cls):
-        """ Returns a list of possible keyword arguments for FoxDot players and effects """
-        return cls.keywords + cls.base_attributes + cls.fx_attributes
+        """ Returns a list of possible keyword arguments for FoxDot players"""
+        return cls.keywords + cls.base_attributes
+
+    @classmethod
+    def get_fxs(cls):
+        """ Returns a list of possible keyword arguments for FoxDot effects """
+        return cls.fx_attributes
 
     @classmethod
     def Attributes(cls):
@@ -1917,9 +1923,10 @@ class Player(Repeatable):
             pitched
         """
         if other is not None:
-            assert(other.__class__ == self.__class__) # make sure it's using another player
-            func = lambda x, y: f(x, y, key=key)
-            self.condition  = lambda: func(self, other) == self
+            # make sure it's using another player
+            assert(other.__class__ == self.__class__)
+            def func(x, y): return f(x, y, key=key)
+            self.condition = lambda: func(self, other) == self
             other.condition = lambda: func(self, other) == other
             self._versus = other
         else:
@@ -2016,11 +2023,45 @@ class Player(Repeatable):
         else:
             return "a '{}' Player Object".format(self.synthdef)
 
+    def get_extra_attributes(self):
+        """ Returns a dict of specific keyword arguments for a particular FoxDot player """
+        filename = SYNTHDEF_DIR + f"/{self.id}.scd"
+        file = open(filename, "r")
+        contents = file.read()
+        file.close()
+        if "arg" in contents:
+            arg_start = "arg"
+            arg_end = "var"
+        else:
+            arg_start = "|"
+            arg_end = "var"
+        idx1 = contents.index(arg_start)
+        idx2 = contents.index(arg_end)
+        args = ""
+        # getting elements in between
+        for idx in range(idx1 + len(arg_start), idx2-3):
+            args = args + contents[idx]
+        args = "".join(args.split())
+        xtra_args = args.split(",")
+        temp_args = {}
+        for arg in xtra_args:
+            if "=" in arg:
+                a, b = arg.split("=")
+                temp_args[a] = b
+                self.extra_attr[a] = b
+        for k in self.default_args:
+            if k in temp_args.keys():
+                del self.extra_attr[k]
+        return self.extra_attr
+
     def info(self):
         s = "Player Instance using '%s' \n\n" % self.synthdef
         s += "ATTRIBUTES\n"
         s += "----------\n\n"
         for attr, val in self.attr.items():
+            s += "\t{}\t:{}\n".format(attr, val)
+        self.get_extra_attributes()
+        for attr, val in self.extra_attr.items():
             s += "\t{}\t:{}\n".format(attr, val)
         return s
 
@@ -2089,7 +2130,7 @@ class Player(Repeatable):
                                   [leftshift, smooth * dur, dur - smooth * dur, smooth * dur,
                                    total - leftshift - dur - smooth * dur])
         return self
-
+        
 
 ###### GROUP OBJECT
 
