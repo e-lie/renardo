@@ -13,6 +13,10 @@ try:
 except ImportError as _err:
     pass
 
+from .SCLang import SynthDefProxy
+
+import time
+
 
 class MidiInputHandler(object):
 
@@ -23,15 +27,63 @@ class MidiInputHandler(object):
         self.midi_ctrl = midi_ctrl
         self.bpm_group = []
         self.played = False
+        self.bpm = 120.0
+        self.tt = False
+        self.tt_bpm = self.bpm
+        self.tt_time = time.time()
+        self.tt_ptime = self.tt_time
+        self.msg = [0, 0, 0]
+        self.msg_list = []
+        self.print_msg = False
 
     def __call__(self, event, data=None):
 
-        datatype, delta = event
+        message, delta = event
+
+        self.msg = message
+
+        if self.print_msg == True:
+            print(self.msg)
+
+        if(self.msg[0] == 144 or self.msg[0] == 145):
+            if len(self.msg_list) == 0:
+                self.msg_list.append(self.msg)
+            else:
+                if self.msg not in self.msg_list:
+                    self.msg_list.append(self.msg)
+        elif self.msg[0] == 128:
+            if len(self.msg_list) > 0:
+                for count, item in enumerate(self.msg_list):
+                    if self.msg[1] == item[1]:
+                        self.msg_list.remove(self.msg_list[count])
+        elif self.msg[0] == 129:
+            for count, item in enumerate(self.msg_list):
+                if self.msg[1] == item[1]:
+                    self.msg_list[count][2] = 0
+        else:
+            if len(self.msg_list) == 0:
+                self.msg_list.append(self.msg)
+            else:
+                if self.msg not in self.msg_list:
+                    self.msg_list.append(self.msg)
+                else:
+                    for count, item in enumerate(self.msg_list):
+                        if self.msg[1] == item[1]:
+                            self.msg_list.remove(self.msg_list[count])
+                            self.msg_list.append(self.msg)
+
+        #print(self.msg_list)
+
+        if self.tt and message[0] == 128 and message[1] == 0:
+            self.tt_time = time.time()
+            if self.tt_ptime < self.tt_time:
+                self.tt_bpm = (1/(self.tt_time - self.tt_ptime)) * 60
+                self.tt_ptime = self.tt_time
 
         self.midi_ctrl.delta += delta
-        
-        if TIMING_CLOCK in datatype and not self.played:
 
+        #if TIMING_CLOCK in datatype and not self.played:
+        if not self.played:
             self.midi_ctrl.pulse += 1
             
 
@@ -44,8 +96,9 @@ class MidiInputHandler(object):
                 self.midi_ctrl.pulse = 0
                 self.midi_ctrl.delta = 0.0
 
-                #print("BPM : " + repr(self.midi_ctrl.bpm))
-            
+                #print("CONTROLLER BPM : " + repr(self.midi_ctrl.bpm))
+
+
 class MidiIn:
     metro = None
     def __init__(self, port_id=0):
@@ -75,16 +128,62 @@ class MidiIn:
 
         self.pulse = 0
         self.delta = 0.0
-        self.bpm   = 120.0
-        self.ppqn  = 24
-        self.beat  = 0
-
-        self.device.set_callback(MidiInputHandler(self))
+        self.bpm = 120.0
+        self.tt_bpm = 120.0
+        self.ppqn = 24
+        self.beat = 0
+        self.ctrl_value = 0
+        self.note = 0
+        self.velocity = 0
+        self.handler = MidiInputHandler(self)
+        self.device.set_callback(self.handler)
+        self.msg = self.handler.msg
 
     @classmethod
     def set_clock(cls, tempo_clock):
         cls.metro = tempo_clock
         return
+
+    def tempo_tapper(self, tt_bool):
+        self.handler.tt = tt_bool
+        return
+
+    def tempo_tapper_bpm(self):
+        self.bpm = self.handler.tt_bpm
+        return self.bpm
+
+    def get_ctrl(self, channel):
+        for i in range(len(self.handler.msg_list)):
+            if self.handler.msg_list[i][1] == channel:
+                self.ctrl_value = self.handler.msg_list[i][2]
+        return self.ctrl_value
+
+    def get_note(self):
+        self.note = ()
+        if len(self.handler.msg_list) > 0:
+            for i in range(len(self.handler.msg_list)):
+                self.note = self.note + (self.handler.msg_list[i][1],)
+        else:
+            self.note = self.note + (0, )
+        return self.note
+
+    def get_velocity(self):
+        self.velocity = ()
+        if len(self.handler.msg_list) > 0:
+            for i in range(len(self.handler.msg_list)):
+                self.velocity = self.velocity + \
+                    (self.handler.msg_list[i][2] / 64, )
+        else:
+            self.velocity = (0, )
+        return self.velocity
+
+    def get_delta(self):
+        self.delta = self.handler.delta
+        return self.delta
+
+    def print_message(self, boolmsg):
+        self.handler.print_msg = boolmsg
+        return self.handler.print_msg
 
     def close(self):
         """ Closes the active port """
