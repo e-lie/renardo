@@ -1,6 +1,5 @@
 SynthDef.new(\xylophone, {
-	arg bus=0, freq=0, fmod=0, amp=1, gate=1, pan=0,
-	t60=2;
+	|bus=0, freq=0, fmod=0, amp=1, gate=1, pan=0, t60=2|
 	var osc, exciter;
 	freq = In.kr(bus, 1);
 	freq = [freq, freq+fmod];

@@ -1,5 +1,5 @@
 SynthDef(\waves, {
-	| amp=0.5, pan=0, bus=0, freq=220, atk=0.01, rel=0.09, rate=4, gate=1, sus=1, fmod=0, blur=1|
+	|amp=0.5, pan=0, bus=0, freq=220, atk=0.01, rel=0.09, rate=4, gate=1, sus=1, fmod=0, blur=1|
 	var env, osc2, osc;
 	sus = sus * blur;
 	freq = In.kr(bus, 1);

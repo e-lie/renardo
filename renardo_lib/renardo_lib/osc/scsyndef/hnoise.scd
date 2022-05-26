@@ -1,5 +1,5 @@
 SynthDef(\hnoise, {
-	| bus=0, freq=800, gate=1, amp=1, atk=0.01 sus=1, fmod=0, pan=0, rel=0.9, room=0.5, rate=1|
+	|bus=0, freq=800, gate=1, amp=1, atk=0.01 sus=1, fmod=0, pan=0, rel=0.9, room=0.5, rate=1|
 	var env, osc, osc2, cenv;
 	freq = In.kr(bus, 1);
 	freq = [freq, freq+fmod];

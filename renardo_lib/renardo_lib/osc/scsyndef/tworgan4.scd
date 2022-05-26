@@ -1,7 +1,6 @@
 SynthDef.new(\tworgan4, {
 	//Standard Values
 	|bus=0, pan=0, freq=440, amp=1, gate=1, fmod=0, atk=0.1, sus=1, rel=0.3,
-	//Other controls (blend goes from 0 to 1)
 	lforate=4.85, lfodepth=0.006, cutoff=5000, rq=0.5, parfreq=400, parrq=1, pardb=3, blend=0.6|
 	var lfo, pulse, filter, fenv, env, osc;
 	freq = In.kr(bus, 1);

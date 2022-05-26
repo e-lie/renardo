@@ -1,6 +1,6 @@
 SynthDef.new(\wsawbass, {
-	arg bus = 0, freq = 0, amp = 1, pan = 0, fmod=0, atk = 0.01, sus = 1, rel = 0.3,
-	slidetime = 0.08, cutoff = 1100, width = 0.15, detune = 1.002, preamp = 4;
+	|bus = 0, freq = 0, amp = 1, pan = 0, fmod=0, atk = 0.01, sus = 1, rel = 0.3,
+	slidetime = 0.08, cutoff = 1100, width = 0.15, detune = 1.002, preamp = 4|
 	var osc, env;
 	freq = In.kr(bus, 1);
 	freq = [freq, freq+fmod];

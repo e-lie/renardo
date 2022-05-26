@@ -1,7 +1,5 @@
 SynthDef.new(\fmbass, {
-	//Standard Values
 	|bus = 0, pan = 0, amp = 0.1, freq = 440, fmod = 0, atk = 0.1, sus=1, rel = 1, crv = -4,
-	// Other Controls
 	atkfract = 0.05, relfract = 0.7, modindex = 80, modratio = 1.51,
 	subamp = 0.99, modfb = 1|
 	var scale, mAtk, mRel, modulatorEnv, modulator, carrierEnv, carrier, osc;

@@ -1,7 +1,5 @@
 SynthDef(\epiano, {
-	//Standard values
 	|bus = 0, freq = 440, amp = 1, fmod = 0, atk = 0.1, sus = 1, rel = 0.3, pan = 0,
-	//These range from 0 to 1
 	tone = 0.5, hollowness = 0.02|
 	var hammer, osc, delay, tonefreq, env;
 	freq = In.kr(bus, 1);

@@ -1,12 +1,8 @@
 SynthDef.new(\sosbell, {
 	//Standard Values
-	|freq=440, bus=0, amp=1, fmod=0, pan=0, rel=2, curve=\lin,
-	//ring Controls (wobbleDepth goes from 0 to 1)
-	ringamp=1, ringrel=0.9, wobbledepth=0.9, wobblemin=0.3, wobblemax=3.8,
-	//strike Controls
-	strikeamp=1, strikedec=0.05, strikerel=0.09, strikedepth=0.058, strikeharm=4,
-	//hum Controls
-	humamp=0.7, atk=0.1, sus=1|
+	|freq=440, bus=0, amp=1, fmod=0, pan=0, rel=2, curve=\lin, ringamp=1, ringrel=0.9, wobbledepth=0.9,
+	wobblemin=0.3, wobblemax=3.8, strikeamp=1, strikedec=0.05, strikerel=0.09, strikedepth=0.058,
+	strikeharm=4, humamp=0.7, atk=0.1, sus=1|
 	var osc, ring, ringEnv, ringFreqs, strike, strikeEnv, strikeMod, hum, humEnv;
 	freq = In.kr(bus, 1);
 	freq = [freq, freq+fmod];

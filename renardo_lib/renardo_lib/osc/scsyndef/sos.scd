@@ -1,5 +1,5 @@
-SynthDef(\sos,
-	{|amp=1, gate=1, rel=1,dur=8, bus=0, freq=200, freqs=240,pan=0, fmod=0, sus=1, vib=0|
+SynthDef(\sos, {
+	|amp=1, gate=1, rel=1,dur=8, bus=0, freq=200, freqs=240,pan=0, fmod=0, sus=1, vib=0|
     var osc1, env, osc, osc2;
     osc1 = VarSaw;
 	freqs = (Rand(60, 40)).midicps + SinOsc.ar(Rand(0, 8));

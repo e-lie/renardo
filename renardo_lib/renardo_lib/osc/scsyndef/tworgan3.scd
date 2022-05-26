@@ -1,6 +1,5 @@
 SynthDef.new(\tworgan3, {
 	|bus=0, pan=0, freq=440, amp=1, fmod=0, atk=0.1, sus=1, rel=0.1, gate=1,
-	//Extra attributes
 	vrate=6, vdepth=0.02, vdelay=0.1, vonset=0, vratevar=0.1, vdepthvar=0.1, fharm=5.04, rq=1, blend=0.83|
 	var osc, env, vibrato;
 	freq = In.kr(bus, 1);

@@ -62,3 +62,28 @@ except FileNotFoundError:
 for key, value in os.environ.items():
     if key in globals():
         globals()[key] = value
+# Category colours
+# ------------------
+
+kick='#780373'
+various='#ffbf00'
+vocal='#ffa6a6'
+bell='#158466'
+hihat='#81d41a'
+clap='#729fcf'
+snap='#729fcf'
+shaker='#a7074b'
+tambourine='#a7074b'
+crash='#bbe33d'
+cymbal='#bbe33d'
+soundfx='#3465a4'
+tom='#ff3838'
+noise='#6b5e9b'
+ride='#ffffa6'
+perc='#ff8000'
+snare='#ffff38'
+rim='#ffff38'
+loops='#1e1e19'
+default='#b2b2b2'
+text1='#ffffff'
+text2='#000000'

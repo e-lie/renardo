@@ -16,16 +16,17 @@ except:
 from FoxDotEditor.tkimport import *
 
 # Custom app modules
-from FoxDotEditor.Format import *
-from FoxDotEditor.AppFunctions import *
-from FoxDotEditor.Console import console
-from FoxDotEditor.Prompt import TextPrompt
-from FoxDotEditor.BracketHandler import BracketHandler
-from FoxDotEditor.TextBox import ThreadedText
-from FoxDotEditor.LineNumbers import LineNumbers
-from FoxDotEditor.MenuBar import MenuBar, PopupMenu
 from renardo_lib.Code import write_to_file
 from renardo_lib.Utils import get_pypi_version
+from .Format import *
+from .AppFunctions import *
+from .Console import console
+from .Prompt import TextPrompt
+from .BracketHandler import BracketHandler
+from .TextBox import ThreadedText
+from .LineNumbers import LineNumbers
+from .MenuBar import MenuBar, PopupMenu
+from .SampleChart import SampleChart
 
 from functools import partial
 # from distutils.version import LooseVersion as VersionNumber
@@ -768,6 +769,15 @@ class workspace:
             print("Hmm... Looks like we couldn't open the directory but you can find the samples in {}".format(FOXDOT_SND))
 
         return
+
+    def open_samples_chart_app(self):
+        try:
+            sample_chart = SampleChart()
+        except OSError as e:
+            print(e)
+            print("Hmm... Looks like we couldn't open the chart app.")
+        return
+
 
     # Toggle console: Ctrl+#
     #-----------------------------

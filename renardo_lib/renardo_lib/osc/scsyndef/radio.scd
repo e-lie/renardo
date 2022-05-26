@@ -1,5 +1,5 @@
 SynthDef.new(\radio, {
-	| bus=0, freq=800, gate=1, amp=0.5, pan=0, fmod=0, rel=3, rate=1|
+	|bus=0, freq=800, gate=1, amp=0.5, pan=0, fmod=0, rel=3, rate=1|
 	var env, osc;
 	freq = In.kr(bus, 1);
 	freq = [freq, freq+fmod];

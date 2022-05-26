@@ -1,7 +1,6 @@
 SynthDef.new(\tworgan2, {
 	//Standard Values
 	|bus=0, pan=0, freq=440, amp=1, fmod=0, atk=0.001, sus=1, rel=0.1, gate=1,
-	//Other controls (blend goes from 0 to 1)
 	vibrate=6.0, vibharm=1.017, fharm=5.04, rq=1, blend=0.83|
 	var osc, env, vibrato;
 	freq = In.kr(bus, 1);

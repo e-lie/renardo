@@ -1,4 +1,4 @@
-SynthDef.new(\mhping,{
+SynthDef.new(\mhping, {
 	|bus=0, freq = 0, amp = 1, fmod=0, atk=0.001, sus=1, rel=0.3, curve= -4, pan=0, rate=9, depth=0.02|
 	var osc, lfo, env;
 	freq = In.kr(bus, 1);

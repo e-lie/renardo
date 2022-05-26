@@ -1,7 +1,6 @@
 SynthDef.new(\strings, {
 	//Standard Definitions
 	|bus = 0, freq = 440, amp = 1, gate = 1, pan = 0, fmod=0, atk = 0.1, sus = 1, rel = 0.2,
-	//Other Controls (mix ranges from 0 - 1)
 	freqlag = 0.9, rq = 0.012, combharm = 4, sawharm = 1.5, mix = 0.33|
 	var env, osc, combFreq;
 	freq = In.kr(bus, 1);

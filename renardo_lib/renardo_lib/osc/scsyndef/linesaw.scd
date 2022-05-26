@@ -1,10 +1,8 @@
 SynthDef.new(\linesaw, {
 	// Standard values
 	|bus = 0, freq = 1000, pan = 0, amp = 0.1, fmod=0, atk = 0.001, sus = 1, rel = 1.3, crv = -2,
-	// lfo controls
 	lforate1 = 5, lfodepth1 = 0.25, phasecenter1 = 0.35,
 	lforate2 = 2.7, lfodepth2 = 0.5, phasecenter2 = 0.5,
-	// Other Controls (pSwitch is 0 or 1)
 	pswitch = 0, fdelay1 = 0.00025, fdelay2 = 0.00015|
 	var input, lfoA, lfoB, phaseShiftA, phaseShiftB, env, saw,
 	polarity, phaseA, phaseB, phase, osc;

@@ -94,6 +94,7 @@ class MenuBar(Menu):
         helpmenu.add_cascade(label="Clock Latency", menu=lat_menu)
         helpmenu.add_separator()
         helpmenu.add_command(label="Open Samples Folder",   command=self.root.open_samples_folder)
+        helpmenu.add_command(label="Open Samples Chart App",   command=self.root.open_samples_chart_app)
         helpmenu.add_command(label="Open config file (advanced)",      command=self.root.open_config_file)
         self.add_cascade(label="Help & Settings", menu=helpmenu)
 

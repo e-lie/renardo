@@ -1,10 +1,7 @@
 SynthDef(\mhpad, {
 	//Standard Values:
 	|bus = 0, pan = 0, freq = 440, amp = 1, fmod=0, atk = 0.1, dec = 0.05, sus = 1, rel = 0.09, gate = 1,
-	//Other Controls:
-	vibrate = 4, vibdepth = 0.08, trem=2,
-	//These controls go from 0 to 1:
-	tremdepth = 0.2|
+	vibrate = 4, vibdepth = 0.08, trem=2, tremdepth = 0.2|
 	var env, osc, vibrato, mod2, mod3;
 	freq = In.kr(bus, 1);
 	freq = [freq, freq+fmod];

@@ -1,5 +1,5 @@
 SynthDef.new(\bounce, {
-	arg bus=0, gate=1, atk=0.1, sus=1, rel=0.09, amp=1, pan=0, freq=0, fmod=0, para1=2, para2=2.5, nharm=3;
+	|bus=0, gate=1, atk=0.1, sus=1, rel=0.09, amp=1, pan=0, freq=0, fmod=0, para1=2, para2=2.5, nharm=3|
 	var env, osc;
 	freq = In.kr(bus, 1);
 	freq = [freq,freq+fmod];
