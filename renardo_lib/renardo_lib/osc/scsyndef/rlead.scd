@@ -8,7 +8,7 @@ SynthDef.new(\rlead, {
     osc = Splay.ar(osc, 2, center:pan);
     osc = MoogFF.ar(osc, seq, 2);
 	env = Env.linen(atk, sus, 0.01, curve:-4).kr(doneAction:0);
-    osc = osc * env * amp * 0.4;
+    osc = osc * env * amp * 0.8;
 	osc = Pan2.ar(osc,pan);
 	ReplaceOut.ar(bus,osc)
 },

@@ -4,11 +4,10 @@ SynthDef.new(\viola, {
 	sus = sus * blur;
 	freq = In.kr(bus, 1);
 	freq = [freq, freq+fmod];
-	amp=(amp / 2);
-	osc=PMOsc.ar(freq, Vibrato.kr(freq, rate: vib, depth: 0.008, delay: (sus * 0.25)), 10, mul: (amp / 2));
-	env=EnvGen.ar(Env.perc(attackTime: (atk * sus),releaseTime: (rel * sus),level: amp,curve: curve), doneAction: 0);
-	osc=(osc * env);
-	osc = Mix(osc) * 0.5;
+	osc = PMOsc.ar(freq, Vibrato.kr(freq, rate: vib, depth: 0.008, delay: (sus * 0.25)), 10, mul: (amp / 2));
+	env = EnvGen.ar(Env.perc(attackTime: atk, releaseTime: sus + rel,level: amp, curve: curve), doneAction: 0);
+	osc = Mix(osc);
+	osc = osc * env * amp * 0.2;
 	osc = Pan2.ar(osc, pan);
 	ReplaceOut.ar(bus, osc)
 },

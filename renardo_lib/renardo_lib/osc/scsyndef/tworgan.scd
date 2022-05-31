@@ -3,13 +3,12 @@ SynthDef.new(\tworgan, {
 	var osc, env, vibrato;
 	freq = In.kr(bus, 1);
 	freq = [freq, freq+fmod];
-	amp = amp / 4;
 	vibrato = Vibrato.kr(freq: freq,rate: vrate,depth: vdepth,delay: vdelay, onset: vonset, rateVariation: vratevar,depthVariation: vdepthvar,);
 	env = Env.linen(attackTime: atk, sustainTime: sus, releaseTime: rel, curve: curve).kr(gate: gate, doneAction: 0);
 	osc = DynKlang.ar(specificationsArrayRef: Ref.new([
 			        [1/12,  1/7, 1, 12, 19, 24, 28, 31, 36].midiratio,
 			        [bass, qnt, fndmtl, oct, nazard, bflute, trc, lrigot, sflute].normalizeSum,nil]), freqscale: vibrato);
-	osc = osc * env * amp * 0.3;
+	osc = osc * env * amp * 0.4;
 	osc = Pan2.ar(osc, pan);
 	ReplaceOut.ar(bus, osc)
 },

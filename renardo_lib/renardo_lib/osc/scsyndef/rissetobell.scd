@@ -12,7 +12,7 @@ SynthDef.new(\rissetobell, {
 	osc = Mix.fill(11, {arg i; env = Env.perc(attackTime: atk, releaseTime: sus + rel * durs[i], level: amps[i],
 		curve: atk.explin(0.005, 4, -4.5, 0)).ar(gate: gate); SinOsc.ar(freq: freq * frqs[i] + dets[i], mul: env * amp);
 	});
-	osc = osc * doneActionEnv * amp * 0.05;
+	osc = osc * doneActionEnv * amp * 0.07;
 	osc = Pan2.ar(osc, pan);
 	ReplaceOut.ar(bus, osc)
 },

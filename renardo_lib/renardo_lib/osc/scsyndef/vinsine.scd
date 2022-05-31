@@ -11,7 +11,7 @@ SynthDef.new(\vinsine, {
 	osc = Clip.ar(LFTri.ar(vibrato), -1 * sineclip, sineclip).softclip;
 	osc = osc + noise;
 	osc = Mix(osc);
-	osc = osc * env * amp * 0.1;
+	osc = osc * env * amp * 0.15;
 	osc = Pan2.ar(osc, pan);
 	ReplaceOut.ar(bus, osc)
 },

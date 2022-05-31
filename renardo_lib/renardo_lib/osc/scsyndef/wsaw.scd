@@ -4,7 +4,7 @@ SynthDef.new(\wsaw, {
 	var osc, env, osc1, osc2, osc3;
 	freq = In.kr(bus, 1);
 	freq = [freq, freq+fmod];
-	amp = amp / 10;
+	amp = amp / 6;
 	env = Env.linen(atk, sus, rel, curve: \sin).kr(doneAction: 0);
 	osc1 = LFSaw.ar(freq * offnote1 + (0.04 * [1,-1]), iphase: iphase1, mul: 1/8);
 	osc2 = LFSaw.ar(freq * offnote2, iphase: iphase2, mul: 1/8);
@@ -13,7 +13,7 @@ SynthDef.new(\wsaw, {
 	osc = (osc * 20).tanh;
 	osc = Mix(osc);
 	osc = Splay.ar(osc, spread:spread, center:pan);
-	osc = osc * env * amp * 0.2;
+	osc = osc * env * amp * 0.5;
 	osc = Pan2.ar(osc, pan);
 	ReplaceOut.ar(bus, osc)
 },
