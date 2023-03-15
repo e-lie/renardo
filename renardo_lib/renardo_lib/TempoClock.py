@@ -93,14 +93,9 @@ class TempoClock(object):
         self.largest_sleep_time = 0
         self.last_block_dur = 0.0
 
-        # Storing time as a float 
-
-        self.dtype=float
-        
-        self.beat       = self.dtype(0) # Beats elapsed
-        self.last_now_call = self.dtype(0)
-
-        self.ticking = True #?? 
+        self.beat = float(0)  # Beats elapsed
+        self.last_now_call = float(0)
+        self.ticking = True
 
         # Player Objects stored here
         self.playing = []
@@ -118,12 +113,6 @@ class TempoClock(object):
         # Create the queue
         self.queue = Queue(clock=self)
         self.current_block = None
-        
-        # Midi Clock In
-        self.midi_clock = None
-
-        # EspGrid sync
-        self.espgrid = None
 
         # Flag for next_bar wrapper
         self.now_flag  = False
@@ -146,53 +135,10 @@ class TempoClock(object):
         self.debugging = False
         self.__setup   = True
 
-        # If one object is going to played
+        # If one object is going to be played
         self.solo = SoloPlayer()
-
         self.thread = threading.Thread(target=self.run)
 
-    def sync_to_espgrid(self, host="localhost", port=5510):
-        """ Connects to an EspGrid instance """
-        from renardo_lib.EspGrid import EspGrid
-        self.espgrid = EspGrid((host, port))
-        try:
-            tempo = self.espgrid.get_tempo()
-        except RequestTimeout:
-            err = "Unable to reach EspGrid. Make sure the application is running and try again."
-            raise RequestTimeout(err)
-        
-        self.espgrid.set_clock_mode(2)
-        self.schedule(lambda: self._espgrid_update_tempo(True))
-        # self._espgrid_update_tempo(True) # could schedule this for next bar?
-        return
-
-    def _espgrid_update_tempo(self, force=False):
-        """ Retrieves the current tempo from EspGrid and updates internal values """
-
-        data = self.espgrid.get_tempo()
-
-        # If the tempo hasn't been started, start it here and get updated data
-        
-        if data[0] == 0:
-            self.espgrid.start_tempo()
-            data = self.espgrid.get_tempo()
-        
-        if force or (data[1] != self.bpm):
-            self.bpm_start_time = float("{}.{}".format(data[2], data[3]))
-            self.bpm_start_beat = data[4]
-            object.__setattr__(self, "bpm", self._convert_json_bpm(data[1]))
-
-        # self.schedule(self._espgrid_update_tempo)
-        self.schedule(self._espgrid_update_tempo, int(self.now() + 1))
-        
-        return
-
-    def reset(self):
-        """ Deprecated """
-        self.time = self.dtype(0)
-        self.beat = self.dtype(0)
-        self.start_time = time.time()
-        return
 
     @classmethod
     def set_server(cls, server):
@@ -354,31 +300,9 @@ class TempoClock(object):
 
     def __setattr__(self, attr, value):
         if attr == "bpm" and self.__setup:
-
-            # If connected to EspGrid, just update that
-
-            # if self.espgrid is not None:
-
-            #     self.espgrid.set_tempo(value)
-
-            # else:
-
-            #     # Schedule for next bar
-
-            #     start_beat, start_time = self.update_tempo(value)
-
-            #     # Checks if any peers are connected and updates them also
-
-            #     self.update_network_tempo(value, start_beat, start_time)
-
             # Schedule for next bar
 
             start_beat, start_time = self.update_tempo(value)
-
-            # Checks if any peers are connected and updates them also
-
-            self.update_network_tempo(value, start_beat, start_time)
-
         elif attr == "midi_nudge" and self.__setup:
 
             # Adjust nudge for midi devices
@@ -628,16 +552,10 @@ class TempoClock(object):
 
                 if len(self.current_block):
 
-                    threading.Thread(target=self.__run_block, args=(self.current_block, beat)).start()
-
-            # If using a midi-clock, update the values
-
-            # if self.midi_clock is not None:
-
-                # self.midi_clock.update()
-
-            # if using espgrid
-
+                    threading.Thread(
+                        target=self.__run_block,
+                        args=(self.current_block, beat)
+                    ).start()
             if self.sleep_time > 0:
 
                 time.sleep(self.sleep_time)
