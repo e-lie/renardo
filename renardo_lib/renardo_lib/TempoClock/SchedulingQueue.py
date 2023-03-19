@@ -1,5 +1,14 @@
-from types import FunctionType
-from . import Code
+import inspect
+import sys
+
+from types import FunctionType, MethodType
+
+from renardo_lib.Repeat import MethodCall
+from renardo_lib.Players import Player
+from renardo_lib.Patterns import asStream
+from renardo_lib.Utils import modi
+from renardo_lib import Code
+
 
 class Queue(object):
     """Queue to store the event elocks to send to SuperCollider"""
