@@ -48,18 +48,6 @@
 
 from __future__ import absolute_import, division, print_function
 
-from types import FunctionType, MethodType
-
-from .Players import Player
-from .Repeat import MethodCall
-from .Patterns import asStream
-from .TimeVar import TimeVar
-from .Midi import MidiIn, MIDIDeviceNotFound
-from .Utils import modi
-from .ServerManager import TempoClient, ServerManager, RequestTimeout
-from .Settings import CPU_USAGE, CLOCK_LATENCY
-from .SchedulingQueue import Queue
-
 import time
 from traceback import format_exc as error_stack
 
@@ -67,6 +55,7 @@ import sys
 import threading
 import inspect
 
+from .SchedulingQueue import Queue, SoloPlayer, History, ScheduleError, Wrapper
 from renardo_lib.Players import Player
 from renardo_lib.Repeat import MethodCall
 from renardo_lib.Patterns import asStream
@@ -75,7 +64,6 @@ from renardo_lib.Midi import MidiIn, MIDIDeviceNotFound
 from renardo_lib.Utils import modi
 from renardo_lib.ServerManager import TempoClient, ServerManager, RequestTimeout
 from renardo_lib.Settings import CPU_USAGE
-
 
 class TempoClock(object):
 
@@ -226,17 +214,9 @@ class TempoClock(object):
         bpm_start_beat = next_bar
 
         def func():
-            
-            if self.espgrid is not None:
-
-                self.espgrid.set_tempo(bpm)
-
-            else:
-
-                object.__setattr__(self, "bpm", self._convert_json_bpm(bpm))
-                self.last_now_call = self.bpm_start_time = bpm_start_time
-                self.bpm_start_beat = bpm_start_beat
-
+            object.__setattr__(self, "bpm", self._convert_json_bpm(bpm))
+            self.last_now_call = self.bpm_start_time = bpm_start_time
+            self.bpm_start_beat = bpm_start_beat
         # Give next bar value to bpm_start_beat
         self.schedule(func, next_bar, is_priority=True)
 
@@ -341,8 +321,6 @@ class TempoClock(object):
         """ Returns the current beats per minute as a floating point number """
         if isinstance(self.bpm, TimeVar):
             bpm_val = self.bpm.now(self.beat)
-        elif self.midi_clock:
-            bpm_val = self.midi_clock.bpm
         else:
             bpm_val = self.bpm
         return float(bpm_val)
@@ -667,9 +645,4 @@ class TempoClock(object):
         #         item.stop()
         
         self.playing = []
-
-        if self.espgrid is not None:
-
-            self.schedule(self._espgrid_update_tempo)
-        
         return
