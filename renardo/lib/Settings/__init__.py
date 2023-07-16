@@ -53,8 +53,8 @@ FOXDOT_ICON  = os.path.realpath(FOXDOT_ROOT + "/lib/Workspace/img/icon.ico")
 FOXDOT_ICON_GIF = os.path.realpath(FOXDOT_ROOT + "/lib/Workspace/img/icon.gif")
 FOXDOT_HELLO = os.path.realpath(FOXDOT_ROOT + "/lib/Workspace/img/hello.txt")
 FOXDOT_STARTUP_PATH = os.path.realpath(FOXDOT_ROOT + "/lib/Custom/startup.py")
-FOXDOT_SND   = os.path.realpath(FOXDOT_ROOT + "/snd/")
-FOXDOT_LOOP  = os.path.realpath(FOXDOT_ROOT + "/snd/_loop_/")
+FOXDOT_SND   = os.path.realpath(FOXDOT_ROOT + "/../../FoxDotSampleDB/")
+FOXDOT_LOOP  = os.path.realpath(FOXDOT_ROOT + "/../../FoxDotSampleDB/_loop_/")
 
 SCLANG_EXEC   = 'sclang.exe' if SYSTEM == WINDOWS else 'sclang'
 SYNTHDEF_DIR  = os.path.realpath(FOXDOT_ROOT + "/osc/scsyndef/")
