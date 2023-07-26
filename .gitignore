@@ -1,22 +1,18 @@
 # demo and debug folders
 myTests/*
 __pycache__/
-FoxDot/lib/debug/*
-FoxDot/data/*
-FoxDot/lib/Settings/conf.py
-FoxDot/lib/Extensions/VRender/tmp/*
+renardo/lib/debug/*
+renardo/data/*
+renardo/lib/Settings/conf.py
+renardo/lib/Extensions/VRender/tmp/*
 build/*
 dist/*
-FoxDot/snd/_loop_/*
-FoxDot/osc/scsyndef/test.scd
-FoxDot/lib/GhostCoder/*
-FoxDot/lib/Settings/conf.txt
-FoxDot/lib/Workspace/tmp/tempfile.txt
+renardo/osc/scsyndef/test.scd
+renardo/lib/GhostCoder/*
+renardo/lib/Settings/conf.txt
 changed_files.txt
 
 # To-do list
-
-
 TODO.txt
 
 

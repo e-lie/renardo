@@ -19,95 +19,98 @@ Copyright Ryan Kirkbride 2015
 
 from __future__ import absolute_import, division, print_function
 
-def boot_supercollider():
-    """ Uses subprocesses to boot supercollider from the cli """
+# def boot_supercollider():
+#     """ Uses subprocesses to boot supercollider from the cli """
 
-    import time
-    import platform
-    import os
-    import subprocess
-    import getpass
-
-    try:
-        import psutil
-    except ImportError:
-        os.system("pip install psutil")
-        import sys
-        sys.exit("Installed psutil, please start FoxDot again.")
-
-    sclangpath = "" #find path to sclang
-
-    thispath = "" #find this path
-
-    thisdir = os.getcwd()
-
-    OS = platform.system()
-
-    username = getpass.getuser()
-
-    if(OS == "Windows"):
-
-        sclangloc = os.popen('where /R "C:\\Program Files" sclang.exe').read()
-
-        thiscwd = str(sclangloc)
-
-        ourcwd = thiscwd.replace('\\sclang.exe\n', '')
-
-        def is_proc_running(name):
-            for p in psutil.process_iter(attrs=["name", "exe", "cmdline"]):
-                #print(p);
-                procname = p.info['name'] or \
-                     p.info['exe'] and os.path.basename(p.info['exe']) == name or \
-                     p.info['cmdline'] and p.info['cmdline'][0] == name
-                if(procname.startswith(name)):
-                    return True
-            return False
+#     import time
+#     import platform
+#     import os
+#     import subprocess
+#     import getpass
 
 
-        running = (is_proc_running("sclang"))
+#     try:
+#         import psutil
+#     except ImportError:
+#         os.system("pip install psutil")
+#         import sys
+#         sys.exit("Installed psutil, please start FoxDot again.")
 
-        if(running == False):
-            startup = thisdir+"/FoxDot/startup.scd"
-            #os.system("sclang"+startup+" &")
-            subprocess.Popen([sclangloc, startup], cwd=ourcwd, shell=True)
+#     sclangpath = "" #find path to sclang
 
-    elif(OS == "Linux"):
+#     thispath = "" #find this path
 
-        def is_proc_running(name):
-            for p in psutil.process_iter(attrs=["name","cmdline"]):
-                #print(p);
-                procname = p.info['name'] or \
-                     p.info['cmdline'] and p.info['cmdline'][0] == name
-                if(procname.startswith(name)):
-                    return True
+#     thisdir = os.getcwd()
+
+#     OS = platform.system()
+
+#     username = getpass.getuser()
+
+#     print(OS)
+
+#     if(OS == "Windows"):
+
+#         sclangloc = os.popen('where /R "C:\\Program Files" sclang.exe').read()
+
+#         thiscwd = str(sclangloc)
+
+#         ourcwd = thiscwd.replace('\\sclang.exe\n', '')
+
+#         def is_proc_running(name):
+#             for p in psutil.process_iter(attrs=["name", "exe", "cmdline"]):
+#                 #print(p);
+#                 procname = p.info['name'] or \
+#                      p.info['exe'] and os.path.basename(p.info['exe']) == name or \
+#                      p.info['cmdline'] and p.info['cmdline'][0] == name
+#                 if(procname.startswith(name)):
+#                     return True
+#             return False
 
 
-        running = (is_proc_running("sclang"))
+#         running = (is_proc_running("sclang"))
 
-        if(running == False):
-            startup = thisdir+"/FoxDot/startup.scd"
-            #os.system('sclang "/home/foxdot/Desktop/FoxDot-Cross-Platform/FoxDot/startup.scd" &') #fuctional
-            os.system("sclang "+startup+" &")
+#         if(running == False):
+#             startup = thisdir+"/FoxDot/startup.scd"
+#             #os.system("sclang"+startup+" &")
+#             subprocess.Popen([sclangloc, startup], cwd=ourcwd, shell=True)
+
+#     elif(OS == "Linux"):
+
+#         def is_proc_running(name):
+#             for p in psutil.process_iter(attrs=["name","cmdline"]):
+#                 #print(p);
+#                 procname = p.info['name'] or \
+#                      p.info['cmdline'] and p.info['cmdline'][0] == name
+#                 if(procname.startswith(name)):
+#                     return True
 
 
-    else:
-        print("Operating system unrecognised")
-        #Potentially get the user to choose their OS from a list?
-        #Then run the corresponding functions
+#         running = (is_proc_running("sclang"))
 
-import sys
+#         if(running == False):
+#             startup = thisdir+"/FoxDot/startup.scd"
+#             #os.system('sclang "/home/foxdot/Desktop/FoxDot-Cross-Platform/FoxDot/startup.scd" &') #fuctional
+#             os.system("sclang "+startup+" &")
 
-if "--boot" in sys.argv:
 
-    boot_supercollider()
+#     else:
+#         print("Operating system unrecognised")
+#         #Potentially get the user to choose their OS from a list?
+#         #Then run the corresponding functions
 
-    sys.argv.remove("--boot")
+# import sys
+
+# if "--boot" in sys.argv:
+
+#     boot_supercollider()
+
+#     sys.argv.remove("--boot")
 
 from .lib import *
 
 def main():
     """ Function for starting the GUI when importing the library """
-    from .lib.Workspace.Editor import workspace
+    from FoxDotEditor.Editor import workspace
     FoxDot = workspace(FoxDotCode).run()
 
 def Go():

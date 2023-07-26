@@ -27,8 +27,6 @@ packages=[
     'renardo.lib.Extensions',
     'renardo.lib.Extensions.VRender',
     'renardo.lib.Extensions.SonicPi',
-    'renardo.lib.Workspace',
-    'renardo.lib.Workspace.Simple',
     'renardo.lib.EspGrid',
     'renardo.lib.Effects',
     'renardo.lib.Patterns',

@@ -59,9 +59,9 @@ if args.no_startup:
 
     FoxDotCode.no_startup()
 
-if args.boot:
+# if args.boot:
 
-    FoxDotCode.boot_supercollider()
+#     FoxDotCode.boot_supercollider()
 
 if args.pipe:
 
@@ -73,12 +73,6 @@ else:
 
     # Open the GUI
 
-    if args.simple:
-
-        from .lib.Workspace.Simple import workspace
-
-    else:
-
-        from .lib.Workspace.Editor import workspace
+    from FoxDotEditor.Editor import workspace
 
     FoxDot = workspace(FoxDotCode).run()
