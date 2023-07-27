@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from os.path import join
 
-from FoxDot.lib.Buffers import BufferManager
+from renardo.lib.Buffers import BufferManager
 
 
 class TestSampleSearch(unittest.TestCase):

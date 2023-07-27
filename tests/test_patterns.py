@@ -1,6 +1,6 @@
 import unittest
 
-from FoxDot.lib import Patterns
+from renardo.lib import Patterns
 
 class TestPatternMethods(unittest.TestCase):
     pass

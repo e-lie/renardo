@@ -1,7 +1,7 @@
 import unittest
 
-from FoxDot.lib.Patterns import GeneratorPattern
-from FoxDot.lib.Patterns import P
+from renardo.lib.Patterns import GeneratorPattern
+from renardo.lib.Patterns import P
 
 class TestPatternMethods(unittest.TestCase):
     def test_from_func(self):
