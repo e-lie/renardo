@@ -5,7 +5,7 @@ from .tkimport import *
 from .Format import *
 from .AppFunctions import *
 
-from renardo.lib.Settings import AUTO_COMPLETE_BRACKETS
+from renardo_lib.lib.Settings import AUTO_COMPLETE_BRACKETS
 
 whitespace = [" ","\t","\n","\r","\f","\v"]
 

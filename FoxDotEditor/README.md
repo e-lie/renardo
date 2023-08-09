@@ -5,7 +5,7 @@ Original FoxDot editor extract from original project for use with separated FoxD
 
 #### Startup
 
-1. Open SuperCollider and type in `FoxDot.start` and evaluate this line. SuperCollider is now listening for messages from renardo. 
+1. Open SuperCollider and type in `FoxDot.start` and evaluate this line. SuperCollider is now listening for messages from renardo_lib. 
 2. Start FoxDot by entering `FoxDot` at the command line. If that doesn't work, try `python -m FoxDot`.
 3. If you have installed the SC3 Plugins, use the "Code" drop-down menu to select "Use SC3 Plugins". Restart FoxDot and you'll have access to classes found in the SC3 Plugins.
 4. Keep up to date with the latest verion of FoxDot by running `pip install FoxDot --upgrade` every few weeks.
@@ -13,7 +13,7 @@ Original FoxDot editor extract from original project for use with separated FoxD
 
 #### Installing with SuperCollider 3.7 or earlier
 
-If you are having trouble installing the FoxDot Quark in SuperCollider, it is usually because the version of SuperCollider you are installing doesn’t have the functionality for installing Quarks or it doesn’t work properly. If this is the case, you can download the contents of the following SuperCollider script: [foxdot.scd](http://foxdot.org/wp-content/uploads/foxdot.scd). Once downloaded, open the file in SuperCollider and press Ctrl+Return to run it. This will make SuperCollider start listening for messages from renardo.
+If you are having trouble installing the FoxDot Quark in SuperCollider, it is usually because the version of SuperCollider you are installing doesn’t have the functionality for installing Quarks or it doesn’t work properly. If this is the case, you can download the contents of the following SuperCollider script: [foxdot.scd](http://foxdot.org/wp-content/uploads/foxdot.scd). Once downloaded, open the file in SuperCollider and press Ctrl+Return to run it. This will make SuperCollider start listening for messages from renardo_lib.
 
 #### Frequently Asked Questions
 

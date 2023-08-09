@@ -26,8 +26,8 @@ from .BracketHandler import BracketHandler
 from .TextBox import ThreadedText
 from .LineNumbers import LineNumbers
 from .MenuBar import MenuBar, PopupMenu
-from renardo.lib.Code import write_to_file
-from renardo.lib.Utils import get_pypi_version
+from renardo_lib.lib.Code import write_to_file
+from renardo_lib.lib.Utils import get_pypi_version
 
 from functools import partial
 from distutils.version import LooseVersion as VersionNumber
@@ -44,8 +44,8 @@ from .Settings import (
     MENU_ON_STARTUP, TRANSPARENT_ON_STARTUP, RECOVER_WORK,
     CHECK_FOR_UPDATE, PY_VERSION
 )
-from renardo.lib.Code import execute
-from renardo.lib.ServerManager import TempoServer
+from renardo_lib.lib.Code import execute
+from renardo_lib.lib.ServerManager import TempoServer
 
 # App object
 

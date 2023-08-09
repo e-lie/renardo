@@ -1,6 +1,6 @@
 import unittest
 
-from renardo.lib import Patterns
+from renardo_lib.lib import Patterns
 
 class TestPatternMethods(unittest.TestCase):
     pass

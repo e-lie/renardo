@@ -1,5 +1,5 @@
 
-from renardo_sitter import launch
+from renardo_lib_sitter import launch
 
 import argparse
 

@@ -11,7 +11,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-from renardo.lib import FoxDotCode, handle_stdin
+from renardo_lib.lib import FoxDotCode, handle_stdin
 
 import argparse
 
