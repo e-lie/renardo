@@ -1,6 +1,10 @@
 # demo and debug folders
-myTests/*
 __pycache__/
+venv
+*.pyc
+*.egg-info
+
+myTests/*
 renardo/lib/debug/*
 renardo/data/*
 renardo/lib/Settings/conf.py
