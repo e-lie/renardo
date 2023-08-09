@@ -11,7 +11,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-from .lib import FoxDotCode, handle_stdin
+from renardo.lib import FoxDotCode, handle_stdin
 
 import argparse
 
@@ -20,7 +20,6 @@ parser = argparse.ArgumentParser(
     description="Live coding with Python and SuperCollider", 
     epilog="More information: https://foxdot.org/")
 
-parser.add_argument('-p', '--pipe', action='store_true', help="run FoxDot from the command line interface")
 parser.add_argument('-d', '--dir', action='store', help="use an alternate directory for looking up samples")
 parser.add_argument('-s', '--startup', action='store', help="use an alternate startup file")
 parser.add_argument('-S', '--simple', action='store_true', help="run FoxDot in simple (accessible) mode")
@@ -59,20 +58,19 @@ if args.no_startup:
 
     FoxDotCode.no_startup()
 
-# if args.boot:
+if args.boot:
 
-#     FoxDotCode.boot_supercollider()
+    FoxDotCode.boot_supercollider()
 
-if args.pipe:
 
-    # Just take commands from the CLI
+# Open the GUI
 
-    handle_stdin()
+if args.simple:
+
+    from .Simple import workspace
 
 else:
 
-    # Open the GUI
+    from .Editor import workspace
 
-    from FoxDotEditor.Editor import workspace
-
-    FoxDot = workspace(FoxDotCode).run()
+FoxDot = workspace(FoxDotCode).run()

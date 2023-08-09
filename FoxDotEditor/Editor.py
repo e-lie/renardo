@@ -26,8 +26,8 @@ from .BracketHandler import BracketHandler
 from .TextBox import ThreadedText
 from .LineNumbers import LineNumbers
 from .MenuBar import MenuBar, PopupMenu
-from ..Code import write_to_file
-from ..Utils import get_pypi_version
+from renardo.lib.Code import write_to_file
+from renardo.lib.Utils import get_pypi_version
 
 from functools import partial
 from distutils.version import LooseVersion as VersionNumber
@@ -37,11 +37,15 @@ import re
 import socket
 
 # Code execution
-from ..Code import execute
-from ..Settings import FONT, FOXDOT_ICON, FOXDOT_HELLO, SC3_PLUGINS, FOXDOT_CONFIG_FILE, ALPHA_VALUE, USE_ALPHA
-from ..Settings import MENU_ON_STARTUP, TRANSPARENT_ON_STARTUP, RECOVER_WORK, CHECK_FOR_UPDATE
-from ..Settings import PY_VERSION
-from ..ServerManager import TempoServer
+from .Settings import (
+    FONT, FOXDOT_ICON, FOXDOT_ICON_GIF,
+    FOXDOT_HELLO, SC3_PLUGINS, FOXDOT_CONFIG_FILE,
+    ALPHA_VALUE, USE_ALPHA, FOXDOT_TEMP_FILE,
+    MENU_ON_STARTUP, TRANSPARENT_ON_STARTUP, RECOVER_WORK,
+    CHECK_FOR_UPDATE, PY_VERSION
+)
+from renardo.lib.Code import execute
+from renardo.lib.ServerManager import TempoServer
 
 # App object
 

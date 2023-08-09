@@ -4,8 +4,8 @@ from .tkimport import Menu, BooleanVar, IntVar, DISABLED
 
 import os.path
 from functools import partial
-from ..Settings import *
-from ..Code import FoxDotCode
+from renardo.lib.Settings import *
+from renardo.lib.Code import FoxDotCode
 
 # Code menu
 

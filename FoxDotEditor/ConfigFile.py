@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 from .tkimport import *
 
-from ..Settings import FOXDOT_ICON, FOXDOT_ICON_GIF
+from .Settings import FOXDOT_ICON, FOXDOT_ICON_GIF
 
 try:
     import tkMessageBox

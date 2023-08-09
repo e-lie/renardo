@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 from .tkimport import *
 
-from ..Settings import FONT
+from renardo.lib.Settings import FONT
 from .AppFunctions import index as get_index
 from .Format import get_keywords
 import re

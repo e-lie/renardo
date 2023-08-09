@@ -3,8 +3,8 @@ from __future__ import absolute_import, division, print_function
 
 from . import tkimport as Tk
 
-from ..Settings import LINE_NUMBER_MARKER_OFFSET
-from ..Code import execute
+from renardo.lib.Settings import LINE_NUMBER_MARKER_OFFSET
+from renardo.lib.Code import execute
 
 class LineNumbers(Tk.Canvas):
     def __init__(self, master, *args, **kwargs):
