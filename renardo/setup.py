@@ -14,7 +14,7 @@ setup(
     license='cc-by-sa-4.0',
     url='http://renardo.org/',
     packages=[
-        'renardo_sitter',
+        'renardo',
     ],
     long_description=long_description,
     long_description_content_type="text/markdown",
