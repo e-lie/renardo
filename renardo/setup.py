@@ -6,7 +6,7 @@ with open("README.md", "r") as f:
     long_description=f.read()
 
 setup(
-    name='renardo_sitter',
+    name='renardo',
     version="0.1.0",
     description='Launcher/config editor for Renardo -- experimental fork of FoxDot as modular library',
     author='Elie Gavoty',
