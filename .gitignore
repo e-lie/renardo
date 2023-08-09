@@ -16,6 +16,14 @@ changed_files.txt
 TODO.txt
 
 
+renardo_samples
+*.wav
+*.wav
+*.aiff
+*.mp3
+*.ogg
+
+
 
 
 autodoc.py
