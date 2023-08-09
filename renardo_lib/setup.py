@@ -6,7 +6,7 @@ with open("README.md", "r") as f:
     long_description=f.read()
 
 setup(
-    name='renardo',
+    name='renardo_lib',
     version="0.9.0",
     description='Python livecoding environment - New fork of FoxDot',
     author='Elie Gavoty',
@@ -14,18 +14,18 @@ setup(
     license='cc-by-sa-4.0',
     url='http://renardo.org/',
     packages=[
-        'renardo',
-        'renardo.lib.Code',
-        'renardo.lib.Custom',
-        'renardo.lib.Extensions',
-        'renardo.lib.Extensions.VRender',
-        'renardo.lib.Extensions.SonicPi',
-        'renardo.lib.EspGrid',
-        'renardo.lib.Effects',
-        'renardo.lib.Patterns',
-        'renardo.lib.SCLang',
-        'renardo.lib.Settings',
-        'renardo.lib.Utils'
+        'renardo_lib',
+        'renardo_lib.lib.Code',
+        'renardo_lib.lib.Custom',
+        'renardo_lib.lib.Extensions',
+        'renardo_lib.lib.Extensions.VRender',
+        'renardo_lib.lib.Extensions.SonicPi',
+        'renardo_lib.lib.EspGrid',
+        'renardo_lib.lib.Effects',
+        'renardo_lib.lib.Patterns',
+        'renardo_lib.lib.SCLang',
+        'renardo_lib.lib.Settings',
+        'renardo_lib.lib.Utils'
     ],
     long_description=long_description,
     long_description_content_type="text/markdown",
