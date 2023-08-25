@@ -1,6 +1,4 @@
 import os.path
-with open((os.path.join(os.path.dirname(__file__), ".version")), "r") as f:
-    __version__ = f.readline().strip()
 
 import logging
 from renardo_lib.lib.Code import *
@@ -189,7 +187,7 @@ def allow_connections(valid = True, *args, **kwargs):
 
 class _util:
     def __repr__(self):
-        return "FoxDot ver. {}".format(__version__)
+        return "Renardo ver. 0.9.0"
     def reload(self):
         Server.reset()
         SynthDefs.reload()

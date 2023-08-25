@@ -129,13 +129,14 @@ from renardo_lib.lib.SCLang.SynthDef import SynthDefProxy, SynthDef, SynthDefs
 from renardo_lib.lib.Effects import FxList
 from renardo_lib.lib.Buffers import Samples
 from renardo_lib.lib.Key import PlayerKey, NumberKey
-#from renardo_lib.lib.Repeat import
+from renardo_lib.lib.Repeat import Repeatable
 from renardo_lib.lib.Patterns import *
 from renardo_lib.lib.Root import Root
 from renardo_lib.lib.Scale import Scale, get_freq_and_midi
 from renardo_lib.lib.Bang import Bang
 from renardo_lib.lib.TimeVar import TimeVar, mapvar
 from renardo_lib.lib.Code import WarningMsg
+from renardo_lib.lib.Utils import get_first_item
 
 class EmptyPlayer(object):
     """ Place holder for Player objects created at run-time to reduce load time.

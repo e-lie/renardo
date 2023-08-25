@@ -7,7 +7,7 @@ with open("README.md", "r") as f:
 
 setup(
     name='renardo_lib',
-    version="0.9dev1",
+    version="0.9dev4",
     description='Python livecoding environment - New fork of FoxDot',
     author='Elie Gavoty',
     author_email='eliegavoty@free.fr',

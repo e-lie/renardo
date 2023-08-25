@@ -47,7 +47,7 @@ SCLANG_EXEC   = 'sclang.exe' if SYSTEM == WINDOWS else 'sclang'
 SYNTHDEF_DIR  = os.path.realpath(FOXDOT_ROOT + "/osc/scsyndef/")
 EFFECTS_DIR   = os.path.realpath(FOXDOT_ROOT + "/osc/sceffects/")
 ENVELOPE_DIR  = os.path.realpath(FOXDOT_ROOT + "/osc/scenvelopes/")
-TUTORIAL_DIR  = os.path.realpath(FOXDOT_ROOT + "/../docs/demo/")
+TUTORIAL_DIR  = os.path.realpath(FOXDOT_ROOT + "/demo/")
 RECORDING_DIR = os.path.realpath(FOXDOT_ROOT + "/rec/")
 
 FOXDOT_OSC_FUNC     = os.path.realpath(FOXDOT_ROOT + "/osc/OSCFunc.scd")
