@@ -26,8 +26,6 @@ setup(
         'renardo_lib.lib.Patterns',
         'renardo_lib.lib.SCLang',
         'renardo_lib.lib.Settings',
-        'renardo_lib.lib.ServerManager',
-        'renardo_lib.lib.TempoClock',
         'renardo_lib.lib.Utils'
     ],
     long_description=long_description,
