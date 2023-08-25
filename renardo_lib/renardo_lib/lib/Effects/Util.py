@@ -60,8 +60,8 @@
 """
 
 import os.path
-from ..Settings import EFFECTS_DIR, SC3_PLUGINS
-from ..ServerManager import Server
+from renardo_lib.lib.Settings import EFFECTS_DIR, SC3_PLUGINS
+from renardo_lib.lib.ServerManager import Server
 
 class Effect:
     server=Server

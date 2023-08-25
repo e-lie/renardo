@@ -43,7 +43,7 @@
 
 """
 
-from .foxdot_func_cmp import *
+from renardo_lib.lib.Code.foxdot_func_cmp import *
 from threading import Thread
 from time import sleep
 

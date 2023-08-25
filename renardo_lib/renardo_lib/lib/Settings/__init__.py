@@ -81,7 +81,7 @@ def GET_TUTORIAL_FILES():
 try:
     reload(conf) # incase of a reload
 except NameError:
-    from . import conf
+    from renardo_lib.lib.Settings import conf
 
 FOXDOT_CONFIG_FILE  = conf.filename
     

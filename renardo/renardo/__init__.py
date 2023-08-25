@@ -1,4 +1,4 @@
-from .boot_supercollider import boot_supercollider
+from renardo.boot_supercollider import boot_supercollider
 import argparse
 import time
 

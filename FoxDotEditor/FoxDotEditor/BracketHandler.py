@@ -1,7 +1,7 @@
-from .tkimport import *
+from FoxDotEditor.tkimport import *
     
-from .Format import *
-from .AppFunctions import *
+from FoxDotEditor.Format import *
+from FoxDotEditor.AppFunctions import *
 
 from renardo_lib.lib.Settings import AUTO_COMPLETE_BRACKETS
 

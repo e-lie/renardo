@@ -142,7 +142,7 @@ class TempoClock(object):
 
     def sync_to_espgrid(self, host="localhost", port=5510):
         """ Connects to an EspGrid instance """
-        from .EspGrid import EspGrid
+        from renardo_lib.lib.EspGrid import EspGrid
         self.espgrid = EspGrid((host, port))
         try:
             tempo = self.espgrid.get_tempo()
@@ -993,7 +993,7 @@ class History(object):
     def add(self, beat, osc_messages):
         self.data.append(osc_messages)
 
-from . import Code
+from renardo_lib.lib import Code
 
 class Wrapper(Code.LiveObject):
     

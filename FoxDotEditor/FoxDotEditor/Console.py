@@ -1,8 +1,8 @@
-from .tkimport import *
+from FoxDotEditor.tkimport import *
 
-from .Format  import *
-from .AppFunctions import stdout
-from .MenuBar import ConsolePopupMenu
+from FoxDotEditor.Format  import *
+from FoxDotEditor.AppFunctions import stdout
+from FoxDotEditor.MenuBar import ConsolePopupMenu
 import math
 import random
 

@@ -62,12 +62,6 @@ if args.boot:
 
 # Open the GUI
 
-if args.simple:
-
-    from .Simple import workspace
-
-else:
-
-    from .Editor import workspace
+from FoxDotEditor.Editor import workspace
 
 FoxDot = workspace(FoxDotCode).run()

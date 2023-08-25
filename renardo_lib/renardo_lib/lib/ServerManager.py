@@ -1092,7 +1092,7 @@ class TempoClient:
 
 if __name__ != "__main__":
 
-    from .Settings import ADDRESS, PORT, PORT2, FORWARD_PORT, FORWARD_ADDRESS
+    from renardo_lib.lib.Settings import ADDRESS, PORT, PORT2, FORWARD_PORT, FORWARD_ADDRESS
 
     # DefaultServer = SCLangServerManager(ADDRESS, PORT, PORT2)
     Server = SCLangServerManager(ADDRESS, PORT, PORT2)

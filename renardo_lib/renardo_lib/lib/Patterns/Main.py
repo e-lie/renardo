@@ -5,8 +5,8 @@ Contains classes `Pattern` and `PGroup` and the base class for `GeneratorPattern
 from random import choice, shuffle
 from copy import deepcopy
 
-from .Operations import *
-from ..Utils import *
+from renardo_lib.lib.Patterns.Operations import *
+from renardo_lib.lib.Utils import *
 
 import functools
 import inspect
@@ -1537,7 +1537,7 @@ Format = PatternFormat ## TODO - Remove this
 
 def convert_nested_data(data):
     """ Converts a piece of data in a pattern to a PGroup/Pattern as appropriate """
-    from ..Constants import NoneConst
+    from renardo_lib.lib.Constants import NoneConst
 
     if isinstance(data, (int, float)):
 

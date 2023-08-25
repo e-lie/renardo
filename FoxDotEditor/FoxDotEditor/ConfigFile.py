@@ -1,6 +1,6 @@
-from .tkimport import *
+from FoxDotEditor.tkimport import *
 
-from .Settings import FOXDOT_ICON, FOXDOT_ICON_GIF
+from FoxDotEditor.Settings import FOXDOT_ICON, FOXDOT_ICON_GIF
 
 try:
     import tkMessageBox

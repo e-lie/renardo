@@ -1,7 +1,7 @@
 #!/usr/bin/python
 """ Collection of functions used in the Workspace package """
 
-from .Format import *
+from FoxDotEditor.Format import *
 import sys
 
 def stdout(*args):

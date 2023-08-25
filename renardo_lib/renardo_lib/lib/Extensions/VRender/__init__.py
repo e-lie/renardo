@@ -1,7 +1,7 @@
-from .VRender import renderizeVoice
-from ...SCLang import SynthDef
-from ... import Clock, Scale, Root
-from ...Settings import FOXDOT_ROOT
+from renardo_lib.lib.Extensions.VRender import renderizeVoice
+from renardo_lib.lib.SCLang import SynthDef
+from renardo_lib.lib import Clock, Scale, Root
+from renardo_lib.lib.Settings import FOXDOT_ROOT
 
 class VRenderSynthDef(SynthDef):
     def __init__(self):

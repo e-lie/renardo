@@ -2,10 +2,10 @@ from random import choice as choose
 
 if __name__ != "__main__":
 
-    from ..SCLang   import SynthDef, SynthDefs
-    from ..Players  import Player
-    from ..Patterns import Sequences
-    from ..Patterns.Sequences import *
+    from renardo_lib.lib.SCLang   import SynthDef, SynthDefs
+    from renardo_lib.lib.Players  import Player
+    from renardo_lib.lib.Patterns import Sequences
+    from renardo_lib.lib.Patterns.Sequences import *
 
     from types import FunctionType
 

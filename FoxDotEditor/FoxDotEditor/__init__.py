@@ -105,7 +105,7 @@ from renardo_lib.lib import *
 
 def main():
     """ Function for starting the GUI when importing the library """
-    from .lib.Workspace.Editor import workspace
+    from FoxDotEditor.Editor import workspace
     FoxDot = workspace(FoxDotCode).run()
 
 def Go():

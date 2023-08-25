@@ -67,11 +67,11 @@ the augmented version of the `Pattern`.
 
 """
 
-from .Main       import *
-from .Operations import *
-from .Sequences  import *
-from .PGroups    import *
-from .Generators import *
-from .PlayString import *
-from .Parse      import *
-from .Utils      import *
+from renardo_lib.lib.Patterns.Main       import *
+from renardo_lib.lib.Patterns.Operations import *
+from renardo_lib.lib.Patterns.Sequences  import *
+from renardo_lib.lib.Patterns.PGroups    import *
+from renardo_lib.lib.Patterns.Generators import *
+from renardo_lib.lib.Patterns.PlayString import *
+from renardo_lib.lib.Patterns.Parse      import *
+from renardo_lib.lib.Patterns.Utils      import *

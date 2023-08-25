@@ -3,9 +3,9 @@ import os
 import json
 from subprocess import check_output
 
-from ...Scale import freqtomidi
-from ...SCLang import CompiledSynthDef
-from ...Settings import SYNTHDEF_DIR
+from renardo_lib.lib.Scale import freqtomidi
+from renardo_lib.lib.SCLang import CompiledSynthDef
+from renardo_lib.lib.Settings import SYNTHDEF_DIR
 
 
 try:

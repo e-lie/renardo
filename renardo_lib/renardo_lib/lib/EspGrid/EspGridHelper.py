@@ -1,4 +1,4 @@
-from ..ServerManager import BidirectionalOSCServer, OSCMessage
+from renardo_lib.lib.ServerManager import BidirectionalOSCServer, OSCMessage
 
 class EspGrid:
     def __init__(self, address=("localhost", 5510), clock=None):

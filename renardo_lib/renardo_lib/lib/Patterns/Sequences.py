@@ -12,10 +12,10 @@ All patterns inherit from Base.Pattern. There are two types of pattern:
 import random
 import math
 
-from .Main import *
-from .PGroups import *
-from .Operations import *
-from .Generators import PRand
+from renardo_lib.lib.Patterns.Main import *
+from renardo_lib.lib.Patterns.PGroups import *
+from renardo_lib.lib.Patterns.Operations import *
+from renardo_lib.lib.Patterns.Generators import PRand
 
 MAX_SIZE = 2048
 

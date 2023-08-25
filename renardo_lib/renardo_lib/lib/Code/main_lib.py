@@ -13,8 +13,8 @@ except ImportError:
 
     TypeType = type
     
-from ..Utils import modi
-from ..Settings import *
+from renardo_lib.lib.Utils import modi
+from renardo_lib.lib.Settings import *
 
 """
 Live Object

@@ -1,1 +1,1 @@
-from . EspGridHelper import *
+from renardo_lib.lib.EspGrid.EspGridHelper import *

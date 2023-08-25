@@ -1,5 +1,5 @@
 import argparse
-from . import launch
+from renardo import launch
 
 parser = argparse.ArgumentParser(
     prog="renardo", 

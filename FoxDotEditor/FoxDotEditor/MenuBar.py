@@ -1,4 +1,4 @@
-from .tkimport import Menu, BooleanVar, IntVar, DISABLED
+from FoxDotEditor.tkimport import Menu, BooleanVar, IntVar, DISABLED
 
 import os.path
 from functools import partial

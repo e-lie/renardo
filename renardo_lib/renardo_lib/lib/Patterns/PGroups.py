@@ -1,5 +1,5 @@
-from .Main import PGroup, PatternMethod, GeneratorPattern, sum_delays
-from ..Utils import modi, LCM
+from renardo_lib.lib.Patterns.Main import PGroup, PatternMethod, GeneratorPattern, sum_delays
+from renardo_lib.lib.Utils import modi, LCM
 
 class PGroupPrime(PGroup):
     WEIGHT  = 1

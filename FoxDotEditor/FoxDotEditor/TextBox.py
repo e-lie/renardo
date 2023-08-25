@@ -1,6 +1,6 @@
-from .tkimport import Text, SEL, END, SEL_FIRST, SEL_LAST, INSERT
+from FoxDotEditor.tkimport import Text, SEL, END, SEL_FIRST, SEL_LAST, INSERT
 
-from .Format import *
+from FoxDotEditor.Format import *
 
 try:
     import Queue

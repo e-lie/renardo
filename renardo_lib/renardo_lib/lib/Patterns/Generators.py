@@ -27,7 +27,7 @@
 """
 
 
-from .Main  import GeneratorPattern, Pattern, asStream, PatternInput
+from renardo_lib.lib.Patterns.Main  import GeneratorPattern, Pattern, asStream, PatternInput
 
 import random
 

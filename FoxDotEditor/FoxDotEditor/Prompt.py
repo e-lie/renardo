@@ -1,8 +1,8 @@
-from .tkimport import *
+from FoxDotEditor.tkimport import *
 
 from renardo_lib.lib.Settings import FONT
-from .AppFunctions import index as get_index
-from .Format import get_keywords
+from FoxDotEditor.AppFunctions import index as get_index
+from FoxDotEditor.Format import get_keywords
 import re
 
 class TextPrompt:

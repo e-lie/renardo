@@ -1,5 +1,5 @@
-from ..Patterns import P, Pattern
-from ... import Scale
+from renardo_lib.lib.Patterns import P, Pattern
+from renardo_lib.lib import Scale
 
 def PArp(seq, index=0):
     ### Return an arpeggio Pattern

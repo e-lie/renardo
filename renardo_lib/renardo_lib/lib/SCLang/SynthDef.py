@@ -1,8 +1,11 @@
 import os
-from . import Env
-from .SCLang import *
-from ..ServerManager import Server
-from ..Settings import SYNTHDEF_DIR
+
+from renardo_lib.lib.SCLang.SCLang import instance, format_args
+from renardo_lib.lib.SCLang import Env
+from renardo_lib.lib.ServerManager import Server
+from renardo_lib.lib.Settings import SYNTHDEF_DIR
+from renardo_lib.lib.Code import WarningMsg
+
 
 # Container for SynthDefs
 

@@ -8,7 +8,7 @@
 
 """
 
-from .lib import FoxDotCode, handle_stdin
+from renardo_lib.lib import FoxDotCode, handle_stdin
 
 import argparse
 

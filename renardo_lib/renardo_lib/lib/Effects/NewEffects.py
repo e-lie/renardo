@@ -1,6 +1,6 @@
 import inspect
 
-from ..SCLang.SCLang import *
+from renardo_lib.lib.SCLang.SCLang import *
 
 # To be moved to SCLang later
 
@@ -78,11 +78,11 @@ def slideFrom(slide_from=0, sus=1, slide_delay=0):
 # fx.add("osc = osc * (1.059463**pshift)")
 # fx.save()
 
-@Effect(order=2)
-def formantFilter(formant=0):
-    Effect.add(formant = (formant % 8) + 1)
-    Effect.add(osc = Formlet.ar(Effect.In(), formant * 200, (formant % 5 + 1) / 1000, (formant * 1.5) / 600).tanh)
-    Effect.Out() 
+# @Effect(order=2)
+# def formantFilter(formant=0):
+#     Effect.add(formant = (formant % 8) + 1)
+#     Effect.add(osc = Formlet.ar(Effect.In(), formant * 200, (formant % 5 + 1) / 1000, (formant * 1.5) / 600).tanh)
+#     Effect.Out(osc) 
 
 @Effect(order=2)
 def filterSwell(swell=0, sus=1, hpr=1):

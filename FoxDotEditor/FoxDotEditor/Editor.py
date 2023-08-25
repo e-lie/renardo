@@ -13,17 +13,17 @@ except:
 
 # Tkinter Interface
 
-from .tkimport import *
+from FoxDotEditor.tkimport import *
 
 # Custom app modules
-from .Format import *
-from .AppFunctions import *
-from .Console import console
-from .Prompt import TextPrompt
-from .BracketHandler import BracketHandler
-from .TextBox import ThreadedText
-from .LineNumbers import LineNumbers
-from .MenuBar import MenuBar, PopupMenu
+from FoxDotEditor.Format import *
+from FoxDotEditor.AppFunctions import *
+from FoxDotEditor.Console import console
+from FoxDotEditor.Prompt import TextPrompt
+from FoxDotEditor.BracketHandler import BracketHandler
+from FoxDotEditor.TextBox import ThreadedText
+from FoxDotEditor.LineNumbers import LineNumbers
+from FoxDotEditor.MenuBar import MenuBar, PopupMenu
 from renardo_lib.lib.Code import write_to_file
 from renardo_lib.lib.Utils import get_pypi_version
 
@@ -35,7 +35,7 @@ import re
 import socket
 
 # Code execution
-from .Settings import (
+from FoxDotEditor.Settings import (
     FONT, FOXDOT_ICON, FOXDOT_ICON_GIF,
     FOXDOT_HELLO, SC3_PLUGINS, FOXDOT_CONFIG_FILE,
     ALPHA_VALUE, USE_ALPHA, FOXDOT_TEMP_FILE,
@@ -748,7 +748,7 @@ class workspace:
         return
 
     def open_config_file(self):
-        from .ConfigFile import Config
+        from FoxDotEditor.ConfigFile import Config
         Config(FOXDOT_CONFIG_FILE).start()
         return
 

@@ -1,4 +1,4 @@
-from .Sequences import *
+from renardo_lib.lib.Patterns.Sequences import *
 
 # Other useful functions that don't return a single pattern
 

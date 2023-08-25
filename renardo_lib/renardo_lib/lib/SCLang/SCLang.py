@@ -2,12 +2,6 @@
     SCLang.py
 """
 
-from ..Code import WarningMsg
-from ..Settings import SC3_PLUGINS
-
-from copy import copy
-import os
-
 def format_args(args=[], kwargs={}, delim=': '):
     return ", ".join([str(a) for a in args] + ["%s%s%s" % (key, delim, value) for key, value in kwargs.items()])
 
