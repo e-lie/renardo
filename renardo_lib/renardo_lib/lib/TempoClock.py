@@ -46,8 +46,6 @@
 
 """
 
-from __future__ import absolute_import, division, print_function
-
 from types import FunctionType, MethodType
 
 from .Players import Player

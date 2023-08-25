@@ -5,8 +5,6 @@ TODO: using __call__ -> go through getattribute and check instead of already hav
 
 """
 
-from __future__ import absolute_import, division, print_function
-
 from .Patterns import *
 from .Utils  import *
 from .Patterns.Operations import *

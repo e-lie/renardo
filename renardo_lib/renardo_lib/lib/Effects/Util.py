@@ -59,8 +59,6 @@
 
 """
 
-from __future__ import absolute_import, division, print_function
-
 import os.path
 from ..Settings import EFFECTS_DIR, SC3_PLUGINS
 from ..ServerManager import Server

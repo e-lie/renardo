@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import os.path
 with open((os.path.join(os.path.dirname(__file__), ".version")), "r") as f:
     __version__ = f.readline().strip()

@@ -12,8 +12,6 @@ Aiming on being able to set individual sample banks for different players
 that can be proggrammed into performance.
 
 """
-from __future__ import absolute_import, division, print_function
-
 import fnmatch
 import os
 import wave

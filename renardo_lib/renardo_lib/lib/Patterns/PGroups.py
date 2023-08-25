@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 from .Main import PGroup, PatternMethod, GeneratorPattern, sum_delays
 from ..Utils import modi, LCM
 

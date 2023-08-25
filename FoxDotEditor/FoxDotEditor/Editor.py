@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/python
 
-from __future__ import absolute_import, division, print_function
-
 """ Tkinter interface made for Live Coding with Python syntax highlighting """
 
 

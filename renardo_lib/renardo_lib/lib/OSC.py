@@ -157,8 +157,6 @@ Original Comments
 > 	Added a generic callback handler.
 > 	- dwh
 """
-from __future__ import print_function
-
 import math, re, socket, select, string, struct, sys, threading, time, types, array, errno, inspect
 from SocketServer import UDPServer, DatagramRequestHandler, ForkingMixIn, ThreadingMixIn, StreamRequestHandler, TCPServer
 from contextlib import closing

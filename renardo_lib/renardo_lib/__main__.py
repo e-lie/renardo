@@ -8,9 +8,6 @@
 
 """
 
-
-from __future__ import absolute_import, division, print_function
-
 from .lib import FoxDotCode, handle_stdin
 
 import argparse

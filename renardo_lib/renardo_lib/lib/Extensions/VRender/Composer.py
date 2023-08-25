@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function
-
 from .MidiFactory import createMidi
 import os
 from math import ceil

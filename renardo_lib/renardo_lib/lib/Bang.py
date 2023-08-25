@@ -5,8 +5,6 @@ in time with `Player` rhythms to give visual aid to which players are creating w
 
 """
 
-from __future__ import absolute_import, division, print_function
-
 from time import time, sleep
 from threading import Thread
 

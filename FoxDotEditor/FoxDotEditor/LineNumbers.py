@@ -1,6 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
-
 from . import tkimport as Tk
 
 from renardo_lib.lib.Settings import LINE_NUMBER_MARKER_OFFSET

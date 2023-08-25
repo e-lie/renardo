@@ -9,8 +9,6 @@ All patterns inherit from Base.Pattern. There are two types of pattern:
     * Similar to generators but can be indexed (returns values based on functions)
 """
 
-from __future__ import absolute_import, division, print_function
-
 import random
 import math
 

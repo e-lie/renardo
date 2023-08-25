@@ -1,22 +1,7 @@
-from __future__ import absolute_import, division, print_function
-
 import os
 import sys
 
-# Anything that needs to be updated
-
-PY_VERSION = sys.version_info[0]
-
-# Any Py2to3
-
-if PY_VERSION == 2:
-
-    range = xrange
-    input = raw_input
-
-else:
-
-    from importlib import reload
+from importlib import reload
 
 # Check for OS -> mac, linux, win
 

@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 from .Patterns import *
 from .TimeVar import TimeVar
 from .Utils import recursive_any, get_inverse_op

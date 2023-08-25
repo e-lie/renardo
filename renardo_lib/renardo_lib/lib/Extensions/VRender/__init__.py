@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function
-
 from .VRender import renderizeVoice
 from ...SCLang import SynthDef
 from ... import Clock, Scale, Root

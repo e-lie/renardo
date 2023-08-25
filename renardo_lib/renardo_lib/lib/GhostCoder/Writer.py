@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from random import choice
 from copy import deepcopy
 import Queue

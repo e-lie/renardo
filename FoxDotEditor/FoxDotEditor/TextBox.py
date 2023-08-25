@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 from .tkimport import Text, SEL, END, SEL_FIRST, SEL_LAST, INSERT
 
 from .Format import *

@@ -17,8 +17,6 @@ the FoxDot classes and how to implement them.
 Copyright Ryan Kirkbride 2015
 """
 
-from __future__ import absolute_import, division, print_function
-
 def boot_supercollider():
     """ Uses subprocesses to boot supercollider from the cli """
 

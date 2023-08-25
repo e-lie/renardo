@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 from .Patterns import Pattern, PGroup, asStream
 from .TimeVar import TimeVar
 from .Root import Root
