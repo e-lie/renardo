@@ -18,13 +18,9 @@ import os.path
 from collections import namedtuple
 from threading import Thread
 
-from .Code import WarningMsg
-from .Settings import *
-
-if sys.version_info[0] > 2:
-    from .OSC3 import *
-else:
-    from .OSC import *
+from renardo_lib.lib.Code import WarningMsg
+from renardo_lib.lib.Settings import *
+from renardo_lib.lib.OSC3 import *
 
 # Keep in sync with Info.scd
 ServerInfo = namedtuple(

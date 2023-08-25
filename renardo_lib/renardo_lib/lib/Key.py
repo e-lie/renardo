@@ -1,6 +1,6 @@
-from .Patterns import *
-from .TimeVar import TimeVar
-from .Utils import recursive_any, get_inverse_op
+from renardo_lib.lib.Patterns import *
+from renardo_lib.lib.TimeVar import TimeVar
+from renardo_lib.lib.Utils import recursive_any, get_inverse_op
 from functools import partial
 
 def convert_to_pattern(value):

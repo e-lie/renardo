@@ -104,7 +104,7 @@ Copyright Ryan Kirkbride 2015
 
 #     sys.argv.remove("--boot")
 
-from .lib import *
+from renardo_lib.lib import *
 
 def main():
     """ Function for starting the GUI when importing the library """

@@ -1,5 +1,13 @@
 """ Module for converting handling MIDI in/out and functions relating to MIDI pitch calculation. """
 
+
+import time
+
+from renardo_lib.lib.Patterns import asStream
+from renardo_lib.lib.Scale    import ScalePattern
+from renardo_lib.lib.TimeVar  import TimeVar
+from renardo_lib.lib.SCLang import SynthDefProxy
+
 try:
     import rtmidi
     from rtmidi import midiconstants
@@ -10,12 +18,6 @@ try:
 except ImportError as _err:
     pass
 
-from .Patterns import asStream
-from .Scale    import ScalePattern
-from .TimeVar  import TimeVar
-from .SCLang import SynthDefProxy
-
-import time
 
 class MidiInputHandler(object):
 

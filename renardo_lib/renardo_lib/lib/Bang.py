@@ -1,14 +1,12 @@
 """
-
 This is an experimental module that contains the `Bang` class; events that are triggered
 in time with `Player` rhythms to give visual aid to which players are creating which sounds.
-
 """
 
 from time import time, sleep
 from threading import Thread
 
-from .Code import execute
+from renardo_lib.lib.Code import execute
 
 class Bang:
 

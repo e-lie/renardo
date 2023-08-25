@@ -1,5 +1,5 @@
-from .Utils   import modi
-from .TimeVar import TimeVar
+from renardo_lib.lib.Utils   import modi
+from renardo_lib.lib.TimeVar import TimeVar
 
 CHROMATIC_NOTES = ["C"," ","D"," ","E","F"," ","G"," ","A"," ","B"]
 

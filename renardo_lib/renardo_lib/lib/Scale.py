@@ -1,6 +1,6 @@
-from .Patterns import Pattern, PGroup, asStream
-from .TimeVar import TimeVar
-from .Root import Root
+from renardo_lib.lib.Patterns import Pattern, PGroup, asStream
+from renardo_lib.lib.TimeVar import TimeVar
+from renardo_lib.lib.Root import Root
 
 from random import choice
 from copy import copy

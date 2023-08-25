@@ -1,4 +1,4 @@
-from .Patterns import Pattern, PGroup
+from renardo_lib.lib.Patterns import Pattern, PGroup
 
 # Constants and constant values
 

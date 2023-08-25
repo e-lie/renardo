@@ -48,15 +48,6 @@
 
 from types import FunctionType, MethodType
 
-from .Players import Player
-from .Repeat import MethodCall
-from .Patterns import asStream
-from .TimeVar import TimeVar
-from .Midi import MidiIn, MIDIDeviceNotFound
-from .Utils import modi
-from .ServerManager import TempoClient, ServerManager, RequestTimeout
-from .Settings import CPU_USAGE, CLOCK_LATENCY
-
 import time
 from fractions import Fraction
 from traceback import format_exc as error_stack
@@ -64,6 +55,16 @@ from traceback import format_exc as error_stack
 import sys
 import threading
 import inspect
+
+from renardo_lib.lib.Players import Player
+from renardo_lib.lib.Repeat import MethodCall
+from renardo_lib.lib.Patterns import asStream
+from renardo_lib.lib.TimeVar import TimeVar
+from renardo_lib.lib.Midi import MidiIn, MIDIDeviceNotFound
+from renardo_lib.lib.Utils import modi
+from renardo_lib.lib.ServerManager import TempoClient, ServerManager, RequestTimeout
+from renardo_lib.lib.Settings import CPU_USAGE, CLOCK_LATENCY
+
 
 class TempoClock(object):
 

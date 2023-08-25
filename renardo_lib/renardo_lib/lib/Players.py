@@ -129,25 +129,25 @@ from os.path import dirname
 from random import shuffle, choice
 from copy import copy, deepcopy
 
-from .Settings import SamplePlayer, LoopPlayer
-from .Code import WarningMsg, debug_stdout
-from .SCLang.SynthDef import SynthDefProxy, SynthDef, SynthDefs
-from .Effects import FxList
-from .Utils import stdout
-from .Buffers import Samples
+from renardo_lib.lib.Settings import SamplePlayer, LoopPlayer
+from renardo_lib.lib.Code import WarningMsg, debug_stdout
+from renardo_lib.lib.SCLang.SynthDef import SynthDefProxy, SynthDef, SynthDefs
+from renardo_lib.lib.Effects import FxList
+from renardo_lib.lib.Utils import stdout
+from renardo_lib.lib.Buffers import Samples
 
-from .Key import *
-from .Repeat import *
-from .Patterns import *
-# from .Midi import *
+from renardo_lib.lib.Key import *
+from renardo_lib.lib.Repeat import *
+from renardo_lib.lib.Patterns import *
+# from renardo_lib.lib.Midi import *
 
-from .Root import Root
-from .Scale import Scale, ScaleType, ScalePattern
-from .Scale import midi, miditofreq, get_freq_and_midi
+from renardo_lib.lib.Root import Root
+from renardo_lib.lib.Scale import Scale, ScaleType, ScalePattern
+from renardo_lib.lib.Scale import midi, miditofreq, get_freq_and_midi
 
-from .Bang import Bang
+from renardo_lib.lib.Bang import Bang
 
-from .TimeVar import TimeVar, Pvar
+from renardo_lib.lib.TimeVar import TimeVar, Pvar
 
 class EmptyPlayer(object):
     """ Place holder for Player objects created at run-time to reduce load time.

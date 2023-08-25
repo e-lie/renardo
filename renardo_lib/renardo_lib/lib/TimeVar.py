@@ -5,12 +5,13 @@ TODO: using __call__ -> go through getattribute and check instead of already hav
 
 """
 
-from .Patterns import *
-from .Utils  import *
-from .Patterns.Operations import *
-from .Constants import inf 
-
 from time import time
+import math
+
+from renardo_lib.lib.Patterns import *
+from renardo_lib.lib.Utils  import *
+from renardo_lib.lib.Patterns.Operations import *
+from renardo_lib.lib.Constants import inf 
 
 def fetch(func):
     """ Function to wrap basic lambda operators for TimeVars  """
@@ -501,7 +502,6 @@ class expvar(linvar):
         self.proportion *= self.proportion
         return (self.current_value * (1-self.proportion)) + (self.next_value * self.proportion)
 
-import math
 
 class sinvar(linvar):
     def get_timevar_value(self):

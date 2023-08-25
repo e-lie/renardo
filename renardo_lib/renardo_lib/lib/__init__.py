@@ -3,24 +3,24 @@ with open((os.path.join(os.path.dirname(__file__), ".version")), "r") as f:
     __version__ = f.readline().strip()
 
 import logging
-from .Code import *
+from renardo_lib.lib.Code import *
 
 FoxDotCode.namespace = globals()
 
-from .TempoClock import *
-from .Buffers import *
-from .Players import *
-from .Patterns import *
-from .Effects import *
-from .TimeVar import *
-from .Constants import *
-from .Midi import *
-from .Settings import *
-from .SCLang._SynthDefs import *
-from .ServerManager import *
-from .SCLang import SynthDefs, Env, SynthDef, CompiledSynthDef
-from .Root import Root
-from .Scale import Scale, Tuning
+from renardo_lib.lib.TempoClock import *
+from renardo_lib.lib.Buffers import *
+from renardo_lib.lib.Players import *
+from renardo_lib.lib.Patterns import *
+from renardo_lib.lib.Effects import *
+from renardo_lib.lib.TimeVar import *
+from renardo_lib.lib.Constants import *
+from renardo_lib.lib.Midi import *
+from renardo_lib.lib.Settings import *
+from renardo_lib.lib.SCLang._SynthDefs import *
+from renardo_lib.lib.ServerManager import *
+from renardo_lib.lib.SCLang import SynthDefs, Env, SynthDef, CompiledSynthDef
+from renardo_lib.lib.Root import Root
+from renardo_lib.lib.Scale import Scale, Tuning
 
 # stdlib imports
 
