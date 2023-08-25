@@ -3,6 +3,8 @@ __pycache__/
 venv
 *.pyc
 *.egg-info
+build
+dist
 
 myTests/*
 renardo/lib/debug/*
