@@ -3,18 +3,7 @@ import sys
 
 # Anything that needs to be updated
 
-PY_VERSION = sys.version_info[0]
-
-# Any Py2to3
-
-if PY_VERSION == 2:
-
-    range = xrange
-    input = raw_input
-
-else:
-
-    from importlib import reload
+from importlib import reload
 
 # Check for OS -> mac, linux, win
 
@@ -58,7 +47,7 @@ SCLANG_EXEC   = 'sclang.exe' if SYSTEM == WINDOWS else 'sclang'
 SYNTHDEF_DIR  = os.path.realpath(FOXDOT_ROOT + "/osc/scsyndef/")
 EFFECTS_DIR   = os.path.realpath(FOXDOT_ROOT + "/osc/sceffects/")
 ENVELOPE_DIR  = os.path.realpath(FOXDOT_ROOT + "/osc/scenvelopes/")
-TUTORIAL_DIR  = os.path.realpath(FOXDOT_ROOT + "/demo/")
+TUTORIAL_DIR  = os.path.realpath(FOXDOT_ROOT + "/../docs/demo/")
 RECORDING_DIR = os.path.realpath(FOXDOT_ROOT + "/rec/")
 
 FOXDOT_OSC_FUNC     = os.path.realpath(FOXDOT_ROOT + "/osc/OSCFunc.scd")

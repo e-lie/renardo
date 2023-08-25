@@ -46,12 +46,6 @@ players='#ec4e20'
 # Loading from file
 # ------------------
 
-PY_VERSION = sys.version_info[0]
-
-if PY_VERSION == 2:
-
-    FileNotFoundError = IOError
-
 filename = os.path.join(os.path.dirname(__file__), "conf.txt")
 
 try:

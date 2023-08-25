@@ -40,7 +40,7 @@ from .Settings import (
     FOXDOT_HELLO, SC3_PLUGINS, FOXDOT_CONFIG_FILE,
     ALPHA_VALUE, USE_ALPHA, FOXDOT_TEMP_FILE,
     MENU_ON_STARTUP, TRANSPARENT_ON_STARTUP, RECOVER_WORK,
-    CHECK_FOR_UPDATE, PY_VERSION
+    CHECK_FOR_UPDATE
 )
 from renardo_lib.lib.Code import execute
 from renardo_lib.lib.ServerManager import TempoServer
@@ -720,10 +720,7 @@ class workspace:
 
     def loadfile(self, path):
         try:
-            if PY_VERSION == 2:
-                f = open(path)
-            else:
-                f = open(path, encoding="utf8")
+            f = open(path, encoding="utf8")
         except Exception as e:
             return print("{} error occurred when loading file:\n    - '{}'".format(e.__class__.__name__, path))
         self.set_all(f.read())
