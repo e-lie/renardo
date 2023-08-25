@@ -1,4 +1,4 @@
-from renardo_lib.lib.Custom.SonicPi import GenerateSonicPiData
+from renardo_lib.lib.Extensions.SonicPi import GenerateSonicPiData
 
 if __name__ == '__main__':
     import sys

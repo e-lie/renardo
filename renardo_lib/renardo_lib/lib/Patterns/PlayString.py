@@ -1,5 +1,3 @@
-import re
-from random import shuffle, choice
 
 re_nests  = r"\((.*?)\)"
 re_square = r"\[.*?\]"

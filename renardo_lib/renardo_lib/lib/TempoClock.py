@@ -46,10 +46,9 @@
 
 """
 
-from types import FunctionType, MethodType
+from types import MethodType
 
 import time
-from fractions import Fraction
 from traceback import format_exc as error_stack
 
 import sys
@@ -63,7 +62,7 @@ from renardo_lib.lib.TimeVar import TimeVar
 from renardo_lib.lib.Midi import MidiIn, MIDIDeviceNotFound
 from renardo_lib.lib.Utils import modi
 from renardo_lib.lib.ServerManager import TempoClient, ServerManager, RequestTimeout
-from renardo_lib.lib.Settings import CPU_USAGE, CLOCK_LATENCY
+from renardo_lib.lib.Settings import CPU_USAGE
 
 
 class TempoClock(object):
@@ -696,7 +695,7 @@ class TempoClock(object):
         return Wrapper(self, obj, dur, args)
 
     def players(self, ex=[]):
-        return [p for p in self.playing if p not in exclude]
+        return [p for p in self.playing if p not in ex]
 
     # Every n beats, do...
 

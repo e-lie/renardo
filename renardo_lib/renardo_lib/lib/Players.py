@@ -122,32 +122,20 @@
 
 """
 
-import itertools
-from functools import partial
-
-from os.path import dirname
-from random import shuffle, choice
 from copy import copy, deepcopy
 
 from renardo_lib.lib.Settings import SamplePlayer, LoopPlayer
-from renardo_lib.lib.Code import WarningMsg, debug_stdout
 from renardo_lib.lib.SCLang.SynthDef import SynthDefProxy, SynthDef, SynthDefs
 from renardo_lib.lib.Effects import FxList
-from renardo_lib.lib.Utils import stdout
 from renardo_lib.lib.Buffers import Samples
-
-from renardo_lib.lib.Key import *
-from renardo_lib.lib.Repeat import *
+from renardo_lib.lib.Key import PlayerKey, NumberKey
+#from renardo_lib.lib.Repeat import
 from renardo_lib.lib.Patterns import *
-# from renardo_lib.lib.Midi import *
-
 from renardo_lib.lib.Root import Root
-from renardo_lib.lib.Scale import Scale, ScaleType, ScalePattern
-from renardo_lib.lib.Scale import midi, miditofreq, get_freq_and_midi
-
+from renardo_lib.lib.Scale import Scale, get_freq_and_midi
 from renardo_lib.lib.Bang import Bang
-
-from renardo_lib.lib.TimeVar import TimeVar, Pvar
+from renardo_lib.lib.TimeVar import TimeVar, mapvar
+from renardo_lib.lib.Code import WarningMsg
 
 class EmptyPlayer(object):
     """ Place holder for Player objects created at run-time to reduce load time.
@@ -1148,7 +1136,7 @@ class Player(Repeatable):
         # key is the value of player key, attr is 
         for key, minimap in mapping.items():
             for attr, value in minimap.items():
-                setattr(self, attr, mapvar(getattr(other, attr), values))
+                setattr(self, attr, mapvar(getattr(other, attr), value))
         return self
 
     

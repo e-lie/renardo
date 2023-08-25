@@ -1,4 +1,4 @@
-from midiutil import MIDIFile
+from midiutil import MIDIFile # dependency to add to installer
 
 def createMidi(midi_file, composition):
     print("Composition:")

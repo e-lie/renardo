@@ -3,10 +3,12 @@ Contains classes `Pattern` and `PGroup` and the base class for `GeneratorPattern
 """
 
 from random import choice, shuffle
-from copy import deepcopy
-
-from renardo_lib.lib.Patterns.Operations import *
-from renardo_lib.lib.Utils import *
+from renardo_lib.lib.Patterns.Operations import (
+    PAdd, PSub2, PMul, PDiv, PDiv2, PFloor, PSub, PFloor2, PMod,
+    PPow, PMod2, PPow2, PEq, Div, rDiv, Add, Sub, rSub, Mul, Mod,
+    rMod, Nil, PNe
+)
+from renardo_lib.lib.Utils import LCM, dots, modi
 
 import functools
 import inspect

@@ -1,11 +1,6 @@
 """ Module for converting handling MIDI in/out and functions relating to MIDI pitch calculation. """
 
 
-import time
-
-from renardo_lib.lib.Patterns import asStream
-from renardo_lib.lib.Scale    import ScalePattern
-from renardo_lib.lib.TimeVar  import TimeVar
 from renardo_lib.lib.SCLang import SynthDefProxy
 
 try:

@@ -1,6 +1,6 @@
 import inspect
 
-from renardo_lib.lib.SCLang.SCLang import *
+from renardo_lib.lib.SCLang.SCLang import cls, instance, Vibrato, RHPF
 
 # To be moved to SCLang later
 

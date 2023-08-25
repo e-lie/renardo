@@ -1,4 +1,4 @@
-from renardo_lib.lib.Extensions.MidiFactory import createMidi
+from renardo_lib.lib.Extensions.VRender.MidiFactory import createMidi
 import os
 from math import ceil
 

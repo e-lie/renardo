@@ -1,4 +1,5 @@
-from renardo_lib.lib.Patterns.Sequences import *
+from renardo_lib.lib.Patterns.Main import Pattern, asStream, PGroup
+from renardo_lib.lib.Patterns.Sequences import PDur
 
 # Other useful functions that don't return a single pattern
 

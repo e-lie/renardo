@@ -1,4 +1,4 @@
-from renardo_lib.lib.Utils import *
+from renardo_lib.lib.Utils import LCM
 import itertools
 
 """

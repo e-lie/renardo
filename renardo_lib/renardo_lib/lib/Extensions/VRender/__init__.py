@@ -1,4 +1,4 @@
-from renardo_lib.lib.Extensions.VRender import renderizeVoice
+from renardo_lib.lib.Extensions.VRender.VRender import renderizeVoice
 from renardo_lib.lib.SCLang import SynthDef
 from renardo_lib.lib import Clock, Scale, Root
 from renardo_lib.lib.Settings import FOXDOT_ROOT

@@ -1,9 +1,10 @@
 from random import choice as choose
+from random import random, randint
+import re
 
 if __name__ != "__main__":
 
     from renardo_lib.lib.SCLang   import SynthDef, SynthDefs
-    from renardo_lib.lib.Players  import Player
     from renardo_lib.lib.Patterns import Sequences
     from renardo_lib.lib.Patterns.Sequences import *
 
@@ -22,8 +23,6 @@ if __name__ != "__main__":
 
 # Grammar
 
-from random import random, randint
-import re
 
 re_player=r"\w+"
 re_synthdef=r"\w+"

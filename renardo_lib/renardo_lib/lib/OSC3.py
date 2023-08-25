@@ -157,19 +157,15 @@ Original Comments
 >     Added a generic callback handler.
 >     - dwh
 """
-import math, re, socket, select, string, struct, sys, threading, time, types, array, errno, inspect
+import math, re, socket, select, string, struct, sys, threading, time, types, array, errno
 
-if sys.version_info[0] > 2:
-        long = int
-        from socketserver import UDPServer, DatagramRequestHandler, ThreadingMixIn, StreamRequestHandler, TCPServer
-        try:
-                from socketserver import ForkingMixIn
-        except ImportError:
-                ForkingMixIn = ThreadingMixIn
-else:
-        from SocketServer import UDPServer, DatagramRequestHandler, ForkingMixIn, ThreadingMixIn, StreamRequestHandler, TCPServer
+from socketserver import UDPServer, DatagramRequestHandler, ThreadingMixIn, StreamRequestHandler, TCPServer
+try:
+        from socketserver import ForkingMixIn
+except ImportError:
+        ForkingMixIn = ThreadingMixIn
 
-from contextlib import closing
+long = int
 
 global version
 version = ("0.3","6", "$Rev: 6382 $"[6:-2])

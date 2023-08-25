@@ -7,16 +7,9 @@
 
 import sys
 import json
-import itertools
 from socket import timeout as socket_timeout
-
-try:
-    from urllib.request import urlopen
-    from urllib.error import URLError
-except ImportError:
-    from urllib2 import urlopen, URLError
-
-# Functions
+from urllib.request import urlopen
+from urllib.error import URLError
 
 def get_pypi_version():
     """ Returns the most up-to-date version number on PyPI. Return None on error """

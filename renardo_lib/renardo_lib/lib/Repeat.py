@@ -3,7 +3,7 @@ import inspect
 from renardo_lib.lib.Code import WarningMsg
 from renardo_lib.lib.Patterns import Pattern, Cycle, asStream
 from renardo_lib.lib.Utils import modi
-from renardo_lib.lib.TimeVar import var, Pvar
+from renardo_lib.lib.TimeVar import var
 
 class MethodList:
     """ Class for holding information about the order of which methods have been

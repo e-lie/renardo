@@ -1,4 +1,3 @@
-import sys
 import urllib
 
 from functools import reduce

@@ -171,16 +171,16 @@ class PGroupXor(metaPGroupPrime):
         return delay
 
 
-#class PGroupAnd(PGroupPrime):
-#    """ Unused """
-#    bracket_style="&()"
-#    delay = 0
-#    def __init__(self, args):
-#        PGroupPrime.__init__(self, args[0])
-#        if len(args) > 0:
-#            self.delay = args[1]
-#    def calculate_step(self, i, dur):
-#        return i * self.delay
+class PGroupAnd(PGroupPrime):
+    """ Unused """
+    bracket_style="&()"
+    delay = 0
+    def __init__(self, args):
+        PGroupPrime.__init__(self, args[0])
+        if len(args) > 0:
+            self.delay = args[1]
+    def calculate_step(self, i, dur):
+        return i * self.delay
 
 # Define any pattern methods that use PGroupPrimes
 

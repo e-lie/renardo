@@ -1,6 +1,4 @@
 # -*- coding: latin-1 -*-
-import math
-import sys
 
 def generateVoiceSpecification(lyrics,tempo,inputMusicXMLPath,outputMusicXMLPath):
 	with open(inputMusicXMLPath, 'r') as c:

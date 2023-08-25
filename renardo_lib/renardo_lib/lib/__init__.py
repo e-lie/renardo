@@ -22,12 +22,6 @@ from renardo_lib.lib.SCLang import SynthDefs, Env, SynthDef, CompiledSynthDef
 from renardo_lib.lib.Root import Root
 from renardo_lib.lib.Scale import Scale, Tuning
 
-# stdlib imports
-
-from random import choice as choose
-
-# Define any custom functions
-
 @PatternMethod
 def __getitem__(self, key):
     """ Overrides the Pattern.__getitem__ to allow indexing

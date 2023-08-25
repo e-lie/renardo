@@ -7,12 +7,7 @@ from renardo_lib.lib.Scale import freqtomidi
 from renardo_lib.lib.SCLang import CompiledSynthDef
 from renardo_lib.lib.Settings import SYNTHDEF_DIR
 
-
-try:
-    from urllib import urlretrieve
-except ImportError:
-    # Python 3
-    from urllib.request import urlretrieve
+from urllib.request import urlretrieve
 
 
 HERE = os.path.dirname(__file__)

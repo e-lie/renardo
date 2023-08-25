@@ -1,5 +1,4 @@
 """ Utilities related to logging """
-import inspect
 import functools
 import logging
 import time
