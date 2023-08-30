@@ -27,7 +27,7 @@ def launch(args):
 
     if args.boot:
         boot_supercollider()
-        time.sleep(5)
+        time.sleep(15)
 
     from renardo_lib.lib import FoxDotCode, handle_stdin
     if args.pipe:

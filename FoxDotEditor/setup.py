@@ -7,7 +7,7 @@ with open("README.md", "r") as f:
 
 setup(
     name='FoxDotEditor',
-    version="0.1.0dev3",
+    version="0.9.0",
     description='Original FoxDot editor extracted from FoxDot Project - Live coding music with SuperCollider',
     author='Elie Gavoty',
     author_email='eliegavoty@free.fr',

@@ -7,7 +7,7 @@ with open("README.md", "r") as f:
 
 setup(
     name='renardo',
-    version="0.1dev3",
+    version="0.9.0",
     description='Launcher/config editor for Renardo -- experimental fork of FoxDot as modular library',
     author='Elie Gavoty',
     author_email='eliegavoty@free.fr',
