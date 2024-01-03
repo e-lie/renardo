@@ -21,5 +21,12 @@ setup(
     # entry_points={'gui_scripts' : ['FoxDotEditor = FoxDotEditor.__init__:main']},
     # data_files=[('', 'LICENSE')],
     # package_data = {'FoxDotEditor': ['README.md','img/*','tmp/*'],},
-    install_requires=['renardo'],
+    install_requires=[
+        'renardo',
+        'renardo_lib',
+        'FoxDotEditor',
+        'psutil',
+        'textual',
+        'FoxDotEditor'
+    ], # TODO create a renardo_sample_manager python script that download sample collections
 )
