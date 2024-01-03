@@ -29,4 +29,9 @@ setup(
         'textual',
         'FoxDotEditor'
     ], # TODO create a renardo_sample_manager python script that download sample collections
+    entry_points={
+        'console_scripts': [
+            'hello-world = timmins:hello_world',
+        ]
+    }
 )
