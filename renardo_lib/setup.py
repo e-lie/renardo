@@ -33,5 +33,5 @@ setup(
     # entry_points={'gui_scripts' : ['FoxDotEditor = FoxDotEditor.__init__:main']},
     # data_files=[('', 'LICENSE')],
     package_data = {'renardo_lib': ['README.md','demo/**', 'osc/**'],},
-    # install_requires=['renardo'],
+    install_requires=['renardo_samples_manager'],
 )
