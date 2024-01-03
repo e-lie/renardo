@@ -1,6 +1,15 @@
 import argparse
 from renardo import launch
 
+
+
+
+# TODO remove this main ? 
+# main is to call the module with python -m but we want to make a pypi package application with entry_point
+# More here : https://setuptools.pypa.io/en/latest/userguide/entry_point.html
+
+
+
 parser = argparse.ArgumentParser(
     prog="renardo", 
     description="Live coding with Python and SuperCollider", 
