@@ -1,7 +1,8 @@
 import os.path
-
 import logging
+
 from renardo_lib.lib.Code import *
+from renardo_samples_manager import renardo_samples_initialized, download_samples_pack
 
 FoxDotCode.namespace = globals()
 
@@ -203,6 +204,9 @@ FoxDot = _util()
 # Create a clock and define functions
 
 _ = None
+
+if not renardo_samples_initialized():
+    download_samples_pack(samples_pack_name='foxdot_default')
 
 logging.basicConfig(level=logging.ERROR)
 when.set_namespace(FoxDotCode) # experimental

@@ -4,6 +4,7 @@ import sys
 # Anything that needs to be updated
 
 from importlib import reload
+from renardo_samples_manager import SAMPLES_FOLDER_PATH
 
 # Check for OS -> mac, linux, win
 
@@ -40,8 +41,9 @@ FOXDOT_ICON  = os.path.realpath(FOXDOT_ROOT + "/lib/Workspace/img/icon.ico")
 FOXDOT_ICON_GIF = os.path.realpath(FOXDOT_ROOT + "/lib/Workspace/img/icon.gif")
 FOXDOT_HELLO = os.path.realpath(FOXDOT_ROOT + "/lib/Workspace/img/hello.txt")
 FOXDOT_STARTUP_PATH = os.path.realpath(FOXDOT_ROOT + "/lib/Custom/startup.py")
-FOXDOT_SND   = os.path.realpath(FOXDOT_ROOT + "/../../renardo_samples/")
-FOXDOT_LOOP  = os.path.realpath(FOXDOT_ROOT + "/../../renardo_samples/_loop_/")
+FOXDOT_SND = SAMPLES_FOLDER_PATH / 'foxdot_default'
+FOXDOT_LOOP = SAMPLES_FOLDER_PATH / 'foxdot_default/_loop_'
+# FOXDOT_LOOP  = os.path.realpath(FOXDOT_ROOT + "/../../renardo_samples/_loop_/")
 
 SCLANG_EXEC   = 'sclang.exe' if SYSTEM == WINDOWS else 'sclang'
 SYNTHDEF_DIR  = os.path.realpath(FOXDOT_ROOT + "/osc/scsyndef/")

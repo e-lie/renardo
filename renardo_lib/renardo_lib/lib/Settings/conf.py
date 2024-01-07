@@ -1,4 +1,5 @@
 import os.path
+from renardo_samples_manager import SAMPLES_FOLDER_PATH
 
 # Settings
 # ------------------
@@ -11,7 +12,7 @@ BOOT_ON_STARTUP=False
 CHECK_FOR_UPDATE=True
 SC3_PLUGINS=False
 MAX_CHANNELS=2
-SAMPLES_DIR=""
+SAMPLES_DIR=SAMPLES_FOLDER_PATH
 GET_SC_INFO=True
 USE_ALPHA=True
 ALPHA_VALUE=0.8
