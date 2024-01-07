@@ -6,7 +6,7 @@ from setuptools import setup
 #     long_description=f.read()
 
 setup(
-    name='renardo_samples_manager',
+    name='renardo_gatherer',
     version="0.1.0",
     description='Samples manager for Renardo Python livecoding environment',
     author='Elie Gavoty',
@@ -14,7 +14,7 @@ setup(
     license='cc-by-sa-4.0',
     url='http://renardo.org/',
     packages=[
-        'renardo_samples_manager',
+        'renardo_gatherer',
     ],
     # long_description=long_description,
     # long_description_content_type="text/markdown",
@@ -24,7 +24,7 @@ setup(
     install_requires=['requests', 'beautifulsoup4'],
     entry_points={
         'console_scripts': [
-            'renardo_samples_manager = renardo_samples_manager:main',
+            'renardo_gatherer = renardo_gatherer:main',
         ]
     }
 )
