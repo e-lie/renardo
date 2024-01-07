@@ -7,7 +7,7 @@ with open("README.md", "r") as f:
 
 setup(
     name='renardo_lib',
-    version="0.9.1.dev1",
+    version="0.9.1.dev2",
     description='Python livecoding environment - New fork of FoxDot',
     author='Elie Gavoty',
     author_email='eliegavoty@free.fr',
@@ -33,5 +33,7 @@ setup(
     # entry_points={'gui_scripts' : ['FoxDotEditor = FoxDotEditor.__init__:main']},
     # data_files=[('', 'LICENSE')],
     package_data = {'renardo_lib': ['README.md','demo/**', 'osc/**'],},
-    install_requires=['renardo_gatherer==0.1.0.dev1'],
+    install_requires=[
+        'renardo_gatherer>=0.1.0.dev1'
+    ],
 )
