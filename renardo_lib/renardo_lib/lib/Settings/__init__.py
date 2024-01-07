@@ -4,7 +4,7 @@ import sys
 # Anything that needs to be updated
 
 from importlib import reload
-from renardo_samples_manager import SAMPLES_FOLDER_PATH
+from renardo_gatherer import SAMPLES_FOLDER_PATH
 
 # Check for OS -> mac, linux, win
 

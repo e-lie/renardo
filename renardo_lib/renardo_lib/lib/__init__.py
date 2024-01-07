@@ -2,7 +2,7 @@ import os.path
 import logging
 
 from renardo_lib.lib.Code import *
-from renardo_samples_manager import renardo_samples_initialized, download_samples_pack
+from renardo_gatherer import renardo_samples_initialized, download_samples_pack
 
 FoxDotCode.namespace = globals()
 
