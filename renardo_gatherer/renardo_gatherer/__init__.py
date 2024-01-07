@@ -92,9 +92,5 @@ def find_audio_links_recursive(base_url, directory_links, audiofile_links, curre
                 audiofile_links.append(current_path + link['href'])
 
 def main():
-    # create_renardo_config_directory()
-    # download_file(url="https://github.com/Qirky/FoxDot/raw/master/FoxDot/snd/a/lower/gb_hihat%200.wav")
-    download_samples_pack()
-
-if __name__ == '__main__':
-    main()
+    pass
+    #download_samples_pack()

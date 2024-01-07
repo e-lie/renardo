@@ -42,7 +42,7 @@ FOXDOT_ICON_GIF = os.path.realpath(FOXDOT_ROOT + "/lib/Workspace/img/icon.gif")
 FOXDOT_HELLO = os.path.realpath(FOXDOT_ROOT + "/lib/Workspace/img/hello.txt")
 FOXDOT_STARTUP_PATH = os.path.realpath(FOXDOT_ROOT + "/lib/Custom/startup.py")
 FOXDOT_SND = SAMPLES_FOLDER_PATH / 'foxdot_default'
-FOXDOT_LOOP = SAMPLES_FOLDER_PATH / 'foxdot_default/_loop_'
+FOXDOT_LOOP = SAMPLES_FOLDER_PATH / 'foxdot_default' / '_loop_'
 # FOXDOT_LOOP  = os.path.realpath(FOXDOT_ROOT + "/../../renardo_samples/_loop_/")
 
 SCLANG_EXEC   = 'sclang.exe' if SYSTEM == WINDOWS else 'sclang'

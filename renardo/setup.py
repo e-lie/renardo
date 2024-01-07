@@ -7,7 +7,7 @@ with open("README.md", "r") as f:
 
 setup(
     name='renardo',
-    version="0.9.0",
+    version="0.9.1.dev2",
     description='Launcher/config editor for Renardo -- experimental fork of FoxDot as modular library',
     author='Elie Gavoty',
     author_email='eliegavoty@free.fr',
@@ -22,11 +22,10 @@ setup(
     # data_files=[('', 'LICENSE')],
     # package_data = {'FoxDotEditor': ['README.md','img/*','tmp/*'],},
     install_requires=[
-        'renardo',
-        'renardo-lib',
-        'FoxDotEditor',
+        'renardo-lib==0.9.1.dev1',
+        'FoxDotEditor==0.9.1.dev2',
         'psutil',
-        'textual',
+        # 'textual',
         'FoxDotEditor'
     ], # TODO create a renardo_sample_manager python script that download sample collections
     entry_points={

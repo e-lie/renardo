@@ -2,13 +2,14 @@
 
 from setuptools import setup
 
-# with open("README.md", "r") as f:
-#     long_description=f.read()
-
 setup(
     name='renardo_gatherer',
-    version="0.1.0",
-    description='Samples manager for Renardo Python livecoding environment',
+    version="0.1.0dev1",
+    description='Asset collector for Renardo Python livecoding environment',
+    long_description="""
+    Asset collector (samples packs, synthdefs, etc) for Renardo Python livecoding environment
+    """,
+    long_description_content_type="text/markdown",
     author='Elie Gavoty',
     author_email='eliegavoty@free.fr',
     license='cc-by-sa-4.0',
@@ -16,12 +17,10 @@ setup(
     packages=[
         'renardo_gatherer',
     ],
-    # long_description=long_description,
-    # long_description_content_type="text/markdown",
-    # entry_points={'gui_scripts' : ['FoxDotEditor = FoxDotEditor.__init__:main']},
-    # data_files=[('', 'LICENSE')],
-    # package_data = {'renardo_lib': ['README.md','demo/**', 'osc/**'],},
-    install_requires=['requests', 'beautifulsoup4'],
+    install_requires=[
+        'requests',
+        'beautifulsoup4',
+    ],
     entry_points={
         'console_scripts': [
             'renardo_gatherer = renardo_gatherer:main',
