@@ -6,6 +6,9 @@ from renardo_gatherer import renardo_samples_initialized, download_samples_pack
 
 FoxDotCode.namespace = globals()
 
+if not renardo_samples_initialized():
+    download_samples_pack(samples_pack_name='foxdot_default')
+
 from renardo_lib.lib.TempoClock import *
 from renardo_lib.lib.Buffers import *
 from renardo_lib.lib.Players import *
@@ -204,9 +207,6 @@ FoxDot = _util()
 # Create a clock and define functions
 
 _ = None
-
-if not renardo_samples_initialized():
-    download_samples_pack(samples_pack_name='foxdot_default')
 
 logging.basicConfig(level=logging.ERROR)
 when.set_namespace(FoxDotCode) # experimental
