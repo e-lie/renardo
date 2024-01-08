@@ -16,13 +16,13 @@ SAMPLES_FOLDER_PATH = None
 # on MacOS /Users/<username>/Library/Application Support/renardo
 if platform == "linux" or platform == "linux2" :
     home_path = pathlib.Path.home()
-    SAMPLES_FOLDER_PATH = home_path /'.config'/'renardo'/'samples'
+    SAMPLES_FOLDER_PATH = home_path / '.config' / 'renardo' / 'samples'
 elif platform == "darwin":
     home_path = pathlib.Path.home()
-    SAMPLES_FOLDER_PATH = home_path / 'Library' / 'Application Support' / 'renardo'/'samples'
+    SAMPLES_FOLDER_PATH = home_path / 'Library' / 'Application Support' / 'renardo' / 'samples'
 elif platform == "win32":
-    appdata_roaming_path = os.getenv('APPDATA')
-    SAMPLES_FOLDER_PATH = appdata_roaming_path / 'renardo'/'samples'
+    appdata_roaming_path = pathlib.Path(os.getenv('APPDATA'))
+    SAMPLES_FOLDER_PATH = appdata_roaming_path / 'renardo' / 'samples'
 
 def download_samples_pack(samples_pack_name="foxdot_default"):
     base_url = f"https://samples.renardo.org/{samples_pack_name}/"
