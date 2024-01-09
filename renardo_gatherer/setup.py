@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='renardo_gatherer',
-    version="0.1.0dev1",
+    version="0.1.0dev2",
     description='Asset collector for Renardo Python livecoding environment',
     long_description="""
     Asset collector (samples packs, synthdefs, etc) for Renardo Python livecoding environment
