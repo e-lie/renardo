@@ -7,4 +7,4 @@
 - Livecoding with Python, SuperCollider, Reaper
 - FoxDot fork with a lot of new features
 
-[Installation](/installation.mdhttps://renardo.org/#/installation)
+[Installation](https://renardo.org/#/installation)
