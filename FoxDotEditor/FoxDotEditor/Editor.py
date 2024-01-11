@@ -54,12 +54,12 @@ class workspace:
 
     def __init__(self, CodeClass):
 
-        # Configure FoxDot's namespace to include the editor
+        # Configure Renardo's namespace to include the editor
 
         CodeClass.namespace['GUI'] = self
         CodeClass.namespace['Player'].widget = self
 
-        self.version = this_version = '0.9.0' 
+        self.version = this_version = '0.9.1' 
 
         pypi_version = get_pypi_version()
 
@@ -67,7 +67,7 @@ class workspace:
 
             # if pypi_version is not None and VersionNumber(pypi_version) > VersionNumber(this_version):
 
-                # tkMessageBox.showinfo("New version available", "There is a new version of FoxDot available from PyPI. Upgrade by going to your command prompt and running:\n\npip install FoxDot --upgrade")
+                # tkMessageBox.showinfo("New version available", "There is a new version of Renardo available from PyPI. Upgrade by going to your command prompt and running:\n\npip install Renardo --upgrade")
 
             return
 
@@ -77,7 +77,7 @@ class workspace:
 
         # Set up master widget
 
-        self.root = Tk(className='FoxDot')
+        self.root = Tk(className='Renardo')
         self.set_window_title()
 
         self.root.rowconfigure(0, weight=1) # Text box
@@ -358,7 +358,7 @@ class workspace:
             # print(hello)
             # print()
 
-            hello = "Welcome to FoxDot! Press {}+{} for help.".format(ctrl, self.help_key)
+            hello = "Welcome to Renardo! Press {}+{} for help.".format(ctrl, self.help_key)
             print(hello)
             print("-" * len(hello))
 
@@ -378,7 +378,7 @@ class workspace:
 
             if len(text):
 
-                loading = tkMessageBox.askyesno("Load unsaved work?", "Your code wasn't saved last time you used FoxDot, do you want to load any unsaved work?")
+                loading = tkMessageBox.askyesno("Load unsaved work?", "Your code wasn't saved last time you used Renardo, do you want to load any unsaved work?")
 
                 self.root.update()
 
@@ -412,7 +412,7 @@ class workspace:
             self.root.after(100, self.toggle_transparency)
 
     def set_window_title(self, text="Live Coding with Python and SuperCollider"):
-            return self.root.title("FoxDot v{} - {}".format(self.version, text))
+            return self.root.title("Renardo v{} - {}".format(self.version, text))
 
     def run(self):
         """ Starts the Tk mainloop for the master widget """
@@ -640,7 +640,7 @@ class workspace:
         else:
             ctrl = "Ctrl"
 
-        print("FoxDot Help:")
+        print("Renardo Help:")
         print("-----------------------------------------")
         print("{}+Return           : Execute code".format(ctrl))
         print("{}+.                : Stop all sound".format(ctrl))
@@ -798,7 +798,7 @@ class workspace:
                 else:
                     f.write(line)
         # Pop-up to tell the user a restart is required
-        tkMessageBox.showwarning(title="Just a heads up", message="Restart of FoxDot is required for the changes to take effect")
+        tkMessageBox.showwarning(title="Just a heads up", message="Restart of Renardo is required for the changes to take effect")
         return "break"
 
     def toggle_transparency(self, event=None):
@@ -1237,7 +1237,7 @@ class workspace:
 
 
     def submit(self, code_str):
-        """ Runs the chunk of code through FoxDot processing and execute """
+        """ Runs the chunk of code through Renardo processing and execute """
         try:
 
             execute( code_str )
@@ -1283,7 +1283,7 @@ class workspace:
 
     """
 
-        Methods that view the FoxDot namespace
+        Methods that view the Renardo namespace
         --------------------------------------
 
     """
@@ -1795,7 +1795,7 @@ class workspace:
         return
 
     def start_listening(self, **kwargs):
-        """ Manual starting of FoxDot tempo server """
+        """ Manual starting of Renardo tempo server """
         # TODO - take this out of the menu
         self.listening_for_connections.set(not self.listening_for_connections.get())
         self.allow_connections(**kwargs)

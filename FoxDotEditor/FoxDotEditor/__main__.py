@@ -13,13 +13,13 @@ from renardo_lib.lib import FoxDotCode, handle_stdin
 import argparse
 
 parser = argparse.ArgumentParser(
-    prog="FoxDot", 
+    prog="Renardo", 
     description="Live coding with Python and SuperCollider", 
-    epilog="More information: https://foxdot.org/")
+    epilog="More information: https://renardo.org/")
 
 parser.add_argument('-d', '--dir', action='store', help="use an alternate directory for looking up samples")
 parser.add_argument('-s', '--startup', action='store', help="use an alternate startup file")
-parser.add_argument('-S', '--simple', action='store_true', help="run FoxDot in simple (accessible) mode")
+parser.add_argument('-S', '--simple', action='store_true', help="run Renardo in simple (accessible) mode")
 parser.add_argument('-n', '--no-startup', action='store_true', help="does not load startup.py on boot")
 parser.add_argument('-b', '--boot', action='store_true', help="Boot SuperCollider from the command line")
 

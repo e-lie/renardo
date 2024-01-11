@@ -79,7 +79,7 @@ class MenuBar(Menu):
 
         helpmenu = Menu(self, tearoff=0)
         helpmenu.add_command(label="Display help message", comman=self.root.help, accelerator="{}+{}".format(ctrl, self.root.help_key))
-        helpmenu.add_command(label="Visit FoxDot Homepage", command=self.root.openhomepage)
+        helpmenu.add_command(label="Visit Renardo Homepage", command=self.root.openhomepage)
         helpmenu.add_command(label="Documentation",   command=self.root.opendocumentation)
         helpmenu.add_separator()
         cpu_menu=Menu(self, tearoff=0)
@@ -145,7 +145,7 @@ class MenuBar(Menu):
         return
 
     def start_listening(self, **kwargs):
-        """ Manual starting of FoxDot tempo server """
+        """ Manual starting of Renardo tempo server """
         # TODO - take this method out of the menu
         self.listening_for_connections.set(not self.listening_for_connections.get())
         self.allow_connections(**kwargs)

@@ -191,7 +191,7 @@ def allow_connections(valid = True, *args, **kwargs):
 
 class _util:
     def __repr__(self):
-        return "Renardo ver. 0.9.0"
+        return "Renardo ver. 0.9.1"
     def reload(self):
         Server.reset()
         SynthDefs.reload()
