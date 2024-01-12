@@ -23,7 +23,7 @@ from renardo_lib.Code import WarningMsg
 from renardo_lib.Logging import Timing
 from renardo_lib.SCLang import SampleSynthDef
 from renardo_lib.ServerManager import Server
-from renardo_lib.Settings import FOXDOT_SND, FOXDOT_LOOP, SAMPLES_DB
+from renardo_lib.Settings import FOXDOT_SND, FOXDOT_LOOP, SAMPLES_PACK_NUMBER
 
 
 alpha    = "abcdefghijklmnopqrstuvwxyz"
@@ -91,42 +91,33 @@ DESCRIPTIONS = { 'a' : "Gameboy hihat",      'A' : "Gameboy kick drum",
                  '3' : 'Vocals (Three)',
                  '4' : 'Vocals (Four)'}
 
-# Function-like class for searching directory for sample based on symbol
 
-class _symbolToDir:
-
-    def __init__(self, root, sdb):
-
-        self.set_root(root)
-
-    def set_root(self, root):
-        """ Check if root is a valid directory then points FoxDot to that
-            folder for searching for samples. Raises an OSError if 'root'
-            is not a valid directory """
-
-        if os.path.isdir(root):
-            self.root = os.path.realpath(root)
+class _get_sample_path_from_symbol:
+    '''Function-like (singleton pattern) class to search the directory for a sample
+    file based on input symbol'''
+    def __init__(self, samples_directory):
+        if os.path.isdir(samples_directory):
+            self.samples_directory = os.path.realpath(samples_directory)
         else:
-            raise OSError("{!r} is not a valid directory".format(root))
-        return
-
-    def __call__(self, symbol, sdb):
+            raise OSError("{!r} is not a valid directory".format(samples_directory))
+    def __call__(self, symbol, samples_pack_number):
         """ Return the sample search directory for a symbol """
+        samples_pack_dirname = ('foxdot_default' if str(samples_pack_number) == '0'
+                                else str(samples_pack_number))
         if symbol.isalpha():
             return join(
-                self.root,
-                str(sdb),
+                self.samples_directory,
+                samples_pack_dirname,
                 symbol.lower(),
                 'upper' if symbol.isupper() else 'lower'
             )
         elif symbol in nonalpha:
             longname = nonalpha[symbol]
-            return join(self.root, str(sdb), '_', longname)
+            return join(self.samples_directory, samples_pack_dirname, '_', longname)
         else:
             return None
 
-sdb = SAMPLES_DB
-symbolToDir = _symbolToDir(FOXDOT_SND, sdb) # singleton
+get_sample_path_from_symbol = _get_sample_path_from_symbol(FOXDOT_SND, SAMPLES_PACK_NUMBER) # singleton
 
 class Buffer(object):
     def __init__(self, fn, number, channels=1):
@@ -161,10 +152,10 @@ class BufferManager(object):
         self._nextbuf = 1
         self._buffers = [None for _ in range(self._max_buffers)]
         self._fn_to_buf = {}
-        self._paths = [join(FOXDOT_SND, str(SAMPLES_DB), FOXDOT_LOOP)] + list(paths)
+        self._paths = [join(FOXDOT_SND, str(SAMPLES_PACK_NUMBER), FOXDOT_LOOP)] + list(paths)
         self._ext = ['wav', 'wave', 'aif', 'aiff', 'flac']
 
-        self.loops = [fn.rsplit(".", 1)[0] for fn in os.listdir(join(FOXDOT_SND, str(SAMPLES_DB), FOXDOT_LOOP))]
+        self.loops = [fn.rsplit(".", 1)[0] for fn in os.listdir(join(FOXDOT_SND, str(SAMPLES_PACK_NUMBER), FOXDOT_LOOP))]
 
     def __str__(self):
         return "\n".join(["%r: %s" % (k, v) for k, v in sorted(DESCRIPTIONS.items())])
@@ -243,7 +234,7 @@ class BufferManager(object):
         """ Get buffer information from a symbol """
         if symbol.isspace():
             return nil
-        dirname = symbolToDir(symbol, sdb)
+        dirname = get_sample_path_from_symbol(symbol, sdb)
         if dirname is None:
             return nil
         samplepath = self._findSample(dirname, index)
@@ -445,7 +436,7 @@ class LoopSynthDef(SampleSynthDef):
         self.beat_stretch = self.new_attr_instance("beat_stretch")
         self.defaults['pos']   = 0
         self.defaults['sample']   = 0
-        self.defaults['sdb'] = SAMPLES_DB
+        self.defaults['sdb'] = SAMPLES_PACK_NUMBER
         self.defaults['beat_stretch'] = 0
         self.base.append("rate = (rate * (1-(beat_stretch>0))) + ((BufDur.kr(buf) / sus) * (beat_stretch>0));")
         self.base.append("osc = PlayBuf.ar(2, buf, BufRateScale.kr(buf) * rate, startPos: BufSampleRate.kr(buf) * pos, loop: 1.0);")
@@ -478,7 +469,7 @@ class GranularSynthDef(SampleSynthDef):
         self.sample = self.new_attr_instance("sample")
         self.defaults['pos']   = 0
         self.defaults['sample']   = 0
-        self.defaults['sdb'] = SAMPLES_DB
+        self.defaults['sdb'] = SAMPLES_PACK_NUMBER
         self.base.append("osc = PlayBuf.ar(2, buf, BufRateScale.kr(buf) * rate, startPos: BufSampleRate.kr(buf) * pos);")
         self.base.append("osc = osc * EnvGen.ar(Env([0,1,1,0],[0.05, sus-0.05, 0.05]));")
         self.osc = self.osc * self.amp

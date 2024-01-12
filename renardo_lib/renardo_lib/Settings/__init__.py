@@ -108,7 +108,7 @@ CPU_USAGE                 = conf.CPU_USAGE
 CLOCK_LATENCY             = conf.CLOCK_LATENCY
 FORWARD_ADDRESS           = conf.FORWARD_ADDRESS
 FORWARD_PORT              = conf.FORWARD_PORT
-SAMPLES_DB                = conf.SAMPLES_DB
+SAMPLES_PACK_NUMBER       = conf.SAMPLES_PACK_NUMBER
 
 if conf.SAMPLES_DIR is not None and conf.SAMPLES_DIR != "":
 
