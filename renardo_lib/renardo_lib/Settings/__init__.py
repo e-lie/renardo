@@ -36,7 +36,7 @@ elif sys.platform.startswith('linux'):
 # Directory informations
 
 USER_CWD     = os.path.realpath(".")
-FOXDOT_ROOT  = os.path.realpath(__file__ + "/../../../")
+FOXDOT_ROOT  = os.path.realpath(__file__ + "/../../")
 FOXDOT_ICON  = os.path.realpath(FOXDOT_ROOT + "/lib/Workspace/img/icon.ico")
 FOXDOT_ICON_GIF = os.path.realpath(FOXDOT_ROOT + "/lib/Workspace/img/icon.gif")
 FOXDOT_HELLO = os.path.realpath(FOXDOT_ROOT + "/lib/Workspace/img/hello.txt")
