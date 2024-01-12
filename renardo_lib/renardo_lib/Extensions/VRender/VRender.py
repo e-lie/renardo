@@ -14,7 +14,8 @@ def renderizeVoice(outputName,lyrics,notes,durations,tempo,scale,sex,foxdot_root
 	VOICE_XML_ORIGINAL=FILES_ROOT + "/last_voice.musicxml"
 	VOICE_XML_PROCESSED=FILES_ROOT+"/last_voice.xml"
 
-	WAVS_ROOT = os.path.realpath(foxdot_root + "/snd/_loop_/")
+	# WAVS_ROOT = os.path.realpath(foxdot_root + "/snd/_loop_/")
+	WAVS_ROOT = os.path.realpath(foxdot_root + "/snd/" + SAMPLES_DB + "/_loop_/")
 	LAST_VOICE_WAV = WAVS_ROOT + "/last_voice_generated.wav"
 
 
