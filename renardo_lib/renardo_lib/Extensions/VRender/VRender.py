@@ -1,8 +1,8 @@
 import os
 
-from renardo_lib.lib.Extensions.VRender.Composer import compose
-from renardo_lib.lib.Extensions.VRender.VoiceSpecificator import generateVoiceSpecification
-from renardo_lib.lib.Extensions.VRender.Sinsy import download
+from renardo_lib.Extensions.VRender.Composer import compose
+from renardo_lib.Extensions.VRender.VoiceSpecificator import generateVoiceSpecification
+from renardo_lib.Extensions.VRender.Sinsy import download
 
 
 def renderizeVoice(outputName,lyrics,notes,durations,tempo,scale,sex,foxdot_root):

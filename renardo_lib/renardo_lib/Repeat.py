@@ -1,9 +1,9 @@
 import inspect
 
-from renardo_lib.lib.Code import WarningMsg
-from renardo_lib.lib.Patterns import Pattern, Cycle, asStream
-from renardo_lib.lib.Utils import modi
-from renardo_lib.lib.TimeVar import var
+from renardo_lib.Code import WarningMsg
+from renardo_lib.Patterns import Pattern, Cycle, asStream
+from renardo_lib.Utils import modi
+from renardo_lib.TimeVar import var
 
 class MethodList:
     """ Class for holding information about the order of which methods have been

@@ -29,7 +29,7 @@ def launch(args):
         boot_supercollider()
         time.sleep(15)
 
-    from renardo_lib.lib import FoxDotCode, handle_stdin
+    from renardo_lib import FoxDotCode, handle_stdin
     if args.pipe:
         # Just take commands from the CLI
         handle_stdin()

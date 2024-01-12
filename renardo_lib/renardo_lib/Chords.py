@@ -1,4 +1,4 @@
-from renardo_lib.lib.Patterns import PGroup
+from renardo_lib.Patterns import PGroup
 
 I   = PGroup(0, 2, 4)
 II  = PGroup(1, 3, 5)

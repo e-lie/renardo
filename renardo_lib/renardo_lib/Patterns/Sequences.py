@@ -12,15 +12,15 @@ All patterns inherit from Base.Pattern. There are two types of pattern:
 import random
 import math
 
-from renardo_lib.lib.Patterns.Main import Pattern, asStream, loop_pattern_func
-from renardo_lib.lib.Patterns.PGroups import (
+from renardo_lib.Patterns.Main import Pattern, asStream, loop_pattern_func
+from renardo_lib.Patterns.PGroups import (
     PGroupAnd, GeneratorPattern, PGroup, PGroupStar,
     PGroupPow, PGroupXor, PGroupOr,
     PGroupPlus, PGroupDiv, modi
 )
-from renardo_lib.lib.Patterns.Operations import LCM
-from renardo_lib.lib.Patterns.Generators import PRand
-from renardo_lib.lib.Utils import sliceToRange, EuclidsAlgorithm, PulsesToDurations
+from renardo_lib.Patterns.Operations import LCM
+from renardo_lib.Patterns.Generators import PRand
+from renardo_lib.Utils import sliceToRange, EuclidsAlgorithm, PulsesToDurations
 
 MAX_SIZE = 2048
 

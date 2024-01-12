@@ -4,9 +4,9 @@ import re
 
 if __name__ != "__main__":
 
-    from renardo_lib.lib.SCLang   import SynthDef, SynthDefs
-    from renardo_lib.lib.Patterns import Sequences
-    from renardo_lib.lib.Patterns.Sequences import *
+    from renardo_lib.SCLang   import SynthDef, SynthDefs
+    from renardo_lib.Patterns import Sequences
+    from renardo_lib.Patterns.Sequences import *
 
     from types import FunctionType
 

@@ -1,4 +1,4 @@
-from renardo_lib.lib.SCLang.SCLang import instance, cls
+from renardo_lib.SCLang.SCLang import instance, cls
 
 class EnvGen(instance):
     value = "Env"

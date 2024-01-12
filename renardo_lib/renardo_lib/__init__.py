@@ -1,7 +1,7 @@
 import os.path
 import logging
 
-from renardo_lib.lib.Code import *
+from renardo_lib.Code import *
 from renardo_gatherer import renardo_samples_initialized, download_samples_pack
 
 FoxDotCode.namespace = globals()
@@ -9,20 +9,20 @@ FoxDotCode.namespace = globals()
 if not renardo_samples_initialized():
     download_samples_pack(samples_pack_name='foxdot_default')
 
-from renardo_lib.lib.TempoClock import *
-from renardo_lib.lib.Buffers import *
-from renardo_lib.lib.Players import *
-from renardo_lib.lib.Patterns import *
-from renardo_lib.lib.Effects import *
-from renardo_lib.lib.TimeVar import *
-from renardo_lib.lib.Constants import *
-from renardo_lib.lib.Midi import *
-from renardo_lib.lib.Settings import *
-from renardo_lib.lib.SCLang._SynthDefs import *
-from renardo_lib.lib.ServerManager import *
-from renardo_lib.lib.SCLang import SynthDefs, Env, SynthDef, CompiledSynthDef
-from renardo_lib.lib.Root import Root
-from renardo_lib.lib.Scale import Scale, Tuning
+from renardo_lib.TempoClock import *
+from renardo_lib.Buffers import *
+from renardo_lib.Players import *
+from renardo_lib.Patterns import *
+from renardo_lib.Effects import *
+from renardo_lib.TimeVar import *
+from renardo_lib.Constants import *
+from renardo_lib.Midi import *
+from renardo_lib.Settings import *
+from renardo_lib.SCLang._SynthDefs import *
+from renardo_lib.ServerManager import *
+from renardo_lib.SCLang import SynthDefs, Env, SynthDef, CompiledSynthDef
+from renardo_lib.Root import Root
+from renardo_lib.Scale import Scale, Tuning
 
 @PatternMethod
 def __getitem__(self, key):
@@ -144,8 +144,8 @@ def instantiate_player_objects():
 def _reload_synths():
     """ Resends all the synth / sample info to SuperCollider. Useful for times
         when starting FoxDot before running `FoxDot.start` in SuperCollider. """
-    from renardo_lib.lib import SCLang
-    from renardo_lib.lib import Effects
+    from renardo_lib import SCLang
+    from renardo_lib import Effects
     reload(SCLang._SynthDefs)
     reload(Effects)
     Samples._reset_buffers()

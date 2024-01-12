@@ -2,8 +2,8 @@ from FoxDotEditor.tkimport import Menu, BooleanVar, IntVar, DISABLED
 
 import os.path
 from functools import partial
-from renardo_lib.lib.Settings import *
-from renardo_lib.lib.Code import FoxDotCode
+from renardo_lib.Settings import *
+from renardo_lib.Code import FoxDotCode
 
 # Code menu
 

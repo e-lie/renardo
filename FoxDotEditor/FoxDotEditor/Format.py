@@ -2,8 +2,8 @@
 import re
 from os.path import abspath, join, dirname
 
-from renardo_lib.lib.Code import classes, functions, instances
-from renardo_lib.lib.Settings import *
+from renardo_lib.Code import classes, functions, instances
+from renardo_lib.Settings import *
 
 def path(fn):
     return abspath(join(dirname(__file__), fn))
@@ -164,8 +164,8 @@ def find_multiline(text):
 
 # Use our regex to read patterns.py and add all the functions to key_types
     
-from renardo_lib.lib.Patterns import Main, Sequences, Generators
-from renardo_lib.lib.SCLang import SCLang
+from renardo_lib.Patterns import Main, Sequences, Generators
+from renardo_lib.SCLang import SCLang
 
 foxdot_kw = [ "Clock","Group","Scale","Server","Root","Samples","var","Pvar",
               "Attributes", "PatternMethods", "PatternTypes", "now",

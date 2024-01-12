@@ -7,12 +7,12 @@
 
 import re
 
-from renardo_lib.lib.Patterns.PlayString import PlayString, ParseError
-from renardo_lib.lib.Patterns.Generators import PRand
-from renardo_lib.lib.Patterns.PGroups    import PGroupOr, PGroupPlus
-from renardo_lib.lib.Patterns.Main       import Pattern, metaPattern, PatternMethod, PGroup, GeneratorPattern
+from renardo_lib.Patterns.PlayString import PlayString, ParseError
+from renardo_lib.Patterns.Generators import PRand
+from renardo_lib.Patterns.PGroups    import PGroupOr, PGroupPlus
+from renardo_lib.Patterns.Main       import Pattern, metaPattern, PatternMethod, PGroup, GeneratorPattern
 
-from renardo_lib.lib.Utils import modi, LCM
+from renardo_lib.Utils import modi, LCM
 
 re_nests  = r"\((.*?)\)"
 re_square = r"\[.*?\]"

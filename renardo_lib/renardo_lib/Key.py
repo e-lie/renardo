@@ -1,5 +1,5 @@
-from renardo_lib.lib.Patterns import Pattern, metaPattern, PGroup, GeneratorPattern, force_pattern_args, equal_values
-from renardo_lib.lib.Utils import get_inverse_op
+from renardo_lib.Patterns import Pattern, metaPattern, PGroup, GeneratorPattern, force_pattern_args, equal_values
+from renardo_lib.Utils import get_inverse_op
 from functools import partial
 
 from random import random

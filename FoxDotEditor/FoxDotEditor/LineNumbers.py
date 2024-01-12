@@ -1,7 +1,7 @@
 from FoxDotEditor import tkimport as Tk
 
-from renardo_lib.lib.Settings import LINE_NUMBER_MARKER_OFFSET
-from renardo_lib.lib.Code import execute
+from renardo_lib.Settings import LINE_NUMBER_MARKER_OFFSET
+from renardo_lib.Code import execute
 
 class LineNumbers(Tk.Canvas):
     def __init__(self, master, *args, **kwargs):

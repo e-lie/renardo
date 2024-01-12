@@ -6,7 +6,7 @@ in time with `Player` rhythms to give visual aid to which players are creating w
 from time import time, sleep
 from threading import Thread
 
-from renardo_lib.lib.Code import execute
+from renardo_lib.Code import execute
 
 class Bang:
 

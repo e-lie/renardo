@@ -1,5 +1,5 @@
-from renardo_lib.lib.Patterns import Pattern, PGroup, asStream
-from renardo_lib.lib.TimeVar import TimeVar
+from renardo_lib.Patterns import Pattern, PGroup, asStream
+from renardo_lib.TimeVar import TimeVar
 
 from random import choice
 from copy import copy

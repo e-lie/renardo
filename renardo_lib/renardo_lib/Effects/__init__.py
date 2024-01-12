@@ -1,1 +1,1 @@
-from renardo_lib.lib.Effects.Util import *
+from renardo_lib.Effects.Util import *

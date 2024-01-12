@@ -15,14 +15,14 @@ from time import sleep
 from collections import namedtuple
 from threading import Thread
 
-from renardo_lib.lib.Code import WarningMsg
-from renardo_lib.lib.Settings import (
+from renardo_lib.Code import WarningMsg
+from renardo_lib.Settings import (
     OSC_MIDI_ADDRESS, GET_SC_INFO, FOXDOT_INFO_FILE, FOXDOT_RECORD_FILE,
     RECORDING_DIR, SamplePlayer, LoopPlayer, get_timestamp, SCLANG_EXEC,
     FOXDOT_STARTUP_FILE, FOXDOT_OSC_FUNC, USER_CWD, FOXDOT_BUFFERS_FILE,
     GET_SYNTHDEF_FILES, GET_FX_FILES
 )
-from renardo_lib.lib.OSC3 import *
+from renardo_lib.OSC3 import *
 
 # Keep in sync with Info.scd
 ServerInfo = namedtuple(
@@ -1094,7 +1094,7 @@ class TempoClient:
 
 if __name__ != "__main__":
 
-    from renardo_lib.lib.Settings import ADDRESS, PORT, PORT2, FORWARD_PORT, FORWARD_ADDRESS
+    from renardo_lib.Settings import ADDRESS, PORT, PORT2, FORWARD_PORT, FORWARD_ADDRESS
 
     # DefaultServer = SCLangServerManager(ADDRESS, PORT, PORT2)
     Server = SCLangServerManager(ADDRESS, PORT, PORT2)

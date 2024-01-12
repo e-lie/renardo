@@ -1,8 +1,8 @@
-from renardo_lib.lib.SCLang.SCLang import *
-from renardo_lib.lib.SCLang.SynthDef import SynthDef, SampleSynthDef, FileSynthDef
-from renardo_lib.lib.Settings import SC3_PLUGINS
+from renardo_lib.SCLang.SCLang import *
+from renardo_lib.SCLang.SynthDef import SynthDef, SampleSynthDef, FileSynthDef
+from renardo_lib.Settings import SC3_PLUGINS
 
-from renardo_lib.lib.SCLang import Env
+from renardo_lib.SCLang import Env
 
 # Sample Player
 

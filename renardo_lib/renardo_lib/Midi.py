@@ -1,7 +1,7 @@
 """ Module for converting handling MIDI in/out and functions relating to MIDI pitch calculation. """
 
 
-from renardo_lib.lib.SCLang import SynthDefProxy
+from renardo_lib.SCLang import SynthDefProxy
 
 try:
     import rtmidi

@@ -24,8 +24,8 @@ from FoxDotEditor.BracketHandler import BracketHandler
 from FoxDotEditor.TextBox import ThreadedText
 from FoxDotEditor.LineNumbers import LineNumbers
 from FoxDotEditor.MenuBar import MenuBar, PopupMenu
-from renardo_lib.lib.Code import write_to_file
-from renardo_lib.lib.Utils import get_pypi_version
+from renardo_lib.Code import write_to_file
+from renardo_lib.Utils import get_pypi_version
 
 from functools import partial
 # from distutils.version import LooseVersion as VersionNumber
@@ -42,8 +42,8 @@ from FoxDotEditor.Settings import (
     MENU_ON_STARTUP, TRANSPARENT_ON_STARTUP, RECOVER_WORK,
     CHECK_FOR_UPDATE
 )
-from renardo_lib.lib.Code import execute
-from renardo_lib.lib.ServerManager import TempoServer
+from renardo_lib.Code import execute
+from renardo_lib.ServerManager import TempoServer
 
 # App object
 

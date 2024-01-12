@@ -19,11 +19,11 @@ from contextlib import closing
 from itertools import chain
 from os.path import abspath, join, isabs, isfile, isdir, splitext
 
-from renardo_lib.lib.Code import WarningMsg
-from renardo_lib.lib.Logging import Timing
-from renardo_lib.lib.SCLang import SampleSynthDef
-from renardo_lib.lib.ServerManager import Server
-from renardo_lib.lib.Settings import FOXDOT_SND, FOXDOT_LOOP
+from renardo_lib.Code import WarningMsg
+from renardo_lib.Logging import Timing
+from renardo_lib.SCLang import SampleSynthDef
+from renardo_lib.ServerManager import Server
+from renardo_lib.Settings import FOXDOT_SND, FOXDOT_LOOP
 
 
 alpha    = "abcdefghijklmnopqrstuvwxyz"

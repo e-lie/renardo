@@ -55,14 +55,14 @@ import sys
 import threading
 import inspect
 
-from renardo_lib.lib.Players import Player
-from renardo_lib.lib.Repeat import MethodCall
-from renardo_lib.lib.Patterns import asStream
-from renardo_lib.lib.TimeVar import TimeVar
-from renardo_lib.lib.Midi import MidiIn, MIDIDeviceNotFound
-from renardo_lib.lib.Utils import modi
-from renardo_lib.lib.ServerManager import TempoClient, ServerManager, RequestTimeout
-from renardo_lib.lib.Settings import CPU_USAGE
+from renardo_lib.Players import Player
+from renardo_lib.Repeat import MethodCall
+from renardo_lib.Patterns import asStream
+from renardo_lib.TimeVar import TimeVar
+from renardo_lib.Midi import MidiIn, MIDIDeviceNotFound
+from renardo_lib.Utils import modi
+from renardo_lib.ServerManager import TempoClient, ServerManager, RequestTimeout
+from renardo_lib.Settings import CPU_USAGE
 
 
 class TempoClock(object):
@@ -141,7 +141,7 @@ class TempoClock(object):
 
     def sync_to_espgrid(self, host="localhost", port=5510):
         """ Connects to an EspGrid instance """
-        from renardo_lib.lib.EspGrid import EspGrid
+        from renardo_lib.EspGrid import EspGrid
         self.espgrid = EspGrid((host, port))
         try:
             tempo = self.espgrid.get_tempo()
@@ -992,7 +992,7 @@ class History(object):
     def add(self, beat, osc_messages):
         self.data.append(osc_messages)
 
-from renardo_lib.lib import Code
+from renardo_lib import Code
 
 class Wrapper(Code.LiveObject):
     

@@ -8,10 +8,10 @@ TODO: using __call__ -> go through getattribute and check instead of already hav
 from time import time
 import math
 
-from renardo_lib.lib.Patterns import *
-from renardo_lib.lib.Utils  import *
-from renardo_lib.lib.Patterns.Operations import *
-from renardo_lib.lib.Constants import inf 
+from renardo_lib.Patterns import *
+from renardo_lib.Utils  import *
+from renardo_lib.Patterns.Operations import *
+from renardo_lib.Constants import inf 
 
 def fetch(func):
     """ Function to wrap basic lambda operators for TimeVars  """

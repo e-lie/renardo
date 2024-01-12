@@ -1,6 +1,6 @@
 from random import choice
-from renardo_lib.lib.TempoClock import Queue
-from renardo_lib.lib.GhostCoder import Grammar
+from renardo_lib.TempoClock import Queue
+from renardo_lib.GhostCoder import Grammar
 
 class null:
     def __init__(self, root=True):
