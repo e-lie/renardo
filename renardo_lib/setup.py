@@ -7,7 +7,7 @@ with open("README.md", "r") as f:
 
 setup(
     name='renardo_lib',
-    version="0.9.1",
+    version="0.9.2.dev0",
     description='Python livecoding environment - New fork of FoxDot',
     author='Elie Gavoty',
     author_email='eliegavoty@free.fr',
@@ -15,18 +15,17 @@ setup(
     url='http://renardo.org/',
     packages=[
         'renardo_lib',
-        'renardo_lib.lib',
-        'renardo_lib.lib.Code',
-        'renardo_lib.lib.Custom',
-        'renardo_lib.lib.Extensions',
-        'renardo_lib.lib.Extensions.VRender',
-        'renardo_lib.lib.Extensions.SonicPi',
-        'renardo_lib.lib.EspGrid',
-        'renardo_lib.lib.Effects',
-        'renardo_lib.lib.Patterns',
-        'renardo_lib.lib.SCLang',
-        'renardo_lib.lib.Settings',
-        'renardo_lib.lib.Utils'
+        'renardo_lib.Code',
+        'renardo_lib.Custom',
+        'renardo_lib.Extensions',
+        'renardo_lib.Extensions.VRender',
+        'renardo_lib.Extensions.SonicPi',
+        'renardo_lib.EspGrid',
+        'renardo_lib.Effects',
+        'renardo_lib.Patterns',
+        'renardo_lib.SCLang',
+        'renardo_lib.Settings',
+        'renardo_lib.Utils'
     ],
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -34,6 +33,6 @@ setup(
     # data_files=[('', 'LICENSE')],
     package_data = {'renardo_lib': ['README.md','demo/**', 'osc/**'],},
     install_requires=[
-        'renardo_gatherer>=0.1.0'
+        'renardo_gatherer>=0.1.1.dev0'
     ],
 )
