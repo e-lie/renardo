@@ -211,11 +211,11 @@ class BufferManager(object):
         self._max_buffers = max_buffers
         self._nextbuf = self._nextbuf % max_buffers
 
-    def getBufferFromSymbol(self, symbol, sdb, index=0):
+    def getBufferFromSymbol(self, symbol, spack, index=0):
         """ Get buffer information from a symbol """
         if symbol.isspace():
             return nil
-        sample_path = spack_manager.get_spack(sdb).sample_path_from_symbol(symbol)
+        sample_path = spack_manager.get_spack(spack).sample_path_from_symbol(symbol)
         if sample_path is None:
             return nil
         sample_path = self._findSample(sample_path, index)
@@ -413,11 +413,11 @@ class LoopSynthDef(SampleSynthDef):
         SampleSynthDef.__init__(self, "loop")
         self.pos = self.new_attr_instance("pos")
         self.sample = self.new_attr_instance("sample")
-        self.sdb = self.new_attr_instance("sdb")
+        self.spack = self.new_attr_instance("spack")
         self.beat_stretch = self.new_attr_instance("beat_stretch")
         self.defaults['pos']   = 0
         self.defaults['sample']   = 0
-        self.defaults['sdb'] = SAMPLES_PACK_NUMBER
+        self.defaults['spack'] = SAMPLES_PACK_NUMBER
         self.defaults['beat_stretch'] = 0
         self.base.append("rate = (rate * (1-(beat_stretch>0))) + ((BufDur.kr(buf) / sus) * (beat_stretch>0));")
         self.base.append("osc = PlayBuf.ar(2, buf, BufRateScale.kr(buf) * rate, startPos: BufSampleRate.kr(buf) * pos, loop: 1.0);")
@@ -450,7 +450,7 @@ class GranularSynthDef(SampleSynthDef):
         self.sample = self.new_attr_instance("sample")
         self.defaults['pos']   = 0
         self.defaults['sample']   = 0
-        self.defaults['sdb'] = SAMPLES_PACK_NUMBER
+        self.defaults['spack'] = SAMPLES_PACK_NUMBER
         self.base.append("osc = PlayBuf.ar(2, buf, BufRateScale.kr(buf) * rate, startPos: BufSampleRate.kr(buf) * pos);")
         self.base.append("osc = osc * EnvGen.ar(Env([0,1,1,0],[0.05, sus-0.05, 0.05]));")
         self.osc = self.osc * self.amp
