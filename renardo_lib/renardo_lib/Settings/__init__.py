@@ -4,7 +4,7 @@ import sys
 # Anything that needs to be updated
 
 from importlib import reload
-from renardo_gatherer import SAMPLES_FOLDER_PATH
+from renardo_gatherer import SAMPLES_DIR_PATH
 
 # Check for OS -> mac, linux, win
 
@@ -42,7 +42,7 @@ FOXDOT_ICON_GIF = os.path.realpath(FOXDOT_ROOT + "/lib/Workspace/img/icon.gif")
 FOXDOT_HELLO = os.path.realpath(FOXDOT_ROOT + "/lib/Workspace/img/hello.txt")
 FOXDOT_STARTUP_PATH = os.path.realpath(FOXDOT_ROOT + "/lib/Custom/startup.py")
 # FOXDOT_SND = SAMPLES_FOLDER_PATH / 'foxdot_default'
-FOXDOT_SND = SAMPLES_FOLDER_PATH 
+FOXDOT_SND = SAMPLES_DIR_PATH
 # FOXDOT_LOOP = SAMPLES_FOLDER_PATH / 'foxdot_default' / '_loop_'
 FOXDOT_LOOP  = "_loop_"
 # FOXDOT_LOOP  = os.path.realpath(FOXDOT_ROOT + "/../../renardo_samples/_loop_/")

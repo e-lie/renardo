@@ -19,6 +19,7 @@ from contextlib import closing
 from itertools import chain
 from os.path import abspath, join, isabs, isfile, isdir, splitext
 
+from renardo_lib import spack_manager
 from renardo_lib.Code import WarningMsg
 from renardo_lib.Logging import Timing
 from renardo_lib.SCLang import SampleSynthDef
@@ -28,29 +29,7 @@ from renardo_lib.Settings import FOXDOT_SND, FOXDOT_LOOP, SAMPLES_PACK_NUMBER
 
 alpha    = "abcdefghijklmnopqrstuvwxyz"
 
-nonalpha = {"&" : "ampersand",
-            "*" : "asterix",
-            "@" : "at",
-            "\\" : "backslash",
-            "|" : "bar",
-            "^" : "caret",
-            ":" : "colon",
-            "$" : "dollar",
-            "=" : "equals",
-            "!" : "exclamation",
-            "/" : "forwardslash",
-            "#" : "hash",
-            "-" : "hyphen",
-            "<" : "lessthan",
-            "%" : "percent",
-            "+" : "plus",
-            "?" : "question",
-            ";" : "semicolon",
-            "~" : "tilde",
-            "1" : "1",
-            "2" : "2",
-            "3" : "3",
-            "4" : "4" }
+
 
 DESCRIPTIONS = { 'a' : "Gameboy hihat",      'A' : "Gameboy kick drum",
                  'b' : "Noisy beep",         'B' : "Short saw",
@@ -92,32 +71,30 @@ DESCRIPTIONS = { 'a' : "Gameboy hihat",      'A' : "Gameboy kick drum",
                  '4' : 'Vocals (Four)'}
 
 
-class _get_sample_path_from_symbol:
-    '''Function-like (singleton pattern) class to search the directory for a sample
-    file based on input symbol'''
-    def __init__(self, samples_directory):
-        if os.path.isdir(samples_directory):
-            self.samples_directory = os.path.realpath(samples_directory)
-        else:
-            raise OSError("{!r} is not a valid directory".format(samples_directory))
-    def __call__(self, symbol, samples_pack_number):
-        """ Return the sample search directory for a symbol """
-        samples_pack_dirname = ('foxdot_default' if str(samples_pack_number) == '0'
-                                else str(samples_pack_number))
-        if symbol.isalpha():
-            return join(
-                self.samples_directory,
-                samples_pack_dirname,
-                symbol.lower(),
-                'upper' if symbol.isupper() else 'lower'
-            )
-        elif symbol in nonalpha:
-            longname = nonalpha[symbol]
-            return join(self.samples_directory, samples_pack_dirname, '_', longname)
-        else:
-            return None
-
-get_sample_path_from_symbol = _get_sample_path_from_symbol(FOXDOT_SND, SAMPLES_PACK_NUMBER) # singleton
+# class _get_sample_path_from_symbol:
+#     '''Function-like (singleton pattern) class to search the directory for a sample
+#     file based on input symbol'''
+#     def __init__(self, samples_directory, _):
+#         if os.path.isdir(samples_directory):
+#             self.samples_directory = os.path.realpath(samples_directory)
+#         else:
+#             raise OSError("{!r} is not a valid directory".format(samples_directory))
+#     def __call__(self, symbol, samples_pack):
+#         """ Return the sample search directory for a symbol """
+#         samples_pack = (
+#             spack_manager.get_spack_from_num(samples_pack) if isinstance(samples_pack, int)
+#             else samples_pack
+#         )
+#         sample_path = None
+#         if symbol.isalpha():
+#             low_up_dirname = 'upper' if symbol.isupper() else 'lower'
+#             samples_path = samples_pack.path / symbol.lower() / low_up_dirname
+#         elif symbol in nonalpha:
+#             longname = nonalpha[symbol]
+#             samples_path = samples_pack.path / '_' / longname
+#         return sample_path
+#
+# get_sample_path_from_symbol = _get_sample_path_from_symbol(FOXDOT_SND, SAMPLES_PACK_NUMBER) # singleton
 
 class Buffer(object):
     def __init__(self, fn, number, channels=1):
@@ -145,17 +122,21 @@ nil = Buffer('', 0)
 
 
 class BufferManager(object):
-    def __init__(self, server=Server, paths=()):
+    def __init__(self, server=Server, paths=[]):
         self._server = server
         self._max_buffers = server.max_buffers
         # Keep buffer 0 unallocated because we use it as the "nil" buffer
         self._nextbuf = 1
         self._buffers = [None for _ in range(self._max_buffers)]
         self._fn_to_buf = {}
-        self._paths = [join(FOXDOT_SND, str(SAMPLES_PACK_NUMBER), FOXDOT_LOOP)] + list(paths)
+        self._paths = [spack_manager.default_spack().loop_path] + list(paths)
         self._ext = ['wav', 'wave', 'aif', 'aiff', 'flac']
 
-        self.loops = [fn.rsplit(".", 1)[0] for fn in os.listdir(join(FOXDOT_SND, str(SAMPLES_PACK_NUMBER), FOXDOT_LOOP))]
+        self.loops = [
+            sample_path.with_suffix('').name #file name without extension
+            for sample_path
+            in spack_manager.default_spack().loop_path.iterdir()
+        ]
 
     def __str__(self):
         return "\n".join(["%r: %s" % (k, v) for k, v in sorted(DESCRIPTIONS.items())])
@@ -196,7 +177,7 @@ class BufferManager(object):
         self._incr_nextbuf()
         return freebuf
 
-    def addPath(self, path):
+    def addAPath(self, path):
         """ Add a path to the search paths for samples """
         self._paths.append(abspath(path))
 
@@ -234,13 +215,13 @@ class BufferManager(object):
         """ Get buffer information from a symbol """
         if symbol.isspace():
             return nil
-        dirname = get_sample_path_from_symbol(symbol, sdb)
-        if dirname is None:
+        sample_path = spack_manager.get_spack(sdb).sample_path_from_symbol(symbol)
+        if sample_path is None:
             return nil
-        samplepath = self._findSample(dirname, index)
-        if samplepath is None:
+        sample_path = self._findSample(sample_path, index)
+        if sample_path is None:
             return nil
-        return self._allocateAndLoad(samplepath)
+        return self._allocateAndLoad(sample_path)
 
     def getBuffer(self, bufnum):
         """ Get buffer information from the buffer number """
