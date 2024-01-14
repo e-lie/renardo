@@ -20,6 +20,7 @@ setup(
     install_requires=[
         'requests',
         'beautifulsoup4',
+        'indexed',
     ],
     entry_points={
         'console_scripts': [

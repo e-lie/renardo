@@ -1,8 +1,14 @@
-import os.path
 import logging
 
+from renardo_lib.ServerManager.SCFilesHandling import write_sc_renardo_files_in_user_config
+from renardo_lib.ServerManager.SuperColliderInstance import RenardoSupercolliderInstance
+
+write_sc_renardo_files_in_user_config()
+
+renardo_sc_instance = RenardoSupercolliderInstance()
+
 from renardo_lib.Code import *
-from renardo_gatherer.samples_download import SPackManager, SPack
+from renardo_gatherer.samples_download import SPackManager
 
 FoxDotCode.namespace = globals()
 

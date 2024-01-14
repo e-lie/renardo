@@ -80,9 +80,8 @@ class SPackManager:
     def __init__(self):
         self._samples_packs = IndexedOrderedDict() # usefull to access from key OR index directly
 
-        if (SAMPLES_DIR_PATH / 'foxdot_default').exists():
+        if (SAMPLES_DIR_PATH / 'foxdot_default').exists() and not (SAMPLES_DIR_PATH/DEFAULT_SAMPLES_PACK_NAME).exists():
             (SAMPLES_DIR_PATH / 'foxdot_default').rename(SAMPLES_DIR_PATH / DEFAULT_SAMPLES_PACK_NAME)
-            pass
 
         if not (SAMPLES_DIR_PATH / DEFAULT_SAMPLES_PACK_NAME / 'downloaded_at.txt').exists():
             self.download_samples_pack(samples_pack_name=DEFAULT_SAMPLES_PACK_NAME)

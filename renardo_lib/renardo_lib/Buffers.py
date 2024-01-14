@@ -24,7 +24,7 @@ from renardo_lib.Code import WarningMsg
 from renardo_lib.Logging import Timing
 from renardo_lib.SCLang import SampleSynthDef
 from renardo_lib.ServerManager import Server
-from renardo_lib.Settings import FOXDOT_SND, FOXDOT_LOOP, SAMPLES_PACK_NUMBER
+from renardo_lib.Settings import SAMPLES_PACK_NUMBER
 
 
 alpha    = "abcdefghijklmnopqrstuvwxyz"
