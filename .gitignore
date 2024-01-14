@@ -7,15 +7,15 @@ build
 dist
 
 myTests/*
-renardo/lib/debug/*
-renardo/data/*
-renardo/lib/Settings/conf.py
-renardo/lib/Extensions/VRender/tmp/*
+renardo_lib/debug/*
+renardo_lib/Settings/conf.py
+renardo_lib/Extensions/VRender/tmp/*
 build/*
 dist/*
-renardo/osc/scsyndef/test.scd
-renardo/lib/GhostCoder/*
-renardo/lib/Settings/conf.txt
+renardo_lib/osc/**/**
+renardo_lib/osc/scsyndef/test.scd
+renardo_lib/GhostCoder/*
+renardo_lib/Settings/conf.txt
 changed_files.txt
 
 # To-do list
