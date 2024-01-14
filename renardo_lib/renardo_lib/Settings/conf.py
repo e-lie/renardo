@@ -1,5 +1,4 @@
 import os.path
-from renardo_gatherer import SAMPLES_DIR_PATH
 
 # Settings
 # ------------------
