@@ -6,7 +6,7 @@ import pathlib
 
 import psutil
 
-from renardo_lib.ServerManager.SCFilesHandling import SC_USER_CONFIG_DIR
+from renardo.SCFilesHandling import SC_USER_CONFIG_DIR
 
 
 class RenardoSupercolliderInstance:
