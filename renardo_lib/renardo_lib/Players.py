@@ -134,7 +134,7 @@ from renardo_lib.Patterns import *
 from renardo_lib.Root import Root
 from renardo_lib.Scale import Scale, get_freq_and_midi
 from renardo_lib.Bang import Bang
-from renardo_lib.TimeVar import TimeVar, mapvar
+from renardo_lib.TimeVar import TimeVar, mapvar, linvar, inf
 from renardo_lib.Code import WarningMsg
 from renardo_lib.Utils import get_first_item
 
@@ -2039,7 +2039,45 @@ class Player(Repeatable):
             bang = Bang(self, self.bang_kwargs)
 
         return self
-        
+
+    # TODO: split this file (by classes)
+    # TODO: externalize player methods like in hacked_foxdot codebase
+    # TODO: use a volume sc effect / 3rd parameter for fades (to make it work with loop synthdef)
+
+    def fade(self, dur=8, fvol=1, ivol=None, autostop=True):
+        if ivol == None:
+            ivol = float(self.amplify)
+        self.amplify = linvar([ivol, fvol], [dur, inf], start=self.metro.mod(4))
+        def static_final_value():
+            if fvol == 0 and autostop:
+                self.stop()
+            else:
+                self.amplify = fvol
+        self.metro.schedule(static_final_value, self.metro.next_bar()+dur+1)
+        return self
+
+    def fadein(self, dur=8, fvol=1, ivol=0, autostop=True):
+        self.fade(dur=dur, fvol=fvol, ivol=ivol, autostop=autostop)
+        return self
+
+    def fadeout(self, dur=4, fvol=0, ivol=1, autostop=True):
+        self.fade(dur=dur, fvol=fvol, ivol=ivol, autostop=autostop)
+        return self
+
+    def solofade(self, dur=16, fvol=0, ivol=None, autostop=False):
+        for player in list(self.metro.playing):
+            if player is not self: # and not player.always_on:
+                player.fade(dur, ivol, fvol, autostop)
+        return self
+
+    def solofadeout(self, dur=16, fvol=0, ivol=None, autostop=False):
+        self.solofade(dur, ivol, fvol, autostop=autostop)
+        return self
+
+    def solofadein(self, dur=16, fvol=1, ivol=None, autostop=False):
+        self.solofade(dur, ivol, fvol, autostop=autostop)
+        return self
+
 
 ###### GROUP OBJECT
 
