@@ -134,7 +134,7 @@ from renardo_lib.Patterns import *
 from renardo_lib.Root import Root
 from renardo_lib.Scale import Scale, get_freq_and_midi
 from renardo_lib.Bang import Bang
-from renardo_lib.TimeVar import TimeVar, mapvar, linvar, inf
+from renardo_lib.TimeVar import TimeVar, mapvar, linvar, inf, var
 from renardo_lib.Code import WarningMsg
 from renardo_lib.Utils import get_first_item
 
@@ -2043,6 +2043,8 @@ class Player(Repeatable):
     # TODO: split this file (by classes)
     # TODO: externalize player methods like in hacked_foxdot codebase
     # TODO: use a volume sc effect / 3rd parameter for fades (to make it work with loop synthdef)
+    # TODO: parametrise duration with bar length automatically
+    # TODO: debug eclipse smooth feature
 
     def fade(self, dur=8, fvol=1, ivol=None, autostop=True):
         if ivol == None:
@@ -2076,6 +2078,16 @@ class Player(Repeatable):
 
     def solofadein(self, dur=16, fvol=1, ivol=None, autostop=False):
         self.solofade(dur, ivol, fvol, autostop=autostop)
+        return self
+
+    def eclipse(self, dur=4, total=16, leftshift=0, smooth=0):
+        """periodic pause of the player: pause 4 beats every 16"""
+        if smooth == 0:
+            self.amplify = var([1, 0, 1], [leftshift, dur, total - leftshift - dur])
+        else:
+            self.amplify = linvar([1, 0, 0, 0, 1, 1],
+                                  [leftshift, smooth * dur, dur - smooth * dur, smooth * dur,
+                                   total - leftshift - dur - smooth * dur])
         return self
 
 
