@@ -61,7 +61,7 @@ def write_sc_renardo_files_in_user_config():
                     'foxdot'
                 );
 
-                StageLimiter.activate(2);
+                StageLimiterBis.activate(2);
                 "Listening for messages from Renardo".postln;
             }
 
@@ -97,7 +97,7 @@ def write_sc_renardo_files_in_user_config():
 
     stagelimiter_sc_class = '''
         // Batuhan Bozkurt 2009
-        StageLimiter
+        StageLimiterBis
         {
             classvar lmSynth, lmFunc, activeSynth;
             
