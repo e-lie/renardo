@@ -14,23 +14,20 @@ class RenardoSupercolliderInstance:
     def __init__(self):
         self.popen = None
 
-        #process_env = os.environ.copy()
         if platform == "win32":
             sc_dir = next(pathlib.Path("C:\\Program Files").glob("SuperCollider*")) # to match SuperCollider-3.version like folders
+            os.environ["PATH"] +=  f"{sc_dir};"
             sclang_path = sc_dir / "sclang.exe"
-            #process_env["PATH"] = process_env + f"{sc_dir};"
             sclang_exec = [str(sclang_path), str(SC_USER_CONFIG_DIR / 'start_renardo.scd')]
         else:
             sclang_exec = ["sclang",  SC_USER_CONFIG_DIR / 'start_renardo.scd']
 
         if not self.is_sclang_running():
-            #self.popen = subprocess.Popen(["cmd", "/c", "dir", "c:\\Users"], stdout=subprocess.PIPE)
             print("Auto Launching Renardo SC module with SCLang...")
             self.popen = subprocess.Popen(
                 args=sclang_exec,
                 shell=True,
                 stdout=subprocess.PIPE,
-                #env=process_env,
             )
             time.sleep(1)  # wait a bit for the server to be started
         # TODO : find a way to consistently stop sclang and scsynth when renardo stops/dies
