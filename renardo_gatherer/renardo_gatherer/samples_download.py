@@ -62,8 +62,9 @@ class SPack:
         return (self.path / "downloaded_at.txt").exists()
 
     def download_file(self, audiofile_relative_path):
-        url = f'{SAMPLES_DOWNLOAD_SERVER}/{self.name}' + audiofile_relative_path
+        url = f'{SAMPLES_DOWNLOAD_SERVER}/{self.name}/' + audiofile_relative_path
         response = requests.get(url)
+        print(url)
         if response.status_code != 200:
             raise SampleDownloadError
         if "content-disposition" in response.headers:
@@ -126,7 +127,7 @@ class SPackManager:
             (SAMPLES_DIR_PATH / samples_pack_name / subdir).mkdir(parents=True, exist_ok=True)
 
         for audiofile in audiofile_links:
-            samples_pack.download_file(audiofile, base_url)
+            samples_pack.download_file(audiofile)
 
         with open(SAMPLES_DIR_PATH / samples_pack_name / 'downloaded_at.txt', mode="w") as file:
             file.write(str(datetime.now()))
