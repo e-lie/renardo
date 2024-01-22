@@ -80,35 +80,40 @@ class SPack:
 class SPackManager:
     def __init__(self):
         self._samples_packs = IndexedOrderedDict() # usefull to access from key OR index directly
-
+        # Workaround to rename the folder temporarily
         if (SAMPLES_DIR_PATH / 'foxdot_default').exists() and not (SAMPLES_DIR_PATH/DEFAULT_SAMPLES_PACK_NAME).exists():
             (SAMPLES_DIR_PATH / 'foxdot_default').rename(SAMPLES_DIR_PATH / DEFAULT_SAMPLES_PACK_NAME)
-
-        if not (SAMPLES_DIR_PATH / DEFAULT_SAMPLES_PACK_NAME / 'downloaded_at.txt').exists():
+        #self.init_default_spack()
+        self.scan_existing_samples_pack()
+        pass
+    
+    def init_default_spack(self):
+        if not SPackManager.is_default_spack_initialized():
             self.download_samples_pack(samples_pack_name=DEFAULT_SAMPLES_PACK_NAME)
         else:
             self.add_samples_pack(SPack(DEFAULT_SAMPLES_PACK_NAME))
 
-        self.scan_existing_samples_pack()
+    @staticmethod
+    def is_default_spack_initialized():
+        return (SAMPLES_DIR_PATH / DEFAULT_SAMPLES_PACK_NAME / 'downloaded_at.txt').exists()
 
     def default_spack(self):
         return self.get_spack(0)
 
-    def renardo_samples_initialized(self) -> bool:
-        return self.default_spack().download_finished()
-
     def scan_existing_samples_pack(self):
-        for dir in [f for f in SAMPLES_DIR_PATH.iterdir() if f.is_dir() and f.name != DEFAULT_SAMPLES_PACK_NAME]:
-            spack = self.add_samples_pack(SPack(dir.name))
+        if SPackManager.is_default_spack_initialized():
+            self.add_samples_pack(SPack(DEFAULT_SAMPLES_PACK_NAME))
+        for directory in [f for f in SAMPLES_DIR_PATH.iterdir() if f.is_dir() and f.name != DEFAULT_SAMPLES_PACK_NAME]:
+            self.add_samples_pack(SPack(directory.name))
 
     def add_samples_pack(self, samples_pack: SPack):
         self._samples_packs[samples_pack.name] = samples_pack
         return samples_pack
 
-    def get_spack(self, num_or_SPack) -> SPack:
+    def get_spack(self, num_or_spack) -> SPack:
         return (
-            self._samples_packs.values()[num_or_SPack]
-            if isinstance(num_or_SPack, int)
+            self._samples_packs.values()[num_or_spack]
+            if isinstance(num_or_spack, int)
             else self._samples_packs[SPack.__name__]
         )
 
