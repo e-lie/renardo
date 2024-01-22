@@ -7,8 +7,8 @@ with open("README.md", "r") as f:
 
 setup(
     name='renardo',
-    version="0.9.3.dev0",
-    description='Launcher/config editor for Renardo -- experimental fork of FoxDot as modular library',
+    version="0.9.3.dev3",
+    description='Launcher/config editor for Renardo livecoding environment',
     author='Elie Gavoty',
     author_email='eliegavoty@free.fr',
     license='cc-by-sa-4.0',
@@ -24,6 +24,7 @@ setup(
     install_requires=[
         'renardo-lib>=0.9.2',
         'FoxDotEditor>=0.9.2',
+        'renardo_gatherer>=0.1.2.dev0',
         'psutil',
         'textual',
     ],
