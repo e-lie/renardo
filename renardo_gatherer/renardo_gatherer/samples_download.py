@@ -61,10 +61,13 @@ class SPack:
     def download_finished(self):
         return (self.path / "downloaded_at.txt").exists()
 
-    def download_file(self, audiofile_relative_path):
+    def download_file(self, audiofile_relative_path, logger=None):
         url = f'{SAMPLES_DOWNLOAD_SERVER}/{self.name}/' + audiofile_relative_path
         response = requests.get(url)
-        print(url)
+        if logger:
+            logger.write_line(url)
+        else:
+            print(url)
         if response.status_code != 200:
             raise SampleDownloadError
         if "content-disposition" in response.headers:
@@ -75,10 +78,14 @@ class SPack:
             filename = url.split("/")[-1]
         with open(self.path / audiofile_relative_path, mode="wb") as file:
             file.write(response.content)
-        print(f"Downloaded file {filename}")
+        if logger:
+            logger.write_line(f"Downloaded file {filename}")
+        else:
+            print(f"Downloaded file {filename}")
 
 class SPackManager:
     def __init__(self):
+        self.logger = None
         self._samples_packs = IndexedOrderedDict() # usefull to access from key OR index directly
         # Workaround to rename the folder temporarily
         if (SAMPLES_DIR_PATH / 'foxdot_default').exists() and not (SAMPLES_DIR_PATH/DEFAULT_SAMPLES_PACK_NAME).exists():
@@ -97,6 +104,9 @@ class SPackManager:
             self.download_samples_pack(samples_pack_name=DEFAULT_SAMPLES_PACK_NAME)
         else:
             self.add_samples_pack(SPack(DEFAULT_SAMPLES_PACK_NAME))
+
+    def set_logger(self, logger):
+        self.logger = logger
 
     @staticmethod
     def is_default_spack_initialized():
@@ -129,7 +139,10 @@ class SPackManager:
         base_url = f"{SAMPLES_DOWNLOAD_SERVER}/{samples_pack.name}/"
         directory_links = []
         audiofile_links = []
-        print("Scanning samples pack...")
+        if self.logger:
+            self.logger.write_line("Scanning samples pack...")
+        else:
+            print("Scanning samples pack...")
         self.find_audio_links_recursive(base_url, directory_links, audiofile_links)
         # print(audiofile_links)
 
@@ -137,7 +150,7 @@ class SPackManager:
             (SAMPLES_DIR_PATH / samples_pack_name / subdir).mkdir(parents=True, exist_ok=True)
 
         for audiofile in audiofile_links:
-            samples_pack.download_file(audiofile)
+            samples_pack.download_file(audiofile, self.logger)
 
         with open(SAMPLES_DIR_PATH / samples_pack_name / 'downloaded_at.txt', mode="w") as file:
             file.write(str(datetime.now()))
