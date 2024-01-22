@@ -84,9 +84,14 @@ class SPackManager:
         if (SAMPLES_DIR_PATH / 'foxdot_default').exists() and not (SAMPLES_DIR_PATH/DEFAULT_SAMPLES_PACK_NAME).exists():
             (SAMPLES_DIR_PATH / 'foxdot_default').rename(SAMPLES_DIR_PATH / DEFAULT_SAMPLES_PACK_NAME)
         #self.init_default_spack()
+        SPackManager.ensure_renardo_samples_directory()
         self.scan_existing_samples_pack()
-        pass
-    
+
+    @staticmethod
+    def ensure_renardo_samples_directory():
+        if not SAMPLES_DIR_PATH.exists():
+            SAMPLES_DIR_PATH.mkdir(parents=True, exist_ok=True)
+
     def init_default_spack(self):
         if not SPackManager.is_default_spack_initialized():
             self.download_samples_pack(samples_pack_name=DEFAULT_SAMPLES_PACK_NAME)

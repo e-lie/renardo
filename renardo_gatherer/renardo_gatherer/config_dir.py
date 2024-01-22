@@ -18,8 +18,4 @@ elif platform == "win32":
     appdata_roaming_path = pathlib.Path(os.getenv('APPDATA'))
     SAMPLES_DIR_PATH = appdata_roaming_path / 'renardo' / 'samples'
 
-def create_renardo_config_directory():
-    if not os.path.exists(SAMPLES_DIR_PATH):
-        os.makedirs(SAMPLES_DIR_PATH)
-
 
