@@ -27,6 +27,7 @@ setup(
         'renardo_lib.Settings',
         'renardo_lib.Utils',
         'renardo_lib.ServerManager',
+        'FoxDot.lib.Killa',
     ],
     long_description=long_description,
     long_description_content_type="text/markdown",
