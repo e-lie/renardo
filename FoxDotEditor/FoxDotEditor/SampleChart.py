@@ -1,56 +1,62 @@
 #!/usr/bin/env python
 from __future__ import absolute_import
 
-import sys
 import multiprocessing
 from playsound import playsound
 from .tkimport import *
 from .Format import *
-from ..Settings import *
-from ..Buffers import alpha, nonalpha
-
-import random
-
+from renardo_lib.Settings import *
+from renardo_lib import spack_manager
+from renardo_gatherer.samples_download import nonalpha
+from renardo_gatherer import SAMPLES_DIR_PATH
 
 class SampleChart:
 
     def __init__(self):
-        self.sdb_name = 0
         # Basic TKinter function
         self.root = Tk()
+
         self.width = 800
         self.height = 600
         self.wheel_count = 0
         self.root.geometry(str(self.width) + "x" + str(self.height))
         self.root.title("FoxDot >> Samples Database Chart")
         self.root.resizable(True, True)
+
         #self.root.iconbitmap('img/foxdot.ico')
+
+        # Call init methods
         self.db_view()
-        self.create_dics(self.sdb_name)
+        self.create_dics(spack_num=0)
         self.smpl_view(self.width, self.height)
         self.root.mainloop()
 
-    def create_dics(self, sdb):
+    def create_dics(self, spack_num=0):
         """Iterating through subfolders and writing all file names into dictionary lists"""
-        self.db = str(sdb)
+        self.spack_num_str = str(spack_num)
         self.ext = ('.wav', 'aif')
         self.dict_letters = {}
         self.dict_specials = {}
         self.dict_loops = []
         # First go through all letters and get file paths in upper and lower
         # Fill dictionary with letters as key and file names of audio as values
-        self.db_path_l = FOXDOT_SND + "/" + self.db + "/"
+        self.db_path_l = str(spack_manager.get_spack(int(self.spack_num_str)).path) + "/"
         self.dir_list_l = []
+
         for filename in os.listdir(self.db_path_l):
             if os.path.isdir(os.path.join(self.db_path_l, filename)):
                 self.dir_list_l.append(filename)
+
         self.dir_list_l.sort()
+
         for i in self.dir_list_l:
             if i != "_" and i != "_loop_":
                 self.new_path = self.db_path_l + str(i) + "/lower/"
                 #self.smpl_list = os.path.isdir(self.new_path)
-                self.smpl_list = [f for f in os.listdir(
-                    self.new_path) if os.path.isfile(os.path.join(self.new_path, f))]
+                self.smpl_list = [
+                    f for f in os.listdir(self.new_path)
+                    if os.path.isfile(os.path.join(self.new_path, f))
+                ]
                 self.smpl_list.sort()
                 for n in self.smpl_list:
                     if not n.endswith(self.ext):
@@ -58,15 +64,18 @@ class SampleChart:
                 self.dict_letters[i.upper()] = self.smpl_list
                 self.dict_letters[i] = self.smpl_list
                 self.new_path = self.db_path_l + str(i) + "/upper/"
-                self.smpl_list = [f for f in os.listdir(
-                    self.new_path) if os.path.isfile(os.path.join(self.new_path, f))]
+                self.smpl_list = [
+                    f for f in os.listdir(self.new_path)
+                    if os.path.isfile(os.path.join(self.new_path, f))
+                ]
                 self.smpl_list.sort()
                 for n in self.smpl_list:
                     if not n.endswith(self.ext):
                         self.smpl_list.remove(n)
                 self.dict_letters[i.upper()] = self.smpl_list
+
         # Fill dictionary with specials as key and file names of audio as values
-        self.db_path_s = FOXDOT_SND + "/" + self.db + "/_/"
+        self.db_path_s = str(spack_manager.get_spack(int(self.spack_num_str)).path) + "/_/"
         self.dir_list_s = []
         for filename in os.listdir(self.db_path_s):
             if os.path.isdir(os.path.join(self.db_path_s, filename)):
@@ -74,17 +83,21 @@ class SampleChart:
         self.dir_list_s.sort()
         for j in self.dir_list_s:
             self.new_path = self.db_path_s + str(j) + "/"
-            self.smpl_list = [f for f in os.listdir(
-                self.new_path) if os.path.isfile(os.path.join(self.new_path, f))]
+            self.smpl_list = [
+                f for f in os.listdir(self.new_path)
+                if os.path.isfile(os.path.join(self.new_path, f))
+            ]
             self.smpl_list.sort()
             for n in self.smpl_list:
                 if not n.endswith(self.ext):
                     self.smpl_list.remove(n)
             self.dict_specials[j] = self.smpl_list
         # Fill dictionary with loops as value
-        self.db_path_loops = FOXDOT_SND + "/" + self.db + "/" + FOXDOT_LOOP
-        self.smpl_list = [f for f in os.listdir(self.db_path_loops) if os.path.isfile(
-            os.path.join(self.db_path_loops, f))]
+        self.db_path_loops = str(spack_manager.get_spack(int(self.spack_num_str)).path) + "/" + FOXDOT_LOOP
+        self.smpl_list = [
+            f for f in os.listdir(self.db_path_loops)
+            if os.path.isfile(os.path.join(self.db_path_loops, f))
+        ]
         self.smpl_list.sort()
         for n in self.smpl_list:
             if not n.endswith(self.ext):
@@ -92,29 +105,28 @@ class SampleChart:
         self.dict_loops = self.smpl_list
 
     def db_view(self):
-        """Generate a button for each sample database by sdb folder"""
+        """Generate a button for each sample database by spack folder"""
         # Set DB_SAMPLES Frame
-        self.db_count = len([name for name in os.listdir(FOXDOT_SND)])
+        self.db_count = len([name for name in os.listdir(str(SAMPLES_DIR_PATH))])
         self.db_frame = LabelFrame(
             self.root, text="SAMPLES_DB", padx=20, pady=20)
         self.db_frame.grid(row=0, column=0)
+
         # Add Buttons
         for count in range(self.db_count):
             lbl = str(count)
             btn_db = Button(self.db_frame, text=lbl,
                             command=lambda db=lbl: self.change_db(db))
             btn_db.grid(row=0, column=count, sticky="ns")
+
         self.db_frame.grid_rowconfigure(1, weight=1)
         self.db_frame.grid_columnconfigure(1, weight=1)
-        self.txt_frame = LabelFrame(
-            self.db_frame, text="Code Example", height=1)
-        self.txt_frame.grid(columnspan=self.db_count,
-                            row=1, column=0, sticky='w')
+        self.txt_frame = LabelFrame(self.db_frame, text="Code Example", height=1)
+        self.txt_frame.grid(columnspan=self.db_count, row=1, column=0, sticky='w')
         self.txt = Text(self.txt_frame, width=80, height=1)
         self.txt.pack()
         self.lbl_file = Label(self.db_frame, text="Filename: ", anchor="w")
-        self.lbl_file.grid(columnspan=self.db_count, row=2,
-                           column=0, pady=5, sticky="w")
+        self.lbl_file.grid(columnspan=self.db_count, row=2, column=0, pady=5, sticky="w")
 
     def smpl_view(self, w, h):
         """Generate a button for each sample arranged by character folder"""
@@ -271,7 +283,7 @@ class SampleChart:
             self.path = self.db_path_s + char + "/" + path
             self.cmd = "play"
         self.p = multiprocessing.Process(target=playsound, args=(self.path,))
-        self.code = f'{self.cmd}("{self.char}", sdb={self.db}, sample={sample})'
+        self.code = f'{self.cmd}("{self.char}", spack={self.spack_num_str}, sample={sample})'
         self.txt.insert(END, self.code)
         self.change_fname(path)
         self.p.start()
@@ -281,10 +293,10 @@ class SampleChart:
         #self.play_audio(char, sample, path, row, col)
         pass
 
-    def change_db(self, db):
+    def change_db(self, spack_num):
         """Deletes buttons and regenerate dictionaries and buttons with set database number"""
-        self.db = db
-        self.create_dics(self.db)
+        self.spack_num_str = spack_num
+        self.create_dics(self.spack_num_str)
         self.smpl_btns()
         # Update buttons frames idle tasks to let tkinter calculate buttons sizes
         self.btn_frame.update_idletasks()

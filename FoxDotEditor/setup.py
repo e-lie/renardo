@@ -22,6 +22,7 @@ setup(
     install_requires=[
         'renardo-lib>=0.9.2',
         'psutil',
+        'playsound',
     ],
 )
 

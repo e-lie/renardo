@@ -37,6 +37,5 @@ setup(
     package_data = {'renardo_lib': ['README.md','demo/**', 'osc/**'],},
     install_requires=[
         'renardo_gatherer>=0.1.1',
-        'playsound',
     ],
 )
