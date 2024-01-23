@@ -75,7 +75,7 @@ class RenardoApp:
         #parser.add_argument('-n', '--no-startup', action='store_true', help="does not load startup.py on boot")
         # store_false => boot default value = True WTF
         parser.add_argument('-b', '--boot', action='store_true', help="Boot SuperCollider Renardo instance automatically")
-        parser.add_argument('-c', '--create-scfiles', action='store_false', help="Create Renardo class file and startup file in SuperCollider user conf dir.")
+        parser.add_argument('-c', '--create-scfiles', action='store_true', help="Create Renardo class file and startup file in SuperCollider user conf dir.")
 
         return parser.parse_args()
 
