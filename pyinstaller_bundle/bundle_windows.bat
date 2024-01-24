@@ -1,15 +1,34 @@
-::Set-ExecutionPolicy Unrestricted -Scope Process
-::pip uninstall renardo renardo_sitter FoxDotEditor pyinstaller wave psutil
+@echo off
 
-git clone https://github.com/e-lie/renardo.git ../renardo
-git clone https://github.com/e-lie/FoxDotEditor.git ../FoxDotEditor
-git clone https://github.com/e-lie/renardo_sitter.git ../renardo_sitter
+:: lolilolilolilol le BAT
+for %%i in ("%CD%\..") do set "PARENT_DIR=%%~fi"
 
-python -m venv venv
+set "VENV_DIR=%PARENT_DIR%\venv"
 
-.\venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-pip list
+set "RENARDO_VERSION=0.9.3"
 
-:: python -m PyInstaller renardo_bundle.py --collect-all renardo --collect-all FoxDotEditor --collect-all renardo_sitter --hidden-import wave --hidden-import psutil --hidden-import json --hidden-import queue --hidden-import socketserver --hidden-import tkinter --clean
-python -m PyInstaller renardo_bundle.py --collect-all renardo --collect-all FoxDotEditor --collect-all renardo_sitter --hidden-import wave --hidden-import psutil --clean
+python -m venv %VENV_DIR%
+
+CALL %VENV_DIR%\Scripts\activate.bat
+
+:: fix playsound install https://stackoverflow.com/questions/76142067/on-github-actions-pip-install-playsound-failed-with-the-oserror-could-not-g
+pip install --upgrade setuptools wheel
+
+cd ..
+pip install -r requirements.pyinstaller.txt
+
+cd pyinstaller_bundle
+
+::python -m PyInstaller renardo_bundle.py --collect-all renardo --collect-all FoxDotEditor --collect-all renardo_sitter --hidden-import wave --hidden-import psutil --hidden-import json --hidden-import queue --hidden-import socketserver --hidden-import tkinter --clean
+python -m PyInstaller "renardo-%RENARDO_VERSION%.py" ^
+--collect-all renardo ^
+--collect-all FoxDotEditor ^
+--collect-all renardo_lib ^
+--collect-all renardo_gatherer ^
+--collect-all textual ^
+--noconfirm ^
+--clean
+
+
+::--onefile prevent usage with pulsar ?
+::--onefile ^ 
