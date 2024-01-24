@@ -170,7 +170,14 @@ class SPackManager:
                 directory_links.append(new_path)
                 self.find_audio_links_recursive(base_url, directory_links, audiofile_links, current_path=new_path)
             else:
-                if(link['href'].endswith('.wav')):
+                if(
+                    link['href'].endswith('.wav')
+                    or link['href'].endswith('.WAV')
+                    or link['href'].endswith('.aiff')
+                    or link['href'].endswith('.aif')
+                    or link['href'].endswith('.AIF')
+                    or link['href'].endswith('.AIFF')
+                ):
                     # print(link['href'])
                     audiofile_links.append(current_path + link['href'])
 
