@@ -20,7 +20,7 @@ pip install -r requirements.pyinstaller.txt
 cd pyinstaller_bundle
 
 ::python -m PyInstaller renardo_bundle.py --collect-all renardo --collect-all FoxDotEditor --collect-all renardo_sitter --hidden-import wave --hidden-import psutil --hidden-import json --hidden-import queue --hidden-import socketserver --hidden-import tkinter --clean
-python -m PyInstaller "renardo-%RENARDO_VERSION%.py" ^
+python -m PyInstaller "renardo-entrypoint.py" ^
 --collect-all renardo ^
 --collect-all FoxDotEditor ^
 --collect-all renardo_lib ^

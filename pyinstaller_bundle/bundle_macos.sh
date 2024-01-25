@@ -12,7 +12,7 @@ pip3 install -r ../requirements.pyinstaller.txt
 echo '####### bundling with pyinstaller'
 export DISTP="/tmp/renardo-$RENARDO_VERSION"
 mkdir -p $DISTP
-pyinstaller "renardo-$RENARDO_VERSION.py" \
+pyinstaller "renardo-entrypoint.py" \
     --name "renardo-$RENARDO_VERSION" \
     --collect-all renardo_gatherer \
     --collect-all renardo_lib \
