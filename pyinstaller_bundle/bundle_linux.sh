@@ -1,4 +1,4 @@
-
+export RENARDO_VERSION="0.9.3rc"
 
 echo '######## creating venv'
 python3 -m venv ../venv
@@ -10,15 +10,20 @@ echo '####### installing python requirements in venv (editable + normal libs)'
 pip3 install -r ../requirements.pyinstaller.txt
 
 echo '####### bundling with pyinstaller'
-pyinstaller renardo_bundle.py \
+export DISTP="/tmp/renardo-$RENARDO_VERSION"
+mkdir -p $DISTP
+pyinstaller "renardo-$RENARDO_VERSION.py" \
+    --name "renardo-$RENARDO_VERSION" \
     --collect-all renardo_gatherer \
     --collect-all renardo_lib \
     --collect-all FoxDotEditor \
     --collect-all renardo \
     --collect-all textual \
     --clean \
-    --distpath ./renardo
+    --noconfirm \
+    --distpath $DISTP \
+    --workpath "/tmp/renardo_pyinstaller_build"
 
 #echo '####### create archive'
-#tar -czvf renardo_linux.tar.gz renardo_linux
+tar -czvf "$DISTP/renardo-$RENARDO_VERSION.tar.gz" "$DISTP/renardo-$RENARDO_VERSION"
 

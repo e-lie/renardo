@@ -5,7 +5,7 @@ for %%i in ("%CD%\..") do set "PARENT_DIR=%%~fi"
 
 set "VENV_DIR=%PARENT_DIR%\venv"
 
-set "RENARDO_VERSION=0.9.3"
+set "RENARDO_VERSION=0.9.3rc"
 
 python -m venv %VENV_DIR%
 
@@ -27,8 +27,15 @@ python -m PyInstaller "renardo-%RENARDO_VERSION%.py" ^
 --collect-all renardo_gatherer ^
 --collect-all textual ^
 --noconfirm ^
+--distpath "C:\User\Desktop\renardo-%RENARDO_VERSION%"
+--workpath "C:\User\Desktop\renardo_pyinstaller_build"
 --clean
 
 
 ::--onefile prevent usage with pulsar ?
 ::--onefile ^ 
+
+set "sourceFolder=C:\User\Desktop\renardo-%RENARDO_VERSION%\renardo-%RENARDO_VERSION%"
+set "destinationZip=C:\User\Desktop\renardo-%RENARDO_VERSION%.zip"
+
+PowerShell -Command "Compress-Archive -Path '%sourceFolder%' -DestinationPath '%destinationZip%'"
