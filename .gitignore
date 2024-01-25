@@ -60,6 +60,8 @@ snd/mkdir.py
 docs/_build/
 
 *.txt
+!requirements.pyinstaller.txt
+!requirements.dev.txt
 
 # Windows image file caches
 Thumbs.db

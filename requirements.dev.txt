@@ -1,0 +1,12 @@
+psutil
+requests
+bs4
+indexed
+playsound
+midiutil
+
+textual
+
+GitPython
+build
+twine
