@@ -21,13 +21,14 @@ cd pyinstaller_bundle
 
 ::python -m PyInstaller renardo_bundle.py --collect-all renardo --collect-all FoxDotEditor --collect-all renardo_sitter --hidden-import wave --hidden-import psutil --hidden-import json --hidden-import queue --hidden-import socketserver --hidden-import tkinter --clean
 python -m PyInstaller "renardo-entrypoint.py" ^
+--name "renardo-%RENARDO_VERSION%" ^
 --collect-all renardo ^
 --collect-all FoxDotEditor ^
 --collect-all renardo_lib ^
 --collect-all renardo_gatherer ^
 --collect-all textual ^
 --noconfirm ^
---distpath "C:\User\Desktop\renardo-%RENARDO_VERSION%"
+--distpath "C:\User\Desktop\renardo-%RENARDO_VERSION%" ^
 --workpath "C:\User\Desktop\renardo_pyinstaller_build"
 --clean
 

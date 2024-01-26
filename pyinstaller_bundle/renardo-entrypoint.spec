@@ -35,7 +35,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='renardo-0.9.3',
+    name='renardo-entrypoint',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -54,5 +54,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='renardo-0.9.3',
+    name='renardo-entrypoint',
 )
