@@ -5,7 +5,7 @@ for %%i in ("%CD%\..") do set "PARENT_DIR=%%~fi"
 
 set "VENV_DIR=%PARENT_DIR%\venv"
 
-set "RENARDO_VERSION=0.9.3rc"
+set "RENARDO_VERSION=0.9.3"
 
 python -m venv %VENV_DIR%
 
