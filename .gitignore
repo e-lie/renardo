@@ -1,6 +1,7 @@
 # demo and debug folders
 __pycache__/
 venv
+venv2
 *.pyc
 *.egg-info
 build
@@ -21,9 +22,7 @@ changed_files.txt
 # To-do list
 TODO.txt
 
-
 renardo_samples
-*.wav
 *.wav
 *.aiff
 *.mp3
