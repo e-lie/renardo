@@ -9,6 +9,7 @@ from textual.worker import get_current_worker
 from textual.app import App, ComposeResult
 from textual.reactive import reactive
 from textual.containers import Container, Horizontal, Vertical
+import subprocess
 
 from textual.widgets import (
     RadioButton,
@@ -100,6 +101,13 @@ class RenardoTUI(App[None]):
                     yield Label("Boot SuperCollider audio backend at startup ?")
                     yield RadioButton("Yes (Still buggy but doesn't hurt to try)")
                     yield RadioButton("No (You should manually open SuperCollider and execute Renardo.start)", value=True)
+            with TabPane("SuperCollider Boot", id="sc-boot"):
+                with Horizontal():
+                    with Vertical():
+                        yield Button("Start SC instance", id="start-sc-btn")
+                    with Vertical():
+                        yield Log(id="sc-log-output")
+
 
     @work(exclusive=True, thread=True)
     def dl_samples_background(self) -> None:
@@ -115,11 +123,30 @@ class RenardoTUI(App[None]):
         self.query_one("#log-output", Log).write_line("Renardo SC files created in user config")
         self.left_pane_mode = self.calculate_left_pane_mode()
 
+    @work(exclusive=True, thread=True)
+    def start_sc_background(self) -> None:
+        self.query_one("#sc-log-output", Log).write_line("Launching Renardo SC module with SCLang...")
+        self.renardo_app.renardo_sc_instance.start_sclang_subprocess()
+        output_line = self.renardo_app.renardo_sc_instance.read_stdout_line()
+        while "Welcome to" not in output_line:
+            self.query_one("#sc-log-output", Log).write_line(output_line)
+            output_line = self.renardo_app.renardo_sc_instance.read_stdout_line()
+        self.renardo_app.renardo_sc_instance.evaluate_sclang_code("Renardo.start;")
+        while True:
+            self.query_one("#sc-log-output", Log).write_line(self.renardo_app.renardo_sc_instance.read_stdout_line())
+
+    @work(exclusive=True, thread=True)
+    def start_foxdoteditor_background(self) -> None:
+        from renardo_lib import FoxDotCode
+        # Open the GUI
+        from FoxDotEditor.Editor import workspace
+        FoxDot = workspace(FoxDotCode).run()
+        self.exit() # Exit renardo when editor is closed because there is a bug when relaunching editor
+
     def watch_left_pane_mode(self):
+        """watch function textual reactive param"""
         try:
             self.query_one(LeftPane).current = self.left_pane_mode
-            #for debug
-            #self.query_one("#log-output", Log).write_line(f"Left pane mode changed to {self.left_pane_mode}")
         except NoMatches:
             pass
 
@@ -131,13 +158,11 @@ class RenardoTUI(App[None]):
         button_id = event.button.id
 
         if button_id == "quit-btn":
-            #self.query_one("StartRenardoBlock").styles.visibility = "hidden"
             self.exit()
 
         if button_id == "pick-btn":
            content_id = ["start-renardo", "init-renardo-scfiles", "dl-renardo-samples", "init-renardo-both"]
            self.query_one(LeftPane).current = random.choice(content_id)
-
 
         if button_id == "dl-renardo-samples":
             self.dl_samples_background()
@@ -148,13 +173,13 @@ class RenardoTUI(App[None]):
         if button_id == "start-renardo-pipe":
             self.renardo_app.args.pipe = True
             self.exit()
-            #from renardo_lib import FoxDotCode, handle_stdin
-            # Just take commands from the CLI
-            #handle_stdin()
 
         if button_id == "start-renardo-foxdot-editor":
-            self.renardo_app.args.foxdot_editor = True
-            self.exit()
+            self.start_foxdoteditor_background()
+
+        if button_id == "start-sc-btn":
+            self.start_sc_background()
+
 
 
     def on_mount(self) -> None:

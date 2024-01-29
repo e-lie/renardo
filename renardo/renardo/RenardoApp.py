@@ -12,6 +12,7 @@ class RenardoApp:
         self.sc_instance = None
         self.spack_manager = SPackManager()
         self.args = RenardoApp.parse_args()
+        self.renardo_sc_instance = RenardoSupercolliderInstance()
         self.launch()
 
     def launch(self):
@@ -42,8 +43,14 @@ class RenardoApp:
             RenardoTUI(self).run()
 
         if self.args.boot:
-            self.renardo_sc_instance = RenardoSupercolliderInstance()
-            time.sleep(10)
+            print("Launching Renardo SC module with SCLang...")
+            self.renardo_sc_instance.start_sclang_subprocess()
+            output_line = self.renardo_sc_instance.read_stdout_line()
+            while "Welcome to" not in output_line:
+                print(output_line[:-1]) # remove \n at the end to avoid double newline
+                output_line = self.renardo_sc_instance.read_stdout_line()
+            self.renardo_sc_instance.evaluate_sclang_code("Renardo.start;")
+            time.sleep(3)
 
         if self.args.pipe:
             from renardo_lib import handle_stdin, FoxDotCode
