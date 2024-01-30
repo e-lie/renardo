@@ -93,11 +93,11 @@ class RenardoTUI(App[None]):
                         yield Button("Quit", id="quit-btn")
                     with Vertical():
                         yield Log(id="log-output")
-            with TabPane("Config", id="config-tab"):
-                with RadioSet():
-                    yield Label("Boot SuperCollider audio backend at startup ?")
-                    yield RadioButton("Yes (Still buggy but doesn't hurt to try)")
-                    yield RadioButton("No (You should manually open SuperCollider and execute Renardo.start)", value=True)
+            # with TabPane("Config", id="config-tab"):
+            #     with RadioSet():
+            #         yield Label("Boot SuperCollider audio backend at startup ?")
+            #         yield RadioButton("Yes (Still buggy but doesn't hurt to try)")
+            #         yield RadioButton("No (You should manually open SuperCollider and execute Renardo.start)", value=True)
             #with TabPane("SuperCollider Boot", id="sc-boot"):
             #    with Horizontal():
             #        with Vertical():
@@ -147,8 +147,8 @@ class RenardoTUI(App[None]):
         except NoMatches:
             pass
 
-    def on_radio_set_changed(self, event: RadioSet.Changed) -> None:
-        self.renardo_app.args.boot = True if event.radio_set.pressed_index == 1 else False
+    # def on_radio_set_changed(self, event: RadioSet.Changed) -> None:
+    #     self.renardo_app.args.boot = True if event.radio_set.pressed_index == 1 else False
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Event handler called when a button is pressed."""
@@ -169,4 +169,4 @@ class RenardoTUI(App[None]):
 
     def on_mount(self) -> None:
         self.title = "Renardo"
-        self.query_one(RadioSet).focus()
+        #self.query_one(RadioSet).focus()
