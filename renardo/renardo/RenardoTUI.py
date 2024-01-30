@@ -27,18 +27,19 @@ from textual.widgets import (
 class StartRenardoBlock(Static):
     def compose(self) -> ComposeResult:
         yield Label("Default samples pack downloaded and Renardo SuperCollider files installed")
-        yield Button("Start renardo (with FoxDot editor)", id="start-renardo-foxdot-editor")
-        yield Button("Start renardo pipe mode", id="start-renardo-pipe")
+        yield Button("Start SuperCollider Backend", id="start-sc-btn")
+        yield Button("Start renardo (with FoxDot editor)", id="start-renardo-foxdot-editor-btn", disabled=True)
+        yield Button("Start renardo pipe mode", id="start-renardo-pipe-btn", disabled=True)
 
 class DownloadRenardoSamplesBlock(Static):
     def compose(self) -> ComposeResult:
         yield Label("Default samples pack needs to be downloaded")
-        yield Button("Download renardo default samples pack", id="dl-renardo-samples")
+        yield Button("Download renardo default samples pack", id="dl-renardo-samples-btn")
 
 class InitRenardoSCFilesBlock(Static):
     def compose(self) -> ComposeResult:
         yield Label("Renardo SuperCollider files need to be installed")
-        yield Button("Create renardo SC Class files and startup code", id="init-renardo-scfiles")
+        yield Button("Create renardo SC Class files and startup code", id="init-renardo-scfiles-btn")
 
 class InitRenardoBothBlock(Static):
     def compose(self) -> ComposeResult:
@@ -97,12 +98,12 @@ class RenardoTUI(App[None]):
                     yield Label("Boot SuperCollider audio backend at startup ?")
                     yield RadioButton("Yes (Still buggy but doesn't hurt to try)")
                     yield RadioButton("No (You should manually open SuperCollider and execute Renardo.start)", value=True)
-            with TabPane("SuperCollider Boot", id="sc-boot"):
-                with Horizontal():
-                    with Vertical():
-                        yield Button("Start SC instance", id="start-sc-btn")
-                    with Vertical():
-                        yield Log(id="sc-log-output")
+            #with TabPane("SuperCollider Boot", id="sc-boot"):
+            #    with Horizontal():
+            #        with Vertical():
+            #            yield Button("Start SC instance", id="start-sc-btn")
+            #        with Vertical():
+            #            yield Log(id="sc-log-output")
 
     @work(exclusive=True, thread=True)
     def dl_samples_background(self) -> None:
@@ -119,15 +120,17 @@ class RenardoTUI(App[None]):
 
     @work(exclusive=True, thread=True)
     def start_sc_background(self) -> None:
-        self.query_one("#sc-log-output", Log).write_line("Launching Renardo SC module with SCLang...")
+        self.query_one("#log-output", Log).write_line("Launching Renardo SC module with SCLang...")
         self.renardo_app.renardo_sc_instance.start_sclang_subprocess()
         output_line = self.renardo_app.renardo_sc_instance.read_stdout_line()
         while "Welcome to" not in output_line:
-            self.query_one("#sc-log-output", Log).write_line(output_line)
+            self.query_one("#log-output", Log).write_line(output_line)
             output_line = self.renardo_app.renardo_sc_instance.read_stdout_line()
         self.renardo_app.renardo_sc_instance.evaluate_sclang_code("Renardo.start;")
+        self.query_one("#start-renardo-foxdot-editor-btn", Button).disabled = False
+        self.query_one("#start-renardo-pipe-btn", Button).disabled = False
         while True:
-            self.query_one("#sc-log-output", Log).write_line(self.renardo_app.renardo_sc_instance.read_stdout_line())
+            self.query_one("#log-output", Log).write_line(self.renardo_app.renardo_sc_instance.read_stdout_line())
 
     @work(exclusive=True, thread=True)
     def start_foxdoteditor_background(self) -> None:
@@ -152,19 +155,16 @@ class RenardoTUI(App[None]):
         button_id = event.button.id
         if button_id == "quit-btn":
             self.exit()
-        if button_id == "pick-btn":
-           content_id = ["start-renardo", "init-renardo-scfiles", "dl-renardo-samples", "init-renardo-both"]
-           self.query_one(LeftPane).current = random.choice(content_id)
-        if button_id == "dl-renardo-samples":
+        if button_id == "dl-renardo-samples-btn":
             self.dl_samples_background()
-        if button_id == "init-renardo-scfiles":
+        if button_id == "init-renardo-scfiles-btn":
             self.init_scfile_background()
-        if button_id == "start-renardo-pipe":
+        if button_id == "start-renardo-pipe-btn":
             self.renardo_app.args.pipe = True
             self.exit()
         if button_id == "start-sc-btn":
             self.start_sc_background()
-        if button_id == "start-renardo-foxdot-editor":
+        if button_id == "start-renardo-foxdot-editor-btn":
             self.start_foxdoteditor_background()
 
     def on_mount(self) -> None:
