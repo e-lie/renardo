@@ -57,12 +57,9 @@ class LeftPane(ContentSwitcher):
         yield InitRenardoSCFilesBlock(id="init-renardo-scfiles")
         yield DownloadRenardoSamplesBlock(id="dl-renardo-samples")
 
-
 class RenardoTUI(App[None]):
     CSS_PATH = "RenardoTUI.tcss"
-
     left_pane_mode = reactive("start-renardo")
-
     #BINDINGS = [
     #    ("d", "toggle_dark", "Toggle dark mode"),
     #    ("a", "add_stopwatch", "Add"),
@@ -84,7 +81,6 @@ class RenardoTUI(App[None]):
             return "dl-renardo-samples"
         else:
             return "init-renardo-both"
-
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -108,11 +104,9 @@ class RenardoTUI(App[None]):
                     with Vertical():
                         yield Log(id="sc-log-output")
 
-
     @work(exclusive=True, thread=True)
     def dl_samples_background(self) -> None:
         log_output_widget = self.query_one("#log-output", Log)
-        worker = get_current_worker()
         self.renardo_app.spack_manager.set_logger(log_output_widget)
         self.renardo_app.spack_manager.init_default_spack()
         self.left_pane_mode = self.calculate_left_pane_mode()
@@ -141,7 +135,7 @@ class RenardoTUI(App[None]):
         # Open the GUI
         from FoxDotEditor.Editor import workspace
         FoxDot = workspace(FoxDotCode).run()
-        self.exit() # Exit renardo when editor is closed because there is a bug when relaunching editor
+        self.exit(0) # Exit renardo when editor is closed because there is a bug when relaunching editor
 
     def watch_left_pane_mode(self):
         """watch function textual reactive param"""
@@ -156,31 +150,22 @@ class RenardoTUI(App[None]):
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Event handler called when a button is pressed."""
         button_id = event.button.id
-
         if button_id == "quit-btn":
             self.exit()
-
         if button_id == "pick-btn":
            content_id = ["start-renardo", "init-renardo-scfiles", "dl-renardo-samples", "init-renardo-both"]
            self.query_one(LeftPane).current = random.choice(content_id)
-
         if button_id == "dl-renardo-samples":
             self.dl_samples_background()
-
         if button_id == "init-renardo-scfiles":
             self.init_scfile_background()
-
         if button_id == "start-renardo-pipe":
             self.renardo_app.args.pipe = True
             self.exit()
-
-        if button_id == "start-renardo-foxdot-editor":
-            self.start_foxdoteditor_background()
-
         if button_id == "start-sc-btn":
             self.start_sc_background()
-
-
+        if button_id == "start-renardo-foxdot-editor":
+            self.start_foxdoteditor_background()
 
     def on_mount(self) -> None:
         self.title = "Renardo"

@@ -72,14 +72,12 @@ class RenardoApp:
             description="Live coding with Python and SuperCollider",
             epilog="More information: https://renardo.org/"
         )
-
         parser.add_argument('-N', '--no-tui', action='store_true', help="does start renardo TUI")
         parser.add_argument('-p', '--pipe', action='store_true', help="run Renardo from the command line interface")
         parser.add_argument('-f', '--foxdot-editor', action='store_true', help="run Renardo with the classic FoxDot code editor")
-        #parser.add_argument('-d', '--dir', action='store', help="use an alternate directory for looking up samples")
-        #parser.add_argument('-s', '--startup', action='store', help="use an alternate startup file")
-
-        #parser.add_argument('-n', '--no-startup', action='store_true', help="does not load startup.py on boot")
+        # parser.add_argument('-d', '--dir', action='store', help="use an alternate directory for looking up samples")
+        # parser.add_argument('-s', '--startup', action='store', help="use an alternate startup file")
+        # parser.add_argument('-n', '--no-startup', action='store_true', help="does not load startup.py on boot")
         # store_false => boot default value = True WTF
         parser.add_argument('-b', '--boot', action='store_true', help="Boot SuperCollider Renardo instance automatically")
         parser.add_argument('-c', '--create-scfiles', action='store_true', help="Create Renardo class file and startup file in SuperCollider user conf dir.")
