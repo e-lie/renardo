@@ -26,10 +26,11 @@ from textual.widgets import (
 
 class StartRenardoBlock(Static):
     def compose(self) -> ComposeResult:
-        yield Label("Default samples pack downloaded and Renardo SuperCollider files installed")
+        #yield Label("Default samples pack downloaded and Renardo SuperCollider files installed")
         yield Button("Start SuperCollider Backend", id="start-sc-btn")
-        yield Button("Start renardo (with FoxDot editor)", id="start-renardo-foxdot-editor-btn", disabled=True)
-        yield Button("Start renardo pipe mode", id="start-renardo-pipe-btn", disabled=True)
+        yield Button("Start renardo Pulsar", id="start-pulsar-btn", disabled=True)
+        yield Button("Start renardo FoxDot editor", id="start-renardo-foxdot-editor-btn", disabled=True)
+        #yield Button("Start renardo pipe mode", id="start-renardo-pipe-btn", disabled=True)
 
 class DownloadRenardoSamplesBlock(Static):
     def compose(self) -> ComposeResult:
@@ -121,16 +122,24 @@ class RenardoTUI(App[None]):
     @work(exclusive=True, thread=True)
     def start_sc_background(self) -> None:
         self.query_one("#log-output", Log).write_line("Launching Renardo SC module with SCLang...")
-        self.renardo_app.renardo_sc_instance.start_sclang_subprocess()
-        output_line = self.renardo_app.renardo_sc_instance.read_stdout_line()
+        self.renardo_app.sc_instance.start_sclang_subprocess()
+        output_line = self.renardo_app.sc_instance.read_stdout_line()
         while "Welcome to" not in output_line:
             self.query_one("#log-output", Log).write_line(output_line)
-            output_line = self.renardo_app.renardo_sc_instance.read_stdout_line()
-        self.renardo_app.renardo_sc_instance.evaluate_sclang_code("Renardo.start;")
+            output_line = self.renardo_app.sc_instance.read_stdout_line()
+        self.renardo_app.sc_instance.evaluate_sclang_code("Renardo.start;")
         self.query_one("#start-renardo-foxdot-editor-btn", Button).disabled = False
         self.query_one("#start-renardo-pipe-btn", Button).disabled = False
+        self.query_one("#start-pulsar-btn", Button).disabled = False
         while True:
-            self.query_one("#log-output", Log).write_line(self.renardo_app.renardo_sc_instance.read_stdout_line())
+            self.query_one("#log-output", Log).write_line(self.renardo_app.sc_instance.read_stdout_line())
+
+    @work(exclusive=True, thread=True)
+    def start_pulsar_background(self) -> None:
+        self.query_one("#log-output", Log).write_line("Launching Renardo SC module with SCLang...")
+        self.renardo_app.pulsar_instance.start_pulsar_subprocess()
+        while True:
+            self.query_one("#log-output", Log).write_line(self.renardo_app.sc_instance.read_stdout_line())
 
     @work(exclusive=True, thread=True)
     def start_foxdoteditor_background(self) -> None:
@@ -162,6 +171,8 @@ class RenardoTUI(App[None]):
         if button_id == "start-renardo-pipe-btn":
             self.renardo_app.args.pipe = True
             self.exit()
+        if button_id == "start-pulsar-btn":
+            self.start_pulsar_background()
         if button_id == "start-sc-btn":
             self.start_sc_background()
         if button_id == "start-renardo-foxdot-editor-btn":

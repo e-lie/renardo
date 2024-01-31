@@ -1,5 +1,6 @@
 from .SCFilesHandling import write_sc_renardo_files_in_user_config
-from .SuperColliderInstance import RenardoSupercolliderInstance
+from .SuperColliderInstance import SupercolliderInstance
+from .PulsarInstance import PulsarInstance
 from .RenardoTUI import RenardoTUI
 from renardo_gatherer.samples_download import SPackManager
 
@@ -12,7 +13,8 @@ class RenardoApp:
         self.sc_instance = None
         self.spack_manager = SPackManager()
         self.args = RenardoApp.parse_args()
-        self.renardo_sc_instance = RenardoSupercolliderInstance()
+        self.sc_instance = SupercolliderInstance()
+        self.pulsar_instance = PulsarInstance()
         self.launch()
 
     def launch(self):
@@ -44,12 +46,12 @@ class RenardoApp:
 
         if self.args.boot:
             print("Launching Renardo SC module with SCLang...")
-            self.renardo_sc_instance.start_sclang_subprocess()
-            output_line = self.renardo_sc_instance.read_stdout_line()
+            self.sc_instance.start_sclang_subprocess()
+            output_line = self.sc_instance.read_stdout_line()
             while "Welcome to" not in output_line:
                 print(output_line[:-1]) # remove \n at the end to avoid double newline
-                output_line = self.renardo_sc_instance.read_stdout_line()
-            self.renardo_sc_instance.evaluate_sclang_code("Renardo.start;")
+                output_line = self.sc_instance.read_stdout_line()
+            self.sc_instance.evaluate_sclang_code("Renardo.start;")
             time.sleep(3)
 
         if self.args.pipe:

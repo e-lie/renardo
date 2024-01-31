@@ -9,7 +9,7 @@ import psutil
 from renardo.SCFilesHandling import SC_USER_CONFIG_DIR
 
 
-class RenardoSupercolliderInstance:
+class SupercolliderInstance:
 
     def __init__(self):
         self.sclang_process = None
