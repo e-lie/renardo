@@ -14,14 +14,21 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Create prerelease
-        if: contains( github.ref_name, 'dev' )
+        if: contains( github.ref_name, 'dev' ) && startsWith( github.ref_name, 'v')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
-        #|
-          # gh release create "$tag" \
-          #    --repo="$GITHUB_REPOSITORY" \
-          #    --title="${GITHUB_REPOSITORY#*/} ${tag#v}" \
-          #    --generate-notes
         run: |
-          echo "${GITHUB_REPOSITORY#*/} ${tag#v}"
+          gh release create "$tag" \
+             --repo="$GITHUB_REPOSITORY" \
+             --title="${GITHUB_REPOSITORY#*/} ${tag#v}" \
+             --generate-notes \
+             --prerelease
+
+      - name: Create release
+        if: "!contains( github.ref_name, 'dev' )) && startsWith( github.ref_name, 'v')"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
+        run: |
+          echo cool
