@@ -26,7 +26,7 @@ jobs:
              --prerelease
 
       - name: Create release
-        if: "!contains( github.ref_name, 'dev' )) && startsWith( github.ref_name, 'v')"
+        if: (false == contains( github.ref_name, 'dev' ))) && startsWith( github.ref_name, 'v')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
