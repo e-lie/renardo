@@ -13,7 +13,8 @@ jobs:
     name: Release pushed tag
     runs-on: ubuntu-22.04
     steps:
-      - name: Create release
+      - name: Create prerelease
+        if: contains( github.ref_name, 'dev' )
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
