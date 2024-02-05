@@ -17,8 +17,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
+        #|
+          # gh release create "$tag" \
+          #    --repo="$GITHUB_REPOSITORY" \
+          #    --title="${GITHUB_REPOSITORY#*/} ${tag#v}" \
+          #    --generate-notes
         run: |
-          gh release create "$tag" \
-              --repo="$GITHUB_REPOSITORY" \
-              --title="${GITHUB_REPOSITORY#*/} ${tag#v}" \
-              --generate-notes
+          echo "${GITHUB_REPOSITORY#*/} ${tag#v}"
