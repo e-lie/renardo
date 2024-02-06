@@ -7,7 +7,7 @@ with open("README.md", "r") as f:
 
 setup(
     name='renardo',
-    version="0.9.4.dev0",
+    version="0.9.4.dev1",
     description='Launcher/config editor for Renardo livecoding environment',
     author='Elie Gavoty',
     author_email='eliegavoty@free.fr',
