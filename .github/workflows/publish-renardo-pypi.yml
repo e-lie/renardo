@@ -1,11 +1,48 @@
 name: Upload Python Package
 
+#on: # only triggered on manuel release creation
+#  release:
+#    types: [published]
+
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - v*
+
+permissions:
+  contents: write
 
 jobs:
-  pypi-publish:
+
+  release:
+    name: Release pushed tag
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Create prerelease
+        if: contains( github.ref_name, 'dev' ) && startsWith( github.ref_name, 'v')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
+        run: |
+          gh release create "$tag" \
+             --repo="$GITHUB_REPOSITORY" \
+             --title="${GITHUB_REPOSITORY#*/} ${tag#v}" \
+             --generate-notes \
+             --prerelease
+
+      - name: Create release
+        if: (false == contains( github.ref_name, 'dev' )) && startsWith( github.ref_name, 'v')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
+        run: |
+          gh release create "$tag" \
+             --repo="$GITHUB_REPOSITORY" \
+             --title="${GITHUB_REPOSITORY#*/} ${tag#v}" \
+             --generate-notes \
+
+      
+  pypi-publish-renardo:
     runs-on: ubuntu-latest
     environment:
       name: release 
@@ -31,3 +68,4 @@ jobs:
         with:
           #password: ${{ secrets.PYPI_API_TOKEN }}
           packages-dir: renardo/dist/
+          skip-existing: true
