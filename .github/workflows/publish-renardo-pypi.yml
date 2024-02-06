@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       # useless to create prerelease for each dev version but usefull to push to pypi
-      
+
       # - name: Create prerelease
       #  if: contains( github.ref_name, 'dev' ) && startsWith( github.ref_name, 'v')
       #  env:
@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: release 
-      url: https://pypi.org/p/renardo
+      url: https://pypi.org/p/renardo-gatherer
     permissions:
       id-token: write
     steps:
@@ -76,7 +76,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: release 
-      url: https://pypi.org/p/renardo
+      url: https://pypi.org/p/renardo-lib
     permissions:
       id-token: write
     steps:
@@ -104,7 +104,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: release 
-      url: https://pypi.org/p/renardo
+      url: https://pypi.org/p/foxdoteditor
     permissions:
       id-token: write
     steps:
