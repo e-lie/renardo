@@ -1,0 +1,33 @@
+name: Upload Python Package
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  pypi-publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi-renardo
+      url: https://pypi.org/p/renardo
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
+      - name: Build package
+        run: |
+          cd renardo
+          python -m build
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          #password: ${{ secrets.PYPI_API_TOKEN }}
+          packages-dir: renardo/dist/
