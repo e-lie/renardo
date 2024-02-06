@@ -8,7 +8,7 @@ jobs:
   pypi-publish:
     runs-on: ubuntu-latest
     environment:
-      name: pypi-renardo
+      name: release 
       url: https://pypi.org/p/renardo
     permissions:
       id-token: write
