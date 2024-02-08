@@ -28,7 +28,7 @@ So the intent of the project is:
 - Renardo should be easier to install (and will continue to get easier).
 - There is a lot of potential for FoxDot/Renardo and we would like to make it even more amazing.
 
-This software would not exist without a lot of hard and smart work from Ryan Kirbride and all the community contributors. They should be thanked a lot for that piece !!
+This software would not exist without a lot of hard and smart work from Ryan Kirkbride and all the community contributors. They should be thanked a lot for that piece !!
 
 ## Presentation of new features and architecture
 
