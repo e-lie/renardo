@@ -37,10 +37,10 @@ elif sys.platform.startswith('linux'):
 
 USER_CWD     = os.path.realpath(".")
 FOXDOT_ROOT  = os.path.realpath(__file__ + "/../../")
-FOXDOT_ICON  = os.path.realpath(FOXDOT_ROOT + "/lib/Workspace/img/icon.ico")
-FOXDOT_ICON_GIF = os.path.realpath(FOXDOT_ROOT + "/lib/Workspace/img/icon.gif")
-FOXDOT_HELLO = os.path.realpath(FOXDOT_ROOT + "/lib/Workspace/img/hello.txt")
-FOXDOT_STARTUP_PATH = os.path.realpath(FOXDOT_ROOT + "/lib/Custom/startup.py")
+FOXDOT_ICON  = os.path.realpath(FOXDOT_ROOT + "/Workspace/img/icon.ico")
+FOXDOT_ICON_GIF = os.path.realpath(FOXDOT_ROOT + "/Workspace/img/icon.gif")
+FOXDOT_HELLO = os.path.realpath(FOXDOT_ROOT + "/Workspace/img/hello.txt")
+FOXDOT_STARTUP_PATH = os.path.realpath(FOXDOT_ROOT + "/Custom/startup.py")
 # FOXDOT_SND = SAMPLES_FOLDER_PATH / 'foxdot_default'
 FOXDOT_SND = get_samples_dir_path()
 # FOXDOT_LOOP = SAMPLES_FOLDER_PATH / 'foxdot_default' / '_loop_'
@@ -60,7 +60,7 @@ FOXDOT_BUFFERS_FILE = os.path.realpath(FOXDOT_ROOT + "/osc/Buffers.scd")
 FOXDOT_EFFECTS_FILE = os.path.realpath(FOXDOT_ROOT + "/osc/Effects.scd")
 FOXDOT_INFO_FILE    = os.path.realpath(FOXDOT_ROOT + "/osc/Info.scd")
 FOXDOT_RECORD_FILE  = os.path.realpath(FOXDOT_ROOT + "/osc/Record.scd")
-FOXDOT_TEMP_FILE    = os.path.realpath(FOXDOT_ROOT + "/lib/Workspace/tmp/tempfile.txt")
+FOXDOT_TEMP_FILE    = os.path.realpath(FOXDOT_ROOT + "/Workspace/tmp/tempfile.txt")
 
 # If the tempfile doesn't exist, create it
 
