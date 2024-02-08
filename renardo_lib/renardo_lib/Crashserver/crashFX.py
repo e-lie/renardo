@@ -322,10 +322,10 @@ fx.add("wet = ~stutter.(osc, reset, stutlen)")
 fx.add("osc = SelectX.ar(stut, [dry, wet], wrap:1)")
 fx.save()
 
-fx = FxList.new('vol','volume', {'vol': 1}, order=2)
-fx.doc("Volume")
-fx.add("osc = osc*vol")
-fx.save()
+#fx = FxList.new('vol','volume', {'vol': 1}, order=2)
+#fx.doc("Volume")
+#fx.add("osc = osc*vol")
+#fx.save()
 
 
 # Fx LOOP
