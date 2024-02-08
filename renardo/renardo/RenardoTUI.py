@@ -121,18 +121,20 @@ class RenardoTUI(App[None]):
 
     @work(exclusive=True, thread=True)
     def start_sc_background(self) -> None:
-        self.query_one("#log-output", Log).write_line("Launching Renardo SC module with SCLang...")
-        self.renardo_app.sc_instance.start_sclang_subprocess()
-        output_line = self.renardo_app.sc_instance.read_stdout_line()
-        while "Welcome to" not in output_line:
-            self.query_one("#log-output", Log).write_line(output_line)
+        if self.renardo_app.sc_instance.start_sclang_subprocess():
+            self.query_one("#log-output", Log).write_line("Launching Renardo SC module with SCLang...")
             output_line = self.renardo_app.sc_instance.read_stdout_line()
-        self.renardo_app.sc_instance.evaluate_sclang_code("Renardo.start;")
-        self.query_one("#start-renardo-foxdot-editor-btn", Button).disabled = False
-        self.query_one("#start-renardo-pipe-btn", Button).disabled = False
-        self.query_one("#start-pulsar-btn", Button).disabled = False
-        while True:
-            self.query_one("#log-output", Log).write_line(self.renardo_app.sc_instance.read_stdout_line())
+            while "Welcome to" not in output_line:
+                self.query_one("#log-output", Log).write_line(output_line)
+                output_line = self.renardo_app.sc_instance.read_stdout_line()
+            self.renardo_app.sc_instance.evaluate_sclang_code("Renardo.start;")
+            self.query_one("#start-renardo-foxdot-editor-btn", Button).disabled = False
+            #self.query_one("#start-renardo-pipe-btn", Button).disabled = False
+            self.query_one("#start-pulsar-btn", Button).disabled = False
+            while True:
+                self.query_one("#log-output", Log).write_line(self.renardo_app.sc_instance.read_stdout_line())
+        else:
+            self.query_one("#log-output", Log).write_line("Already started")
 
     @work(exclusive=True, thread=True)
     def start_pulsar_background(self) -> None:
@@ -168,9 +170,9 @@ class RenardoTUI(App[None]):
             self.dl_samples_background()
         if button_id == "init-renardo-scfiles-btn":
             self.init_scfile_background()
-        if button_id == "start-renardo-pipe-btn":
-            self.renardo_app.args.pipe = True
-            self.exit()
+        #if button_id == "start-renardo-pipe-btn":
+        #    self.renardo_app.args.pipe = True
+        #    self.exit()
         if button_id == "start-pulsar-btn":
             self.start_pulsar_background()
         if button_id == "start-sc-btn":

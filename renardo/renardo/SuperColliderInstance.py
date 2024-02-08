@@ -35,6 +35,9 @@ class SupercolliderInstance:
                 stderr=subprocess.PIPE,
                 stdin=subprocess.PIPE,
             )
+            return True
+        else:
+            return False
 
     def read_stdout_line(self):
         if self.sclang_process.returncode is None:
