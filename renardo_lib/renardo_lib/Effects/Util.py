@@ -591,6 +591,16 @@ fx.add("for(1, 4, {|i| delayedSignal = AllpassL.ar(delayedSignal, 0.01 * 4.recip
 fx.add("osc = osc + delayedSignal")
 fx.save()
 
+fx = FxList.new(
+    foxdot_arg_name='vol',
+    synthdef='volume',
+    args={'vol': 1},
+    order=2
+)
+fx.add("osc = osc * vol")
+fx.save()
+
+
 fx = FxList.new('room2', 'reverb_stereo', {
                 'room2': 0, 'mix2': 0.2, 'damp2': 0.8, 'revatk': 0, 'revsus': 1}, order=2)
 fx.add_var("dry")
@@ -730,11 +740,6 @@ Effect.server.setFx(FxList)
 
 
 ##Not implemented yet#########
-
-# fx = FxList.new('vol','volume', {'vol': 1}, order=2)
-# fx.doc("Volume")
-# fx.add("osc = osc*vol")
-# fx.save()
 
 # # Fx LOOP
 # fx = FxList.new('fx1','fxout', {'fx1': 0, 'lpfx1':22000, 'hpfx1':0}, order=2)
