@@ -17,7 +17,7 @@ SynthDef(\virus, {
 	osc = (bass+tone1+tone2+tone3+noise+impulse).tanh;
 	env = EnvGen.ar(Env.asr(atk, sus, rel, curve:\lin), doneAction: 0);
 	osc = Mix.ar(osc);
-	osc = osc * amp * env * 0.3;
+	osc = osc * amp * env * 0.8;
 	osc = Pan2.ar(osc, pan);
 	ReplaceOut.ar(bus, osc);
 	},

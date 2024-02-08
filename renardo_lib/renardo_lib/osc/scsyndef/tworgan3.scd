@@ -11,7 +11,7 @@ SynthDef.new(\tworgan3, {
 	osc = BLowPass4.ar(in: osc, freq: fharm * freq, rq: rq, mul: env);
     osc = LeakDC.ar(osc);
 	osc = Mix(osc);
-	osc = osc * env * amp * 0.2;
+	osc = osc * env * amp * 0.15;
 	osc = Pan2.ar(osc, pan);
 	ReplaceOut.ar(bus, osc)
 },
