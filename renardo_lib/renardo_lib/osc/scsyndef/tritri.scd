@@ -7,7 +7,7 @@ SynthDef.new(\tritri, {
 	osc  = LFTri.ar(freq: freq, mul: modulator);
 	env = EnvGen.ar(Env([0, peak, level, level, 0], [atk, decay, max((atk + decay + rel), sus - (atk + decay + rel)), rel], curve:\sin), doneAction: 0);
 	osc = BLowPass4.ar(osc,(cutoff*(env.squared))+200+freq,rq);
-	osc = Mix(osc*env) * amp * 0.18;
+	osc = Mix(osc*env) * amp * 0.3;
 	osc = Pan2.ar(osc, pan);
 	ReplaceOut.ar(bus, osc)
 },

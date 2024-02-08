@@ -7,14 +7,14 @@ SynthDef.new(\varicelle, {
 	freq = [freq, freq+fmod];
 	env = EnvGen.ar(Env([0, peak, level, level, 0], [atk, decay, max((atk + decay + rel), sus - (atk + decay + rel)), rel], curve:\sin), doneAction: 0);
 	modul = fmod * SinOsc.kr(rate, add: amp) * Line.kr(0, 1, 7);
-	sigA = Pulse.ar(freq + modul, LFNoise2.kr(1).range(0.2, 0.8), mul: 0.8);
-	sigB = VarSaw.ar(freq + modul, mul: 0.7);
-	sigC = LPF.ar(WhiteNoise.ar(noisemix) * 0.15, freq * noiserate, mul: 0.5);
+	sigA = Pulse.ar(freq + modul, LFNoise2.kr(1).range(0.2, 0.8) );
+	sigB = VarSaw.ar(freq + modul);
+	sigC = LPF.ar(WhiteNoise.ar(noisemix) * 0.15, freq * noiserate);
 	sigA = sigA + sigC;
 	sigB = sigB + sigC;
 	osc = SelectX.ar(LFDNoise3.kr(xvib, 0.5).range(0, 1), [sigA, sigB]);
 	osc = Mix(osc);
-	osc = osc * env * amp * 0.18;
+	osc = osc * env * amp * 0.15;
 	osc = Pan2.ar(osc, pan);
 	ReplaceOut.ar(bus,osc)
 },
