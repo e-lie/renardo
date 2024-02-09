@@ -10,6 +10,7 @@ spack_manager = SPackManager()
 from renardo_lib.TempoClock import *
 from renardo_lib.Buffers import *
 from renardo_lib.Players import *
+from renardo_lib.Groups import *
 from renardo_lib.Patterns import *
 from renardo_lib.Effects import *
 from renardo_lib.TimeVar import *

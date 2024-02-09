@@ -55,8 +55,11 @@ def midi(scale, octave, degree, root=0, stepsPerOctave=12):
 
     return midival
 
-def get_freq_and_midi(degree, octave, root, scale):
+def get_freq_and_midi(degree, octave, root, scale, midi_map=None):
     """ Returns the frequency and midinote """
+
+    if isinstance(degree, str) and midi_map:
+        degree = midi_map[degree] if degree in midi_map.keys() else midi_map["default"]
 
     # TODO -- make sure it's always a scale
     if hasattr(scale, "now"):
