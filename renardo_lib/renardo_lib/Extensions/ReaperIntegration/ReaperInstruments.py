@@ -1,8 +1,8 @@
-from FoxDot.lib.Extensions.MidiMapFactory import MidiMapFactory
-from FoxDot import get_reaper_object_and_param_name, set_reaper_param
-from FoxDot.lib.Extensions.ReaperIntegrationLib.functions import split_param_name
-from FoxDot.lib.Midi import ReaperInstrument
-from FoxDot.lib.Patterns import Pattern
+from renardo_lib.Extensions.MidiMapFactory import MidiMapFactory
+from renardo_lib.Extensions.ReaperIntegrationLib.ReaProject import get_reaper_object_and_param_name, set_reaper_param
+from renardo_lib.Extensions.ReaperIntegrationLib.functions import split_param_name
+from renardo_lib.Midi import ReaperInstrument
+from renardo_lib.Patterns import Pattern
 from typing import Dict
 
 

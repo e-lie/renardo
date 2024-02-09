@@ -1,8 +1,8 @@
+from renardo_lib import Player
 
 def switch(player_running, new_player, dur=8):
     player_running.fadeout(dur)
     new_player.fadein(dur)
-
 
 class BiInstrument:
     """

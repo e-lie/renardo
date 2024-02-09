@@ -1,8 +1,8 @@
 from typing import Dict, List
-from FoxDot.lib.Extensions.ReaperIntegration import init_reapy_project, ReaperInstrumentFactory
+from renardo_lib.Extensions.ReaperIntegration import init_reapy_project, ReaperInstrumentFactory
 
 #from .Presets import presets
-from FoxDot import Clock, Scale
+from renardo_lib import Clock, Scale
 from functools import partial
 
 Clock.midi_nudge = 0

@@ -1,8 +1,6 @@
 # Pattern function
-from copy import Error
-
 import math
-from FoxDot import Player, Group, Pvar, player_method, PWhite, linvar, inf, Clock, TimeVar, var, expvar, sinvar, Pattern, xvar, yvar, P
+from renardo_lib import Pvar, player_method, linvar, TimeVar, var, expvar, sinvar, Pattern, xvar, yvar, P, PTri
 
 
 def hexa_panning_beta(value):

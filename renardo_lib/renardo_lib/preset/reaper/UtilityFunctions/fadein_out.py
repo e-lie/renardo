@@ -1,6 +1,6 @@
 
-from FoxDot import Clock, linvar, sinvar, PWhite, PRand, inf, player_method, nextBar
-from FoxDot.lib import ReaTrack
+from renardo_lib import Clock, linvar, sinvar, PWhite, PRand, inf, player_method, nextBar
+from renardo_lib.Extensions.ReaperIntegrationLib import ReaTrack
 
 
 @player_method

@@ -1,4 +1,4 @@
-from FoxDot import Pvar
+from renardo_lib import Pvar
 from typing import List
 
 

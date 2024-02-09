@@ -1,4 +1,4 @@
-from FoxDot import Player, Group, play, Clock, Scale, var, player_method, blip, bbass
+from renardo_lib import Player, Group, play, Clock, Scale, blip, bbass
 
 joueur1 = Player()
 joueur2 = Player()

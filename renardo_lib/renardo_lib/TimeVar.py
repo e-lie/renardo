@@ -497,6 +497,18 @@ class linvar(TimeVar):
     def get_timevar_value(self):
         return (self.current_value * (1-self.proportion)) + (self.next_value * self.proportion)
 
+
+class xvar(linvar):
+    def get_timevar_value(self):
+        lin = super().get_timevar_value()
+        return math.cos(math.radians(lin))
+
+class yvar(linvar):
+    def get_timevar_value(self):
+        lin = super().get_timevar_value()
+        return math.sin(math.radians(lin))
+
+
 class expvar(linvar):
     def get_timevar_value(self):
         self.proportion *= self.proportion
