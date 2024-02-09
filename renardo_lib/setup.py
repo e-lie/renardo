@@ -15,6 +15,7 @@ setup(
     url='http://renardo.org/',
     packages=[
         'renardo_lib',
+        'renardo_lib.preset',
         'renardo_lib.Code',
         'renardo_lib.Custom',
         'renardo_lib.Extensions',
