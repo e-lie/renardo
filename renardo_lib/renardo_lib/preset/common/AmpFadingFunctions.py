@@ -1,9 +1,6 @@
-# Pattern function
-from copy import Error
 from pprint import pprint
 
-import math
-from FoxDot import Player, Group, Pvar, player_method, PWhite, linvar, inf, Clock, TimeVar, var, expvar, sinvar, Pattern, xvar, yvar, nextBar
+from renardo_lib import player_method, linvar, inf, Clock, nextBar
 
 
 @player_method

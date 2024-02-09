@@ -1,11 +1,9 @@
 # Pattern function
-from copy import Error
 
-import math
-from FoxDot import (
-    Player, Group, Pvar, player_method,
-    PWhite, linvar, inf, Clock, TimeVar,
-    var, expvar, sinvar, Pattern, xvar, yvar
+from renardo_lib import (
+    Player, Group, player_method,
+    linvar,
+    var,
 )
 
 def create_group(group_name, *args):

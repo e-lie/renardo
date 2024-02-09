@@ -194,6 +194,14 @@ class MidiOut(SynthDefProxy):
     def __init__(self, degree=0, **kwargs):
         SynthDefProxy.__init__(self, self.__class__.__name__, degree, kwargs)
 
+class ReaperInstrument(MidiOut):
+    """SynthDef proxy to handle MIDI + PyLive/LiveOSC integration"""
+    def __init__(self, degree=0, **kwargs):
+        if isinstance(degree, str) and "midi_map" not in kwargs.keys():
+            raise Exception("No midi map defined to translate playstring")
+        MidiOut.__init__(self, degree, **kwargs)
+
+
 midi = MidiOut # experimental alias
 
 # Midi information exceptions

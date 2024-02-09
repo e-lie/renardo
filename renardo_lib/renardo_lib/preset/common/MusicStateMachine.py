@@ -2,7 +2,7 @@ from fysom import Fysom
 from pprint import pprint
 import re
 
-from FoxDot import Pvar
+from renardo_lib import Pvar
 
 class MusicStateMachine:
     def __init__(self, events, max_time_count=512, max_transition_count=128):

@@ -5,6 +5,10 @@ indexed
 playsound
 midiutil
 python-rtmidi
+fastnumbers
+python-reapy
+mido
+JACK-Client
 
 textual
 

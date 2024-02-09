@@ -1,4 +1,4 @@
-from FoxDot.lib.Extensions.ReaperIntegration import init_reapy_project, ReaperInstrumentFactory, ReaTask
+from renardo_lib.Extensions.ReaperIntegration import init_reapy_project, ReaperInstrumentFactory, ReaTask
 
 old_style_presets = {}
 

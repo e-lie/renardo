@@ -1,8 +1,5 @@
 # Pattern function
-from copy import Error
-
-import math
-from FoxDot import Player, Group, Pvar, player_method, PWhite, linvar, inf, Clock, TimeVar, var, expvar, sinvar, Pattern, xvar, yvar
+from renardo_lib import player_method, PWhite
 
 # Param shortcut functions to use with dict unpack : **lpf(linvar([0,.3],8))
 @player_method

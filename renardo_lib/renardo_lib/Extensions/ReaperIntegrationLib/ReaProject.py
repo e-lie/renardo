@@ -1,7 +1,7 @@
 from typing import Tuple, Optional, Union
 
-from FoxDot.lib.TimeVar import TimeVar
-from FoxDot.lib.Patterns import Pattern
+from renardo_lib.TimeVar import TimeVar
+from renardo_lib.Patterns import Pattern
 from .ReaFX import ReaFX, ReaFXGroup
 from .ReaParam import ReaParamState
 from .ReaTrack import ReaTrack

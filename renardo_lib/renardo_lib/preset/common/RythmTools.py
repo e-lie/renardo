@@ -2,7 +2,7 @@
 from copy import Error
 
 import math
-from FoxDot import Player, Group, Pvar, player_method, PWhite, linvar, inf, Clock, TimeVar, var, expvar, sinvar, Pattern, xvar, yvar
+from renardo_lib import Pvar, Pattern, PEuclid, P
 
 def groove_rythm_combination(rythm, groove):
     """
