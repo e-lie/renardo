@@ -34,7 +34,7 @@ setup(
     # data_files=[('', 'LICENSE')],
     package_data = {'renardo_lib': ['README.md','demo/**', 'osc/**'],},
     install_requires=[
-        'renardo_gatherer==0.1.3.dev0',
+        'renardo_gatherer==0.1.3',
         'midiutil',
     ],
 )
