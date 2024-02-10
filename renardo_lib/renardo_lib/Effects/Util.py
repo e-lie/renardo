@@ -378,7 +378,7 @@ fx.add('osc = MoogFF.ar(osc, mpf, mpr,0,1)')
 fx.save()
 
 # DFM1 LPF
-fx = FxList.new('dfm', 'DFM1', {'dfm': 1000, 'dfmr': 0.1, 'dfmd': 1}, order=2)
+fx = FxList.new('dfm', 'DFM1', {'dfm': 0, 'dfmr': 0.1, 'dfmd': 1}, order=2)
 fx.doc("DFM1 filter")
 fx.add('osc = DFM1.ar(osc, dfm, dfmr, dfmd,0.0)')
 fx.save()
