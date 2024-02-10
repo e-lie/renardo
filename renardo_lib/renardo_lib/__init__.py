@@ -10,6 +10,7 @@ spack_manager = SPackManager()
 from renardo_lib.TempoClock import *
 from renardo_lib.Buffers import *
 from renardo_lib.Players import *
+from renardo_lib.PlayerMethods import *
 from renardo_lib.Groups import *
 from renardo_lib.Patterns import *
 from renardo_lib.Effects import *
@@ -38,20 +39,6 @@ def __getitem__(self, key):
         return item
     else:
         return self.getitem(key)
-
-def player_method(f):
-    """ Decorator for assigning functions as Player methods.
-
-    >>> @player_method
-    ... def test(self):
-    ...    print(self.degree)
-
-    >>> p1.test()
-    """
-    setattr(Player, f.__name__, f)
-    return getattr(Player, f.__name__)
-
-PlayerMethod = player_method # Temporary alias
 
 def _futureBarDecorator(n, multiplier=1):
     if callable(n):

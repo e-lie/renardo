@@ -6,7 +6,7 @@ from copy import copy
 from .SCLang.SynthDef import SynthDef
 from .Players import Player
 from .Patterns import PwRand, PRand, PGroup, PGroupPrime, asStream
-from .TimeVar import mapvar
+from .TimeVar import mapvar, var, linvar, inf
 from .Buffers import Samples
 from .Settings import LoopPlayer
 
@@ -92,8 +92,6 @@ def degrade(self, amount=0.5):
         self.amplify = PwRand([0, self.attr["amplify"]], [int(amount * 10), max(10 - int(amount), 0)])
     return self
 
-
-
 @player_method
 def often(self, *args, **kwargs):
     """ Calls a method every 1/2 to 4 beats using `every` """
@@ -108,8 +106,6 @@ def sometimes(self, *args, **kwargs):
 def rarely(self, *args, **kwargs):
     """ Calls a method every 16 to 32 beats using `every` """
     return self.every(PRand(32, 64) / 2, *args, **kwargs)
-
-
 
 @player_method
 def spread(self, on=0.125):
