@@ -110,3 +110,7 @@ Temporary Items
 
 # swp files
 *.swp
+
+
+# Pyinstaller
+*.spec
