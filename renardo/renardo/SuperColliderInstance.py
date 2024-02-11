@@ -1,11 +1,8 @@
 import os
 import subprocess
 from sys import platform
-import time
 import pathlib
-
 import psutil
-
 from renardo.SCFilesHandling import SC_USER_CONFIG_DIR
 
 
