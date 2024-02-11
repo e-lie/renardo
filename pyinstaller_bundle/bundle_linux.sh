@@ -1,13 +1,14 @@
-export RENARDO_VERSION="0.9.3"
+export RENARDO_VERSION="0.9.6"
 
 echo '######## creating venv'
-python3 -m venv ../venv
+rm -Rf /tmp/venv_pyinstaller
+python3 -m venv /tmp/venv_pyinstaller
 
 echo '######## activating venv'
-source ../venv/bin/activate
+source /tmp/venv_pyinstaller/bin/activate
 
 echo '####### installing python requirements in venv (editable + normal libs)'
-pip3 install -r ../requirements.pyinstaller.txt
+pip3 install -r ../requirements.pyinstaller.txt --no-cache-dir --upgrade
 
 echo '####### bundling with pyinstaller'
 export DISTP="/tmp/renardo-$RENARDO_VERSION"
@@ -24,6 +25,6 @@ pyinstaller "renardo-entrypoint.py" \
     --distpath $DISTP \
     --workpath "/tmp/renardo_pyinstaller_build"
 
-#echo '####### create archive'
-tar -czvf "$DISTP/renardo-$RENARDO_VERSION.tar.gz" "$DISTP/renardo-$RENARDO_VERSION"
+echo '####### create archive'
+cd $DISTP && tar -czvf "renardo-$RENARDO_VERSION-linux.tar.gz" "renardo-$RENARDO_VERSION"
 
