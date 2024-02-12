@@ -32,6 +32,10 @@ class StartRenardoBlock(Static):
         yield Button("Start renardo FoxDot editor", id="start-renardo-foxdot-editor-btn", disabled=True)
         #yield Button("Start renardo pipe mode", id="start-renardo-pipe-btn", disabled=True)
 
+class SCNotReadyBlock(Static):
+    def compose(self) -> ComposeResult:
+        yield Label("SuperCollider seems not ready. Please install it in default location (see doc)")
+
 class DownloadRenardoSamplesBlock(Static):
     def compose(self) -> ComposeResult:
         yield Label("Default samples pack needs to be downloaded")
@@ -42,20 +46,13 @@ class InitRenardoSCFilesBlock(Static):
         yield Label("Renardo SuperCollider files need to be installed")
         yield Button("Create renardo SC Class files and startup code", id="init-renardo-scfiles-btn")
 
-class InitRenardoBothBlock(Static):
-    def compose(self) -> ComposeResult:
-        yield InitRenardoSCFilesBlock()
-        yield DownloadRenardoSamplesBlock()
-
 class LeftPane(ContentSwitcher):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def compose(self) -> ComposeResult:
         yield StartRenardoBlock(id="start-renardo")
-        yield InitRenardoBothBlock(
-            id="init-renardo-both",
-        )
+        yield SCNotReadyBlock(id="sc-not-ready")
         yield InitRenardoSCFilesBlock(id="init-renardo-scfiles")
         yield DownloadRenardoSamplesBlock(id="dl-renardo-samples")
 
@@ -73,16 +70,14 @@ class RenardoTUI(App[None]):
         self.left_pane_mode = self.calculate_left_pane_mode()
 
     def calculate_left_pane_mode(self):
-        default_spack_ready = self.renardo_app.spack_manager.is_default_spack_initialized()
-        renardo_sc_installed = is_renardo_scfiles_installed()
-        if default_spack_ready and renardo_sc_installed:
-            return "start-renardo"
-        elif default_spack_ready and not renardo_sc_installed:
+        renardo_scfiles_installed = is_renardo_scfiles_installed()
+        if not self.renardo_app.sc_instance.is_supercollider_ready():
+            return "sc-not-ready"
+        if not is_renardo_scfiles_installed():
             return "init-renardo-scfiles"
-        elif not default_spack_ready and renardo_sc_installed:
+        if not self.renardo_app.spack_manager.is_default_spack_initialized():
             return "dl-renardo-samples"
-        else:
-            return "init-renardo-both"
+        return "start-renardo"
 
     def compose(self) -> ComposeResult:
         yield Header()
