@@ -1,9 +1,11 @@
 @echo off
 
 :: lolilolilolilol le BAT
-for %%i in ("%CD%\..") do set "PARENT_DIR=%%~fi"
+::for %%i in ("%CD%\..") do set "PARENT_DIR=%%~fi"
 
-set "VENV_DIR=%PARENT_DIR%\venv"
+set "VENV_DIR=%userprofile%\Desktop\venv_pyinstaller"
+
+@RD /S /Q "%VENV_DIR%"
 
 set "RENARDO_VERSION=0.9.6"
 
@@ -37,6 +39,6 @@ python -m PyInstaller "renardo-entrypoint.py" ^
 ::--onefile ^ 
 
 set "sourceFolder=%userprofile%\Desktop\renardo-%RENARDO_VERSION%\renardo-%RENARDO_VERSION%"
-set "destinationZip=%userprofile%\Desktop\renardo-%RENARDO_VERSION%.zip"
+set "destinationZip=%userprofile%\Desktop\renardo-%RENARDO_VERSION%-windows.zip"
 
 PowerShell -Command "Compress-Archive -Path '%sourceFolder%' -DestinationPath '%destinationZip%'"
