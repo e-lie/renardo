@@ -23,7 +23,7 @@ class PulsarInstance:
         if platform == "win32":
             # if chocolatey
             pulsar_appdata_path = pathlib.Path(os.getenv('LOCALAPPDATA')) / 'Programs' / 'Pulsar' / 'Pulsar.exe'
-            pulsar_c_path = pathlib.WindowsPath("C:") / 'Program Files' / 'Pulsar' / 'Pulsar.exe'
+            pulsar_c_path = pathlib.WindowsPath(os.getenv('ProgramFiles')) / 'Pulsar' / 'Pulsar.exe'
             if pulsar_appdata_path.exists():
                 self.pulsar_exec = [str(pulsar_appdata_path)]
                 self.check_exec = [str(pulsar_appdata_path),'--version']
