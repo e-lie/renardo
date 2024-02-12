@@ -17,7 +17,8 @@ CALL %VENV_DIR%\Scripts\activate.bat
 pip install --upgrade setuptools wheel
 
 cd ..
-pip install -r requirements.pyinstaller.txt
+pip install -r --no-cache-dir requirements.pyinstaller.txt
+pip install --upgrade --no-cache-dir renardo
 
 cd pyinstaller_bundle
 
