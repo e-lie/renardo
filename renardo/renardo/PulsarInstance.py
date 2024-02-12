@@ -11,10 +11,14 @@ from renardo.SCFilesHandling import SC_USER_CONFIG_DIR
 class PulsarNotFoundError(Exception):
     pass
 
+class PulsarAlreadyRunning(Exception):
+    pass
+
 class PulsarInstance:
 
     def __init__(self):
         self.pulsar_process = None
+        self.pulsar_ready = None
 
         if platform == "win32":
             # if chocolatey
@@ -22,26 +26,43 @@ class PulsarInstance:
             pulsar_c_path = pathlib.WindowsPath("C:") / 'Program Files' / 'Pulsar' / 'Pulsar.exe'
             if pulsar_appdata_path.exists():
                 self.pulsar_exec = [str(pulsar_appdata_path)]
+                self.check_exec = [str(pulsar_appdata_path),'--version']
             elif pulsar_c_path.exists():
                 self.pulsar_exec = [str(pulsar_c_path)]
+                self.check_exec = [str(pulsar_c_path),'--version']
             else:
-                raise PulsarNotFoundError
+                self.pulsar_ready = False
         elif platform == "Darwin":
             pulsar_path = pathlib.Path("/Applications" / "Pulsar.app")
             self.pulsar_exec = ['open', str(pulsar_path)]
+            self.check_exec = ['open', str(pulsar_path), "--version"]
         else:
             self.pulsar_exec = ["pulsar"]
+            self.check_exec = ["pulsar", "--version"]
+
+    def is_pulsar_ready(self):
+        if self.pulsar_ready is None:
+            try:
+                completed_process = subprocess.run(self.check_exec)
+                self.pulsar_ready = completed_process.returncode==0
+            except:
+                self.pulsar_ready = False
+        return self.pulsar_ready
 
 
     def start_pulsar_subprocess(self):
-        if not self.is_pulsar_running():
+        try:
+            if self.is_pulsar_running():
+                raise PulsarAlreadyRunning()
             self.pulsar_process = subprocess.Popen(
-                 args=self.pulsar_exec,
-                 #shell=True,
-                 stdout=subprocess.PIPE,
-                 stderr=subprocess.PIPE,
-                 stdin=subprocess.PIPE,
+                    args=self.pulsar_exec,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    stdin=subprocess.PIPE,
             )
+            return "Pulsar started"
+        except Exception as e:
+            return f"Pulsar not started: {e}"
 
     def read_stdout_line(self):
         if self.pulsar_process.returncode is None:

@@ -131,7 +131,11 @@ class RenardoTUI(App[None]):
             self.renardo_app.sc_instance.evaluate_sclang_code("Renardo.midi;")
             self.query_one("#start-renardo-foxdot-editor-btn", Button).disabled = False
             #self.query_one("#start-renardo-pipe-btn", Button).disabled = False
-            self.query_one("#start-pulsar-btn", Button).disabled = False
+            if self.renardo_app.pulsar_instance.is_pulsar_ready():
+                self.query_one("#start-pulsar-btn", Button).disabled = False
+            else:
+                self.query_one("#start-pulsar-btn", Button).label = "Pulsar not ready"
+
             while True:
                 self.query_one("#log-output", Log).write_line(self.renardo_app.sc_instance.read_stdout_line())
         else:
