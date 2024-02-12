@@ -23,7 +23,7 @@ setup(
     package_data = {'renardo': ['RenardoTUI.tcss'],},
     install_requires=[
         'renardo-lib==0.9.6',
-        'FoxDotEditor==0.9.5',
+        'FoxDotEditor==0.9.6',
         'renardo_gatherer==0.1.3',
         'psutil',
         'textual',
