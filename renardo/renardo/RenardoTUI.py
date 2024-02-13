@@ -125,7 +125,6 @@ class RenardoTUI(App[None]):
             self.renardo_app.sc_instance.evaluate_sclang_code("Renardo.start;")
             self.renardo_app.sc_instance.evaluate_sclang_code("Renardo.midi;")
             self.query_one("#start-renardo-foxdot-editor-btn", Button).disabled = False
-            #self.query_one("#start-renardo-pipe-btn", Button).disabled = False
             if self.renardo_app.pulsar_instance.pulsar_ready:
                 self.query_one("#start-pulsar-btn", Button).disabled = False
             else:
@@ -141,7 +140,7 @@ class RenardoTUI(App[None]):
         self.query_one("#log-output", Log).write_line("Launching Renardo SC module with SCLang...")
         self.renardo_app.pulsar_instance.start_pulsar_subprocess()
         while True:
-            self.query_one("#log-output", Log).write_line(self.renardo_app.sc_instance.read_stdout_line())
+            self.query_one("#log-output", Log).write_line(self.renardo_app.pulsar_instance.read_stdout_line())
 
     @work(exclusive=True, thread=True)
     def start_foxdoteditor_background(self) -> None:
@@ -165,7 +164,7 @@ class RenardoTUI(App[None]):
         """Event handler called when a button is pressed."""
         button_id = event.button.id
         if button_id == "quit-btn":
-            self.renardo_app.sc_instance.sclang_process.kill()
+            #self.renardo_app.sc_instance.sclang_process.kill()
             self.exit()
         if button_id == "dl-renardo-samples-btn":
             self.dl_samples_background()
