@@ -1,7 +1,6 @@
 # demo and debug folders
 __pycache__/
-venv
-venv2
+venv*
 *.pyc
 *.egg-info
 build
