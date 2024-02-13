@@ -13,18 +13,16 @@ class SupercolliderInstance:
         self.supercollider_ready = None
 
         if platform == "win32":
-            try:
-                sc_dir = next(pathlib.Path("C:\\Program Files").glob("SuperCollider*")) # to match SuperCollider-3.version like folders
-            except StopIteration as e: # if No directory matching SuperCollider*
+
+            if len(list(pathlib.Path("C:\\Program Files").glob("SuperCollider*"))) == 0: # return if no supercollider folder
                 self.supercollider_ready = False
-                self.sclang_exec = None
-                self.check_exec = None
-                return
-            #os.environ["PATH"] +=  f"{sc_dir};"
-            sclang_path = sc_dir / "sclang.exe"
-            #self.sclang_exec = [str(sclang_path), str(SC_USER_CONFIG_DIR / 'start_renardo.scd')]
-            self.sclang_exec = [str(sclang_path), '-i', 'scqt']
-            self.check_exec = [str(sclang_path), '-version']
+            else:
+                sc_dir = next(pathlib.Path("C:\\Program Files").glob("SuperCollider*")) # to match SuperCollider-3.version like folders
+                os.environ["PATH"] +=  f"{sc_dir};"
+                sclang_path = sc_dir / "sclang.exe"
+                #self.sclang_exec = [str(sclang_path), str(SC_USER_CONFIG_DIR / 'start_renardo.scd')]
+                self.sclang_exec = [str(sclang_path), '-i', 'scqt']
+                self.check_exec = [str(sclang_path), '-version']
         else:
             #self.sclang_exec = ["sclang",  str(SC_USER_CONFIG_DIR / 'start_renardo.scd')]
             self.sclang_exec = ["sclang", '-i', 'scqt']
