@@ -71,8 +71,8 @@ class RenardoTUI(App[None]):
 
     def calculate_left_pane_mode(self):
         renardo_scfiles_installed = is_renardo_scfiles_installed()
-        if not self.renardo_app.sc_instance.is_supercollider_ready():
-            return "sc-not-ready"
+        #if not self.renardo_app.sc_instance.is_supercollider_ready():
+        #    return "sc-not-ready"
         if not is_renardo_scfiles_installed():
             return "init-renardo-scfiles"
         if not self.renardo_app.spack_manager.is_default_spack_initialized():
@@ -126,7 +126,7 @@ class RenardoTUI(App[None]):
             self.renardo_app.sc_instance.evaluate_sclang_code("Renardo.midi;")
             self.query_one("#start-renardo-foxdot-editor-btn", Button).disabled = False
             #self.query_one("#start-renardo-pipe-btn", Button).disabled = False
-            if self.renardo_app.pulsar_instance.is_pulsar_ready():
+            if self.renardo_app.pulsar_instance.pulsar_ready:
                 self.query_one("#start-pulsar-btn", Button).disabled = False
             else:
                 self.query_one("#start-pulsar-btn", Button).label = "Pulsar not ready"
@@ -165,6 +165,7 @@ class RenardoTUI(App[None]):
         """Event handler called when a button is pressed."""
         button_id = event.button.id
         if button_id == "quit-btn":
+            self.renardo_app.sc_instance.sclang_process.kill()
             self.exit()
         if button_id == "dl-renardo-samples-btn":
             self.dl_samples_background()

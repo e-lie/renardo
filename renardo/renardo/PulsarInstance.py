@@ -39,11 +39,13 @@ class PulsarInstance:
         else:
             self.pulsar_exec = ["pulsar"]
             self.check_exec = ["pulsar", "--version"]
+        self.is_pulsar_ready()
+
 
     def is_pulsar_ready(self):
         if self.pulsar_ready is None:
             try:
-                completed_process = subprocess.run(self.check_exec)
+                completed_process = subprocess.run(self.check_exec, capture_output=True)
                 self.pulsar_ready = completed_process.returncode==0
             except:
                 self.pulsar_ready = False
