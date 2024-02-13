@@ -1,19 +1,12 @@
-import random
-import time
-
 from textual.css.query import NoMatches
 
 from .SCFilesHandling import is_renardo_scfiles_installed, write_sc_renardo_files_in_user_config
 from textual import work
-from textual.worker import get_current_worker
 from textual.app import App, ComposeResult
 from textual.reactive import reactive
-from textual.containers import Container, Horizontal, Vertical
-import subprocess
+from textual.containers import Horizontal, Vertical
 
 from textual.widgets import (
-    RadioButton,
-    RadioSet,
     Header,
     Label,
     Button,
@@ -70,9 +63,8 @@ class RenardoTUI(App[None]):
         self.left_pane_mode = self.calculate_left_pane_mode()
 
     def calculate_left_pane_mode(self):
-        renardo_scfiles_installed = is_renardo_scfiles_installed()
-        #if not self.renardo_app.sc_instance.is_supercollider_ready():
-        #    return "sc-not-ready"
+        if not self.renardo_app.sc_instance.supercollider_ready:
+            return "sc-not-ready"
         if not is_renardo_scfiles_installed():
             return "init-renardo-scfiles"
         if not self.renardo_app.spack_manager.is_default_spack_initialized():
