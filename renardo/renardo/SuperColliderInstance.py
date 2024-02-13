@@ -14,10 +14,11 @@ class SupercolliderInstance:
 
         if platform == "win32":
 
-            if len(list(pathlib.Path("C:\\Program Files").glob("SuperCollider*"))) == 0: # return if no supercollider folder
+            path_glob = list(pathlib.Path("C:\\Program Files").glob("SuperCollider*"))
+            if len(path_glob) == 0: # return if no supercollider folder
                 self.supercollider_ready = False
             else:
-                sc_dir = next(pathlib.Path("C:\\Program Files").glob("SuperCollider*")) # to match SuperCollider-3.version like folders
+                sc_dir = path_glob[0] # to match SuperCollider-3.version like folders
                 os.environ["PATH"] +=  f"{sc_dir};"
                 sclang_path = sc_dir / "sclang.exe"
                 #self.sclang_exec = [str(sclang_path), str(SC_USER_CONFIG_DIR / 'start_renardo.scd')]
@@ -28,10 +29,12 @@ class SupercolliderInstance:
             self.sclang_exec = ["sclang", '-i', 'scqt']
             self.check_exec = ["sclang", '-version']
 
+        self.is_supercollider_ready()
+
     def is_supercollider_ready(self):
         if self.supercollider_ready is None:
             try:
-                completed_process = subprocess.run(self.check_exec)
+                completed_process = subprocess.run(self.check_exec, capture_output=True)
                 self.supercollider_ready = completed_process.returncode==0
             except:
                 self.supercollider_ready = False
