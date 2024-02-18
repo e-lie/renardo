@@ -4,6 +4,7 @@ bs4
 indexed
 playsound
 midiutil
+python-rtmidi
 
 textual
 
