@@ -13,8 +13,6 @@ try:
 except ImportError as _err:
     pass
 
-from .SCLang import SynthDefProxy
-
 import time
 
 
@@ -110,7 +108,7 @@ class MidiIn:
 
         except NameError:
 
-            raise ImportError(_err)
+            raise ImportError("Rtmidi not imported")
 
         self.available_ports = self.device.get_ports()
 
