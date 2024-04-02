@@ -505,8 +505,7 @@ class SCLangServerManager(ServerManager):
 
         # Create a specific message for midi
 
-        if synthdef == "MidiOut":  # this should be in a dict of synthdef to functions maybe? we need a "nudge to sync"
-
+        if synthdef in ["MidiOut", "ReaperInstrument"]:  # this should be in a dict of synthdef to functions maybe? we need a "nudge to sync"
             return self.get_midi_message(synthdef, packet, timestamp)
 
         # Create a bundle
