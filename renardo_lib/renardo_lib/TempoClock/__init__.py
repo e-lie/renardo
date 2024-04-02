@@ -540,8 +540,8 @@ class TempoClock(object):
 
         return
 
-    def schedule(self, obj, beat_count=None, args=(), kwargs={}, is_priority=False):
-        """ TempoClock.schedule(callable, beat_count=None)
+    def schedule(self, obj, beat=None, args=(), kwargs={}, is_priority=False):
+        """ TempoClock.schedule(callable, beat=None)
             Add a player / event to the queue """
 
         # Make sure the object can actually be called
@@ -562,7 +562,7 @@ class TempoClock(object):
 
         # Default is next bar
 
-        if beat_count is None:
+        if beat is None:
 
             beat = self.next_bar()
 
