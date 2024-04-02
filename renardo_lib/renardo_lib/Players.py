@@ -956,9 +956,9 @@ class Player(Repeatable):
 
         return self
 
-    def get_timestamp(self, beat_count=None):
-        if beat_count is not None:
-            timestamp = self.metro.osc_message_time() - self.metro.beat_dur(self.metro.now() - beat_count)
+    def get_timestamp(self, beat=None):
+        if beat is not None:
+            timestamp = self.metro.osc_message_time() - self.metro.beat_dur(self.metro.now() - beat)
         else:
             timestamp = self.metro.osc_message_time()
         return timestamp

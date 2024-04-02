@@ -19,7 +19,7 @@ def arrêter():
     joueurs.generic_fadeout(8)
     def stopp():
         Clock.clear()
-    Clock.schedule(stopp, beat_count=Clock.next_bar()+8)
+    Clock.schedule(stopp, beat=Clock.next_bar()+8)
 
 
 batterie = play

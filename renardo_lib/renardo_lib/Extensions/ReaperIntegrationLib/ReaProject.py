@@ -115,8 +115,8 @@ def set_reaper_param(track: ReaTrack, full_name, value, update_freq=.1):
         def initiate_timevar_update_loop(name, value, new_state, update_freq):
             rea_object.reaparams[name].state = new_state
             track.reaproject.task_queue.timevar_update_loop(rea_object, name, value, new_state, update_freq)
-        # beat_count=None means schedule for the next bar
-        track._clock.schedule(initiate_timevar_update_loop, beat_count=None, args=[name, value, new_state, update_freq])
+        # beat=None means schedule for the next bar
+        track._clock.schedule(initiate_timevar_update_loop, beat=None, args=[name, value, new_state, update_freq])
     else:
         # to switch back to non varying value use the state normal to make the recursion loop stop
         def normal_value_update(rea_object, name, value):
@@ -135,8 +135,8 @@ def set_reaper_param(track: ReaTrack, full_name, value, update_freq=.1):
                 #     except:
                 #         print("Failed again")
 
-        # beat_count=None means schedule for the next bar
-        track._clock.schedule(normal_value_update, beat_count=None, args=[rea_object, name, value])
+        # beat=None means schedule for the next bar
+        track._clock.schedule(normal_value_update, beat=None, args=[rea_object, name, value])
 
 
 def get_reaper_param(reaobject, full_name):
