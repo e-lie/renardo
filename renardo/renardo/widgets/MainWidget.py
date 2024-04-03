@@ -46,23 +46,29 @@ class MainWidget(Widget):
                         yield LeftPane(initial=self.calculate_left_pane_mode())
                     with Vertical():
                         yield Log(id="log-output")
-#             with TabPane("Documentation", id="doc-tab"):
-#                 EXAMPLE_MARKDOWN = """\
-# # Markdown Viewer
+            with TabPane("Editor", id="editor-tab"):
+                yield TextArea()
+            yield ConfigPane("Config", id="config-tab")
+            with TabPane("Tutorial", id="tuto-tab"):
+                yield Label("Tutorial chapter 1")
+                yield TextArea()
+            with TabPane("Documentation", id="doc-tab"):
+                EXAMPLE_MARKDOWN = """\
+# Markdown Viewer
 
-# This is an example of Textual's `MarkdownViewer` widget.
+This is an example of Textual's `MarkdownViewer` widget.
 
-# ## Features
+## Features
 
-# Markdown syntax and extensions are supported.
+Markdown syntax and extensions are supported.
 
-# - Typography *emphasis*, **strong**, `inline code` etc.
-# - Headers
-# - Lists (bullet and ordered)
-# - Syntax highlighted code blocks
-# - Tables!
-#                 """
-#                 yield MarkdownViewer(EXAMPLE_MARKDOWN)
+- Typography *emphasis*, **strong**, `inline code` etc.
+- Headers
+- Lists (bullet and ordered)
+- Syntax highlighted code blocks
+- Tables!
+                """
+                yield MarkdownViewer(EXAMPLE_MARKDOWN)
 
     @work(exclusive=True, thread=True)
     def dl_samples_background(self) -> None:
