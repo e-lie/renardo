@@ -6,6 +6,7 @@ class StartRenardoBlock(Static):
     def compose(self) -> ComposeResult:
         #yield Label("Default samples pack downloaded and Renardo SuperCollider files installed")
         yield Button("Start SuperCollider Backend", id="start-sc-btn")
+        yield Button("Go to editor tab", id="go-editor-tab-btn", disabled=True)
         yield Button("Start renardo Pulsar", id="start-pulsar-btn", disabled=True)
         yield Button("Start renardo FoxDot editor", id="start-renardo-foxdot-editor-btn", disabled=True)
         #yield Button("Start renardo pipe mode", id="start-renardo-pipe-btn", disabled=True)
