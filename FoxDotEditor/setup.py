@@ -7,7 +7,7 @@ with open("README.md", "r") as f:
 
 setup(
     name='FoxDotEditor',
-    version="0.9.10",
+    version="0.9.11.dev0",
     description='Original FoxDot editor extracted from FoxDot Project - Live coding music with SuperCollider',
     author='Elie Gavoty',
     author_email='eliegavoty@free.fr',
@@ -20,9 +20,8 @@ setup(
     # data_files=[('', 'LICENSE')],
     package_data = {'FoxDotEditor': ['README.md','img/*','tmp/*'],},
     install_requires=[
-        'renardo-lib==0.9.10',
+        'renardo-lib==0.9.11.dev0',
         'psutil',
-        'playsound',
     ],
 )
 
