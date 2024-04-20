@@ -236,8 +236,6 @@ def handle_stdin():
 
             sys.exit("Quitting")
 
-    return
-
 def stdout(code):
     """ Shell-based output """
     console_text = code.strip().split("\n")
