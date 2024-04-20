@@ -1,21 +1,25 @@
 from textual.app import ComposeResult
 from textual.css.query import NoMatches
 from textual import work
+from textual.widget import Widget
 from textual.widgets import (
-    Static,
     Button,
     Label,
-    ContentSwitcher,
     TabbedContent,
     TabPane,
     Log,
     RadioButton,
-    RadioSet
+    RadioSet,
+    TextArea,
+    MarkdownViewer
 )
 from textual.containers import Horizontal, Vertical
-from .SCFilesHandling import is_renardo_scfiles_installed, write_sc_renardo_files_in_user_config
+from renardo.SCFilesHandling import is_renardo_scfiles_installed, write_sc_renardo_files_in_user_config
+from renardo.widgets.Widgets import LeftPane
+from renardo.widgets.ConfigPane import ConfigPane
 
-class MainWidget(TabbedContent):
+
+class MainWidget(Widget):
     
     def __init__(self, renardo_app, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -32,24 +36,33 @@ class MainWidget(TabbedContent):
         return "start-renardo"
     
     def compose(self) -> ComposeResult:
-        with TabPane("Start", id="start-tab"):
-            with Horizontal():
-                with Vertical():
-                    yield LeftPane(initial=self.calculate_left_pane_mode())
-                    yield Button("Quit", id="quit-btn")
-                with Vertical():
-                    yield Log(id="log-output")
-        with TabPane("Config", id="config-tab"):
-            with RadioSet():
-                yield Label("Boot SuperCollider audio backend at startup ?")
-                yield RadioButton("Yes (Still buggy but doesn't hurt to try)")
-                yield RadioButton("No (You should manually open SuperCollider and execute Renardo.start)", value=True)
-        #with TabPane("SuperCollider Boot", id="sc-boot"):
-        #    with Horizontal():
-        #        with Vertical():
-        #            yield Button("Start SC instance", id="start-sc-btn")
-        #        with Vertical():
-        #            yield Log(id="sc-log-output")
+        with TabbedContent():
+            with TabPane("Welcome", id="welcome-tab"):
+                yield Label("Welcome to renardo terminal user interface (TUI) !!")
+                yield Label("Here you can configure (WIP), learn (WIP) renardo and start it's different modules")
+            with TabPane("Autostart", id="start-tab"):
+                with Horizontal():
+                    with Vertical():
+                        yield LeftPane(initial=self.calculate_left_pane_mode())
+                    with Vertical():
+                        yield Log(id="log-output")
+#             with TabPane("Documentation", id="doc-tab"):
+#                 EXAMPLE_MARKDOWN = """\
+# # Markdown Viewer
+
+# This is an example of Textual's `MarkdownViewer` widget.
+
+# ## Features
+
+# Markdown syntax and extensions are supported.
+
+# - Typography *emphasis*, **strong**, `inline code` etc.
+# - Headers
+# - Lists (bullet and ordered)
+# - Syntax highlighted code blocks
+# - Tables!
+#                 """
+#                 yield MarkdownViewer(EXAMPLE_MARKDOWN)
 
     @work(exclusive=True, thread=True)
     def dl_samples_background(self) -> None:
@@ -83,7 +96,10 @@ class MainWidget(TabbedContent):
             while True:
                 self.query_one("#log-output", Log).write_line(self.renardo_app.sc_instance.read_stdout_line())
         else:
-            self.query_one("#log-output", Log).write_line("Already started")
+            self.query_one("#log-output", Log).write_line("SuperCollider backend already started (sclang backend externally managed)\nIf you want to handle the backend manually you should ensure... \n...you executed Renardo.start; correctly in SuperCollider IDE")
+            self.query_one("#start-renardo-foxdot-editor-btn", Button).disabled = False
+            if self.renardo_app.pulsar_instance.pulsar_ready:
+                self.query_one("#start-pulsar-btn", Button).disabled = False
 
     @work(exclusive=True, thread=True)
     def start_pulsar_background(self) -> None:
@@ -113,9 +129,6 @@ class MainWidget(TabbedContent):
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Event handler called when a button is pressed."""
         button_id = event.button.id
-        if button_id == "quit-btn":
-            #self.renardo_app.sc_instance.sclang_process.kill()
-            self.app.exit()
         if button_id == "dl-renardo-samples-btn":
             self.dl_samples_background()
         if button_id == "init-renardo-scfiles-btn":
@@ -134,38 +147,4 @@ class MainWidget(TabbedContent):
         self.title = "Renardo"
         #self.query_one(RadioSet).focus()
 
-class StartRenardoBlock(Static):
-    def compose(self) -> ComposeResult:
-        #yield Label("Default samples pack downloaded and Renardo SuperCollider files installed")
-        yield Button("Start SuperCollider Backend", id="start-sc-btn")
-        yield Button("Start renardo Pulsar", id="start-pulsar-btn", disabled=True)
-        yield Button("Start renardo FoxDot editor", id="start-renardo-foxdot-editor-btn", disabled=True)
-        #yield Button("Start renardo pipe mode", id="start-renardo-pipe-btn", disabled=True)
 
-
-class SCNotReadyBlock(Static):
-    def compose(self) -> ComposeResult:
-        yield Label("SuperCollider seems not ready. Please install it in default location (see doc)")
-
-
-class DownloadRenardoSamplesBlock(Static):
-    def compose(self) -> ComposeResult:
-        yield Label("Default samples pack needs to be downloaded")
-        yield Button("Download renardo default samples pack", id="dl-renardo-samples-btn")
-
-
-class InitRenardoSCFilesBlock(Static):
-    def compose(self) -> ComposeResult:
-        yield Label("Renardo SuperCollider files need to be installed")
-        yield Button("Create renardo SC Class files and startup code", id="init-renardo-scfiles-btn")
-
-
-class LeftPane(ContentSwitcher):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def compose(self) -> ComposeResult:
-        yield StartRenardoBlock(id="start-renardo")
-        yield SCNotReadyBlock(id="sc-not-ready")
-        yield InitRenardoSCFilesBlock(id="init-renardo-scfiles")
-        yield DownloadRenardoSamplesBlock(id="dl-renardo-samples")
