@@ -7,7 +7,7 @@ set "VENV_DIR=%userprofile%\Desktop\venv_pyinstaller"
 
 @RD /S /Q "%VENV_DIR%"
 
-set "RENARDO_VERSION=0.9.12"
+set "RENARDO_VERSION=1.0.0.dev0"
 
 python -m venv %VENV_DIR%
 
