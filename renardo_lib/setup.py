@@ -7,7 +7,7 @@ with open("README.md", "r") as f:
 
 setup(
     name='renardo_lib',
-    version="1.0.0.dev2",
+    version="1.0.0.dev3",
     description='Python livecoding environment - New fork of FoxDot',
     author='Elie Gavoty',
     author_email='eliegavoty@free.fr',
@@ -28,6 +28,7 @@ setup(
         'renardo_lib.Settings',
         'renardo_lib.Utils',
         'renardo_lib.ServerManager',
+        'renardo_lib.TempoClock',
     ],
     long_description=long_description,
     long_description_content_type="text/markdown",
