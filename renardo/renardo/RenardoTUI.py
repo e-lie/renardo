@@ -4,6 +4,7 @@ from textual.binding import Binding
 from textual.css.query import NoMatches
 from renardo.SCFilesHandling import is_renardo_scfiles_installed, write_sc_renardo_files_in_user_config
 from renardo.widgets.Widgets import LeftPane
+from renardo.widgets.TutoTabPane import TutoTabPane
 from textual import work
 
 from textual.containers import Horizontal, Vertical
@@ -15,10 +16,6 @@ from textual.widgets import (
     TabbedContent,
     TabPane,
     Log,
-    RadioButton,
-    RadioSet,
-    TextArea,
-    MarkdownViewer
 )
 
 class RenardoTUI(App[None]):
@@ -55,30 +52,15 @@ class RenardoTUI(App[None]):
         with TabbedContent():
             with TabPane("Welcome", id="welcome-tab"):
                 yield Label("Welcome to renardo terminal user interface (TUI) !!")
-                yield Label("Here you can configure (WIP), learn (WIP) renardo and start it's different modules")
+                yield Label("Here you can configure, learn renardo and start it's different modules")
             with TabPane("Autostart", id="start-tab"):
                 with Horizontal():
                     with Vertical():
                         yield LeftPane(initial=self.calculate_left_pane_mode())
                     with Vertical():
                         yield Log(id="log-output")
-#             with TabPane("Documentation", id="doc-tab"):
-#                 EXAMPLE_MARKDOWN = """\
-# # Markdown Viewer
+            yield TutoTabPane(title="Tutorials", id="tuto-tab")
 
-# This is an example of Textual's `MarkdownViewer` widget.
-
-# ## Features
-
-# Markdown syntax and extensions are supported.
-
-# - Typography *emphasis*, **strong**, `inline code` etc.
-# - Headers
-# - Lists (bullet and ordered)
-# - Syntax highlighted code blocks
-# - Tables!
-#                 """
-#                 yield MarkdownViewer(EXAMPLE_MARKDOWN)
         yield Footer()
 
     @work(exclusive=True, thread=True)
