@@ -199,7 +199,7 @@ def Go():
 
 class _util:
     def __repr__(self):
-        return "Renardo ver. 0.9.11.dev1"
+        return "Renardo ver. 0.9.11"
     def reload(self):
         Server.reset()
         SynthDefs.reload()
