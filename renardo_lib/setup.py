@@ -7,7 +7,7 @@ with open("README.md", "r") as f:
 
 setup(
     name='renardo_lib',
-    version="1.0.0.dev3",
+    version="1.0.0.dev4",
     description='Python livecoding environment - New fork of FoxDot',
     author='Elie Gavoty',
     author_email='eliegavoty@free.fr',
@@ -21,6 +21,9 @@ setup(
         'renardo_lib.Extensions',
         'renardo_lib.Extensions.VRender',
         'renardo_lib.Extensions.SonicPi',
+        'renardo_lib.Extensions.ReaperIntegration',
+        'renardo_lib.Extensions.ReaperIntegrationLib',
+        'renardo_lib.Extensions.MidiMapFactory',
         'renardo_lib.EspGrid',
         'renardo_lib.Effects',
         'renardo_lib.Patterns',
