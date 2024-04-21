@@ -2,13 +2,17 @@
 from __future__ import absolute_import
 
 import multiprocessing
-from playsound import playsound
 from .tkimport import *
 from .Format import *
 from renardo_lib.Settings import *
 from renardo_lib import spack_manager
 from renardo_gatherer.samples_download import nonalpha
 from renardo_gatherer import SAMPLES_DIR_PATH
+
+try:
+    from playsound import playsound
+except:
+    print("playsound library not installed...")
 
 class SampleChart:
 
@@ -282,7 +286,10 @@ class SampleChart:
                 nonalpha.values()).index(self.char)]
             self.path = self.db_path_s + char + "/" + path
             self.cmd = "play"
-        self.p = multiprocessing.Process(target=playsound, args=(self.path,))
+        try:
+            self.p = multiprocessing.Process(target=playsound, args=(self.path,))
+        except:
+            print("playsound library not installed...")
         self.code = f'{self.cmd}("{self.char}", spack={self.spack_num_str}, sample={sample})'
         self.txt.insert(END, self.code)
         self.change_fname(path)
