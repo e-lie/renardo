@@ -7,7 +7,7 @@ set "VENV_DIR=%userprofile%\Desktop\venv_pyinstaller"
 
 @RD /S /Q "%VENV_DIR%"
 
-set "RENARDO_VERSION=0.9.8"
+set "RENARDO_VERSION=0.9.12"
 
 python -m venv %VENV_DIR%
 
@@ -17,7 +17,7 @@ CALL %VENV_DIR%\Scripts\activate.bat
 pip install --upgrade setuptools wheel
 
 cd ..
-pip install -r --no-cache-dir requirements.pyinstaller.txt
+pip install --no-cache-dir -r requirements.pyinstaller.txt
 pip install --upgrade --no-cache-dir renardo
 
 cd pyinstaller_bundle
