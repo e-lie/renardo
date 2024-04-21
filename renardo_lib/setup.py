@@ -7,7 +7,7 @@ with open("README.md", "r") as f:
 
 setup(
     name='renardo_lib',
-    version="1.0.0.dev6",
+    version="1.0.0.dev7",
     description='Python livecoding environment - New fork of FoxDot',
     author='Elie Gavoty',
     author_email='eliegavoty@free.fr',
@@ -47,6 +47,8 @@ setup(
         'renardo_gatherer==0.1.3',
         'fastnumbers',
         'midiutil',
-        'python-reapy'
+        'python-reapy',
+        'mido',
+        'JACK-Client'
     ],
 )
