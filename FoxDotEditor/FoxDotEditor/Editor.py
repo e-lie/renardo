@@ -60,7 +60,7 @@ class workspace:
         CodeClass.namespace['GUI'] = self
         CodeClass.namespace['Player'].widget = self
 
-        self.version = this_version = '0.9.11.dev1' 
+        self.version = this_version = '0.9.11' 
 
         pypi_version = get_pypi_version()
 
