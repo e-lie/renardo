@@ -114,4 +114,4 @@ try:
 #
 
 except Exception as e:
-    Print("Jack client lib or mido not available. Aborting MIDIddleware...")
+    print("Jack client lib or mido not available. Aborting MIDIddleware...")
