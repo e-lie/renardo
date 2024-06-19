@@ -48,7 +48,5 @@ setup(
         'fastnumbers',
         'midiutil',
         'python-reapy',
-        'mido',
-        'JACK-Client'
     ],
 )
