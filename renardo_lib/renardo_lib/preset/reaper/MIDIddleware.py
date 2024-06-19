@@ -100,10 +100,10 @@ try:
                     res = scale[round(degree_in_scale)] + octave * steps_per_octave + int(root) # round degree in scale to force it to play in the scale
                     res = int(res) # in case of scale Pvar, scale[i] is a ChildTimevar to convert to int
                     break
-        if res is None: # if degree_chromatic > max(scale) => use the last degree of the scale
-            res = scale[-1] + octave * steps_per_octave
-            res = int(res)
-        return res
+            if res is None: # if degree_chromatic > max(scale) => use the last degree of the scale
+                res = scale[-1] + octave * steps_per_octave
+                res = int(res)
+            return res
 
 ### TODO
 #
