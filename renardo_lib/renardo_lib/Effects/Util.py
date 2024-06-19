@@ -97,7 +97,7 @@ class Effect:
         return "<'{}': keyword='{}'{}>".format(self.synthdef, self.name, other_args)
 
     def __str__(self):
-        s = "SynthDef.new(\{},\n".format(self.synthdef)
+        s = f"SynthDef.new(\\{self.synthdef},\n"
         s += "{" + "|bus, {}|\n".format(", ".join(self.args))
         s += "var {};\n".format(",".join(self.vars))
         s += self.input
@@ -173,7 +173,7 @@ class In(Effect):
         self.save()
 
     def __str__(self):
-        s = "SynthDef.new(\startSound,\n"
+        s = "SynthDef.new(\\startSound,\n"
         s += "{ arg bus, rate=1, sus; var osc;\n"
         s += "	ReplaceOut.kr(bus, rate)}).add;\n"
         return s
@@ -186,7 +186,7 @@ class Out(Effect):
         self.save()
 
     def __str__(self):
-        s = "SynthDef.new(\makeSound,\n"
+        s = "SynthDef.new(\\makeSound,\n"
         s += "{ arg bus, sus; var osc;\n"
         s += "	osc = In.ar(bus, 2);\n"
         s += "  osc = EnvGen.ar(Env([1,1,0],[sus * {}, 0.1]), doneAction: 14) * osc;\n".format(
@@ -612,6 +612,10 @@ fx.add("osc = osc * EnvGen.ar(Env([0,1,0], [revatk,revsus], curve: 'welch'))")
 fx.add("osc = SelectX.ar(mix2, [dry, osc])")
 fx.save()
 
+fx = FxList.new('output','output', {'output': 0}, order=2)
+fx.doc("Output select Bus")
+fx.add("Out.ar(output, osc)")
+fx.save()
 
 In()
 Out()
@@ -758,10 +762,6 @@ Effect.server.setFx(FxList)
 # fx.add("Out.ar(3, Mix.ar(fxsig*fx2))")
 # fx.save()
 #
-fx = FxList.new('output','output', {'output': 0}, order=2)
-fx.doc("Output select Bus")
-fx.add("Out.ar(output, osc)")
-fx.save()
 
 
 # ### need the miSCellaneous Quark, install in SC
