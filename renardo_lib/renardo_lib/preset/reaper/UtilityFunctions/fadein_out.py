@@ -2,6 +2,16 @@
 from renardo_lib import Clock, linvar, sinvar, PWhite, PRand, inf, player_method, nextBar
 from renardo_lib.Extensions.ReaperIntegrationLib.ReaTrack import ReaTrack
 
+@player_method
+def fadep(self, param_name, fvalue=1, dur=8, ivalue=None):
+    """ general fade to value method working with any param """
+    if ivalue == None:
+        ivalue = float(self.__getattr__(param_name))
+    self.__setattr__(param_name, linvar([ivalue, fvalue], [dur, inf], start=Clock.mod(4)))
+    @nextBar(dur+1)
+    def static_final_value():
+        self.__setattr__(param_name, fvalue)
+    return self
 
 @player_method
 def fade(self, dur=8, fvol=1, ivol=None, autostop=True):

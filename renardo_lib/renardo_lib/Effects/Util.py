@@ -758,10 +758,10 @@ Effect.server.setFx(FxList)
 # fx.add("Out.ar(3, Mix.ar(fxsig*fx2))")
 # fx.save()
 #
-# fx = FxList.new('output','output', {'output': 0}, order=2)
-# fx.doc("Output select Bus")
-# fx.add("Out.ar(output, osc)")
-# fx.save()
+fx = FxList.new('output','output', {'output': 0}, order=2)
+fx.doc("Output select Bus")
+fx.add("Out.ar(output, osc)")
+fx.save()
 
 
 # ### need the miSCellaneous Quark, install in SC
