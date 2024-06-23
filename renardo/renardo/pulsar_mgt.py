@@ -1,12 +1,9 @@
 import os
 import subprocess
 from sys import platform
-import time
 import pathlib
 
 import psutil
-
-from renardo.SCFilesHandling import SC_USER_CONFIG_DIR
 
 class PulsarNotFoundError(Exception):
     pass
@@ -21,8 +18,9 @@ class PulsarInstance:
         self.pulsar_ready = None
 
         if platform == "win32":
-            # if chocolatey
+            # if chocolatey pulsar is installed in appdata
             pulsar_appdata_path = pathlib.Path(os.getenv('LOCALAPPDATA')) / 'Programs' / 'Pulsar' / 'Pulsar.exe'
+            #
             pulsar_c_path = pathlib.WindowsPath(os.getenv('ProgramFiles')) / 'Pulsar' / 'Pulsar.exe'
             if pulsar_appdata_path.exists():
                 self.pulsar_exec = [str(pulsar_appdata_path)]

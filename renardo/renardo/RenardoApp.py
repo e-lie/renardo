@@ -1,6 +1,6 @@
-from .SCFilesHandling import write_sc_renardo_files_in_user_config
-from .SuperColliderInstance import SupercolliderInstance
-from .PulsarInstance import PulsarInstance
+from renardo.supercollider_mgt.sc_classes_files import write_sc_renardo_files_in_user_config
+from renardo.supercollider_mgt.sclang_instances_mgt import SupercolliderInstance
+from .pulsar_mgt import PulsarInstance
 from .RenardoTUI import RenardoTUI
 from renardo_gatherer.samples_download import SPackManager
 
@@ -42,7 +42,7 @@ class RenardoApp:
             write_sc_renardo_files_in_user_config()
 
         if not (self.args.no_tui or self.args.pipe or self.args.foxdot_editor):
-            RenardoTUI(self).run()
+            RenardoTUI(renardo_app=self).run()
 
         if self.args.boot:
             print("Launching Renardo SC module with SCLang...")
