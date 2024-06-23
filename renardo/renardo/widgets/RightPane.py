@@ -22,6 +22,7 @@ class ResourcesRightPane(Static):
         if not self.app.base_sample_pack_downloaded:
             yield Label("Default samples pack needs to be downloaded")
             yield Button("Download renardo default samples pack", id="dl-renardo-samples-btn")
+            yield Log(id="spack-dl-log-output")
         else:
             yield Label("The default sample pack is downloaded")
 
@@ -29,7 +30,7 @@ class SCBackendRightPane(Static):
     def compose(self) -> ComposeResult:
         #yield Label("SuperCollider seems not ready. Please install it in default location (see doc)")
         yield Button("Start SuperCollider Backend", id="start-sc-btn")
-        yield Log(id="log-output")
+        yield Log(id="sclang-log-output")
 
 class RenardoLibRightPane(Static):
     def compose(self) -> ComposeResult:

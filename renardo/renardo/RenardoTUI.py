@@ -3,8 +3,9 @@ from textual.reactive import reactive
 from textual.binding import Binding
 from textual.css.query import NoMatches
 from renardo.supercollider_mgt.sc_classes_files import is_renardo_sc_classes_initialized, write_sc_renardo_files_in_user_config
-from renardo.widgets.RightPane import RightPane
+from renardo.widgets.RightPane import RightPane, ResourcesRightPane
 from textual import work
+from textual.worker import Worker
 
 from textual.containers import Horizontal, Vertical, Center, Grid
 from textual.widgets import (
@@ -17,6 +18,7 @@ from textual.widgets import (
 class RenardoTUI(App[None]):
     CSS_PATH = "RenardoTUI.tcss"
     right_pane_mode = reactive(None)
+    base_sample_pack_downloaded = reactive(None, recompose=True)
 
     BINDINGS = [
         Binding("CTRL+Q", "quit", "Quit", show=True, priority=True),
@@ -57,10 +59,10 @@ class RenardoTUI(App[None]):
         #            with Vertical():
         #                yield LeftPane(initial=self.calculate_left_pane_mode())
         #            with Vertical():
-        #                yield Log(id="log-output")
+        #                yield Log(id="sclang-log-output")
         #    yield TutoTabPane(title="Tutorials", id="tuto-tab")
 
-        yield Footer()
+        # yield Footer()
 
     ################ App state methods
 
@@ -134,7 +136,7 @@ class RenardoTUI(App[None]):
 
     @work(exclusive=True, thread=True)
     def dl_samples_background(self) -> None:
-        log_output_widget = self.query_one("#log-output", Log)
+        log_output_widget = self.query_one("#spack-dl-log-output", Log)
         self.renardo_app.spack_manager.set_logger(log_output_widget)
         self.renardo_app.spack_manager.init_default_spack()
         self.update_app_state()
@@ -142,16 +144,16 @@ class RenardoTUI(App[None]):
     @work(exclusive=True, thread=True)
     def init_renardo_sc_classes(self) -> None:
         write_sc_renardo_files_in_user_config()
-        self.query_one("#log-output", Log).write_line("Renardo SC files created in user config")
+        self.query_one("#sclang-log-output", Log).write_line("Renardo SC files created in user config")
         self.update_app_state()
 
     @work(exclusive=True, thread=True)
     def start_sc_backend(self) -> None:
         if self.renardo_app.sc_instance.start_sclang_subprocess():
-            self.query_one("#log-output", Log).write_line("Launching Renardo SC module with SCLang...")
+            self.query_one("#sclang-log-output", Log).write_line("Launching Renardo SC module with SCLang...")
             output_line = self.renardo_app.sc_instance.read_stdout_line()
             while "Welcome to" not in output_line:
-                self.query_one("#log-output", Log).write_line(output_line)
+                self.query_one("#sclang-log-output", Log).write_line(output_line)
                 output_line = self.renardo_app.sc_instance.read_stdout_line()
             self.renardo_app.sc_instance.evaluate_sclang_code("Renardo.start;")
             self.renardo_app.sc_instance.evaluate_sclang_code("Renardo.midi;")
@@ -161,19 +163,19 @@ class RenardoTUI(App[None]):
             # else:
             #     self.query_one("#start-pulsar-btn", Button).label = "Pulsar not ready"
             while True:
-                self.query_one("#log-output", Log).write_line(self.renardo_app.sc_instance.read_stdout_line())
+                self.query_one("#sclang-log-output", Log).write_line(self.renardo_app.sc_instance.read_stdout_line())
         else:
-            self.query_one("#log-output", Log).write_line("SuperCollider backend already started (sclang backend externally managed)\nIf you want to handle the backend manually you should ensure... \n...you executed Renardo.start; correctly in SuperCollider IDE")
+            self.query_one("#sclang-log-output", Log).write_line("SuperCollider backend already started (sclang backend externally managed)\nIf you want to handle the backend manually you should ensure... \n...you executed Renardo.start; correctly in SuperCollider IDE")
             self.query_one("#start-renardo-foxdot-editor-btn", Button).disabled = False
             if self.renardo_app.pulsar_instance.pulsar_ready:
                 self.query_one("#start-pulsar-btn", Button).disabled = False
 
     @work(exclusive=True, thread=True)
     def start_pulsar_background(self) -> None:
-        self.query_one("#log-output", Log).write_line("Launching Renardo SC module with SCLang...")
+        self.query_one("#sclang-log-output", Log).write_line("Launching Renardo SC module with SCLang...")
         self.renardo_app.pulsar_instance.start_pulsar_subprocess()
         while True:
-            self.query_one("#log-output", Log).write_line(self.renardo_app.pulsar_instance.read_stdout_line())
+            self.query_one("#sclang-log-output", Log).write_line(self.renardo_app.pulsar_instance.read_stdout_line())
 
     @work(exclusive=True, thread=True)
     def start_foxdoteditor_background(self) -> None:
