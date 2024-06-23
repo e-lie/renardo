@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 from renardo_gatherer.config_dir import SAMPLES_DIR_PATH
 
 SAMPLES_DOWNLOAD_SERVER = 'https://samples.renardo.org'
+#DEFAULT_SAMPLES_PACK_NAME = '0_foxdot_default_testing'
 DEFAULT_SAMPLES_PACK_NAME = '0_foxdot_default'
 LOOP_SUBDIR = '_loop_'
 
