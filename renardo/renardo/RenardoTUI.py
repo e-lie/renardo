@@ -21,7 +21,7 @@ class RenardoTUI(App[None]):
     base_sample_pack_downloaded = reactive(None, recompose=True)
 
     BINDINGS = [
-        Binding("CTRL+Q", "quit", "Quit", show=True, priority=True),
+        Binding("ctrl+q", "quit", "Quit", show=True, priority=True),
     ]
 
     def __init__(self, renardo_app, *args, **kwargs):
