@@ -44,8 +44,8 @@ class RenardoTUI(App[None]):
                 with Grid(classes="main-grid"):
                     yield Button("1 - Music Resources", id="music-resources-1-btn", classes="home-button")
                     yield Button("2 - SuperCollider Backend", id="supercollider-backend-2-btn", classes="home-button")
-                    yield Button("3 - Renardo Instance", id="renardo-instance-3-btn", classes="home-button")
-                    yield Button("4 - Livecoding Editor", id="livecoding-editor-4-btn", classes="home-button")
+                    #yield Button("3 - Renardo Instance", id="renardo-instance-3-btn", classes="home-button")
+                    yield Button("3 - Livecoding Editor", id="livecoding-editor-3-btn", classes="home-button")
             with Vertical(classes="right-pane"):
                 yield RightPane(initial=self.right_pane_mode)
         #with TabbedContent():
@@ -97,7 +97,7 @@ class RenardoTUI(App[None]):
 
         # Right pane mode switch
         if button_id in ["music-resources-1-btn", "supercollider-backend-2-btn",
-            "renardo-instance-3-btn", "livecoding-editor-4-btn"]:
+            "renardo-instance-3-btn", "livecoding-editor-3-btn"]:
             self.right_pane_mode = button_id[:-4]
             pass
 
