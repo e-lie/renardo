@@ -1,5 +1,6 @@
 from textual.app import App, ComposeResult
 from textual.reactive import reactive
+from textual import work
 from textual.binding import Binding
 from textual.css.query import NoMatches
 from renardo.supercollider_mgt.sc_classes_files import is_renardo_sc_classes_initialized, write_sc_renardo_files_in_user_config
@@ -13,7 +14,12 @@ from textual.widgets import (
     Footer,
     Button,
     Log,
+    TabbedContent,
+    TabPane
 )
+
+from renardo.widgets.TutoTabPane import TutoTabPane
+from renardo.widgets.RightPane import RightPane, ResourcesRightPane
 
 class RenardoTUI(App[None]):
     CSS_PATH = "RenardoTUI.tcss"
@@ -41,26 +47,20 @@ class RenardoTUI(App[None]):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        with Horizontal():
-            with Center(classes="main-center"):
-                with Grid(classes="main-grid"):
-                    yield Button("1 - Music Resources", id="music-resources-1-btn", classes="home-button")
-                    yield Button("2 - SuperCollider Backend", id="supercollider-backend-2-btn", classes="home-button")
-                    #yield Button("3 - Renardo Instance", id="renardo-instance-3-btn", classes="home-button")
-                    yield Button("3 - Livecoding Editor", id="livecoding-editor-3-btn", classes="home-button")
-            with Vertical(classes="right-pane"):
-                yield RightPane(initial=self.right_pane_mode)
-        #with TabbedContent():
-        #    with TabPane("Welcome", id="welcome-tab"):
-        #        yield Label("Welcome to renardo terminal user interface (TUI) !!")
-        #        yield Label("Here you can configure, learn renardo and start it's different modules")
-        #    with TabPane("Autostart", id="start-tab"):
-        #        with Horizontal():
-        #            with Vertical():
-        #                yield LeftPane(initial=self.calculate_left_pane_mode())
-        #            with Vertical():
-        #                yield Log(id="sclang-log-output")
-        #    yield TutoTabPane(title="Tutorials", id="tuto-tab")
+        with TabbedContent():
+            with TabPane("Start", id="start-tab"):
+                with Horizontal():
+                    with Center(classes="main-center"):
+                        with Grid(classes="main-grid"):
+                            yield Button("1 - Music Resources", id="music-resources-1-btn", classes="home-button")
+                            yield Button("2 - SuperCollider Backend", id="supercollider-backend-2-btn", classes="home-button")
+                            #yield Button("3 - Renardo Instance", id="renardo-instance-3-btn", classes="home-button")
+                            yield Button("3 - Livecoding Editor", id="livecoding-editor-3-btn", classes="home-button")
+                    with Vertical(classes="right-pane"):
+                        yield RightPane(initial=self.right_pane_mode)
+            #with TabPane("Logs", id="log-tab"):
+            #    yield Log(id="renardo-log")
+            #yield TutoTabPane(title="Tutorials", id="tuto-tab")
 
         # yield Footer()
 
