@@ -61,7 +61,7 @@
 
 import os.path
 from renardo_lib.Settings import EFFECTS_DIR, SC3_PLUGINS
-from renardo_lib.ServerManager import Server
+from renardo_lib.ServerManager.default_server import Server
 
 
 class Effect:
@@ -69,6 +69,7 @@ class Effect:
 
     def __init__(self, foxdot_name, synthdef, args={}, control=False):
 
+        #self.server =Server
         self.name = foxdot_name
         self.synthdef = synthdef
         self.filename = EFFECTS_DIR + "/{}.scd".format(self.synthdef)

@@ -2,10 +2,7 @@
 """
 import sys
 
-if sys.version_info[0] > 2:
-    import queue
-else:
-    import Queue as queue
+import queue
 
 import json
 import os.path
@@ -15,7 +12,6 @@ from time import sleep
 from collections import namedtuple
 from threading import Thread
 
-from renardo_lib.Code import WarningMsg
 from renardo_lib.Settings import (
     OSC_MIDI_ADDRESS, GET_SC_INFO, FOXDOT_INFO_FILE, FOXDOT_RECORD_FILE,
     RECORDING_DIR, SamplePlayer, LoopPlayer, get_timestamp, SCLANG_EXEC,
@@ -32,6 +28,8 @@ ServerInfo = namedtuple(
      'num_input_bus_channels', 'num_output_bus_channels', 'num_buffers',
      'max_nodes', 'max_synth_defs'))
 
+def WarningMsg(*text):
+    print("Warning: {}".format( " ".join(str(s) for s in text) ))
 
 class OSCClientWrapper(OSCClient):
     error_printed = False
@@ -42,10 +40,8 @@ class OSCClientWrapper(OSCClient):
             OSCClient.send(*args, **kwargs)
         except OSCClientError as e:
             if not OSCClientWrapper.error_printed:
-                print(
-                    "Error sending message to SuperCollider server instance: make sure FoxDot quark is running and try again.")
+                print("Error sending message to SuperCollider server instance: make sure FoxDot quark is running and try again.")
                 OSCClientWrapper.error_printed = True
-
 
 class OSCConnect(OSCClientWrapper):
     """ An OSCClientWrapper that connects on initialisation """
@@ -206,6 +202,7 @@ class SCLangServerManager(ServerManager):
         self.fx_setup_done = False
         self.fx_names = {}
 
+        ## why connect at initialization
         self.reset()
 
     def reset(self):
@@ -1091,13 +1088,3 @@ class TempoClient:
         self.listening = False
         self.socket.close()
         return
-
-if __name__ != "__main__":
-
-    from renardo_lib.Settings import ADDRESS, PORT, PORT2, FORWARD_PORT, FORWARD_ADDRESS
-
-    # DefaultServer = SCLangServerManager(ADDRESS, PORT, PORT2)
-    Server = SCLangServerManager(ADDRESS, PORT, PORT2)
-
-    if FORWARD_PORT and FORWARD_ADDRESS:
-        Server.add_forward(FORWARD_ADDRESS, FORWARD_PORT)
