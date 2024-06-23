@@ -1,13 +1,10 @@
 from textual.app import App, ComposeResult
 from textual.reactive import reactive
+from renardo_lib.ServerManager import SCLangServerManager
 from textual import work
 from textual.binding import Binding
 from textual.css.query import NoMatches
 from renardo.supercollider_mgt.sc_classes_files import is_renardo_sc_classes_initialized, write_sc_renardo_files_in_user_config
-from renardo.widgets.RightPane import RightPane, ResourcesRightPane
-from textual import work
-from textual.worker import Worker
-
 from textual.containers import Horizontal, Vertical, Center, Grid
 from textual.widgets import (
     Header,
@@ -43,6 +40,7 @@ class RenardoTUI(App[None]):
         self.sc_backend_started = None
         self.supercollider_found = self.get_supercollider_found()
         self.pulsar_found = None
+        self.test_sclang_connection()
 
 
     def compose(self) -> ComposeResult:
@@ -80,6 +78,11 @@ class RenardoTUI(App[None]):
     def get_supercollider_found(self):
         return True
 
+    def test_sclang_connection(self):
+        ADDRESS='localhost'
+        PORT=57110
+        PORT2=57120
+        TestServer = SCLangServerManager(ADDRESS, PORT, PORT2)
 
     ################# Reactiveness for state variables (magic textual watch methods)
 
@@ -179,7 +182,7 @@ class RenardoTUI(App[None]):
 
     @work(exclusive=True, thread=True)
     def start_foxdoteditor_background(self) -> None:
-        from renardo_lib import FoxDotCode
+        from renardo_lib.runtime import FoxDotCode
         # Open the GUI
         from FoxDotEditor.Editor import workspace
         FoxDot = workspace(FoxDotCode).run()
