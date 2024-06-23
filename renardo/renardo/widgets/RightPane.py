@@ -8,8 +8,8 @@ class RightPane(ContentSwitcher):
     def compose(self) -> ComposeResult:
         yield ResourcesRightPane(id="music-resources-1")
         yield SCBackendRightPane(id="supercollider-backend-2")
-        yield RenardoLibRightPane(id="renardo-lib-3")
-        yield LivecodingEditorRightPane(id="livecoding-editor-4")
+        #yield RenardoLibRightPane(id="renardo-lib-3")
+        yield LivecodingEditorRightPane(id="livecoding-editor-3")
 
 
 class ResourcesRightPane(Static):
