@@ -3,7 +3,6 @@ import subprocess
 from sys import platform
 import pathlib
 import psutil
-from renardo.SCFilesHandling import SC_USER_CONFIG_DIR
 
 
 class SupercolliderInstance:

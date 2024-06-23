@@ -23,7 +23,7 @@ SC_USER_EXTENSIONS_DIR = SC_USER_CONFIG_DIR / 'Extensions'
 
 SCLANG_PROCESS = None
 
-def is_renardo_scfiles_installed():
+def is_renardo_sc_classes_initialized():
     return (
         (SC_USER_EXTENSIONS_DIR / 'Renardo.sc').exists()
         and (SC_USER_EXTENSIONS_DIR / 'StageLimiter.sc').exists()

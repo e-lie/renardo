@@ -27,3 +27,34 @@ Vertical {
 RadioSet {
     width: 50%;
 }
+
+.box {
+    /*height: 100%;*/
+    min-width: 30;
+    width: 1fr;
+}
+
+/*.main-center {
+    width: 1fr;
+}*/
+
+.main-grid {
+    grid-size: 2;
+    /*max-width: 120;*/
+    margin: 0 2;
+    max-height: 20;
+}
+
+.home-button {
+    padding-top:1;
+    padding-bottom:1;
+    width: 1fr;
+    height: 1fr;
+}
+
+.right-pane {
+    max-width: 200;
+    width: 2fr;
+    background: $boost;
+    padding: 0 4;
+}
