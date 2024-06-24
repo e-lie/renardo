@@ -3,6 +3,7 @@ from renardo_lib.ServerManager import SCLangServerManager
 
 # DefaultServer = SCLangServerManager(ADDRESS, PORT, PORT2)
 Server = SCLangServerManager(ADDRESS, PORT, PORT2)
+Server.init_connection()
 
 if FORWARD_PORT and FORWARD_ADDRESS:
     Server.add_forward(FORWARD_ADDRESS, FORWARD_PORT)
