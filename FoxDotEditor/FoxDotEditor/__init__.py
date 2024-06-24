@@ -101,7 +101,7 @@ if "--boot" in sys.argv:
 
     sys.argv.remove("--boot")
 
-from renardo_lib import *
+from renardo_lib.runtime import *
 
 def main():
     """ Function for starting the GUI when importing the library """
