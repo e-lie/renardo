@@ -202,19 +202,28 @@ class SCLangServerManager(ServerManager):
         self.fx_setup_done = False
         self.fx_names = {}
 
-        ## why connect at initialization
-        self.reset()
-
-    def reset(self):
-
-        # General SuperCollider OSC connection
+        # General SuperCollider OSC connection on PORT 1
         self.client = OSCClientWrapper()
-        self.client.connect((self.addr, self.port))
 
-        # OSC Connection for custom OSCFunc in SuperCollider
+        # self.sclang is the OSC Connection for custom OSCFunc in SuperCollider
+        self.sclang = BidirectionalOSCServer() if GET_SC_INFO else OSCClientWrapper()
+
+
+    def test_connection(self):
+        self.sclang.connect((self.addr, self.SCLang_port))
+        self.loadSynthDef(FOXDOT_INFO_FILE)
+        try:
+            self.getInfo()
+            return True
+        except:
+            return False
+
+    def init_connection(self):
+        self.client.connect((self.addr, self.port))
+        self.sclang.connect((self.addr, self.SCLang_port))
+
+        # Use bidirectionnal connection to ask SuperCollider for info
         if GET_SC_INFO:
-            self.sclang = BidirectionalOSCServer()
-            self.sclang.connect((self.addr, self.SCLang_port))
             self.loadSynthDef(FOXDOT_INFO_FILE)
             try:
                 info = self.getInfo()
@@ -227,20 +236,11 @@ class SCLangServerManager(ServerManager):
                 self.num_output_busses = info.num_output_bus_channels
                 self.max_busses = info.num_audio_bus_channels
                 self.bus = self.num_input_busses + self.num_output_busses
-        else:
-            self.sclang = OSCClientWrapper()
-            self.sclang.connect((self.addr, self.SCLang_port))
-
         # Clear SuperCollider nodes if any left over from other session etc
-
         self.freeAllNodes()
-
         # Load recorder OSCFunc
-
         self.loadRecorder()  # move to the quark?
-
         # Toggle debug in SuperCollider
-
         self.dumpOSC(0)
 
     def __str__(self):

@@ -154,7 +154,7 @@ def _reload_synths():
     return
 
 def foxdot_reload():
-    Server.reset()
+    Server.init_connection()
     SynthDefs.reload()
     FxList.reload()
     Samples.reset()
@@ -205,7 +205,7 @@ class _util:
     def __repr__(self):
         return "Renardo ver. 0.9.12"
     def reload(self):
-        Server.reset()
+        Server.init_connection()
         SynthDefs.reload()
         FxList.reload()
         Samples.reset()
