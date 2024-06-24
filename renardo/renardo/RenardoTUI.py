@@ -1,6 +1,7 @@
 from textual.app import App, ComposeResult
 from textual.reactive import reactive
 from renardo_lib.ServerManager import SCLangServerManager
+from renardo_lib.Settings import ADDRESS, PORT, PORT2
 from textual import work
 from textual.binding import Binding
 from textual.css.query import NoMatches
@@ -22,6 +23,8 @@ class RenardoTUI(App[None]):
     CSS_PATH = "RenardoTUI.tcss"
     right_pane_mode = reactive(None)
     base_sample_pack_downloaded = reactive(None, recompose=True)
+    sc_backend_started = reactive(None)
+    renardo_sc_class_initialized = reactive(None, recompose=True)
 
     BINDINGS = [
         Binding("ctrl+q", "quit", "Quit", show=True, priority=True),
@@ -37,10 +40,9 @@ class RenardoTUI(App[None]):
         self.right_pane_maximized = None # maximization feature TODO ?
         self.renardo_sc_class_initialized = is_renardo_sc_classes_initialized()
         self.base_sample_pack_downloaded = self.renardo_app.spack_manager.is_default_spack_initialized()
-        self.sc_backend_started = None
-        self.supercollider_found = self.get_supercollider_found()
-        self.pulsar_found = None
-        self.test_sclang_connection()
+        self.sc_backend_started = self.test_sclang_connection()
+        self.supercollider_found = self.renardo_app.sc_instance.supercollider_ready
+        self.pulsar_found = self.renardo_app.pulsar_instance.pulsar_ready
 
 
     def compose(self) -> ComposeResult:
@@ -65,24 +67,19 @@ class RenardoTUI(App[None]):
     ################ App state methods
 
     def update_app_state(self):
-        self.right_pane_mode = self.get_right_pane_mode()
         self.renardo_sc_class_initialized = is_renardo_sc_classes_initialized()
         self.base_sample_pack_downloaded = self.renardo_app.spack_manager.is_default_spack_initialized()
-        self.sc_backend_started = None
-        self.supercollider_found = self.get_supercollider_found()
-        self.pulsar_found = None
+        self.sc_backend_started = self.test_sclang_connection()
+        self.supercollider_found = self.renardo_app.sc_instance.supercollider_ready
+        self.pulsar_found = self.renardo_app.pulsar_instance.pulsar_ready
 
     def get_right_pane_mode(self):
         return "music-resources-1"
 
-    def get_supercollider_found(self):
-        return True
-
     def test_sclang_connection(self):
-        ADDRESS='localhost'
-        PORT=57110
-        PORT2=57120
         TestServer = SCLangServerManager(ADDRESS, PORT, PORT2)
+        TestServer.sclang._printed_error = True
+        return TestServer.test_connection()
 
     ################# Reactiveness for state variables (magic textual watch methods)
 
@@ -160,11 +157,6 @@ class RenardoTUI(App[None]):
                 output_line = self.renardo_app.sc_instance.read_stdout_line()
             self.renardo_app.sc_instance.evaluate_sclang_code("Renardo.start;")
             self.renardo_app.sc_instance.evaluate_sclang_code("Renardo.midi;")
-            # self.query_one("#start-renardo-foxdot-editor-btn", Button).disabled = False
-            # if self.renardo_app.pulsar_instance.pulsar_ready:
-            #     self.query_one("#start-pulsar-btn", Button).disabled = False
-            # else:
-            #     self.query_one("#start-pulsar-btn", Button).label = "Pulsar not ready"
             while True:
                 self.query_one("#sclang-log-output", Log).write_line(self.renardo_app.sc_instance.read_stdout_line())
         else:
