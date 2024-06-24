@@ -1,0 +1,73 @@
+name: CI Tests
+
+on: [push, pull_request]
+
+jobs:
+  #black:
+  #  name: Black Code Formatter
+  #  runs-on: ubuntu-latest
+  #  steps:
+  #    - uses: actions/checkout@v4
+  #    - name: Black Code Formatter
+  #      uses: lgeiger/black-action@master
+  #      with:
+  #        args: >
+  #          SABnzbd.py
+  #          sabnzbd
+  #          scripts
+  #          tools
+  #          builder
+  #          builder/SABnzbd.spec
+  #          tests
+  #          --line-length=120
+  #          --target-version=py38
+  #          --check
+  #          --diff
+
+  test:
+    name: Test ${{ matrix.name }} - Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python-architecture: ["x64"]
+        name: ["Linux"]
+        os: [ubuntu-20.04]
+        include:
+          - name: macOS
+            os: macos-latest
+            python-version: "3.12.3"
+            python-architecture: "x64"
+          - name: Windows
+            os: windows-latest
+            python-version: "3.12"
+            python-architecture: "x64"
+          - name: Windows (32bit)
+            os: windows-latest
+            python-version: "3.8"
+            python-architecture: "x86"
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }} ${{ matrix.python-architecture }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        architecture:  ${{ matrix.python-architecture }}
+        cache: pip
+        cache-dependency-path: "**/requirements.pyinstaller.txt"
+    - name: Install system dependencies
+      if: runner.os == 'Linux'
+      run: sudo apt-get install unrar p7zip-full par2
+    - name: Install Python dependencies
+      run: |
+        python --version
+        python -m pip install --upgrade pip wheel
+        pip install --upgrade -r requirements.pyinstaller.txt --no-dependencies
+      # pip install --upgrade -r tests/requirements.txt
+    - name: Testsss
+      #run: pytest -s
+      run: >
+        python -c "print(${{ matrix.python-version }}, ${{ matrix.python-architecture }}, ${{ matrix.os }})"
