@@ -8,12 +8,13 @@ echo '######## activating venv'
 source /tmp/venv_pyinstaller/bin/activate
 
 echo '####### installing python requirements in venv (editable + normal libs)'
-pip3 install -r ../requirements.pyinstaller.txt --no-cache-dir --upgrade
+pip3 install renardo==$RENARDO_VERSION
+pip3 install -r ../../requirements.pyinstaller.txt --no-cache-dir --upgrade
 
 echo '####### bundling with pyinstaller'
 export DISTP="/tmp/renardo-$RENARDO_VERSION"
 mkdir -p $DISTP
-pyinstaller "renardo-entrypoint.py" \
+pyinstaller "../renardo-entrypoint.py" \
     --name "renardo-$RENARDO_VERSION" \
     --collect-all renardo_gatherer \
     --collect-all renardo_lib \
