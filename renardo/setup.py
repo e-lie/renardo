@@ -16,6 +16,7 @@ setup(
     packages=[
         'renardo',
         'renardo.widgets',
+        'renardo.supercollider_mgt',
     ],
     long_description=long_description,
     long_description_content_type="text/markdown",
