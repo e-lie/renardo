@@ -17,10 +17,11 @@ CALL %VENV_DIR%\Scripts\activate.bat
 pip install --upgrade setuptools wheel
 
 cd ..
+cd ..
+pip install --upgrade --no-cache-dir renardo==%RENARDO_VERSION%
 pip install --no-cache-dir -r requirements.pyinstaller.txt
-pip install --upgrade --no-cache-dir renardo
 
-cd pyinstaller_bundle
+cd builder
 
 ::python -m PyInstaller renardo_bundle.py --collect-all renardo --collect-all FoxDotEditor --collect-all renardo_sitter --hidden-import wave --hidden-import psutil --hidden-import json --hidden-import queue --hidden-import socketserver --hidden-import tkinter --clean
 python -m PyInstaller "renardo-entrypoint.py" ^
