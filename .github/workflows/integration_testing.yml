@@ -70,4 +70,4 @@ jobs:
     - name: Testsss
       #run: pytest -s
       run: >
-        python -c "print(${{ matrix.python-version }}, ${{ matrix.python-architecture }}, ${{ matrix.os }})"
+        python -c "print('${{ matrix.python-version }}', '${{ matrix.python-architecture }}', '${{ matrix.os }}')"
