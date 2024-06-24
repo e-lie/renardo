@@ -55,11 +55,11 @@ class RenardoApp:
             time.sleep(3)
 
         if self.args.pipe:
-            from renardo_lib import handle_stdin, FoxDotCode
+            from renardo_lib.runtime import handle_stdin, FoxDotCode
             # Just take commands from the CLI
             handle_stdin()
         elif self.args.foxdot_editor:
-            from renardo_lib import FoxDotCode
+            from renardo_lib.runtime import FoxDotCode
             # Open the GUI
             from FoxDotEditor.Editor import workspace
             FoxDot = workspace(FoxDotCode).run()

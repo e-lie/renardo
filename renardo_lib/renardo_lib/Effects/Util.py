@@ -98,7 +98,7 @@ class Effect:
         return "<'{}': keyword='{}'{}>".format(self.synthdef, self.name, other_args)
 
     def __str__(self):
-        s = "SynthDef.new(\{},\n".format(self.synthdef)
+        s = "SynthDef.new(\\{},\n".format(self.synthdef)
         s += "{" + "|bus, {}|\n".format(", ".join(self.args))
         s += "var {};\n".format(",".join(self.vars))
         s += self.input
@@ -174,7 +174,7 @@ class In(Effect):
         self.save()
 
     def __str__(self):
-        s = "SynthDef.new(\startSound,\n"
+        s = "SynthDef.new(\\startSound,\n"
         s += "{ arg bus, rate=1, sus; var osc;\n"
         s += "	ReplaceOut.kr(bus, rate)}).add;\n"
         return s
@@ -187,7 +187,7 @@ class Out(Effect):
         self.save()
 
     def __str__(self):
-        s = "SynthDef.new(\makeSound,\n"
+        s = "SynthDef.new(\\makeSound,\n"
         s += "{ arg bus, sus; var osc;\n"
         s += "	osc = In.ar(bus, 2);\n"
         s += "  osc = EnvGen.ar(Env([1,1,0],[sus * {}, 0.1]), doneAction: 14) * osc;\n".format(
