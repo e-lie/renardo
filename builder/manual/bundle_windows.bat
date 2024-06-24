@@ -1,4 +1,4 @@
-@echo off
+echo off
 
 :: lolilolilolilol le BAT
 ::for %%i in ("%CD%\..") do set "PARENT_DIR=%%~fi"
