@@ -6,36 +6,8 @@ from renardo_lib.ServerManager.default_server import Server
 from renardo_lib.Settings import SYNTHDEF_DIR
 from renardo_lib.Code import WarningMsg
 
-#from renardo_lib.runtime import Server
 
-# Container for SynthDefs
-
-#class SynthDict(dict):
-#    module = None
-#    server = None
-#    def __init__(self, **kwargs):
-#        dict.__init__(self, kwargs)
-#    def __str__(self):
-#        return str(list(self.keys()))
-#    def __repr__(self):
-#        return str(list(self.keys()))
-#    def __call__(self, name):
-#        return self[name]
-#    def reload(self):
-#        for key, item in self.items():
-#            item.load()
-#        return
-#    def set_server(self, serv):
-#        self.server = serv
-#        self.server.synthdefs = self
-#        return
-
-# Create container for SynthDefs
-
-#SynthDefs = SynthDict()
 SynthDefs = {}
-
-# SynthDef Base Class
 
 class SynthDefBaseClass(object):
 

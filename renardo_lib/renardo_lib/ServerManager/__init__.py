@@ -121,53 +121,7 @@ class BidirectionalOSCServer(OSCServer):
                 return data
             now = time.time()
 
-#  Create an abstract base class that could be sub-classed for users who want to send their OSC messages elsewhere
-#class ServerManager(object):
-#    def __init__(self, addr, port, osc_address="/s_new"):
-#        self.addr = addr
-#        self.port = port
-#        self.client = OSCClientWrapper()
-#        self.client.connect((self.addr, self.port))
-#        self.osc_address = osc_address
-#
-#        self.node = 1000
-#        self.num_input_busses = 2
-#        self.num_output_busses = 2
-#        self.bus = self.num_input_busses + self.num_output_busses
-#        self.max_busses = 100
-#        self.max_buffers = 1024
-#
-#    @staticmethod
-#    def create_osc_msg(dictionary):
-#        """ Converts a Python dictionary into an OSC style list """
-#        msg = []
-#        for key, value in dictionary.items():
-#            msg += [key, value]
-#        return msg
-#
-#    def sendOSC(self, osc_message):
-#        self.client.send(osc_message)
-#        return
-#
-#    def get_bundle(self, *args, **kwargs):
-#        bundle = OSCBundle(time=kwargs.get("timestamp", 0))
-#        message = OSCMessage(self.osc_address)
-#        for item in args:
-#            if type(item) == dict:
-#                message.append(self.create_osc_msg(item))
-#            else:
-#                message.append(item)
-#        bundle.append(message)
-#        return bundle
-#
-#    def loadSynthDef(self, *args, **kwargs):
-#        return
-#
-#    def setFx(self, *args, **kwargs):
-#        return
 
-
-#class SCLangServerManager:
 class ServerManager:
 
     fxlist = None
@@ -603,19 +557,6 @@ class ServerManager:
         self.sclang.send(msg)
         info = ServerInfo(*self.sclang.receive('/foxdot/info'))
         return info
-
-    #def start(self):
-    #    """ Boots SuperCollider using `subprocess`"""
-    #    if not self.booted:
-    #        os.chdir(SC_DIRECTORY)
-    #        print("Booting SuperCollider Server...")
-    #        self.daemon = subprocess.Popen([SCLANG_EXEC, '-D', FOXDOT_STARTUP_FILE])
-    #        os.chdir(USER_CWD)
-    #        self.booted = True
-    #    else:
-    #        print("Warning: SuperCollider already running")
-
-    #    return
 
     def makeStartupFile(self):
         ''' Boot SuperCollider and connect over OSC '''
