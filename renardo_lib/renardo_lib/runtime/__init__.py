@@ -16,13 +16,10 @@ from renardo_lib.TimeVar import *
 from renardo_lib.Constants import *
 from renardo_lib.Midi import *
 from renardo_lib.Settings import *
-from renardo_lib.synthdefs_initialisation import *
 from renardo_lib.ServerManager import *
 from renardo_lib.SCLang import SynthDefs, Env, SynthDef, CompiledSynthDef
 from renardo_lib.Root import Root
 from renardo_lib.Scale import Scale, Tuning
-
-
 
 
 
@@ -55,6 +52,11 @@ def player_method(f):
     return getattr(Player, f.__name__)
 
 PlayerMethod = player_method # Temporary alias
+
+
+#########################################
+### Scheduling utils
+#########################################
 
 def _futureBarDecorator(n, multiplier=1):
     if callable(n):
@@ -96,6 +98,10 @@ def futureBar(n=0):
     '''
     return _futureBarDecorator(n, Clock.bar_length())
 
+#########################################
+### Reset clock and OSC server
+#########################################
+
 def update_foxdot_clock(clock):
     """ Tells the TimeVar, Player, and MidiIn classes to use
         a new instance of TempoClock. """
@@ -114,32 +120,9 @@ def update_foxdot_server(serv):
     """ Tells the `Effect` and`TempoClock`classes to send OSC messages to
         a new ServerManager instance.
     """
-
     assert isinstance(serv, ServerManager)
-
     TempoClock.set_server(serv)
     serv.update_synthdef_dict(SynthDefs)
-
-    return
-
-def instantiate_player_objects():
-    """ Instantiates all two-character variable Player Objects """
-    alphabet = list('abcdefghijklmnopqrstuvwxyz')
-    numbers  = list('0123456789')
-
-    for char1 in alphabet:
-
-        group = []
-
-        for char2 in alphabet + numbers:
-
-            arg = char1 + char2
-
-            FoxDotCode.namespace[arg] = EmptyPlayer(arg)
-
-            group.append(arg)
-
-        FoxDotCode.namespace[char1 + "_all"] = Group(*[FoxDotCode.namespace[char1+str(n)] for n in range(10)])
 
     return
 
@@ -170,14 +153,6 @@ def _convert_json_bpm(clock, data):
     else:
         return data
 
-def Master():
-    """ Returns a `Group` containing all the players currently active in the Clock """
-    return Group(*Clock.playing)
-
-def Ramp(t=32, ramp_time=4):
-    """ Returns a `linvar` that goes from 0 to 1 over the course of the last
-        `ramp_time` bars of every `t` length cycle. """
-    return linvar([0,0,1,0],[t-ramp_time, ramp_time, 0, 0])
 
 def allow_connections(valid = True, *args, **kwargs):
     """ Starts a new instance of ServerManager.TempoServer and connects it with the clock. Default port is 57999 """
@@ -188,6 +163,45 @@ def allow_connections(valid = True, *args, **kwargs):
         Clock.kill_tempo_server()
         print("Closed connections")
     return
+
+
+#########################################
+### Initialize base Player instances
+#########################################
+
+def instantiate_player_objects():
+    """ Instantiates all two-character variable Player Objects """
+    alphabet = list('abcdefghijklmnopqrstuvwxyz')
+    numbers  = list('0123456789')
+    for char1 in alphabet:
+        group = []
+        for char2 in alphabet + numbers:
+            arg = char1 + char2
+            FoxDotCode.namespace[arg] = EmptyPlayer(arg)
+            group.append(arg)
+        FoxDotCode.namespace[char1 + "_all"] = Group(*[FoxDotCode.namespace[char1+str(n)] for n in range(10)])
+    return
+
+
+#########################################
+### Initialize base synthdefs
+#########################################
+
+from renardo_lib.runtime.synthdefs_initialisation import *
+
+
+#########################################
+### Define some practical functions
+#########################################
+
+def Master():
+    """ Returns a `Group` containing all the players currently active in the Clock """
+    return Group(*Clock.playing)
+
+def Ramp(t=32, ramp_time=4):
+    """ Returns a `linvar` that goes from 0 to 1 over the course of the last
+        `ramp_time` bars of every `t` length cycle. """
+    return linvar([0,0,1,0],[t-ramp_time, ramp_time, 0, 0])
 
 def Go():
     """ Function to be called at the end of Python files with FoxDot code in to keep
@@ -200,7 +214,6 @@ def Go():
         return
 
 # Util class
-
 class _util:
     def __repr__(self):
         return "Renardo ver. 0.9.13.dev2"
@@ -215,6 +228,7 @@ class _util:
         return
 
 FoxDot = _util()
+
 
 # Create a clock and define functions
 
