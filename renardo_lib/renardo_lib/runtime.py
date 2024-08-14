@@ -16,7 +16,7 @@ from renardo_lib.TimeVar import *
 from renardo_lib.Constants import *
 from renardo_lib.Midi import *
 from renardo_lib.Settings import *
-from renardo_lib.SCLang._SynthDefs import *
+from renardo_lib.synthdefs_initialisation import *
 from renardo_lib.ServerManager import *
 from renardo_lib.SCLang import SynthDefs, Env, SynthDef, CompiledSynthDef
 from renardo_lib.Root import Root
