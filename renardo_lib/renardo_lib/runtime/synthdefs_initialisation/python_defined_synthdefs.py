@@ -1,4 +1,4 @@
-from renardo_lib.SCLang.SCLang import *
+from renardo_lib.SCLang.SCLangExperimentalBindings import *
 from renardo_lib.SCLang.SynthDef import SynthDef
 from renardo_lib.Settings import SC3_PLUGINS
 from renardo_lib.SCLang import Env
