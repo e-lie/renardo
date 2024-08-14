@@ -118,7 +118,7 @@ def update_foxdot_server(serv):
     assert isinstance(serv, ServerManager)
 
     TempoClock.set_server(serv)
-    SynthDefs.set_server(serv)
+    serv.update_synthdef_dict(SynthDefs)
 
     return
 
