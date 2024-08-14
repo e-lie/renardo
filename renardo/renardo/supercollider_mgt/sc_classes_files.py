@@ -32,28 +32,28 @@ def is_renardo_sc_classes_initialized():
 
 def write_sc_renardo_files_in_user_config():
     renardo_sc_class = '''
-        Renardo
-        {
+        Renardo {
             classvar server;
             classvar midiout;
 
-            *start
-            { | remote = false |
+            *configure {
+              
+                arg remote = false;
 
                 server = Server.default;
                 server.options.memSize = 8192 * 16; // increase this if you get "alloc failed" messages
                 server.options.maxNodes = 1024 * 32; // increase this if you are getting drop outs and the message "too many nodes"
-                server.options.numOutputBusChannels = 2; // set this to your hardware output channel size, if necessary
-                server.options.numInputBusChannels = 2; // set this to your hardware output channel size, if necessary
+                server.options.numOutputBusChannels = 48; // set this to your hardware output channel size, if necessary
+                server.options.numInputBusChannels = 16; // set this to your hardware output channel size, if necessary
 
                 if (remote, {
                     server.options.bindAddress = "0.0.0.0"; // allow connections from any address
                 });
+            }
 
-                server.boot();
-
+            *oscAddSynthDefFromFile {
                 OSCFunc(
-                    {
+                    func: {
                         arg msg, time, addr, port;
                         var fn;
                         // Get local filename
@@ -65,25 +65,68 @@ def write_sc_renardo_files_in_user_config():
                         fn.readAllString.interpret;
                         fn.close;
                     },
-                    'foxdot'
+                    path: 'foxdot'
                 );
 
+                OSCFunc(
+                    func: {
+                        arg msg, time, addr, port;
+                        var fn;
+                        // Get local filename
+                        fn = msg[1].asString;
+                        // Print a message to the user
+                        ("Loading SynthDef from" + fn).postln;
+                        // Add SynthDef to file
+                        fn = File(fn, "r");
+                        fn.readAllString.interpret;
+                        fn.close;
+                    },
+                    path: 'add-synthdef-file'
+                );
+            }
+
+            *oscAddSynthDefFromCode {
+                OSCFunc(
+                    func: {
+                        arg msg, time, addr, port;
+                        var fn;
+                        // Get local filename
+                        fn = msg[1].asString;
+                        // Print a message to the user
+                        ("Loading SynthDef :" + fn).postln;
+                        // Add SynthDef to file
+                        fn = File(fn, "r");
+                        fn.readAllString.interpret;
+                        fn.close;
+                    },
+                    path: 'add-synthdef-code'
+                );
+            }
+
+            *start {
+                arg remote = false;
+                this.configure(remote);
+
+                server.boot();
+
+                this.oscAddSynthDefFromFile;
+                this.oscAddSynthDefFromCode;
+
                 StageLimiterBis.activate(2);
+
                 "Listening for messages from Renardo".postln;
             }
 
-            *startRemote
-            {
+            *startRemote {
                 this.start(true);
             }
 
-            *midi
-            {
+            *midi {
                 arg port=0;
                 MIDIClient.init;
                 midiout = MIDIOut(port);
                 OSCFunc(
-                    {
+                    func: {
                         arg msg, time, addr, port;
                         var note, vel, sus, channel, nudge;
                         // listen for specific MIDI trigger messages from FoxDot
@@ -95,11 +138,12 @@ def write_sc_renardo_files_in_user_config():
                         SystemClock.schedAbs(time + nudge, {midiout.noteOn(channel, note, vel)});
                         SystemClock.schedAbs(time + nudge + sus, {midiout.noteOff(channel, note, vel)});
                     },
-                    'foxdot_midi'
+                    path: 'foxdot_midi'
                 );
                 ("Sending Renardo MIDI messages to" + MIDIClient.destinations[port].name).postln;
             }
         }
+   
    '''
 
     stagelimiter_sc_class = '''
