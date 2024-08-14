@@ -1,4 +1,4 @@
-from renardo_lib.SCLang.SCLang import *
+from renardo_lib.SCLang.SCLangExperimentalBindings import *
 from renardo_lib.SCLang.SynthDef import SynthDef, SampleSynthDef
 from renardo_lib.SCLang import Env
 
