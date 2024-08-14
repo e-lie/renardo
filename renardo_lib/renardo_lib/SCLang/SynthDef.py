@@ -1,6 +1,6 @@
 import os
 
-from renardo_lib.SCLang.SCLang import instance, format_args
+from renardo_lib.SCLang.SCLangExperimentalBindings import instance, format_args
 from renardo_lib.SCLang import Env
 from renardo_lib.ServerManager.default_server import Server
 from renardo_lib.Settings import SYNTHDEF_DIR
