@@ -139,42 +139,6 @@ class TempoClock(object):
 
         self.thread = threading.Thread(target=self.run)
 
-    def sync_to_espgrid(self, host="localhost", port=5510):
-        """ Connects to an EspGrid instance """
-        from renardo_lib.EspGrid import EspGrid
-        self.espgrid = EspGrid((host, port))
-        try:
-            tempo = self.espgrid.get_tempo()
-        except RequestTimeout:
-            err = "Unable to reach EspGrid. Make sure the application is running and try again."
-            raise RequestTimeout(err)
-        
-        self.espgrid.set_clock_mode(2)
-        self.schedule(lambda: self._espgrid_update_tempo(True))
-        # self._espgrid_update_tempo(True) # could schedule this for next bar?
-        return
-
-    def _espgrid_update_tempo(self, force=False):
-        """ Retrieves the current tempo from EspGrid and updates internal values """
-
-        data = self.espgrid.get_tempo()
-
-        # If the tempo hasn't been started, start it here and get updated data
-        
-        if data[0] == 0:
-            self.espgrid.start_tempo()
-            data = self.espgrid.get_tempo()
-        
-        if force or (data[1] != self.bpm):
-            self.bpm_start_time = float("{}.{}".format(data[2], data[3]))
-            self.bpm_start_beat = data[4]
-            object.__setattr__(self, "bpm", self._convert_json_bpm(data[1]))
-
-        # self.schedule(self._espgrid_update_tempo)
-        self.schedule(self._espgrid_update_tempo, int(self.now() + 1))
-        
-        return
-
     def reset(self):
         """ Deprecated """
         self.time = self.dtype(0)
