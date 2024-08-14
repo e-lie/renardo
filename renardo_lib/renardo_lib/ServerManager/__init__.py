@@ -45,7 +45,6 @@ class OSCClientWrapper(OSCClient):
 
 class OSCConnect(OSCClientWrapper):
     """ An OSCClientWrapper that connects on initialisation """
-
     def __init__(self, address):
         OSCClientWrapper.__init__(self)
         self.connect(address)
@@ -58,10 +57,8 @@ class RequestTimeout(Exception):
 class BidirectionalOSCServer(OSCServer):
     """
     This is a combination client/server
-
     The UDP server is necessary for receiving responses from the SCLang server
     when we query it with requests.
-
     Note that this is not thread-safe, as the receive() method can discard messages
     """
 
@@ -108,7 +105,6 @@ class BidirectionalOSCServer(OSCServer):
     def receive(self, pattern, timeout=2):
         """
         Retrieve the first message matching the pattern
-
         All messages received that do not match will be discarded
         """
         expr = getRegEx(pattern)
@@ -125,57 +121,58 @@ class BidirectionalOSCServer(OSCServer):
                 return data
             now = time.time()
 
-
 #  Create an abstract base class that could be sub-classed for users who want to send their OSC messages elsewhere
+#class ServerManager(object):
+#    def __init__(self, addr, port, osc_address="/s_new"):
+#        self.addr = addr
+#        self.port = port
+#        self.client = OSCClientWrapper()
+#        self.client.connect((self.addr, self.port))
+#        self.osc_address = osc_address
+#
+#        self.node = 1000
+#        self.num_input_busses = 2
+#        self.num_output_busses = 2
+#        self.bus = self.num_input_busses + self.num_output_busses
+#        self.max_busses = 100
+#        self.max_buffers = 1024
+#
+#    @staticmethod
+#    def create_osc_msg(dictionary):
+#        """ Converts a Python dictionary into an OSC style list """
+#        msg = []
+#        for key, value in dictionary.items():
+#            msg += [key, value]
+#        return msg
+#
+#    def sendOSC(self, osc_message):
+#        self.client.send(osc_message)
+#        return
+#
+#    def get_bundle(self, *args, **kwargs):
+#        bundle = OSCBundle(time=kwargs.get("timestamp", 0))
+#        message = OSCMessage(self.osc_address)
+#        for item in args:
+#            if type(item) == dict:
+#                message.append(self.create_osc_msg(item))
+#            else:
+#                message.append(item)
+#        bundle.append(message)
+#        return bundle
+#
+#    def loadSynthDef(self, *args, **kwargs):
+#        return
+#
+#    def setFx(self, *args, **kwargs):
+#        return
 
-class ServerManager(object):
-    def __init__(self, addr, port, osc_address="/s_new"):
-        self.addr = addr
-        self.port = port
-        self.client = OSCClientWrapper()
-        self.client.connect((self.addr, self.port))
-        self.osc_address = osc_address
 
-        self.node = 1000
-        self.num_input_busses = 2
-        self.num_output_busses = 2
-        self.bus = self.num_input_busses + self.num_output_busses
-        self.max_busses = 100
-        self.max_buffers = 1024
+#class SCLangServerManager:
+class ServerManager:
 
-    @staticmethod
-    def create_osc_msg(dictionary):
-        """ Converts a Python dictionary into an OSC style list """
-        msg = []
-        for key, value in dictionary.items():
-            msg += [key, value]
-        return msg
-
-    def sendOSC(self, osc_message):
-        self.client.send(osc_message)
-        return
-
-    def get_bundle(self, *args, **kwargs):
-        bundle = OSCBundle(time=kwargs.get("timestamp", 0))
-        message = OSCMessage(self.osc_address)
-        for item in args:
-            if type(item) == dict:
-                message.append(self.create_osc_msg(item))
-            else:
-                message.append(item)
-        bundle.append(message)
-        return bundle
-
-    def loadSynthDef(self, *args, **kwargs):
-        return
-
-    def setFx(self, *args, **kwargs):
-        return
-
-
-class SCLangServerManager(ServerManager):
     fxlist = None
-    synthdefs = None
+    #synthdefs = None
+    synthdefs = {}
 
     def __init__(self, addr, osc_port, sclang_port):
 
@@ -269,20 +266,13 @@ class SCLangServerManager(ServerManager):
 
     def sendOSC(self, osc_message):
         """ Sends an OSC message to the server. Checks for midi messages """
-
         if osc_message.address == OSC_MIDI_ADDRESS:
-
             self.sclang.send(osc_message)
-
         else:
-
             self.client.send(osc_message)
-
         # If we are sending other messages as well
-
         if self.forward is not None:
             self.forward.send(osc_message)
-
         return
 
     def freeAllNodes(self):
@@ -300,6 +290,17 @@ class SCLangServerManager(ServerManager):
     def set_midi_nudge(self, value):
         self.midi_nudge = value
         return
+
+    def update_synthdef_dict(self, synthdef_dict):
+        self.synthdefs = synthdef_dict
+
+    @staticmethod
+    def create_osc_msg(dictionary):
+        """ Converts a Python dictionary into an OSC style list """
+        msg = []
+        for key, value in dictionary.items():
+            msg += [key, value]
+        return msg
 
     def get_midi_message(self, synthdef, packet, timestamp):
         """ Prepares an OSC message to trigger midi sent from SuperCollider """
@@ -324,94 +325,57 @@ class SCLangServerManager(ServerManager):
     def get_init_node(self, node, bus, group_id, synthdef, packet):
 
         msg = OSCMessage("/s_new")
-
         # Make sure messages release themselves after 8 * the duration at max (temp)
-
         max_sus = float(packet["sus"] * 8)  # might be able to get rid of this
-
         key = "rate" if synthdef.name in (SamplePlayer, LoopPlayer) else "freq"
-
         if key in packet:
-
             value = ["rate", packet[key]]
-
         else:
-
             value = []
-
         osc_packet = ["startSound", node, 0, group_id, 'bus', bus, "sus", max_sus] + value
-
         msg.append(osc_packet)
 
         return msg, node
 
     def get_control_effect_nodes(self, node, bus, group_id, packet):
-
         pkg = []
-
         # Go through effects and put together with child attributes
-
         for fx in self.fxlist.order[0]:
 
             if fx in packet and packet[fx] != 0:
                 # this_effect = effects[fx] # old pre-prepared
-
                 # prepare each effect here
-
                 this_effect = self.prepare_effect(fx, packet)
-
                 # Get next node ID
                 node, last_node = self.nextnodeID(), node
-
                 msg = OSCMessage("/s_new")
-
                 osc_packet = [self.fx_names[fx], node, 1, group_id, 'bus', bus] + this_effect
-
                 msg.append(osc_packet)
-
                 pkg.append(msg)
-
         return pkg, node
 
     def get_synth_node(self, node, bus, group_id, synthdef, packet):
-
         msg = OSCMessage("/s_new")
-
         new_message = {}
-
         for key in packet:
-
             if key not in ("env", "degree"):  # skip some attr
-
                 try:
-
                     new_message[key] = float(packet[key])  # is this not already the case?
-
                 except (TypeError, ValueError) as e:
-
                     WarningMsg("Could not convert '{}' argument '{}' to float. Set to 0".format(key, packet[key]))
                     new_message[key] = 0.0
-
         # Get next node ID
-
         node, last_node = self.nextnodeID(), node
-
         osc_packet = [synthdef.name, node, 1, group_id, synthdef.bus_name, bus] \
                      + self.create_osc_msg(new_message)
-
         msg.append(osc_packet)
-
         return msg, node
 
     def get_pre_env_effect_nodes(self, node, bus, group_id, packet):
-
         pkg = []
-
         for fx in self.fxlist.order[1]:
-
             if fx in packet and packet[fx] != 0:
                 this_effect = self.prepare_effect(fx, packet)
-
                 # Get next node ID
                 node, last_node = self.nextnodeID(), node
                 msg = OSCMessage("/s_new")
@@ -422,38 +386,24 @@ class SCLangServerManager(ServerManager):
         return pkg, node
 
     def get_synth_envelope(self, node, bus, group_id, synthdef, packet):
-
         env_packet = {"sus": packet["sus"],
                       "amp": packet["amp"]}
-
         for key in ("atk", "decay", "rel", "legato", "curve", "gain"):
-
             # Try and get from the player
-
             value = packet.get(key, None)
-
             # If it is absent or set to None, get default from Synth
-
             if value is None:
                 value = synthdef.get_default_env(key)
-
             # Store
-
             env_packet[key] = value
 
         env = synthdef.get_default_env("env") if packet.get("env", None) is None else packet.get("env", None)
-
         try:
-
             dest = env.get_env_name()
-
         except AttributeError as e:
-
             # Set the curve value
-
             env_packet["curve"] = env
             dest = "BasicEnvelope"
-
         node, last_node = self.nextnodeID(), node
         msg = OSCMessage("/s_new")
         osc_packet = [dest, node, 1, group_id, 'bus', bus] + self.create_osc_msg(env_packet)
@@ -462,21 +412,16 @@ class SCLangServerManager(ServerManager):
         return msg, node
 
     def get_post_env_effect_nodes(self, node, bus, group_id, packet):
-
         pkg = []
-
         for fx in self.fxlist.order[2]:
-
             if fx in packet and packet[fx] != 0:
                 this_effect = self.prepare_effect(fx, packet)
-
                 # Get next node ID
                 node, last_node = self.nextnodeID(), node
                 msg = OSCMessage("/s_new")
                 osc_packet = [self.fx_names[fx], node, 1, group_id, 'bus', bus] + this_effect
                 msg.append(osc_packet)
                 pkg.append(msg)
-
         return pkg, node
 
     def prepare_effect(self, name, packet):
@@ -489,7 +434,6 @@ class SCLangServerManager(ServerManager):
         return data
 
     def get_exit_node(self, node, bus, group_id, packet):
-
         msg = OSCMessage("/s_new")
         node, last_node = self.nextnodeID(), node
         osc_packet = ['makeSound', node, 1, group_id, 'bus', bus, 'sus', float(packet["sus"])]
@@ -499,26 +443,20 @@ class SCLangServerManager(ServerManager):
 
     def get_bundle(self, synthdef, packet, timestamp=0):
         """ Returns the OSC Bundle for a notew based on a Player's SynthDef, and event and effects dictionaries """
-
         # Create a specific message for midi
-
         if synthdef == "MidiOut":  # this should be in a dict of synthdef to functions maybe? we need a "nudge to sync"
-
             return self.get_midi_message(synthdef, packet, timestamp)
 
         # Create a bundle
-
         bundle = OSCBundle(time=timestamp)
 
         # Get the actual synthdef object
-
         synthdef = self.synthdefs[synthdef]
 
         # Create a group for the note
         group_id = self.nextnodeID()
         msg = OSCMessage("/g_new")
         msg.append([group_id, 1, 1])
-
         bundle.append(msg)
 
         # Get the bus and SynthDef nodes
@@ -526,64 +464,45 @@ class SCLangServerManager(ServerManager):
         this_node = self.nextnodeID()
 
         # synthdef.preprocess_osc(packet) # so far, just "balance" to multiply amp by 1
-
         # First node of the group (control rate)
-
         msg, this_node = self.get_init_node(this_node, this_bus, group_id, synthdef, packet)
 
         # Add effects to control rate e.g. vibrato
-
         bundle.append(msg)
-
         pkg, this_node = self.get_control_effect_nodes(this_node, this_bus, group_id, packet)
-
         for msg in pkg:
             bundle.append(msg)
 
         # trigger synth
-
         msg, this_node = self.get_synth_node(this_node, this_bus, group_id, synthdef, packet)
-
         bundle.append(msg)
 
         # ORDER 1
-
         pkg, this_node = self.get_pre_env_effect_nodes(this_node, this_bus, group_id, packet)
-
         for msg in pkg:
             bundle.append(msg)
 
         # ENVELOPE
-
         # msg, this_node = self.get_synth_envelope(this_node, this_bus, group_id, synthdef, packet)
-
         # bundle.append( msg )
-
         # ORDER 2 (AUDIO EFFECTS)
-
         pkg, this_node = self.get_post_env_effect_nodes(this_node, this_bus, group_id, packet)
-
         for msg in pkg:
             bundle.append(msg)
 
         # OUT
-
         msg, _ = self.get_exit_node(this_node, this_bus, group_id, packet)
 
         bundle.append(msg)
-
         return bundle
 
     def send(self, address, message):
         """ Sends message (a list) to SuperCollider """
         msg = OSCMessage(address)
-
         msg.append(message)
-
         self.client.send(msg)
 
         # If we are sending other messages as well
-
         if self.forward is not None:
             self.forward.send(message)
 
@@ -615,11 +534,11 @@ class SCLangServerManager(ServerManager):
         self.sclang.send(msg)
         return
 
-    def loadSynthDef(self, fn, cmd='/foxdot'):
+    def loadSynthDef(self, synthdef_filename, osc_path='/foxdot'):
         """ Sends a message to the FoxDot class in SuperCollider to load a SynthDef from file """
         msg = OSCMessage()
-        msg.setAddress(cmd)
-        msg.append(fn)
+        msg.setAddress(osc_path)
+        msg.append(synthdef_filename)
         self.sclang.send(msg)
         return
 
@@ -633,12 +552,10 @@ class SCLangServerManager(ServerManager):
         """ Starts recording audio from SuperCollider """
 
         if self._is_recording is False:
-
             if fn is None:
                 fn = "{}.aiff".format(get_timestamp())
 
             path = os.path.join(RECORDING_DIR, fn)
-
             msg = OSCMessage('/foxdot-record')
             msg.append([1, path])
             self.sclang.send(msg)
@@ -686,26 +603,18 @@ class SCLangServerManager(ServerManager):
         info = ServerInfo(*self.sclang.receive('/foxdot/info'))
         return info
 
-    def start(self):
-        """ Boots SuperCollider using `subprocess`"""
+    #def start(self):
+    #    """ Boots SuperCollider using `subprocess`"""
+    #    if not self.booted:
+    #        os.chdir(SC_DIRECTORY)
+    #        print("Booting SuperCollider Server...")
+    #        self.daemon = subprocess.Popen([SCLANG_EXEC, '-D', FOXDOT_STARTUP_FILE])
+    #        os.chdir(USER_CWD)
+    #        self.booted = True
+    #    else:
+    #        print("Warning: SuperCollider already running")
 
-        if not self.booted:
-
-            os.chdir(SC_DIRECTORY)
-
-            print("Booting SuperCollider Server...")
-
-            self.daemon = subprocess.Popen([SCLANG_EXEC, '-D', FOXDOT_STARTUP_FILE])
-
-            os.chdir(USER_CWD)
-
-            self.booted = True
-
-        else:
-
-            print("Warning: SuperCollider already running")
-
-        return
+    #    return
 
     def makeStartupFile(self):
         ''' Boot SuperCollider and connect over OSC '''
