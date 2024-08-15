@@ -5,7 +5,7 @@ from renardo_lib.SynthDefManagement.SynthDefProxy import SynthDefProxy
 from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings import format_args, Env
 from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings.core import instance
 from renardo_lib.ServerManager.default_server import Server
-from renardo_lib.Settings import SYNTHDEF_DIR
+from renardo_lib.Settings import TMP_SYNTHDEF_DIR
 from renardo_lib.Code import WarningMsg
 
 
@@ -34,7 +34,7 @@ class PygenSynthDefBaseClass(object):
         self.attr = [] # stores custom attributes
 
         # Name of the file to store the SynthDef
-        self.filename     = SYNTHDEF_DIR + "/{}.scd".format(self.name)
+        self.filename     = TMP_SYNTHDEF_DIR + "/{}.scd".format(self.name)
 
         # SynthDef default arguments
         self.osc         = instance("osc")
@@ -265,20 +265,3 @@ class DefaultPygenSynthDef(PygenSynthDefBaseClass):
         self.base.append("freq = In.kr(bus, 1);")
         self.base.append("freq = [freq, freq+fmod];")
         return
-
-
-
-
-#class CompiledSynthDef(SynthDefBaseClass):
-#    def __init__(self, name, filename):
-#        super(CompiledSynthDef, self).__init__(name)
-#        self.filename = filename
-#
-#    def write(self):
-#        return
-#
-#    def load(self):
-#        SynthDef.server.loadCompiled(self.filename)
-#
-#    def __str__(self):
-#        return repr(self)

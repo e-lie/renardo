@@ -4,11 +4,11 @@ import json
 from subprocess import check_output
 
 from renardo_lib.Scale import freqtomidi
-from renardo_lib.SynthDefManagement import CompiledSynthDef
-from renardo_lib.Settings import SYNTHDEF_DIR
+from renardo_lib.Settings import TMP_SYNTHDEF_DIR
 
 from urllib.request import urlretrieve
 
+from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings.PygenSynthDef import PygenSynthDefBaseClass, DefaultPygenSynthDef
 
 HERE = os.path.dirname(__file__)
 SONIC_PI_FILE = os.path.join(HERE, 'sonicpi.json')
@@ -21,6 +21,21 @@ class Container(dict):
         return self[attr]
 
 pisynth = Container()
+
+
+class CompiledSynthDef(PygenSynthDefBaseClass):
+    def __init__(self, name, filename):
+        super(CompiledSynthDef, self).__init__(name)
+        self.filename = filename
+
+    def write(self):
+        return
+
+    def load(self):
+        DefaultPygenSynthDef.server.loadCompiled(self.filename)
+
+    def __str__(self):
+        return repr(self)
 
 
 class SonicPiSynthDef(CompiledSynthDef):
@@ -93,7 +108,7 @@ def LoadSonicPiSynths(metadata_file=SONIC_PI_FILE):
         data = json.load(ifile)
     ref = data.pop('__ref__')
     def create_filename(fullname):
-        filename = os.path.join(SYNTHDEF_DIR, fullname + '.scsyndef')
+        filename = os.path.join(TMP_SYNTHDEF_DIR, fullname + '.scsyndef')
         if not os.path.exists(filename):
             url = "https://github.com/samaaron/sonic-pi/raw/%s/etc/synthdefs/compiled/%s.scsyndef" % (ref, fullname)
             print("Downloading", url)

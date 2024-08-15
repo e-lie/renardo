@@ -16,7 +16,6 @@ from renardo_lib.Settings import (
     OSC_MIDI_ADDRESS, GET_SC_INFO, FOXDOT_INFO_FILE, FOXDOT_RECORD_FILE,
     RECORDING_DIR, SamplePlayer, LoopPlayer, get_timestamp, SCLANG_EXEC,
     FOXDOT_STARTUP_FILE, FOXDOT_OSC_FUNC, USER_CWD, FOXDOT_BUFFERS_FILE,
-    GET_SYNTHDEF_FILES, GET_FX_FILES
 )
 from renardo_lib.OSC3 import *
 
@@ -558,28 +557,28 @@ class ServerManager:
         info = ServerInfo(*self.sclang.receive('/foxdot/info'))
         return info
 
-    def makeStartupFile(self):
-        ''' Boot SuperCollider and connect over OSC '''
+    #def makeStartupFile(self):
+    #    ''' Boot SuperCollider and connect over OSC '''
 
-        # 1. Compile startup file
+    #    # 1. Compile startup file
 
-        with open(FOXDOT_STARTUP_FILE, 'w') as startup:
-            startup.write('''Routine.run {
-            s.options.blockSize = 128;
-            s.options.memSize = 131072;
-            s.bootSync();\n''')
+    #    with open(FOXDOT_STARTUP_FILE, 'w') as startup:
+    #        startup.write('''Routine.run {
+    #        s.options.blockSize = 128;
+    #        s.options.memSize = 131072;
+    #        s.bootSync();\n''')
 
-            files = [FOXDOT_OSC_FUNC, FOXDOT_BUFFERS_FILE]
-            files = files + GET_SYNTHDEF_FILES() + GET_FX_FILES()
+    #        files = [FOXDOT_OSC_FUNC, FOXDOT_BUFFERS_FILE]
+    #        files = files + GET_SYNTHDEF_FILES() + GET_FX_FILES()
 
-            for fn in files:
-                f = open(fn)
-                startup.write(f.read())
-                startup.write("\n\n")
+    #        for fn in files:
+    #            f = open(fn)
+    #            startup.write(f.read())
+    #            startup.write("\n\n")
 
-            startup.write("};")
+    #        startup.write("};")
 
-        return
+    #    return
 
     def quit(self):
         if self.booted:
