@@ -1,8 +1,8 @@
 from renardo_lib.SCLang.SCLangExperimentalBindings import *
+from renardo_lib.SCLang.SCLangExperimentalBindings.core import instance
 from renardo_lib.SCLang.SynthDef import SynthDef
 from renardo_lib.Settings import SC3_PLUGINS
-from renardo_lib.SCLang import Env
-
+from renardo_lib.SCLang.SCLangExperimentalBindings import Env
 
 # with SynthDef("sinepad") as sinepad:
 #     sinepad.amp = sinepad.amp * 1.5
@@ -68,7 +68,7 @@ with SynthDef("rave") as rave:
 with SynthDef("scatter") as scatter:
     scatter.osc = (Saw.ar(scatter.freq, mul=scatter.amp / 8) + VarSaw.ar(
         scatter.freq + [2, 1],  mul=scatter.amp/8)) * LFNoise0.ar(scatter.rate)
-    scatter.env = Env.linen(0.01, scatter.sus/2, scatter.sus/2)
+    scatter.env = Env.linen(0.01, scatter.sus / 2, scatter.sus / 2)
 
 with SynthDef("charm") as charm:
     charm.freq = charm.freq + [0, 2]
@@ -127,7 +127,7 @@ with SynthDef("klank") as klank:
                          2, 2, 2, 2]], ClipNoise.ar(0.0005).dup, klank.freq)
     if SC3_PLUGINS:
         klank.osc = Decimator.ar(klank.osc, bits=klank.rate - 1)
-    klank.env = Env.env(klank.sus*2)
+    klank.env = Env.env(klank.sus * 2)
 
 with SynthDef("feel") as feel:
     feel.sus = feel.sus * 1.5
@@ -135,7 +135,7 @@ with SynthDef("feel") as feel:
     feel.freq = feel.freq * [1, 1.005]
     feel.osc = Klank.ar([[1, 2, 3, 3 + ((feel.rate-1)/10)], [1, 1, 1, 1],
                         [2, 2, 2, 2]], Impulse.ar(0.0005) * Saw.ar(feel.freq, add=1), feel.freq)
-    feel.env = Env.env(feel.sus*2)
+    feel.env = Env.env(feel.sus * 2)
 
 with SynthDef("glass") as glass:
     glass.sus = glass.sus * 1.5
@@ -143,7 +143,7 @@ with SynthDef("glass") as glass:
     glass.freq = glass.freq * [1, (1 + (0.005 * glass.rate))]
     glass.osc = Klank.ar([[2, 4, 9, 16], [1, 1, 1, 1], [2, 2, 2, 2]], PinkNoise.ar(
         0.0005).dup * SinOsc.ar(glass.freq / 4, add=1, mul=0.5), glass.freq)
-    glass.env = Env.env(glass.sus*2)
+    glass.env = Env.env(glass.sus * 2)
 
 with SynthDef("soft") as soft:
     soft.freq = soft.freq/2
@@ -199,7 +199,7 @@ with SynthDef("ripple") as ripple:
     ripple.osc = Pulse.ar(ripple.freq/4, 0.2, 0.25) + \
         Pulse.ar(ripple.freq+1, 0.5, 0.5)
     ripple.osc = ripple.osc * SinOsc.ar(ripple.rate/ripple.sus, 0, 0.5, 1)
-    ripple.env = Env.env(sus=[0.55 * ripple.sus, 0.55*ripple.sus])
+    ripple.env = Env.env(sus=[0.55 * ripple.sus, 0.55 * ripple.sus])
 
 with SynthDef("creep") as creep:
     creep.amp = creep.amp / 4
@@ -270,7 +270,7 @@ twang.freq = twang.freq / 8
 twang.freq = twang.freq + [0, 2]
 twang.osc = LPF.ar(Impulse.ar(twang.freq, 0.1), 4000)
 twang.osc = Env.perc() * CombL.ar(twang.osc, delaytime=twang.rate
-                                  / (twang.freq * 8), maxdelaytime=0.25)
+                                                       / (twang.freq * 8), maxdelaytime=0.25)
 twang.add()
 
 karp = SynthDef("karp")
@@ -425,7 +425,7 @@ with SynthDef("rave") as rave:
 with SynthDef("scatter") as scatter:
     scatter.osc = (Saw.ar(scatter.freq, mul=scatter.amp / 8) + VarSaw.ar(
         scatter.freq + [2, 1],  mul=scatter.amp/8)) * LFNoise0.ar(scatter.rate)
-    scatter.env = Env.linen(0.01, scatter.sus/2, scatter.sus/2)
+    scatter.env = Env.linen(0.01, scatter.sus / 2, scatter.sus / 2)
 
 with SynthDef("charm") as charm:
     charm.freq = charm.freq + [0, 2]
@@ -484,7 +484,7 @@ with SynthDef("klank") as klank:
                          2, 2, 2, 2]], ClipNoise.ar(0.0005).dup, klank.freq)
     if SC3_PLUGINS:
         klank.osc = Decimator.ar(klank.osc, bits=klank.rate - 1)
-    klank.env = Env.env(klank.sus*2)
+    klank.env = Env.env(klank.sus * 2)
 
 with SynthDef("feel") as feel:
     feel.sus = feel.sus * 1.5
@@ -492,7 +492,7 @@ with SynthDef("feel") as feel:
     feel.freq = feel.freq * [1, 1.005]
     feel.osc = Klank.ar([[1, 2, 3, 3 + ((feel.rate-1)/10)], [1, 1, 1, 1],
                         [2, 2, 2, 2]], Impulse.ar(0.0005) * Saw.ar(feel.freq, add=1), feel.freq)
-    feel.env = Env.env(feel.sus*2)
+    feel.env = Env.env(feel.sus * 2)
 
 with SynthDef("glass") as glass:
     glass.sus = glass.sus * 1.5
@@ -500,7 +500,7 @@ with SynthDef("glass") as glass:
     glass.freq = glass.freq * [1, (1 + (0.005 * glass.rate))]
     glass.osc = Klank.ar([[2, 4, 9, 16], [1, 1, 1, 1], [2, 2, 2, 2]], PinkNoise.ar(
         0.0005).dup * SinOsc.ar(glass.freq / 4, add=1, mul=0.5), glass.freq)
-    glass.env = Env.env(glass.sus*2)
+    glass.env = Env.env(glass.sus * 2)
 
 with SynthDef("soft") as soft:
     soft.freq = soft.freq/2
@@ -556,7 +556,7 @@ with SynthDef("ripple") as ripple:
     ripple.osc = Pulse.ar(ripple.freq/4, 0.2, 0.25) + \
         Pulse.ar(ripple.freq+1, 0.5, 0.5)
     ripple.osc = ripple.osc * SinOsc.ar(ripple.rate/ripple.sus, 0, 0.5, 1)
-    ripple.env = Env.env(sus=[0.55 * ripple.sus, 0.55*ripple.sus])
+    ripple.env = Env.env(sus=[0.55 * ripple.sus, 0.55 * ripple.sus])
 
 with SynthDef("creep") as creep:
     creep.amp = creep.amp / 4
@@ -627,7 +627,7 @@ twang.freq = twang.freq / 8
 twang.freq = twang.freq + [0, 2]
 twang.osc = LPF.ar(Impulse.ar(twang.freq, 0.1), 4000)
 twang.osc = Env.perc() * CombL.ar(twang.osc, delaytime=twang.rate
-                                  / (twang.freq * 8), maxdelaytime=0.25)
+                                                       / (twang.freq * 8), maxdelaytime=0.25)
 twang.add()
 
 karp = SynthDef("karp")

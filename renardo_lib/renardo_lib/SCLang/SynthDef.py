@@ -1,7 +1,7 @@
 import os
 
-from renardo_lib.SCLang.SCLangExperimentalBindings import instance, format_args
-from renardo_lib.SCLang import Env
+from renardo_lib.SCLang.SCLangExperimentalBindings import format_args, Env
+from renardo_lib.SCLang.SCLangExperimentalBindings.core import instance
 from renardo_lib.ServerManager.default_server import Server
 from renardo_lib.Settings import SYNTHDEF_DIR
 from renardo_lib.Code import WarningMsg
@@ -73,16 +73,15 @@ class SynthDefBaseClass(object):
 
     # Context Manager
     # ---------------
-
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.add()
 
+
     # String representation
     # ---------------------
-
     def __str__(self):
         Def  = "SynthDef.new(\\{},\n".format(self.name)
         Def += "{}|{}|\n".format("{", format_args(kwargs=self.defaults, delim='='))
@@ -98,9 +97,9 @@ class SynthDefBaseClass(object):
     def __repr__(self):
         return str(self.name)
 
+
     # Combining with other SynthDefs
     # ------------------------------
-
     def __add__(self, other):
         if not isinstance(other, SynthDef):
             raise TypeError("Warning: '{}' is not a SynthDef".format(str(other)))
@@ -108,15 +107,14 @@ class SynthDefBaseClass(object):
         new.osc = self.osc + other.osc
         return new
 
+
     # Returning the SynthDefProxy
     # ---------------------------
-
     def __call__(self, degree=None, **kwargs):
         return SynthDefProxy(self.name, degree, kwargs)
 
     # Getter and setter
     # -----------------
-
     def __getattribute__(self, key):
         if key.startswith("_"):
             return object.__getattribute__(self, key)
@@ -188,34 +186,22 @@ class SynthDefBaseClass(object):
     def write(self):
         """  Writes the SynthDef to file """
         # 1. See if the file exists
-
         if os.path.isfile(self.filename):
-
             with open(self.filename) as f:
-
                 contents = f.read()
-
         else:
-
             contents = ""
 
         # 2. If it does, check contents
-
         this_string = self.__str__()
 
         if contents != this_string:
-
             try:
-
                 with open(self.filename, 'w') as f:
-                
                     f.write(this_string)
-
             except IOError:
-
                 # print("Warning: Unable to update '{}' SynthDef.".format(self.name))
                 pass # TODO - add python -m --verbose to print warnings?
-
         return
 
     def has_envelope(self):
@@ -231,43 +217,33 @@ class SynthDefBaseClass(object):
 
     def add(self):
         """ This is required to add the SynthDef to the SuperCollider Server """
-
         if self.has_envelope():
-
             self.osc = self.osc * self.env
-
         try:
-
             self.synth_added = True
-
             # Load to server
-            
             self.write()
-
             self.load()
-
         except Exception as e:
-
             WarningMsg("{}: SynthDef '{}' could not be added to the server:\n{}".format(e.__class__.__name__, self.name, e))
-
         return None
 
-    def rename(self, newname):
-        new = copy(self)
-        new.name = str(newname)
-        return new
+    #def rename(self, newname):
+    #    new = copy(self)
+    #    new.name = str(newname)
+    #    return new
 
     @staticmethod
     def new_attr_instance(name):
         return instance(name)
 
-    def play(self, freq, **kwargs):
-        ''' Plays a single sound '''
-        message = ["freq", freq]
-        for key, value in kwargs.items():
-            message += [key, value]
-        self.server.sendNote(self.name, message)
-        return
+    #def play(self, freq, **kwargs):
+    #    ''' Plays a single sound '''
+    #    message = ["freq", freq]
+    #    for key, value in kwargs.items():
+    #        message += [key, value]
+    #    self.server.sendNote(self.name, message)
+    #    return
 
     def preprocess_osc(self, osc_message):
         osc_message['amp'] *= self.balance
@@ -335,16 +311,16 @@ class SynthDefProxy:
         else:
             return getattr(self, name)
 
-class CompiledSynthDef(SynthDefBaseClass):
-    def __init__(self, name, filename):
-        super(CompiledSynthDef, self).__init__(name)
-        self.filename = filename
-
-    def write(self):
-        return
-
-    def load(self):
-        SynthDef.server.loadCompiled(self.filename)
-
-    def __str__(self):
-        return repr(self)
+#class CompiledSynthDef(SynthDefBaseClass):
+#    def __init__(self, name, filename):
+#        super(CompiledSynthDef, self).__init__(name)
+#        self.filename = filename
+#
+#    def write(self):
+#        return
+#
+#    def load(self):
+#        SynthDef.server.loadCompiled(self.filename)
+#
+#    def __str__(self):
+#        return repr(self)

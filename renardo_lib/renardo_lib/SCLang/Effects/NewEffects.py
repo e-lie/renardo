@@ -1,6 +1,7 @@
 import inspect
 
-from renardo_lib.SCLang.SCLangExperimentalBindings import cls, instance, Vibrato, RHPF
+from renardo_lib.SCLang.SCLangExperimentalBindings import cls, Vibrato, RHPF
+from renardo_lib.SCLang.SCLangExperimentalBindings.core import instance
 
 # To be moved to SCLang later
 
