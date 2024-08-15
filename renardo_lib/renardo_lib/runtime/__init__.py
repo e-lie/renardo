@@ -15,7 +15,7 @@ from renardo_lib.Constants import *
 from renardo_lib.Midi import *
 from renardo_lib.Settings import *
 from renardo_lib.ServerManager import *
-from renardo_lib.SynthDefManagement import Effects
+#from renardo_lib.SynthDefManagement import Effects
 from renardo_lib.SynthDefManagement.SynthDict import SynthDefs
 
 
@@ -134,7 +134,7 @@ def _reload_synths():
 def foxdot_reload():
     Server.init_connection()
     SynthDefs.reload()
-    FxList.reload()
+    effect_manager.reload()
     Samples.reset()
     return
 
@@ -215,7 +215,7 @@ class _util:
     def reload(self):
         Server.init_connection()
         SynthDefs.reload()
-        FxList.reload()
+        effect_manager.reload()
         Samples.reset()
         return
     def reassign_clock(self):

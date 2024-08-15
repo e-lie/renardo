@@ -59,8 +59,16 @@ SCLANG_EXEC   = 'sclang.exe' if SYSTEM == WINDOWS else 'sclang'
 def get_synthdefs_dir_path():
     return pathlib.Path(FOXDOT_ROOT) / 'SynthDefManagement' / 'sclang_code'
 
+# Directory for permanent/externally managed .scd file for synths (not overwritten)
 SYNTHDEF_DIR = str(get_synthdefs_dir_path() / "scsynth")
+
+# Directory to write temporary Python generated or Live sclang .scd synths
+# To avoid overwriting permanent (default) synthdef scd files
+TMP_SYNTHDEF_DIR = str(get_synthdefs_dir_path() / "tmp_code" / "scsynth")
+
 EFFECTS_DIR = str(get_synthdefs_dir_path() / "sceffects")
+TMP_EFFECTS_DIR = str(get_synthdefs_dir_path() / "tmp_code" / "sceffects")
+
 ENVELOPE_DIR = str(get_synthdefs_dir_path() / "scenvelopes")
 FOXDOT_OSC_FUNC = str(get_synthdefs_dir_path() / "OSCFunc.scd")
 FOXDOT_STARTUP_FILE = str(get_synthdefs_dir_path() / "Startup.scd")
@@ -78,11 +86,11 @@ if not os.path.isfile(FOXDOT_TEMP_FILE):
     except FileNotFoundError:
         pass
 
-def GET_SYNTHDEF_FILES():
-    return [os.path.realpath(SYNTHDEF_DIR + "/" + path) for path in os.listdir(SYNTHDEF_DIR)]
-
-def GET_FX_FILES():
-    return [os.path.realpath(EFFECTS_DIR + "/" + path) for path in os.listdir(EFFECTS_DIR)]
+#def GET_SYNTHDEF_FILES():
+#    return [os.path.realpath(SYNTHDEF_DIR + "/" + path) for path in os.listdir(SYNTHDEF_DIR)]
+#
+#def GET_FX_FILES():
+#    return [os.path.realpath(EFFECTS_DIR + "/" + path) for path in os.listdir(EFFECTS_DIR)]
 
 def GET_TUTORIAL_FILES():
     return [os.path.realpath(TUTORIAL_DIR + "/" + path) for path in sorted(os.listdir(TUTORIAL_DIR))]
