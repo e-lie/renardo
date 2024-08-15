@@ -1,327 +1,53 @@
-"""
-    Filter Effects
-    --------------
+from renardo_lib.SynthDefManagement.EffectManager import EffectManager
+from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings.PygenEffectSynthDefs import *
+from renardo_lib.Settings import SC3_PLUGINS
 
-    Effects are added to Player objects as keywords instructions like `dur`
-    or `amp` but are a little more tricky. Each effect has a "title" keyword,
-    which requires a nonzero value to add the effect to a Player. Effects
-    also have other attribute keywords which can be any value and may have
-    a default value which is set when a Player is created.
+effect_manager = EffectManager()
 
-    ::
-        # Example. Reverb effect "title" is `room` and attribute is `mix`, which
-        # defaults to 0.25. The following adds a reverb effect
-
-        p1 >> pads(room=0.5)
-
-        # This still adds the effect, but a mix of 0 doesn't actually do anything
-
-        p1 >> pads(room=0.5, mix=0)
-
-        # This effect is not added as the "title" keyword, room, is 0
-
-        p1 >> pads(room=0, mix=0.5)
-
-    Other effects are outlined below:
-
-    *High Pass Filter* - Title keyword: `hpf`, Attribute keyword(s): `hpr`
-    Only frequences **above** the value of `hpf` are kept in the final signal. Use `hpr` to set the resonance (usually a value between 0 and 1)
-
-    *Low Pass Filter* - Title keyword: `lpf`, Attribute keyword(s): `lpr`
-    Only frequences **below** the value of `lpf` are kept in final signal. Use `lpr` to set the resonance (usually a value between 0 and 1)
-
-    *Bitcrush* - Title keyword: `bits`, Attribute keyword(s): `crush`
-    The bit depth, in number of `bits`, that the signal is reduced to; this is a value between 1 and 24 where other values are ignored. Use `crush` to set the amount of reduction to the bitrate (defaults to 8)
-
-    *Reverb* - Title keyword: `room`, Attribute keyword(s): `mix`
-    The `room` argument specifies the size of the room and `mix` is the dry/wet mix of reverb; this should be a value between 0 and 1 (defalts to 0.25)
-
-    *Chop* - Title keyword: `chop`, Attribute keyword(s): `sus`
-    'Chops' the signal into chunks using a low frequency pulse wave over the sustain of a note.
-
-    *Slide To* - Title keyword: `slide`, Attribute keyword(s):
-    Slides' the frequency value of a signal to `freq * (slide+1)` over the  duration of a note (defaults to 0)
-
-    *Slide From* - Title keyword: `slidefrom`, Attribute keyword(s):
-    Slides' the frequency value of a signal from `freq * (slidefrom)` over the  duration of a note (defaults to 1)
-
-    *Comb delay (echo)* - Title keyword: `echo`, Attribute keyword(s): `decay`
-    Sets the decay time for any echo effect in beats, works best on Sample Player (defaults to 0)
-
-    *Panning* - Title keyword: `pan`, Attribute keyword(s):
-    Panning, where -1 is far left, 1 is far right (defaults to 0)
-
-    *Vibrato* - Title keyword: `vib`, Attribute keyword(s):
-    Vibrato (defaults to 0)
-
-    Undocumented: Spin, Shape, Formant, BandPassFilter, Echo
-
-
-"""
-
-import os.path
-from renardo_lib.Settings import EFFECTS_DIR, SC3_PLUGINS
-from renardo_lib.ServerManager.default_server import Server
-
-
-class Effect:
-    server = Server
-
-    def __init__(self, foxdot_name, synthdef, args={}, control=False):
-
-        #self.server =Server
-        self.name = foxdot_name
-        self.synthdef = synthdef
-        self.filename = EFFECTS_DIR + "/{}.scd".format(self.synthdef)
-        self.args = args.keys()
-        self.vars = ["osc"]
-        self.defaults = args
-        self.effects = []
-        self.control = control
-
-        self.suffix = "kr" if self.control else "ar"
-        self.channels = 1 if self.control else 2
-
-        self.input = "osc = In.{}(bus, {});\n".format(
-            self.suffix, self.channels)
-        self.output = "ReplaceOut.{}".format(self.suffix)
-
-    @classmethod
-    def set_server(cls, server):
-        cls.server = server
-
-    def __repr__(self):
-        # return "<Fx '{}' -- args: {}>".format(self.synthdef, ", ".join(self.args))
-        other_args = ['{}'.format(arg)
-                      for arg in self.args if arg != self.name]
-        other_args = ", other args={}".format(other_args) if other_args else ""
-        return "<'{}': keyword='{}'{}>".format(self.synthdef, self.name, other_args)
-
-    def __str__(self):
-        s = "SynthDef.new(\\{},\n".format(self.synthdef)
-        s += "{" + "|bus, {}|\n".format(", ".join(self.args))
-        s += "var {};\n".format(",".join(self.vars))
-        s += self.input
-        s += self.list_effects()
-        s += self.output
-        s += "(bus, osc)}).add;"
-        return s
-
-    def add(self, string):
-        self.effects.append(string)
-        return
-
-    def doc(self, string):
-        """ Set a docstring for the effects"""
-        return
-
-    def list_effects(self):
-        s = ""
-        for p in self.effects:
-            s += p + ";\n"
-        return s
-
-    def add_var(self, name):
-        if name not in self.vars:
-            self.vars.append(name)
-        return
-
-    def save(self):
-        ''' writes to file and sends to server '''
-
-        # 1. See if the file exists
-
-        if os.path.isfile(self.filename):
-
-            with open(self.filename) as f:
-
-                contents = f.read()
-
-        else:
-
-            contents = ""
-
-        # 2. If it does, check contents
-
-        this_string = self.__str__()
-
-        if contents != this_string:
-
-            try:
-
-                with open(self.filename, 'w') as f:
-
-                    f.write(this_string)
-
-            except IOError:
-
-                print("IOError: Unable to update '{}' effect.".format(self.synthdef))
-
-        # 3. Send to server
-
-        self.load()
-
-    def load(self):
-        """ Load the Effect """
-        if self.server is not None:
-            self.server.loadSynthDef(self.filename)
-        return
-
-
-class In(Effect):
-    def __init__(self):
-        Effect.__init__(self, 'startSound', 'startSound')
-        self.save()
-
-    def __str__(self):
-        s = "SynthDef.new(\\startSound,\n"
-        s += "{ arg bus, rate=1, sus; var osc;\n"
-        s += "	ReplaceOut.kr(bus, rate)}).add;\n"
-        return s
-
-
-class Out(Effect):
-    def __init__(self):
-        self.max_duration = 8
-        Effect.__init__(self, 'makeSound', 'makeSound')
-        self.save()
-
-    def __str__(self):
-        s = "SynthDef.new(\\makeSound,\n"
-        s += "{ arg bus, sus; var osc;\n"
-        s += "	osc = In.ar(bus, 2);\n"
-        s += "  osc = EnvGen.ar(Env([1,1,0],[sus * {}, 0.1]), doneAction: 14) * osc;\n".format(
-            self.max_duration)
-        s += "	DetectSilence.ar(osc, amp:0.0001, time: 0.1, doneAction: 14);\n"
-        #s += "	Out.ar(0, osc);\n"
-        s += "OffsetOut.ar(0, osc[0]);\n"
-        s += "OffsetOut.ar(1, osc[1]);\n"
-        s += " }).add;\n"
-        return s
-
-
-class EffectManager(dict):
-    def __init__(self):
-
-        dict.__init__(self)
-        self.kw = []
-        self.all_kw = []
-        self.defaults = {}
-        self.order = {N: [] for N in range(3)}
-
-    def __repr__(self):
-        return "\n".join([repr(value) for value in self.values()])
-
-    def values(self):
-        return [self[key] for key in self.sort_by("synthdef")]
-
-    def sort_by(self, attr):
-        """ Returns the keys sorted by attribute name"""
-        return sorted(self.keys(), key=lambda effect: getattr(self[effect], attr))
-
-    def new(self, foxdot_arg_name, synthdef, args, order=2):
-        self[foxdot_arg_name] = Effect(
-            foxdot_arg_name, synthdef, args, order == 0)
-
-        if order in self.order:
-
-            self.order[order].append(foxdot_arg_name)
-
-        else:
-
-            self.order[order] = [foxdot_arg_name]
-
-        # Store the main keywords together
-
-        self.kw.append(foxdot_arg_name)
-
-        # Store other sub-keys
-
-        for arg in args:
-            if arg not in self.all_kw:
-                self.all_kw.append(arg)
-
-            # Store the default value
-
-            self.defaults[arg] = args[arg]
-
-        return self[foxdot_arg_name]
-
-    def kwargs(self):
-        """ Returns the title keywords for each effect """
-        return tuple(self.kw)
-
-    def all_kwargs(self):
-        """ Returns *all* keywords for all effects """
-        return tuple(self.all_kw)
-
-    def __iter__(self):
-        for key in self.kw:
-            yield key, self[key]
-
-    def reload(self):
-        """ Re-sends each effect to SC """
-        for kw, effect in self:
-            effect.load()
-        In()
-        Out()
-        return
-
-
-# -- TODO
-
-# Have ordered effects e.g.
-# 0. Process frequency / playback rate
-# 1. Before envelope
-# 2. Adding the envelope
-# 3. After envelope
-
-FxList = EffectManager()
-
-Effects = FxList  # Alias - to become default
+Effects = effect_manager  # Alias - to become default
 
 # Frequency Effects
 
-fx = FxList.new("vib", "vibrato", {"vib": 0, "vibdepth": 0.02}, order=0)
+fx = effect_manager.new("vib", "vibrato", {"vib": 0, "vibdepth": 0.02}, order=0)
 fx.add("osc = Vibrato.ar(osc, vib, depth: vibdepth)")
 fx.save()
 
-fx = FxList.new("slide", "slideTo", {
+fx = effect_manager.new("slide", "slideTo", {
                 "slide": 0, "sus": 1, "slidedelay": 0}, order=0)
 fx.add(
     "osc = osc * EnvGen.ar(Env([1, 1, slide + 1], [sus*slidedelay, sus*(1-slidedelay)]))")
 fx.save()
 
-fx = FxList.new("slidefrom", "slideFrom", {
+fx = effect_manager.new("slidefrom", "slideFrom", {
                 "slidefrom": 0, "sus": 1, "slidedelay": 0}, order=0)
 fx.add(
     "osc = osc * EnvGen.ar(Env([slidefrom + 1, slidefrom + 1, 1], [sus*slidedelay, sus*(1-slidedelay)]))")
 fx.save()
 
-fx = FxList.new("glide", "glissando", {
+fx = effect_manager.new("glide", "glissando", {
                 "glide": 0, "glidedelay": 0.5, "sus": 1}, order=0)
 fx.add(
     "osc = osc * EnvGen.ar(Env([1, 1, (1.059463**glide)], [sus*glidedelay, sus*(1-glidedelay)]))")
 fx.save()
 
-fx = FxList.new("bend", "pitchBend", {
+fx = effect_manager.new("bend", "pitchBend", {
                 "bend": 0, "sus": 1, "benddelay": 0}, order=0)
 fx.add(
     "osc = osc * EnvGen.ar(Env([1, 1, 1 + bend, 1], [sus * benddelay, (sus*(1-benddelay)/2), (sus*(1-benddelay)/2)]))")
 fx.save()
 
-fx = FxList.new("coarse", "coarse", {"coarse": 0, "sus": 1}, order=0)
+fx = effect_manager.new("coarse", "coarse", {"coarse": 0, "sus": 1}, order=0)
 fx.add("osc = osc * LFPulse.ar(coarse / sus)")
 fx.save()
 
-fx = FxList.new("striate", "striate", {
+fx = effect_manager.new("striate", "striate", {
                 "striate": 0, "sus": 1, "buf": 0, "rate": 1}, order=0)
 fx.add("rate = (BufDur.kr(buf) / sus)")
 fx.add("rate = Select.kr(rate > 1, [1, rate])")
 fx.add("osc = osc * LFPulse.ar(striate / sus, width:  (BufDur.kr(buf) / rate) / sus) * rate")
 fx.save()
 
-fx = FxList.new("pshift", "pitchShift", {"pshift": 0}, order=0)
+fx = effect_manager.new("pshift", "pitchShift", {"pshift": 0}, order=0)
 fx.add("osc = osc * (1.059463**pshift)")
 fx.save()
 
@@ -339,24 +65,24 @@ fx.save()
 
 # Signal effects
 
-fx = FxList.new('hpf', 'highPassFilter', {'hpf': 0, 'hpr': 1}, order=2)
+fx = effect_manager.new('hpf', 'highPassFilter', {'hpf': 0, 'hpr': 1}, order=2)
 fx.doc("Highpass filter")
 fx.add('osc = RHPF.ar(osc, hpf, hpr)')
 fx.save()
 
-fx = FxList.new('lpf', 'lowPassFilter', {'lpf': 0, 'lpr': 1}, order=2)
+fx = effect_manager.new('lpf', 'lowPassFilter', {'lpf': 0, 'lpr': 1}, order=2)
 fx.add('osc = RLPF.ar(osc, lpf, lpr)')
 fx.save()
 
 # Lpf slide
-fx = FxList.new('spf', 'SLPF', {'spf': 0, 'spr': 1,
+fx = effect_manager.new('spf', 'SLPF', {'spf': 0, 'spr': 1,
                 'spfslide': 1, 'spfend': 15000}, order=2)
 fx.add_var("spfenv")
 fx.add('spfenv = EnvGen.ar(Env.new([spf, spfend], [spfslide]))')
 fx.add('osc = RLPF.ar(osc, spfenv, spr)')
 fx.save()
 
-fx = FxList.new('swell', 'filterSwell', {
+fx = effect_manager.new('swell', 'filterSwell', {
                 'swell': 0, 'sus': 1, 'hpr': 1}, order=2)
 fx.add_var("env")
 fx.add(
@@ -364,7 +90,7 @@ fx.add(
 fx.add('osc = RHPF.ar(osc, env * swell * 2000, hpr)')
 fx.save()
 
-fx = FxList.new("bpf", "bandPassFilter", {
+fx = effect_manager.new("bpf", "bandPassFilter", {
                 "bpf": 0, "bpr": 1, "bpnoise": 0, "sus": 1}, order=2)
 fx.add("bpnoise = bpnoise / sus")
 fx.add("bpf = LFNoise1.kr(bpnoise).exprange(bpf * 0.5, bpf * 2)")
@@ -373,26 +99,26 @@ fx.add("osc = BPF.ar(osc, bpf, bpr)")
 fx.save()
 
 # MoogLPF
-fx = FxList.new('mpf', 'MoogFF', {'mpf': 0, 'mpr': 0}, order=2)
+fx = effect_manager.new('mpf', 'MoogFF', {'mpf': 0, 'mpr': 0}, order=2)
 fx.doc("MoogFF filter")
 fx.add('osc = MoogFF.ar(osc, mpf, mpr,0,1)')
 fx.save()
 
 # DFM1 LPF
-fx = FxList.new('dfm', 'DFM1', {'dfm': 0, 'dfmr': 0.1, 'dfmd': 1}, order=2)
+fx = effect_manager.new('dfm', 'DFM1', {'dfm': 0, 'dfmr': 0.1, 'dfmd': 1}, order=2)
 fx.doc("DFM1 filter")
 fx.add('osc = DFM1.ar(osc, dfm, dfmr, dfmd,0.0)')
 fx.save()
 
 if SC3_PLUGINS:
 
-    fx = FxList.new('crush', 'bitcrush', {
+    fx = effect_manager.new('crush', 'bitcrush', {
                     'bits': 8, 'sus': 1, 'amp': 1, 'crush': 0}, order=1)
     fx.add("osc = Decimator.ar(osc, rate: 44100/crush, bits: bits)")
     fx.add("osc = osc * Line.ar(amp * 0.85, 0.0001, sus * 2)")
     fx.save()
 
-    fx = FxList.new('dist', 'distortion', {'dist': 0, 'tmp': 0}, order=1)
+    fx = effect_manager.new('dist', 'distortion', {'dist': 0, 'tmp': 0}, order=1)
     fx.add("tmp = osc")
     fx.add("osc = CrossoverDistortion.ar(osc, amp:0.2, smooth:0.01)")
     fx.add(
@@ -408,65 +134,65 @@ if SC3_PLUGINS:
 #New Chop, with wave select :
 #chopwave = (0: Pulse, 1: Tri, 2: Saw, 3: Sin, 4: Parabolic )
 # and chopi = oscillator phase
-fx = FxList.new('chop', 'chop', {
+fx = effect_manager.new('chop', 'chop', {
                 'chop': 0, 'sus': 1, 'chopmix': 1, 'chopwave': 0, 'chopi': 0}, order=2)
 fx.add("osc = LinXFade2.ar(osc * SelectX.kr(chopwave, [LFPulse.kr(chop / sus, iphase:chopi, add: 0.01), LFTri.kr(chop / sus, iphase:chopi, add: 0.01), LFSaw.kr(chop / sus, iphase:chopi, add: 0.01), FSinOsc.kr(chop / sus, iphase:chopi, add: 0.01), LFPar.kr(chop / sus, iphase:chopi, add: 0.01)]), osc, 1-chopmix)")
 fx.save()
 
-fx = FxList.new('tremolo', 'tremolo', {'tremolo': 0, 'beat_dur': 1}, order=2)
+fx = effect_manager.new('tremolo', 'tremolo', {'tremolo': 0, 'beat_dur': 1}, order=2)
 fx.add("osc = osc * SinOsc.ar( tremolo / beat_dur, mul:0.5, add:0.5)")
 fx.save()
 
-fx = FxList.new('echo', 'combDelay', {
+fx = effect_manager.new('echo', 'combDelay', {
                 'echo': 0, 'beat_dur': 1, 'echotime': 1}, order=2)
 fx.add('osc = osc + CombL.ar(osc, delaytime: echo * beat_dur, maxdelaytime: 2 * beat_dur, decaytime: echotime * beat_dur)')
 fx.save()
 
-fx = FxList.new('spin', 'spinPan', {'spin': 0, 'sus': 1}, order=2)
+fx = effect_manager.new('spin', 'spinPan', {'spin': 0, 'sus': 1}, order=2)
 fx.add('osc = osc * [FSinOsc.ar(spin / 2, iphase: 1, mul: 0.5, add: 0.5), FSinOsc.ar(spin / 2, iphase: 3, mul: 0.5, add: 0.5)]')
 fx.save()
 
-fx = FxList.new("cut", "trimLength", {"cut": 0, "sus": 1}, order=2)
+fx = effect_manager.new("cut", "trimLength", {"cut": 0, "sus": 1}, order=2)
 fx.add(
     "osc = osc * EnvGen.ar(Env(levels: [1,1,0.01], curve: 'step', times: [sus * cut, 0.01]))")
 fx.save()
 
-fx = FxList.new('room', 'reverb', {'room': 0, 'mix': 0.1}, order=2)
+fx = effect_manager.new('room', 'reverb', {'room': 0, 'mix': 0.1}, order=2)
 fx.add("osc = FreeVerb.ar(osc, mix, room)")
 fx.save()
 
-fx = FxList.new("formant", "formantFilter", {"formant": 0}, order=2)
+fx = effect_manager.new("formant", "formantFilter", {"formant": 0}, order=2)
 fx.add("formant = (formant % 8) + 1")
 fx.add("osc = Formlet.ar(osc, formant * 200, ((formant % 5 + 1)) / 1000, (formant * 1.5) / 600).tanh")
 fx.save()
 
-fx = FxList.new("shape", "wavesShapeDistortion", {"shape": 0}, order=2)
+fx = effect_manager.new("shape", "wavesShapeDistortion", {"shape": 0}, order=2)
 fx.add("osc = (osc * (shape * 50)).fold2(1).distort / 5")
 fx.save()
 
-fx = FxList.new("drive", "overdriveDistortion", {"drive": 0}, order=2)
+fx = effect_manager.new("drive", "overdriveDistortion", {"drive": 0}, order=2)
 fx.add("osc = (osc * (drive * 50)).clip(0,0.2).fold2(2)")
 fx.save()
 
 #################
 
-fx = FxList.new("squiz", "squiz", {"squiz": 0}, order=2)
+fx = effect_manager.new("squiz", "squiz", {"squiz": 0}, order=2)
 fx.add("osc = Squiz.ar(osc, squiz)")
 fx.save()
 
-fx = FxList.new("comp", "comp", {"comp": 0,
+fx = effect_manager.new("comp", "comp", {"comp": 0,
                 "comp_down": 1, "comp_up": 0.8}, order=2)
 fx.add("osc = Compander.ar(osc, osc, thresh: comp, slopeAbove: comp_down, slopeBelow: comp_up, clampTime: 0.01, relaxTime: 0.01, mul: 1)")
 fx.save()
 
-fx = FxList.new("triode", "triode", {"triode": 0}, order=2)
+fx = effect_manager.new("triode", "triode", {"triode": 0}, order=2)
 fx.add_var("sc")
 fx.add("sc = triode * 10 + 1e-3")
 fx.add("osc = (osc * (osc > 0)) + (tanh(osc * sc) / sc * (osc < 0))")
 fx.add("osc = LeakDC.ar(osc)*1.2")
 fx.save()
 
-fx = FxList.new("krush", "krush", {
+fx = effect_manager.new("krush", "krush", {
                 "krush": 0, "kutoff": 15000}, order=2)
 fx.add_var("signal")
 fx.add_var("freq")
@@ -476,15 +202,15 @@ fx.add("signal = RLPF.ar(signal, clip(freq, 20, 10000), 1)")
 fx.add("osc = SelectX.ar(krush * 2.0, [osc, signal])")
 fx.save()
 
-fx = FxList.new("leg", "leg", {"leg": 0, "sus": 1}, order=0)
+fx = effect_manager.new("leg", "leg", {"leg": 0, "sus": 1}, order=0)
 fx.add("osc = osc * XLine.ar(Rand(0.5,1.5)*leg,1,0.05*sus)")
 fx.save()
 
-fx = FxList.new("tanh", "tanhDisto", {"tanh": 0}, order=2)
+fx = effect_manager.new("tanh", "tanhDisto", {"tanh": 0}, order=2)
 fx.add("osc = osc + (osc*tanh).tanh.sqrt()")
 fx.save()
 
-fx = FxList.new("fdist", "fdist", {"fdist": 0, "fdistfreq": 1600}, order=2)
+fx = effect_manager.new("fdist", "fdist", {"fdist": 0, "fdistfreq": 1600}, order=2)
 fx.add("osc = LPF.ar(osc, fdistfreq)")
 fx.add("osc = (osc * 1.1 * fdist).tanh")
 fx.add("osc = LPF.ar(osc, fdistfreq)")
@@ -496,7 +222,7 @@ fx.add("osc = (osc * 2 * fdist).tanh")
 fx.add("osc = osc*0.2")
 fx.save()
 
-fx = FxList.new("fdistc", "fdistc", {"fdistc": 0, "fdistcfreq1": 1600, "fdistcfreq2": 1600, "fdistcfreq3": 1600, "fdistcfreq4": 1600,
+fx = effect_manager.new("fdistc", "fdistc", {"fdistc": 0, "fdistcfreq1": 1600, "fdistcfreq2": 1600, "fdistcfreq3": 1600, "fdistcfreq4": 1600,
                 "fdistcm1": 1.1, "fdistcm2": 1.1, "fdistcm3": 1.4, "fdistcm4": 2, "fdistcq1": 1, "fdistcq2": 1, "fdistcq3": 1, "fdistcq4": 1}, order=2)
 fx.add("osc = RLPF.ar(osc, fdistcfreq1, fdistcq1)")
 fx.add("osc = (osc * fdistcm1 * fdistc).tanh")
@@ -509,7 +235,7 @@ fx.add("osc = (osc * fdistcm4 * fdistc).tanh")
 fx.save()
 
 #based on Derek Kwan chorus
-fx = FxList.new("chorus", "chorus", {"chorus": 0, "chorusrate": 0.5}, order=2)
+fx = effect_manager.new("chorus", "chorus", {"chorus": 0, "chorusrate": 0.5}, order=2)
 fx.add_var("lfos")
 fx.add_var("numDelays = 4")
 fx.add_var("chrate")
@@ -526,11 +252,11 @@ fx.add("osc = DelayC.ar(osc, (maxDelayTime * 2), lfos).sum")
 fx.add("osc = Mix(osc)")
 fx.save()
 
-fx = FxList.new("squiz", "squiz", {"squiz": 0}, order=2)
+fx = effect_manager.new("squiz", "squiz", {"squiz": 0}, order=2)
 fx.add("osc = Squiz.ar(osc, squiz)")
 fx.save()
 
-fx = FxList.new("sample_atk", "sample_atk", {
+fx = effect_manager.new("sample_atk", "sample_atk", {
                 "sample_atk": 0, "sample_sus": 1}, order=2)
 fx.add_var("env")
 fx.add(
@@ -538,19 +264,19 @@ fx.add(
 fx.add("osc = osc*env")
 fx.save()
 
-fx = FxList.new("position", "trimPos", {"position": 0, "sus": 1}, order=2)
+fx = effect_manager.new("position", "trimPos", {"position": 0, "sus": 1}, order=2)
 fx.add(
     "osc = osc * EnvGen.ar(Env(levels: [0,0,1], curve: 'step', times: [sus * position, 0]))")
 fx.save()
 
-fx = FxList.new("ring", "ring_modulation", {
+fx = effect_manager.new("ring", "ring_modulation", {
                 "ring": 0, "ringl": 500, "ringh": 1500}, order=0)
 fx.add_var("mod")
 fx.add("mod = ring * SinOsc.ar(Clip.kr(XLine.kr(ringl, ringl + ringh), 20, 20000))")
 fx.add("osc = ring1(osc, mod)")
 fx.save()
 
-fx = FxList.new("lofi", "lofi", {"lofi": 0,
+fx = effect_manager.new("lofi", "lofi", {"lofi": 0,
                 "lofiwow": 0.5, "lofiamp": 0.5}, order=2)
 fx.add_var("minWowRate")
 fx.add_var("wowRate")
@@ -585,14 +311,14 @@ fx.add("osc = MoogFF.ar(osc, LinExp.kr(lofi, 0, 1, 1000, 10000), 0)")
 fx.save()
 
 
-fx = FxList.new('phaser', 'phaser', {'phaser': 0, 'phaserdepth': 0.5}, order=2)
+fx = effect_manager.new('phaser', 'phaser', {'phaser': 0, 'phaserdepth': 0.5}, order=2)
 fx.add_var("delayedSignal")
 fx.add("delayedSignal = osc")
 fx.add("for(1, 4, {|i| delayedSignal = AllpassL.ar(delayedSignal, 0.01 * 4.reciprocal, LFPar.kr(LinExp.kr(phaser, 0, 1, 0.275, 16), i + 0.5.rand, LinExp.kr(phaserdepth*4.reciprocal, 0, 1, 0.0005, 0.01 * 0.5), LinExp.kr(phaserdepth*4.reciprocal, 0, 1, 0.0005, 0.01 * 0.5)), 0)})")
 fx.add("osc = osc + delayedSignal")
 fx.save()
 
-fx = FxList.new(
+fx = effect_manager.new(
     foxdot_arg_name='vol',
     synthdef='volume',
     args={'vol': 1},
@@ -602,7 +328,7 @@ fx.add("osc = osc * vol")
 fx.save()
 
 
-fx = FxList.new('room2', 'reverb_stereo', {
+fx = effect_manager.new('room2', 'reverb_stereo', {
                 'room2': 0, 'mix2': 0.2, 'damp2': 0.8, 'revatk': 0, 'revsus': 1}, order=2)
 fx.add_var("dry")
 fx.add("dry = osc")
@@ -616,7 +342,7 @@ fx.save()
 
 In()
 Out()
-Effect.server.setFx(FxList)
+Effect.server.setFx(effect_manager)
 
 
 ####FXs that need work before implementing###########

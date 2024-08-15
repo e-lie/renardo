@@ -19,7 +19,7 @@ setup(
         'renardo_lib.Custom',
         'renardo_lib.Extensions',
         'renardo_lib.Extensions.VRender',
-        'renardo_lib.Extensions.SonicPi',
+        'renardo_lib.Extensions.SonicPiSynthDefImporter',
         'renardo_lib.EspGrid',
         'renardo_lib.Effects',
         'renardo_lib.Patterns',

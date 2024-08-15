@@ -124,11 +124,11 @@
 
 from copy import copy
 
-from renardo_lib.Settings import SamplePlayer, LoopPlayer, SYNTHDEF_DIR
+from renardo_lib.Settings import SamplePlayer, LoopPlayer
 from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings.PygenSynthDef import DefaultPygenSynthDef
 from renardo_lib.SynthDefManagement import SynthDefProxy
 from renardo_lib.SynthDefManagement.SynthDict import SynthDefs
-from renardo_lib.SynthDefManagement.Effects import FxList
+from renardo_lib.runtime.synthdefs_initialisation import effect_manager
 from renardo_lib.SynthDefManagement.BufferManagement import Samples
 from renardo_lib.Key import PlayerKey, NumberKey
 from renardo_lib.Repeat import Repeatable
@@ -228,8 +228,8 @@ class Player(Repeatable):
     alias = { "pitch" : "degree",
               "char"  : "degree" }
 
-    fx_attributes = FxList.all_kwargs()
-    fx_keys       = FxList.kwargs()
+    fx_attributes = effect_manager.all_kwargs()
+    fx_keys       = effect_manager.kwargs()
 
     # Load default sample bank
     samples = Samples
@@ -562,7 +562,7 @@ class Player(Repeatable):
 
         for key in Player.fx_attributes:
 
-            value = FxList.defaults[key]
+            value = effect_manager.defaults[key]
 
             setattr(self, key, value)
 
