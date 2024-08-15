@@ -4,7 +4,7 @@ import re
 
 if __name__ != "__main__":
 
-    from renardo_lib.SCLang   import SynthDef, SynthDefs
+    from renardo_lib.SCLang   import DefaultSynthDef, SynthDefs
     from renardo_lib.Patterns import Sequences
     from renardo_lib.Patterns.Sequences import *
 
@@ -19,7 +19,7 @@ if __name__ != "__main__":
     del patternNames['PSine']
 
     synthdefNames = [name for name, obj in vars(SynthDefs).items() \
-                if isinstance(obj, SynthDef.SynthDef)]
+                     if isinstance(obj, DefaultSynthDef.SynthDef)]
 
 # Grammar
 
