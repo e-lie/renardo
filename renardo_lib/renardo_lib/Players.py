@@ -125,10 +125,10 @@
 from copy import copy
 
 from renardo_lib.Settings import SamplePlayer, LoopPlayer, SYNTHDEF_DIR
-from renardo_lib.SCLang.SynthDef import SynthDef, SynthDefs
+from renardo_lib.SCLang.SynthDef import DefaultSynthDef, SynthDefs
 from renardo_lib.SCLang import SynthDefProxy
 from renardo_lib.SCLang.Effects import FxList
-from renardo_lib.SCLang.Buffers import Samples
+from renardo_lib.SCLang.BufferManagement import Samples
 from renardo_lib.Key import PlayerKey, NumberKey
 from renardo_lib.Repeat import Repeatable
 from renardo_lib.Patterns import *
@@ -1614,6 +1614,100 @@ class Player(Repeatable):
         #        self.playstring = str(new_degree)
         setattr(self, 'degree', new_degree)
         return
+
+    def multiply(self, n=2):
+        self.attr['degree'] = self.attr['degree'] * n
+        return self
+
+    def degrade(self, amount=0.5):
+        """ Sets the amp modifier to a random array of 0s and 1s
+            amount=0.5 weights the array to equal numbers """
+        if float(amount) <= 0:
+            self.amplify = 1
+        else:
+            self.amplify = PwRand([0, self.attr["amplify"]],[int(amount*10), max(10 - int(amount),0)])
+        return self
+
+    def changeSynth(self, list_of_synthdefs):
+        new_synth = choice(list_of_synthdefs)
+        if isinstance(new_synth, DefaultSynthDef):
+            new_synth = str(new_synth.name)
+        self.synthdef = new_synth
+        return self
+
+    """
+
+        Modifier Methods
+        ----------------
+
+        Other modifiers for affecting the playback of Players
+
+    """
+
+    def offbeat(self, dur=1):
+        """ Off sets the next event occurence """
+
+        self.dur = abs(dur)
+        self.delay = abs(dur) / 2
+
+        return self
+
+    def strum(self, dur=0.025):
+        """ Adds a delay to a Synth Envelope """
+        x = self.largest_attribute()
+        if x > 1:
+            self.delay = asStream([tuple(a * dur for a in range(x))])
+        else:
+            self.delay = asStream(dur)
+        return self
+
+    def __repr__(self):
+        if self.id is not None:
+            return "<{} - {}>".format(self.id, self.synthdef)
+        else:
+            return "a '{}' Player Object".format(self.synthdef)
+
+    def get_extra_attributes(self):
+        """ Returns a dict of specific keyword arguments for a particular FoxDot player """
+        filename = SYNTHDEF_DIR + f"/{self.id}.scd"
+        file = open(filename, "r")
+        contents = file.read()
+        file.close()
+        if "arg" in contents:
+            arg_start = "arg"
+            arg_end = "var"
+        else:
+            arg_start = "|"
+            arg_end = "var"
+        idx1 = contents.index(arg_start)
+        idx2 = contents.index(arg_end)
+        args = ""
+        # getting elements in between
+        for idx in range(idx1 + len(arg_start), idx2-3):
+            args = args + contents[idx]
+        args = "".join(args.split())
+        xtra_args = args.split(",")
+        temp_args = {}
+        for arg in xtra_args:
+            if "=" in arg:
+                a, b = arg.split("=")
+                temp_args[a] = b
+                self.extra_attr[a] = b
+        for k in self.default_args:
+            if k in temp_args.keys():
+                del self.extra_attr[k]
+        return self.extra_attr
+
+    def info(self):
+        s = "Player Instance using '%s' \n\n" % self.synthdef
+        s += "ATTRIBUTES\n"
+        s += "----------\n\n"
+        for attr, val in self.attr.items():
+            s += "\t{}\t:{}\n".format(attr, val)
+        self.get_extra_attributes()
+        for attr, val in self.extra_attr.items():
+            s += "\t{}\t:{}\n".format(attr, val)
+        return s
 
     def bang(self, **kwargs):
         """
