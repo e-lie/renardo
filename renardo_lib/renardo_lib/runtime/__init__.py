@@ -8,15 +8,15 @@ FoxDotCode.namespace = globals()
 spack_manager = SPackManager()
 
 from renardo_lib.TempoClock import *
-from renardo_lib.SCLang.BufferManagement import *
+from renardo_lib.SynthDefManagement.BufferManagement import *
 from renardo_lib.Players import *
 from renardo_lib.TimeVar import *
 from renardo_lib.Constants import *
 from renardo_lib.Midi import *
 from renardo_lib.Settings import *
 from renardo_lib.ServerManager import *
-from renardo_lib.SCLang import Effects
-from renardo_lib.SCLang.SynthDict import SynthDefs
+from renardo_lib.SynthDefManagement import Effects
+from renardo_lib.SynthDefManagement.SynthDict import SynthDefs
 
 
 @PatternMethod
@@ -125,8 +125,8 @@ def update_foxdot_server(serv):
 def _reload_synths():
     """ Resends all the synth / sample info to SuperCollider. Useful for times
         when starting FoxDot before running `FoxDot.start` in SuperCollider. """
-    from renardo_lib import SCLang
-    reload(SCLang._SynthDefs)
+    from renardo_lib import SynthDefManagement
+    reload(SynthDefManagement._SynthDefs)
     reload(Effects)
     Samples._reset_buffers()
     return

@@ -27,7 +27,7 @@ setup(
         'renardo_lib.EspGrid',
         'renardo_lib.Effects',
         'renardo_lib.Patterns',
-        'renardo_lib.SCLang',
+        'renardo_lib.SynthDefManagement',
         'renardo_lib.Settings',
         'renardo_lib.Utils',
         'renardo_lib.ServerManager',

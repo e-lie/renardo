@@ -1,9 +1,9 @@
 import inspect
 
-from renardo_lib.SCLang.SCLangExperimentalBindings import cls, Vibrato, RHPF
-from renardo_lib.SCLang.SCLangExperimentalBindings.core import instance
+from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings import cls, Vibrato, RHPF
+from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings.core import instance
 
-# To be moved to SCLang later
+# To be moved to SynthDefManagement later
 
 EnvGen = cls("EnvGen")
 Env = cls("Env")
