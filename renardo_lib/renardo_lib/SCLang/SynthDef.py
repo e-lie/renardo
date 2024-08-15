@@ -99,14 +99,14 @@ class SynthDefBaseClass(object):
         return str(self.name)
 
 
-    # Combining with other SynthDefs
-    # ------------------------------
-    def __add__(self, other):
-        if not isinstance(other, SynthDef):
-            raise TypeError("Warning: '{}' is not a SynthDef".format(str(other)))
-        new = copy(self)
-        new.osc = self.osc + other.osc
-        return new
+    ## Combining with other SynthDefs
+    ## ------------------------------
+    #def __add__(self, other):
+    #    if not isinstance(other, DefaultSynthDef):
+    #        raise TypeError("Warning: '{}' is not a SynthDef".format(str(other)))
+    #    new = copy(self)
+    #    new.osc = self.osc + other.osc
+    #    return new
 
 
     # Returning the SynthDefProxy
@@ -214,7 +214,7 @@ class SynthDefBaseClass(object):
 
     def load(self):
         """ Load in server"""
-        return SynthDef.server.loadSynthDef(self.filename)
+        return DefaultSynthDef.server.loadSynthDef(self.filename)
 
     def add(self):
         """ This is required to add the SynthDef to the SuperCollider Server """
@@ -249,7 +249,7 @@ class SynthDefBaseClass(object):
     def preprocess_osc(self, osc_message):
         osc_message['amp'] *= self.balance
 
-class SynthDef(SynthDefBaseClass):
+class DefaultSynthDef(SynthDefBaseClass):
     def __init__(self, *args, **kwargs):
         SynthDefBaseClass.__init__(self, *args, **kwargs)
         # add vib depth?

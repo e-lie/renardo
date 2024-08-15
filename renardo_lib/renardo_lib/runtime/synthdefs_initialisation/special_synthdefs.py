@@ -1,6 +1,6 @@
 from renardo_lib.SCLang.SCLangExperimentalBindings import *
-from renardo_lib.SCLang.SynthDef import SynthDef
-from renardo_lib.SCLang import SampleSynthDef
+from renardo_lib.SCLang.SynthDef import DefaultSynthDef
+from renardo_lib.SCLang.SampleSynthDefs import SampleSynthDef, LoopSynthDef, StretchSynthDef, GranularSynthDef
 from renardo_lib.SCLang.SCLangExperimentalBindings import Env
 
 # Sample Player
@@ -15,9 +15,14 @@ with SampleSynthDef("play2") as play:
         play.buf) * play.rate, startPos=BufSampleRate.kr(play.buf) * play.pos)
     play.osc = play.osc * play.amp
 
+
+loop = LoopSynthDef()
+stretch = StretchSynthDef()
+granular = GranularSynthDef()
+
 # Synth Players
 
-with SynthDef("audioin") as audioin:
+with DefaultSynthDef("audioin") as audioin:
     audioin.defaults.update(channel=1)
     audioin.osc = AudioIn.ar(audioin.channel)
     audioin.env = Env.mask()
