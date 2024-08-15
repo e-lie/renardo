@@ -125,7 +125,7 @@
 from copy import copy
 
 from renardo_lib.Settings import SamplePlayer, LoopPlayer, SYNTHDEF_DIR
-from renardo_lib.SynthDefManagement.PySynthDef import DefaultSynthDef
+from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings.PygenSynthDef import DefaultPygenSynthDef
 from renardo_lib.SynthDefManagement import SynthDefProxy
 from renardo_lib.SynthDefManagement.SynthDict import SynthDefs
 from renardo_lib.SynthDefManagement.Effects import FxList
@@ -1631,7 +1631,7 @@ class Player(Repeatable):
 
     def changeSynth(self, list_of_synthdefs):
         new_synth = choice(list_of_synthdefs)
-        if isinstance(new_synth, DefaultSynthDef):
+        if isinstance(new_synth, DefaultPygenSynthDef):
             new_synth = str(new_synth.name)
         self.synthdef = new_synth
         return self
