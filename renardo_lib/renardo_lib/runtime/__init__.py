@@ -15,7 +15,8 @@ from renardo_lib.Constants import *
 from renardo_lib.Midi import *
 from renardo_lib.Settings import *
 from renardo_lib.ServerManager import *
-from renardo_lib.SCLang import SynthDefs, Effects
+from renardo_lib.SCLang import Effects
+from renardo_lib.SCLang.SynthDict import SynthDefs
 
 
 @PatternMethod

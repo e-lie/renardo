@@ -125,8 +125,9 @@
 from copy import copy
 
 from renardo_lib.Settings import SamplePlayer, LoopPlayer, SYNTHDEF_DIR
-from renardo_lib.SCLang.SynthDef import DefaultSynthDef, SynthDefs
+from renardo_lib.SCLang.SynthDef import DefaultSynthDef
 from renardo_lib.SCLang import SynthDefProxy
+from renardo_lib.SCLang.SynthDict import SynthDefs
 from renardo_lib.SCLang.Effects import FxList
 from renardo_lib.SCLang.BufferManagement import Samples
 from renardo_lib.Key import PlayerKey, NumberKey

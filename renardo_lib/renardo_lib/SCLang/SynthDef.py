@@ -1,5 +1,6 @@
 import os
 
+from renardo_lib.SCLang.SynthDict import SynthDefs
 from renardo_lib.SCLang.SynthDefProxy import SynthDefProxy
 from renardo_lib.SCLang.SCLangExperimentalBindings import format_args, Env
 from renardo_lib.SCLang.SCLangExperimentalBindings.core import instance
@@ -7,8 +8,6 @@ from renardo_lib.ServerManager.default_server import Server
 from renardo_lib.Settings import SYNTHDEF_DIR
 from renardo_lib.Code import WarningMsg
 
-
-SynthDefs = {}
 
 class SynthDefBaseClass(object):
 
@@ -262,13 +261,7 @@ class DefaultSynthDef(SynthDefBaseClass):
         return
 
 
-# SynthDef from sc file
-class FileSynthDef(SynthDefBaseClass):
-    def write(self):
-        pass
 
-    def __str__(self):
-        return open(self.filename, 'rb').read()
 
 #class CompiledSynthDef(SynthDefBaseClass):
 #    def __init__(self, name, filename):
