@@ -122,28 +122,21 @@
 
 """
 
-from __future__ import absolute_import, division, print_function
+from copy import copy
 
-import itertools
-
-from .Settings import SamplePlayer, LoopPlayer
-from .SCLang.SynthDef import SynthDefProxy, SynthDefs
-from .Effects import FxList
-from .Buffers import Samples
-
-from .Code import WarningMsg
-from .Key import PlayerKey, NumberKey
-from .Repeat import Repeatable
-from .Patterns import Pattern, PGroup, asStream, modi, pattern_depth, GeneratorPattern, group_modi, Rest
-from .Utils import get_first_item, get_expanded_len
-
-from .Root import Root
-from .Scale import Scale
-from .Scale import get_freq_and_midi
-
-from .Bang import Bang
-
-from .TimeVar import TimeVar
+from renardo_lib.Settings import SamplePlayer, LoopPlayer, SYNTHDEF_DIR
+from renardo_lib.SCLang.SynthDef import SynthDefProxy, SynthDef, SynthDefs
+from renardo_lib.SCLang.Effects import FxList
+from renardo_lib.Buffers import Samples
+from renardo_lib.Key import PlayerKey, NumberKey
+from renardo_lib.Repeat import Repeatable
+from renardo_lib.Patterns import *
+from renardo_lib.Root import Root
+from renardo_lib.Scale import Scale, get_freq_and_midi
+from renardo_lib.Bang import Bang
+from renardo_lib.TimeVar import TimeVar, mapvar, linvar, inf, var
+from renardo_lib.Code import WarningMsg
+from renardo_lib.Utils import get_first_item
 
 from renardo_lib.Extensions.ReaperIntegrationLib.ReaProject import get_reaper_object_and_param_name, set_reaper_param, get_reaper_param
 from renardo_lib.Extensions.ReaperIntegrationLib.ReaTrack import ReaTrack
