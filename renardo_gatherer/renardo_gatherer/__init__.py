@@ -1,10 +1,6 @@
-import os
-
 from renardo_gatherer.config_dir import SAMPLES_DIR_PATH
 from renardo_gatherer.samples_download import DEFAULT_SAMPLES_PACK_NAME
 
-def get_samples_dir_path():
-    return SAMPLES_DIR_PATH
 
 def main():
     pass
