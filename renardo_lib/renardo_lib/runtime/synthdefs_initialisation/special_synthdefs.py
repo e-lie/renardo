@@ -1,6 +1,6 @@
 from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings import *
-from renardo_lib.SynthDefManagement.PySynthDef import DefaultSynthDef
-from renardo_lib.SynthDefManagement.SampleSynthDefs import SampleSynthDef, LoopSynthDef, StretchSynthDef, GranularSynthDef
+from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings.PygenSynthDef import DefaultPygenSynthDef
+from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings.SamplePygenSynthDefs import LoopPygenSynthDef, StretchPygenSynthDef, GranularPygenSynthDef
 from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings import Env
 
 # Sample Player
@@ -16,13 +16,13 @@ from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings import Env
 #    play.osc = play.osc * play.amp
 
 
-loop = LoopSynthDef()
-stretch = StretchSynthDef()
-granular = GranularSynthDef()
+loop = LoopPygenSynthDef()
+stretch = StretchPygenSynthDef()
+granular = GranularPygenSynthDef()
 
 # Synth Players
 
-with DefaultSynthDef("audioin") as audioin:
+with DefaultPygenSynthDef("audioin") as audioin:
     audioin.defaults.update(channel=1)
     audioin.osc = AudioIn.ar(audioin.channel)
     audioin.env = Env.mask()

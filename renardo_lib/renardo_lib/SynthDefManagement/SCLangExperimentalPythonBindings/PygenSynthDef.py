@@ -9,7 +9,13 @@ from renardo_lib.Settings import SYNTHDEF_DIR
 from renardo_lib.Code import WarningMsg
 
 
-class SynthDefBaseClass(object):
+class PygenSynthDefBaseClass(object):
+    """
+    Python generated synthdef synthetizer using SCLang bindings
+    This writes a .scd supercollider file before loading it in
+    the sclang server via OSCFunc
+    This is the legacy mode of FoxDot
+    """
 
     server = Server
     bus_name = 'bus'
@@ -213,7 +219,7 @@ class SynthDefBaseClass(object):
 
     def load(self):
         """ Load in server"""
-        return DefaultSynthDef.server.loadSynthDef(self.filename)
+        return DefaultPygenSynthDef.server.loadSynthDef(self.filename)
 
     def add(self):
         """ This is required to add the SynthDef to the SuperCollider Server """
@@ -248,14 +254,14 @@ class SynthDefBaseClass(object):
     def preprocess_osc(self, osc_message):
         osc_message['amp'] *= self.balance
 
-class DefaultSynthDef(SynthDefBaseClass):
+class DefaultPygenSynthDef(PygenSynthDefBaseClass):
     def __init__(self, *args, **kwargs):
-        SynthDefBaseClass.__init__(self, *args, **kwargs)
+        PygenSynthDefBaseClass.__init__(self, *args, **kwargs)
         # add vib depth?
 
     def add_base_class_behaviour(self):
         """ Defines the initial setup for every SynthDef """
-        SynthDefBaseClass.add_base_class_behaviour(self)
+        PygenSynthDefBaseClass.add_base_class_behaviour(self)
         self.base.append("freq = In.kr(bus, 1);")
         self.base.append("freq = [freq, freq+fmod];")
         return

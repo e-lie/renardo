@@ -1,5 +1,5 @@
 from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings import *
-from renardo_lib.SynthDefManagement.PySynthDef import DefaultSynthDef
+from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings.PygenSynthDef import DefaultPygenSynthDef
 from renardo_lib.SynthDefManagement.SynthDefProxy import SynthDefProxy
-from renardo_lib.SynthDefManagement.SampleSynthDefs import SampleSynthDef
+from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings.SamplePygenSynthDefs import SamplePygenSynthDef
 
