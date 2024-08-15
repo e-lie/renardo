@@ -1,4 +1,5 @@
-from renardo_lib.SCLang.SCLangExperimentalBindings import instance, cls
+from renardo_lib.SCLang.SCLangExperimentalBindings import cls
+from renardo_lib.SCLang.SCLangExperimentalBindings.core import instance
 
 class EnvGen(instance):
     value = "Env"
