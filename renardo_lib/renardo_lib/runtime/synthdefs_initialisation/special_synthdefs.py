@@ -1,5 +1,6 @@
 from renardo_lib.SCLang.SCLangExperimentalBindings import *
-from renardo_lib.SCLang.SynthDef import SynthDef, SampleSynthDef
+from renardo_lib.SCLang.SynthDef import SynthDef
+from renardo_lib.SCLang import SampleSynthDef
 from renardo_lib.SCLang.SCLangExperimentalBindings import Env
 
 # Sample Player
