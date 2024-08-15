@@ -1,5 +1,5 @@
 from renardo_lib.Code import WarningMsg
-from renardo_lib.SynthDefManagement import SynthDefProxy, DefaultSynthDef
+from renardo_lib.SynthDefManagement import SynthDefProxy, DefaultPygenSynthDef
 from renardo_lib.SynthDefManagement.SynthDict import SynthDefs
 from renardo_lib.ServerManager.default_server import Server
 from renardo_lib.Settings import SYNTHDEF_DIR
@@ -39,7 +39,7 @@ class MinimalSynthDef(object):
 
     def load(self):
         """ Load in server"""
-        return DefaultSynthDef.server.loadSynthDef(self.filename)
+        return DefaultPygenSynthDef.server.loadSynthDef(self.filename)
 
     def add(self):
         try:
