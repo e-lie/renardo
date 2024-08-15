@@ -4,7 +4,7 @@ import json
 from subprocess import check_output
 
 from renardo_lib.Scale import freqtomidi
-from renardo_lib.SCLang import CompiledSynthDef
+from renardo_lib.SynthDefManagement import CompiledSynthDef
 from renardo_lib.Settings import SYNTHDEF_DIR
 
 from urllib.request import urlretrieve

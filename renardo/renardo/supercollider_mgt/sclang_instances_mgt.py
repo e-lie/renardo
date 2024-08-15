@@ -42,7 +42,7 @@ class SupercolliderInstance:
 
     def start_sclang_subprocess(self):
         if not self.is_sclang_running():
-            #print("Auto Launching Renardo SC module with SCLang...")
+            #print("Auto Launching Renardo SC module with SynthDefManagement...")
             self.sclang_process = subprocess.Popen(
                 args=self.sclang_exec,
                 #shell=True,

@@ -4,8 +4,8 @@ import re
 
 if __name__ != "__main__":
 
-    from renardo_lib.SCLang   import DefaultSynthDef
-    from renardo_lib.SCLang.SynthDict import SynthDefs
+    from renardo_lib.SynthDefManagement   import DefaultSynthDef
+    from renardo_lib.SynthDefManagement.SynthDict import SynthDefs
     from renardo_lib.Patterns import Sequences
     from renardo_lib.Patterns.Sequences import *
 
