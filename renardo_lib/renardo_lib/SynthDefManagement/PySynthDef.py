@@ -1,9 +1,9 @@
 import os
 
-from renardo_lib.SCLang.SynthDict import SynthDefs
-from renardo_lib.SCLang.SynthDefProxy import SynthDefProxy
-from renardo_lib.SCLang.SCLangExperimentalBindings import format_args, Env
-from renardo_lib.SCLang.SCLangExperimentalBindings.core import instance
+from renardo_lib.SynthDefManagement.SynthDict import SynthDefs
+from renardo_lib.SynthDefManagement.SynthDefProxy import SynthDefProxy
+from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings import format_args, Env
+from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings.core import instance
 from renardo_lib.ServerManager.default_server import Server
 from renardo_lib.Settings import SYNTHDEF_DIR
 from renardo_lib.Code import WarningMsg

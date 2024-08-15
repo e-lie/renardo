@@ -1,5 +1,5 @@
-from renardo_lib.SCLang.SCLangExperimentalBindings import cls
-from renardo_lib.SCLang.SCLangExperimentalBindings.core import instance
+from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings import cls
+from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings.core import instance
 
 class EnvGen(instance):
     value = "Env"
@@ -9,7 +9,7 @@ class EnvGen(instance):
     def __str__(self):
         return str( cls("EnvGen").ar(instance(self.__attr__()), doneAction=self.doneAction))
     def __attr__(self):
-        """ Converts the attr dict to SCLang arguments """
+        """ Converts the attr dict to SynthDefManagement arguments """
         args = ",".join(["{}: {}".format(str(key), str(value)) for key, value in self.attr.items()])        
         return self.value + "(" + args + ")"
 

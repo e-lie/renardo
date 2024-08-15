@@ -165,7 +165,7 @@ def find_multiline(text):
 # Use our regex to read patterns.py and add all the functions to key_types
     
 from renardo_lib.Patterns import Main, Sequences, Generators
-from renardo_lib.SCLang import SCLangExperimentalBindings
+from renardo_lib.SynthDefManagement import SCLangExperimentalPythonBindings
 
 foxdot_kw = [ "Clock","Group","Scale","Server","Root","Samples","var","Pvar",
               "Attributes", "PatternMethods", "PatternTypes", "now",

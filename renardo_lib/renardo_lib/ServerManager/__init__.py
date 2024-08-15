@@ -57,7 +57,7 @@ class RequestTimeout(Exception):
 class BidirectionalOSCServer(OSCServer):
     """
     This is a combination client/server
-    The UDP server is necessary for receiving responses from the SCLang server
+    The UDP server is necessary for receiving responses from the SynthDefManagement server
     when we query it with requests.
     Note that this is not thread-safe, as the receive() method can discard messages
     """
@@ -180,7 +180,7 @@ class ServerManager:
                 info = self.getInfo()
             except RequestTimeout:
                 # It's not terrible if we couldn't fetch the info, but we should log it.
-                WarningMsg("Could not fetch info from SCLang server. Using defaults...")
+                WarningMsg("Could not fetch info from SynthDefManagement server. Using defaults...")
             else:
                 self.max_buffers = info.num_buffers
                 self.num_input_busses = info.num_input_bus_channels
@@ -537,7 +537,7 @@ class ServerManager:
     #    self.client.send(msg)
 
     def dumpOSC(self, value=1):
-        """ Debug - Dumps OSC messages SCLang side """
+        """ Debug - Dumps OSC messages SynthDefManagement side """
         msg = OSCMessage("/dumpOSC")
         msg.append(value)
         self.client.send(msg)
@@ -550,7 +550,7 @@ class ServerManager:
         self.client.send(msg)
 
     def getInfo(self):
-        """ Fetch info about the SCLang server """
+        """ Fetch info about the SynthDefManagement server """
         msg = OSCMessage()
         msg.setAddress('/foxdot/info')
         self.sclang.send(msg)

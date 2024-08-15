@@ -45,7 +45,7 @@ class RenardoApp:
             RenardoTUI(renardo_app=self).run()
 
         if self.args.boot:
-            print("Launching Renardo SC module with SCLang...")
+            print("Launching Renardo SC module with SynthDefManagement...")
             self.sc_instance.start_sclang_subprocess()
             output_line = self.sc_instance.read_stdout_line()
             while "Welcome to" not in output_line:

@@ -1,5 +1,5 @@
 from renardo_lib.Extensions.VRender.VRender import renderizeVoice
-from renardo_lib.SCLang import DefaultSynthDef
+from renardo_lib.SynthDefManagement import DefaultSynthDef
 from renardo_lib.runtime import Clock, Scale, Root
 from renardo_lib.Settings import FOXDOT_ROOT
 
