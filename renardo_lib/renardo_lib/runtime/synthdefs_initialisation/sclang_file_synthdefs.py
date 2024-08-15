@@ -1,4 +1,4 @@
-from renardo_lib.SCLang.SynthDef import FileSynthDef
+from renardo_lib.SCLang.FileSynthDef import FileSynthDef
 
 # SynthDefs read from file
 bass = FileSynthDef('bass')
