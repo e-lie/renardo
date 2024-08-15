@@ -125,10 +125,10 @@
 from copy import copy
 
 from renardo_lib.Settings import SamplePlayer, LoopPlayer, SYNTHDEF_DIR
-from renardo_lib.SCLang.SynthDef import SynthDef, SynthDefs
+from renardo_lib.SCLang.SynthDef import DefaultSynthDef, SynthDefs
 from renardo_lib.SCLang import SynthDefProxy
 from renardo_lib.SCLang.Effects import FxList
-from renardo_lib.SCLang.Buffers import Samples
+from renardo_lib.SCLang.BufferManagement import Samples
 from renardo_lib.Key import PlayerKey, NumberKey
 from renardo_lib.Repeat import Repeatable
 from renardo_lib.Patterns import *
@@ -1987,7 +1987,7 @@ class Player(Repeatable):
 
     def changeSynth(self, list_of_synthdefs):
         new_synth = choice(list_of_synthdefs)
-        if isinstance(new_synth, SynthDef):
+        if isinstance(new_synth, DefaultSynthDef):
             new_synth = str(new_synth.name)
         self.synthdef = new_synth
         return self

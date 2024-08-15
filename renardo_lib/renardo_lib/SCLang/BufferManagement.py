@@ -22,14 +22,9 @@ from os.path import abspath, join, isabs, isfile, isdir, splitext
 from renardo_lib.runtime import spack_manager
 from renardo_lib.Code import WarningMsg
 from renardo_lib.Logging import Timing
-from renardo_lib.SCLang import SampleSynthDef
 from renardo_lib.ServerManager.default_server import Server
-from renardo_lib.Settings import SAMPLES_PACK_NUMBER
-
 
 alpha    = "abcdefghijklmnopqrstuvwxyz"
-
-
 
 DESCRIPTIONS = { 'a' : "Gameboy hihat",      'A' : "Gameboy kick drum",
                  'b' : "Noisy beep",         'B' : "Short saw",
@@ -406,59 +401,3 @@ def hasext(filename):
 
 
 Samples = BufferManager()
-
-
-class LoopSynthDef(SampleSynthDef):
-    def __init__(self):
-        SampleSynthDef.__init__(self, "loop")
-        self.pos = self.new_attr_instance("pos")
-        self.sample = self.new_attr_instance("sample")
-        self.spack = self.new_attr_instance("spack")
-        self.beat_stretch = self.new_attr_instance("beat_stretch")
-        self.defaults['pos']   = 0
-        self.defaults['sample']   = 0
-        self.defaults['spack'] = SAMPLES_PACK_NUMBER
-        self.defaults['beat_stretch'] = 0
-        self.base.append("rate = (rate * (1-(beat_stretch>0))) + ((BufDur.kr(buf) / sus) * (beat_stretch>0));")
-        self.base.append("osc = PlayBuf.ar(2, buf, BufRateScale.kr(buf) * rate, startPos: BufSampleRate.kr(buf) * pos, loop: 1.0);")
-        self.base.append("osc = osc * EnvGen.ar(Env([0,1,1,0],[0.05, sus-0.05, 0.05]));")
-        self.osc = self.osc * self.amp
-        self.add()
-    def __call__(self, filename, pos=0, sample=0, **kwargs):
-        kwargs["buf"] = Samples.loadBuffer(filename, sample)
-        proxy = SampleSynthDef.__call__(self, pos, **kwargs)
-        proxy.kwargs["filename"] = filename
-        return proxy
-
-class StretchSynthDef(SampleSynthDef):
-    def __init__(self):
-        SampleSynthDef.__init__(self, "stretch")
-        self.base.append("osc = Warp1.ar(2, buf, Line.kr(0,1,sus), rate, windowSize: 0.2, overlaps: 4, interp:2);")
-        self.base.append("osc = osc * EnvGen.ar(Env([0,1,1,0],[0.05, sus-0.05, 0.05]));")
-        self.osc = self.osc * self.amp
-        self.add()
-    def __call__(self, filename, pos=0, sample=0, **kwargs):
-        kwargs["buf"] = Samples.loadBuffer(filename, sample)
-        proxy = SampleSynthDef.__call__(self, pos, **kwargs)
-        proxy.kwargs["filename"] = filename
-        return proxy
-
-class GranularSynthDef(SampleSynthDef):
-    def __init__(self):
-        SampleSynthDef.__init__(self, "gsynth")
-        self.pos = self.new_attr_instance("pos")
-        self.sample = self.new_attr_instance("sample")
-        self.defaults['pos']   = 0
-        self.defaults['sample']   = 0
-        self.defaults['spack'] = SAMPLES_PACK_NUMBER
-        self.base.append("osc = PlayBuf.ar(2, buf, BufRateScale.kr(buf) * rate, startPos: BufSampleRate.kr(buf) * pos);")
-        self.base.append("osc = osc * EnvGen.ar(Env([0,1,1,0],[0.05, sus-0.05, 0.05]));")
-        self.osc = self.osc * self.amp
-        self.add()
-    def __call__(self, filename, pos=0, sample=0, **kwargs):
-        kwargs["buf"] = Samples.loadBuffer(filename, sample)
-        return SampleSynthDef.__call__(self, pos, **kwargs)
-
-loop = LoopSynthDef()
-stretch = StretchSynthDef()
-# gsynth = GranularSynthDef()

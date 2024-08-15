@@ -1,11 +1,11 @@
 from renardo_lib.Extensions.VRender.VRender import renderizeVoice
-from renardo_lib.SCLang import SynthDef
+from renardo_lib.SCLang import DefaultSynthDef
 from renardo_lib.runtime import Clock, Scale, Root
 from renardo_lib.Settings import FOXDOT_ROOT
 
-class VRenderSynthDef(SynthDef):
+class VRenderSynthDef(DefaultSynthDef):
     def __init__(self):
-        SynthDef.__init__(self, "vrender")
+        DefaultSynthDef.__init__(self, "vrender")
         self.add()
 
     def __call__(self, notes, pos=0, sample=0, **kwargs):
