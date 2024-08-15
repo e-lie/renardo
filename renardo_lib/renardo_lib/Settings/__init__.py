@@ -1,10 +1,11 @@
 import os
 import sys
+import pathlib
 
 # Anything that needs to be updated
 
 from importlib import reload
-from renardo_gatherer import get_samples_dir_path
+from renardo_gatherer.config_dir import get_samples_dir_path
 
 # Check for OS -> mac, linux, win
 
@@ -47,20 +48,26 @@ FOXDOT_SND = get_samples_dir_path()
 FOXDOT_LOOP  = "_loop_"
 # FOXDOT_LOOP  = os.path.realpath(FOXDOT_ROOT + "/../../renardo_samples/_loop_/")
 
-SCLANG_EXEC   = 'sclang.exe' if SYSTEM == WINDOWS else 'sclang'
-SYNTHDEF_DIR  = os.path.realpath(FOXDOT_ROOT + "/osc/scsyndef/")
-EFFECTS_DIR   = os.path.realpath(FOXDOT_ROOT + "/osc/sceffects/")
-ENVELOPE_DIR  = os.path.realpath(FOXDOT_ROOT + "/osc/scenvelopes/")
 TUTORIAL_DIR  = os.path.realpath(FOXDOT_ROOT + "/demo/")
 RECORDING_DIR = os.path.realpath(FOXDOT_ROOT + "/rec/")
-
-FOXDOT_OSC_FUNC     = os.path.realpath(FOXDOT_ROOT + "/osc/OSCFunc.scd")
-FOXDOT_STARTUP_FILE = os.path.realpath(FOXDOT_ROOT + "/osc/Startup.scd")
-FOXDOT_BUFFERS_FILE = os.path.realpath(FOXDOT_ROOT + "/osc/Buffers.scd")
-FOXDOT_EFFECTS_FILE = os.path.realpath(FOXDOT_ROOT + "/osc/Effects.scd")
-FOXDOT_INFO_FILE    = os.path.realpath(FOXDOT_ROOT + "/osc/Info.scd")
-FOXDOT_RECORD_FILE  = os.path.realpath(FOXDOT_ROOT + "/osc/Record.scd")
 FOXDOT_TEMP_FILE    = os.path.realpath(FOXDOT_ROOT + "/Workspace/tmp/tempfile.txt")
+
+SCLANG_EXEC   = 'sclang.exe' if SYSTEM == WINDOWS else 'sclang'
+
+
+# TODO move this method to user config and renardo_gatherer when synthdef download implemented
+def get_synthdefs_dir_path():
+    return pathlib.Path(FOXDOT_ROOT) / 'SynthDefManagement' / 'sclang_code'
+
+SYNTHDEF_DIR = str(get_synthdefs_dir_path() / "scsynth")
+EFFECTS_DIR = str(get_synthdefs_dir_path() / "sceffects")
+ENVELOPE_DIR = str(get_synthdefs_dir_path() / "scenvelopes")
+FOXDOT_OSC_FUNC = str(get_synthdefs_dir_path() / "OSCFunc.scd")
+FOXDOT_STARTUP_FILE = str(get_synthdefs_dir_path() / "Startup.scd")
+FOXDOT_BUFFERS_FILE = str(get_synthdefs_dir_path() / "Buffers.scd")
+FOXDOT_EFFECTS_FILE = str(get_synthdefs_dir_path() / "Effects.scd")
+FOXDOT_INFO_FILE = str(get_synthdefs_dir_path() / "Info.scd")
+FOXDOT_RECORD_FILE  = str(get_synthdefs_dir_path() / "Record.scd")
 
 # If the tempfile doesn't exist, create it
 
