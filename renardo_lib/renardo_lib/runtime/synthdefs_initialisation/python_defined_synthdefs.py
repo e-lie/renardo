@@ -1,8 +1,8 @@
-from renardo_lib.SCLang.SCLangExperimentalBindings import *
-from renardo_lib.SCLang.SCLangExperimentalBindings.core import instance
-from renardo_lib.SCLang.SynthDef import DefaultSynthDef
+from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings import *
+from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings.core import instance
+from renardo_lib.SynthDefManagement.PySynthDef import DefaultSynthDef
 from renardo_lib.Settings import SC3_PLUGINS
-from renardo_lib.SCLang.SCLangExperimentalBindings import Env
+from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings import Env
 
 # with SynthDef("sinepad") as sinepad:
 #     sinepad.amp = sinepad.amp * 1.5

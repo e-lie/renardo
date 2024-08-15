@@ -125,11 +125,11 @@
 from copy import copy
 
 from renardo_lib.Settings import SamplePlayer, LoopPlayer, SYNTHDEF_DIR
-from renardo_lib.SCLang.SynthDef import DefaultSynthDef
-from renardo_lib.SCLang import SynthDefProxy
-from renardo_lib.SCLang.SynthDict import SynthDefs
-from renardo_lib.SCLang.Effects import FxList
-from renardo_lib.SCLang.BufferManagement import Samples
+from renardo_lib.SynthDefManagement.PySynthDef import DefaultSynthDef
+from renardo_lib.SynthDefManagement import SynthDefProxy
+from renardo_lib.SynthDefManagement.SynthDict import SynthDefs
+from renardo_lib.SynthDefManagement.Effects import FxList
+from renardo_lib.SynthDefManagement.BufferManagement import Samples
 from renardo_lib.Key import PlayerKey, NumberKey
 from renardo_lib.Repeat import Repeatable
 from renardo_lib.Patterns import *
@@ -190,7 +190,7 @@ class Player(Repeatable):
     overriding the bitshift operator, and should be given an instance of `SynthDefProxy`.
     A `SynthDefProxy` is created when calling an instance of `SynthDef` - these are the
     "instruments" used by player objects and are written in SuperCollider code. You can
-    see more information about these in the `SCLang` module. Below describes how to assign
+    see more information about these in the `SynthDefManagement` module. Below describes how to assign
     a `SynthDefProxy` of the `SynthDef` `pads` to a `Player` instance called `p1`: ::
 
         # Calling pads as if it were a function returns a 

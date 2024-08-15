@@ -27,13 +27,13 @@ mySynth = SynthDef("mySynth")
 # Using the same variable name in FoxDot as in SuperCollider for your SynthDef
 # is a good idea to avoid confusion. If you want to write (or edit) your own
 # SynthDef during run-time in FoxDot you can use a SuperCollider API by
-# importing the SCLang module. All FoxDot SynthDef objects inherit the
+# importing the SynthDefManagement module. All FoxDot SynthDef objects inherit the
 # base-class behaviour, such as low- and high-pass filters and vibrato,
 # but these can be overridden or updated easily. If you want to know more
 # about digital sound processing and SynthDef creation, check out the
 # SuperCollider documentation. Below is an example of creating one in FoxDot:
 
-# Import module for writing SCLang code from Python
+# Import module for writing SynthDefManagement code from Python
 from SCLang import *
 
 # Create a SynthDef named 'example' (using the same variable name as the SynthDef name is a good idea)

@@ -1,4 +1,4 @@
-from renardo_lib.SCLang.SCLangExperimentalBindings.core import format_args, cls
+from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings.core import format_args, cls
 
 # UGens
 

@@ -150,7 +150,7 @@ class RenardoTUI(App[None]):
     @work(exclusive=True, thread=True)
     def start_sc_backend(self) -> None:
         if self.renardo_app.sc_instance.start_sclang_subprocess():
-            self.query_one("#sclang-log-output", Log).write_line("Launching Renardo SC module with SCLang...")
+            self.query_one("#sclang-log-output", Log).write_line("Launching Renardo SC module with SynthDefManagement...")
             output_line = self.renardo_app.sc_instance.read_stdout_line()
             while "Welcome to" not in output_line:
                 self.query_one("#sclang-log-output", Log).write_line(output_line)
@@ -167,7 +167,7 @@ class RenardoTUI(App[None]):
 
     @work(exclusive=True, thread=True)
     def start_pulsar_background(self) -> None:
-        self.query_one("#sclang-log-output", Log).write_line("Launching Renardo SC module with SCLang...")
+        self.query_one("#sclang-log-output", Log).write_line("Launching Renardo SC module with SynthDefManagement...")
         self.renardo_app.pulsar_instance.start_pulsar_subprocess()
         while True:
             self.query_one("#sclang-log-output", Log).write_line(self.renardo_app.pulsar_instance.read_stdout_line())

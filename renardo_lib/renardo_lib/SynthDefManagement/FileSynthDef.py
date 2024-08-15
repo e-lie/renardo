@@ -1,6 +1,6 @@
 from renardo_lib.Code import WarningMsg
-from renardo_lib.SCLang import SynthDefProxy, DefaultSynthDef
-from renardo_lib.SCLang.SynthDict import SynthDefs
+from renardo_lib.SynthDefManagement import SynthDefProxy, DefaultSynthDef
+from renardo_lib.SynthDefManagement.SynthDict import SynthDefs
 from renardo_lib.ServerManager.default_server import Server
 from renardo_lib.Settings import SYNTHDEF_DIR
 

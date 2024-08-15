@@ -1,5 +1,5 @@
-from renardo_lib.SCLang.BufferManagement import Samples
-from renardo_lib.SCLang.SynthDef import SynthDefBaseClass
+from renardo_lib.SynthDefManagement.BufferManagement import Samples
+from renardo_lib.SynthDefManagement.PySynthDef import SynthDefBaseClass
 from renardo_lib.Settings import SAMPLES_PACK_NUMBER
 
 
