@@ -8,7 +8,7 @@ FoxDotCode.namespace = globals()
 spack_manager = SPackManager()
 
 from renardo_lib.TempoClock import *
-from renardo_lib.Buffers import *
+from renardo_lib.SCLang.Buffers import *
 from renardo_lib.Players import *
 from renardo_lib.TimeVar import *
 from renardo_lib.Constants import *

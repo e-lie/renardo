@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from os.path import join
 
-from renardo_lib.Buffers import BufferManager
+from renardo_lib.SCLang.Buffers import BufferManager
 
 
 class TestSampleSearch(unittest.TestCase):

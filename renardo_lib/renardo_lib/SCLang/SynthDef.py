@@ -1,5 +1,6 @@
 import os
 
+from renardo_lib.SCLang.SynthDefProxy import SynthDefProxy
 from renardo_lib.SCLang.SCLangExperimentalBindings import format_args, Env
 from renardo_lib.SCLang.SCLangExperimentalBindings.core import instance
 from renardo_lib.ServerManager.default_server import Server
@@ -260,17 +261,6 @@ class SynthDef(SynthDefBaseClass):
         self.base.append("freq = [freq, freq+fmod];")
         return
 
-class SampleSynthDef(SynthDefBaseClass):
-    def __init__(self, *args, **kwargs):
-        SynthDefBaseClass.__init__(self, *args, **kwargs)
-        self.buf = self.new_attr_instance("buf")
-        self.pos = self.new_attr_instance("pos")
-        self.defaults['buf']   = 0
-        self.defaults['pos']   = 0
-        self.defaults['room']  = 0.1
-        self.defaults['rate']  = 1.0
-        self.base.append("rate = In.kr(bus, 1);")
-
 
 # SynthDef from sc file
 class FileSynthDef(SynthDefBaseClass):
@@ -279,37 +269,6 @@ class FileSynthDef(SynthDefBaseClass):
 
     def __str__(self):
         return open(self.filename, 'rb').read()
-
-'''
-    SynthDefProxy Class
-    -------------------
-
-
-'''
-
-class SynthDefProxy:
-    def __init__(self, name, degree, kwargs):
-        self.name = name
-        self.degree = degree
-        self.mod = 0
-        self.kwargs = kwargs
-        self.methods = []
-        self.vars = vars(self)
-    def __str__(self):
-        return "<SynthDef Proxy '{}'>".format(self.name)
-    def __add__(self, other):
-        self.mod = other
-        return self
-    def __coerce__(self, other):
-        return None
-    def __getattr__(self, name):
-        if name not in self.vars:
-            def func(*args, **kwargs):
-                self.methods.append((name, (args, kwargs)))
-                return self
-            return func
-        else:
-            return getattr(self, name)
 
 #class CompiledSynthDef(SynthDefBaseClass):
 #    def __init__(self, name, filename):
