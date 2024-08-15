@@ -2025,47 +2025,47 @@ class Player(Repeatable):
         else:
             return "a '{}' Player Object".format(self.synthdef)
 
-    def get_extra_attributes(self):
-        """ Returns a dict of specific keyword arguments for a particular FoxDot player """
-        filename = SYNTHDEF_DIR + f"/{self.id}.scd"
-        file = open(filename, "r")
-        contents = file.read()
-        file.close()
-        if "arg" in contents:
-            arg_start = "arg"
-            arg_end = "var"
-        else:
-            arg_start = "|"
-            arg_end = "var"
-        idx1 = contents.index(arg_start)
-        idx2 = contents.index(arg_end)
-        args = ""
-        # getting elements in between
-        for idx in range(idx1 + len(arg_start), idx2-3):
-            args = args + contents[idx]
-        args = "".join(args.split())
-        xtra_args = args.split(",")
-        temp_args = {}
-        for arg in xtra_args:
-            if "=" in arg:
-                a, b = arg.split("=")
-                temp_args[a] = b
-                self.extra_attr[a] = b
-        for k in self.default_args:
-            if k in temp_args.keys():
-                del self.extra_attr[k]
-        return self.extra_attr
+    #def get_extra_attributes(self):
+    #    """ Returns a dict of specific keyword arguments for a particular FoxDot player """
+    #    filename = SYNTHDEF_DIR + f"/{self.id}.scd"
+    #    file = open(filename, "r")
+    #    contents = file.read()
+    #    file.close()
+    #    if "arg" in contents:
+    #        arg_start = "arg"
+    #        arg_end = "var"
+    #    else:
+    #        arg_start = "|"
+    #        arg_end = "var"
+    #    idx1 = contents.index(arg_start)
+    #    idx2 = contents.index(arg_end)
+    #    args = ""
+    #    # getting elements in between
+    #    for idx in range(idx1 + len(arg_start), idx2-3):
+    #        args = args + contents[idx]
+    #    args = "".join(args.split())
+    #    xtra_args = args.split(",")
+    #    temp_args = {}
+    #    for arg in xtra_args:
+    #        if "=" in arg:
+    #            a, b = arg.split("=")
+    #            temp_args[a] = b
+    #            self.extra_attr[a] = b
+    #    for k in self.default_args:
+    #        if k in temp_args.keys():
+    #            del self.extra_attr[k]
+    #    return self.extra_attr
 
-    def info(self):
-        s = "Player Instance using '%s' \n\n" % self.synthdef
-        s += "ATTRIBUTES\n"
-        s += "----------\n\n"
-        for attr, val in self.attr.items():
-            s += "\t{}\t:{}\n".format(attr, val)
-        self.get_extra_attributes()
-        for attr, val in self.extra_attr.items():
-            s += "\t{}\t:{}\n".format(attr, val)
-        return s
+    #def info(self):
+    #    s = "Player Instance using '%s' \n\n" % self.synthdef
+    #    s += "ATTRIBUTES\n"
+    #    s += "----------\n\n"
+    #    for attr, val in self.attr.items():
+    #        s += "\t{}\t:{}\n".format(attr, val)
+    #    self.get_extra_attributes()
+    #    for attr, val in self.extra_attr.items():
+    #        s += "\t{}\t:{}\n".format(attr, val)
+    #    return s
 
     def bang(self, **kwargs):
         """
