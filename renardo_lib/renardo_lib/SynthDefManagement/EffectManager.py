@@ -62,7 +62,7 @@ class EffectManager(dict):
     def reload(self):
         """ Re-sends each effect to SC """
         for kw, effect in self:
-            effect.load_in_server_from_file()
+            effect.load()
         In()
         Out()
         return
