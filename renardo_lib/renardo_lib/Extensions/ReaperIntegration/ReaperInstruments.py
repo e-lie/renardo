@@ -82,7 +82,7 @@ class ReaperInstrumentFacade:
         for param_fullname, value in param_dict.items():
             rea_object, name = get_reaper_object_and_param_name(reatrack, param_fullname)
             if rea_object is not None:  # means param exists in reaper
-                set_reaper_param(reatrack, param_fullname, value, update_freq=.1)
+                set_reaper_param(reatrack, param_fullname, value, update_freq=.02)
             else:
                 remaining_param_dict[param_fullname] = value
 

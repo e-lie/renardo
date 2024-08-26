@@ -97,7 +97,7 @@ class Effect:
         return "<'{}': keyword='{}'{}>".format(self.synthdef, self.name, other_args)
 
     def __str__(self):
-        s = f"SynthDef.new(\\{self.synthdef},\n"
+        s = "SynthDef.new(\\{},\n".format(self.synthdef)
         s += "{" + "|bus, {}|\n".format(", ".join(self.args))
         s += "var {};\n".format(",".join(self.vars))
         s += self.input

@@ -18,7 +18,7 @@ class TaskQueue(object):
     def __init__(self, clock, reapylib):
         self.queue = []
         self.task_counter_dict = {}
-        self.max_amount_of_same_task = 200
+        self.max_amount_of_same_task = 1000
         self.clock = clock
         self.is_active = False
         self.reapylib = reapylib

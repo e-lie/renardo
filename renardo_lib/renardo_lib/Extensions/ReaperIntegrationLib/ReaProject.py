@@ -91,7 +91,7 @@ def get_reaper_object_and_param_name(track: ReaTrack, param_fullname: str, quiet
     return reaper_object, param_name
 
 
-def set_reaper_param(track: ReaTrack, full_name, value, update_freq=.1):
+def set_reaper_param(track: ReaTrack, full_name, value, update_freq=.02):
     # rea_object can point to a fx or a track (self) -> (when param is vol or other send)
     rea_object, name = get_reaper_object_and_param_name(track, full_name)
 
