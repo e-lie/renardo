@@ -30,6 +30,31 @@ So the intent of the project is:
 
 This software would not exist without a lot of hard and smart work from Ryan Kirkbride and all the community contributors. They should be thanked a lot for that piece !!
 
+## Install development version
+
+Clone the master branch and go to the directory
+
+Before installing, you should probably create a virtualenv and install renardo in it. It's cleaner and the standard Python dev practice but still facultative and it makes it harder to use it with pulsardo (you need then to customize the path in pulsardo extension settings).
+
+Then install the four libraries in the right order :
+
+```sh
+pip install --editable renardo_gatherer
+pip install --editable renardo_lib
+pip install --editable FoxDotEditor
+pip install --editable renardo
+```
+
+Or on linux if you choose to do without virtualenv :
+
+```sh
+pip install --break-system-packages --editable renardo_gatherer
+pip install --break-system-packages --editable renardo_lib
+pip install --break-system-packages --editable FoxDotEditor
+pip install --break-system-packages --editable renardo
+```
+
+
 ## Presentation of new features and architecture
 
 ### New documentation and tutorials (Work in progress)
