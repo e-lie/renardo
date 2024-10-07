@@ -1,5 +1,4 @@
 from FoxDotEditor.tkimport import Text, SEL, END, SEL_FIRST, SEL_LAST, INSERT
-
 from FoxDotEditor.Format import *
 
 try:
@@ -8,6 +7,7 @@ except ImportError:
     import queue as Queue
 
 background = colour_map['background']
+
 
 class ThreadedText(Text):
     def __init__(self, master, **options):
@@ -21,7 +21,7 @@ class ThreadedText(Text):
         )
         self.height = options.get("height", 20)
         self.queue = Queue.Queue()
-        self.lines = 0 # number of lines in the text
+        self.lines = 0  # number of lines in the text
         self.modifying = False
         self.update()
 
@@ -34,30 +34,21 @@ class ThreadedText(Text):
     def get_num_lines(self):
         self.lines = len(self.get("1.0", END).split("\n"))
         return self.lines
-    
+
     def update(self):
         """ Recursively called method that monitors as
             queue of Tkinter tasks.
         """
         try:
-            
             while True:
-
                 task, args, kwargs = self.queue.get_nowait()
-
                 task(*args, **kwargs)
-                
                 self.update_idletasks()
-
         # Break when the queue is empty
         except Queue.Empty:
-
             pass
-
         except Exception as e:
-
             print(e)
-
         # Recursive call
         self.after(10, self.update)
         return
@@ -69,7 +60,7 @@ class ThreadedText(Text):
     def remove_selection(self):
         """ Removes selection from the entire document """
         self.tag_remove(SEL, "1.0", END)
-        return 
+        return
 
     def is_selected(self, index):
         """ Returns True if the character at index has the SEL tag """
@@ -79,31 +70,32 @@ class ThreadedText(Text):
         return tuple([int(x) for x in self.index(index).split(".")])
 
     def is_after(self, index1, index2):
-        """ Returns True if index1 is after index2, returns True if they are equal """
+        """
+        Returns True if index1 is after index2, returns True if they are equal
+        """
         a_row, a_col = self.row_col(index1)
         b_row, b_col = self.row_col(index2)
         return (a_row > b_row) or (a_row == b_row and a_col >= b_col)
 
     def is_before(self, index1, index2):
-        """ Returns True if index1 is after index2, returns True if they are equal """
+        """
+        Returns True if index1 is after index2, returns True if they are equal
+        """
         return not self.is_after(index1, index2)
 
     def char_range(self, index1, index2):
         """ Returns a list of indices between two Tk indices"""
         if self.is_after(index1, index2):
-            
             index1, index2 = index2, index1
             reverse = True
-
         else:
-            
             reverse = False
 
         a_row, a_col = self.row_col(index1)
         b_row, b_col = self.row_col(index2)
 
         data = []
-        
+
         for row in range(a_row, b_row + 1,):
             if row == a_row:
                 x1_col = a_col
@@ -113,19 +105,18 @@ class ThreadedText(Text):
                 x2_col = b_col
             else:
                 _, x2_col = self.row_col(self.index("{}.{}".format(row, END)))
-            
+
             for col in range(x1_col, x2_col):
-                
-                data.append( "{}.{}".format(row, col) )
-
+                data.append("{}.{}".format(row, col))
         if reverse:
-
             data = list(reversed(data))
-
         return data
 
     def get_visible_range(self):
-        """ Returns a tuple of integers for the first and last row visible in the editor """
+        """
+        Returns a tuple of integers for the first and last row visible in the
+        editor
+        """
         a = self.index("@0,0")
         b = self.index("@0,%d" % self.winfo_height())
-        return tuple(int(s.split(".")[0]) for s in (a, b)) 
+        return tuple(int(s.split(".")[0]) for s in (a, b))

@@ -1,20 +1,17 @@
 # -*- coding: utf-8 -*-
-#!/usr/bin/python
+# !/usr/bin/python
 
 """ Tkinter interface made for Live Coding with Python syntax highlighting """
-
 
 # This removed blurry fonts on Windows
 try:
     from ctypes import windll
     windll.shcore.SetProcessDpiAwareness(1)
-except:
+except Exception:
     pass
 
 # Tkinter Interface
-
 from FoxDotEditor.tkimport import *
-
 # Custom app modules
 from renardo_lib.Code import write_to_file
 from renardo_lib.Utils import get_pypi_version
@@ -27,16 +24,14 @@ from .TextBox import ThreadedText
 from .LineNumbers import LineNumbers
 from .MenuBar import MenuBar, PopupMenu
 from .SampleChart import SampleChart
-
 from functools import partial
 # from distutils.version import LooseVersion as VersionNumber
 import webbrowser
 import os
 import re
 import socket
-
 # Code execution
-from FoxDotEditor.Settings import (
+from renardo_lib.Settings import (
     FONT, FOXDOT_ICON, FOXDOT_ICON_GIF,
     FOXDOT_HELLO, SC3_PLUGINS, FOXDOT_CONFIG_FILE,
     ALPHA_VALUE, USE_ALPHA, FOXDOT_TEMP_FILE,
@@ -46,17 +41,14 @@ from FoxDotEditor.Settings import (
 from renardo_lib.Code import execute
 from renardo_lib.ServerManager import TempoServer
 
+
 # App object
-
 class workspace:
-
     default_font = FONT
     namespace = {}
 
     def __init__(self, CodeClass):
-
         # Configure Renardo's namespace to include the editor
-
         CodeClass.namespace['GUI'] = self
         CodeClass.namespace['Player'].widget = self
 

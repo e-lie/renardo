@@ -1,36 +1,30 @@
+# !/usr/bin/python
 from FoxDotEditor.tkimport import *
-
-from FoxDotEditor.Format  import *
+from FoxDotEditor.Format import *
 from FoxDotEditor.AppFunctions import stdout
 from FoxDotEditor.MenuBar import ConsolePopupMenu
 import math
 import random
-
 try:
     import Queue
 except ImportError:
     import queue as Queue
 
-#!/usr/bin/python
 """ Console widget that displays the true Python input """
+
 
 class console:
 
     def __init__(self, master):
-
-        self.app  = master
+        self.app = master
         self.root = master.root
-
         self.y_scroll = Scrollbar(self.root)
         self.y_scroll.grid(row=2, column=2, sticky='nsew', rowspan=3)
         self.scrollable = False
-
         # Right-click menu
-
         self.popup = ConsolePopupMenu(self)
-
-        # Create a bar for changing console size and displaying info about beat number
-
+        # Create a bar for changing console size and displaying info about
+        # beat number
         self.drag = Frame(
             self.root,
             bg="white",
@@ -59,47 +53,44 @@ class console:
                              yscrollincrement=1,
                              highlightthickness=0)
 
-        self.canvas.bind("<Button-1>",          self.canvas_mouseclick)
-        self.canvas.bind("<ButtonRelease-1>",   self.canvas_mouserelease)
-        self.canvas.bind("<B1-Motion>",         self.canvas_mousedrag)
-        self.canvas.bind("<MouseWheel>",        self.on_scroll)
-        self.canvas.bind("<Button-{}>".format(2 if SYSTEM == MAC_OS else 3), self.show_popup)
-        self.canvas.bind("<{}-c>".format("Command" if SYSTEM == MAC_OS else "Control"),   self.edit_copy)
-
+        self.canvas.bind("<Button-1>",
+                         self.canvas_mouseclick)
+        self.canvas.bind("<ButtonRelease-1>",
+                         self.canvas_mouserelease)
+        self.canvas.bind("<B1-Motion>",
+                         self.canvas_mousedrag)
+        self.canvas.bind("<MouseWheel>",
+                         self.on_scroll)
+        self.canvas.bind("<Button-{}>".format(2 if SYSTEM == MAC_OS else 3),
+                         self.show_popup)
+        self.canvas.bind("<{}-c>".format("Command" if SYSTEM == MAC_OS else "Control"),
+                         self.edit_copy)
         self.padx = 5
         self.pady = 5
-
         self.text_y = 0
-
         self.text_height = 0
         self.canvas_height = 0
-
         # Draw logo
-
         self.draw_logo()
-
         # Create text
-
         self.text = self.canvas.create_text((self.padx, self.pady),
                                             anchor=NW,
                                             fill="white",
-                                            font = self.app.console_font)
-
+                                            font=self.app.console_font)
         self.text_cursor = None
-
         self.y_scroll.config(command=self.scroll_text)
-
         # Allow for resizing
         self.mouse_down = False
-        self.drag.bind("<Button-1>",        self.drag_mouseclick)
-        self.drag.bind("<ButtonRelease-1>", self.drag_mouserelease)
-        self.drag.bind("<B1-Motion>",       self.drag_mousedrag)
-
+        self.drag.bind("<Button-1>",
+                       self.drag_mouseclick)
+        self.drag.bind("<ButtonRelease-1>",
+                       self.drag_mouserelease)
+        self.drag.bind("<B1-Motion>",
+                       self.drag_mousedrag)
         self.drag.grid(row=1, column=0, stick="nsew", columnspan=3)
         self.canvas.grid(row=2, column=0, sticky="nsew", columnspan=2)
         self.counter.grid(row=3, column=0, sticky="nsew", columnspan=2)
         self.counter.hide()
-
         self.queue = Queue.Queue()
         self.update()
 
@@ -137,72 +128,45 @@ class console:
 
     def drag_mousedrag(self, event):
         if self.mouse_down:
-
             textbox_line_h = self.app.text.dlineinfo("@0,0")
-
             if textbox_line_h is not None:
-
-                self.app.text.height = int(self.app.text.winfo_height() / textbox_line_h[3])
-
+                self.app.text.height = int(self.app.text.winfo_height() /
+                                           textbox_line_h[3])
             self.root_h = self.height + self.app.text.height
-
             widget_y = self.canvas.winfo_rooty()
-
-            new_height = (self.canvas.winfo_height() + (widget_y - event.y_root) )
-
+            new_height = (self.canvas.winfo_height() +
+                          (widget_y - event.y_root))
             self.height, old_height = new_height, self.height
-
-            self.canvas.config(height = max(self.height, 50))
-
+            self.canvas.config(height=max(self.height, 50))
             return "break"
 
     def update(self):
         try:
-
             while True:
-
                 # Add last "print" to the console text
-
                 string = self.queue.get_nowait()
-
-                self.canvas.itemconfig(self.text, width=self.canvas.winfo_width())
-
-                self.canvas.insert( self.text, "end", string )
-
+                self.canvas.itemconfig(self.text,
+                                       width=self.canvas.winfo_width())
+                self.canvas.insert(self.text, "end", string)
                 # Get the text bounding box
-
                 bbox = self.canvas.bbox(self.text)
-
                 # Text box height
-
                 self.text_height = bbox[3] - bbox[1]
-
                 # Canvas height
-
                 self.canvas_height = self.canvas.winfo_height()
-
                 # Only allow scrolling when the text is larger than the canvas
-
                 if self.text_height > self.canvas_height:
-
                     self.scrollable = True
-
-                    # The text should only move so that the end is at the bottom of the canvas
-
-                    self.text_y = self.max_offset = self.canvas_height - self.text_height
-
+                    # The text should only move so that the end is at the
+                    # bottom of the canvas
+                    self.max_offset = self.canvas_height - self.text_height
+                    self.text_y = self.max_offset
                     self.canvas.coords(self.text, (self.padx, self.text_y))
-
                 else:
-
                     self.scrollable = False
-
                 self.update_scrollbar()
-
         except Queue.Empty:
-
             pass
-
         self.root.after(50, self.update)
 
     def read(self):
@@ -222,7 +186,7 @@ class console:
 
     def canvas_mouseclick(self, event):
         """ Forces the text to align itself and gives focus to the console """
-        self.canvas.insert( self.text, "end", "" )
+        self.canvas.insert(self.text, "end", "")
         self.canvas.focus_set()
         self.canvas.focus(self.text)
 
@@ -257,7 +221,8 @@ class console:
             self.root.clipboard_clear()
             a = self.canvas.index(self.text, SEL_FIRST)
             b = self.canvas.index(self.text, SEL_LAST) + 1
-            self.root.clipboard_append(self.canvas.itemcget(self.text, "text")[a:b])
+            self.root.clipboard_append(self.canvas.itemcget(self.text,
+                                                            "text")[a:b])
         return "break"
 
     def select_all(self, event=None):
@@ -282,21 +247,16 @@ class console:
         """ Moves the text up (negative) or down (positive) """
 
         if SYSTEM != MAC_OS:
-
             delta /= 100
-
         x, y = self.canvas.coords(self.text)
-
         self.text_y = max(min(self.pady, y + delta), self.max_offset)
-
         self.canvas.coords(self.text, (x, self.text_y))
-
         self.update_scrollbar()
-
         return
 
     def on_scroll(self, event):
-        if self.scrollable: self.move_text(event.delta)
+        if self.scrollable:
+            self.move_text(event.delta)
         return "break"
 
     def get_scrollbar_size(self):
@@ -316,32 +276,27 @@ class console:
         self.y_scroll.set(a, b)
         return a, b
 
-    def draw_arrow(self, start_x, start_y, width, colour,  direction, degree=45,):
-        """ Works out the line to draw at 45 degrees, returns the x and y of the end
-            of the line. Direction should be a string, "up" or "down" """
-
+    def draw_arrow(self, start_x, start_y, width, colour, direction, degree=45):
+        """
+        Works out the line to draw at 45 degrees, returns the x and y of the
+        end of the line. Direction should be a string, "up" or "down"
+        """
         # Work out the height
-
         height = int(math.tan(math.radians(degree)) * (width / 2.0))
-
         # Draw line up
-
         end_x = start_x + (width / 2.0)
         end_y = (start_y - height) if direction == "up" else (start_y + height)
-
-        self.canvas.create_line((start_x, start_y, end_x, end_y), fill=colour, width=3)
-
+        self.canvas.create_line((start_x, start_y, end_x, end_y),
+                                fill=colour,
+                                width=3)
         # Draw line down
-
         start_x, start_y = end_x, end_y
-
         end_x = start_x + (width / 2.0)
         end_y = (start_y + height) if direction == "up" else (start_y - height)
-
-        self.canvas.create_line((start_x, start_y, end_x, end_y), fill=colour, width=3)
-
+        self.canvas.create_line((start_x, start_y, end_x, end_y),
+                                fill=colour,
+                                width=3)
         # Return the end x, y
-
         return end_x, end_y
 
     def draw_logo(self):
@@ -351,19 +306,18 @@ class console:
         """
         # All lines are 45 degress up then down
         grn_widths = [
-            random.randint(400, 600), # Large
-            random.randint(150, 350), # Medium
-            random.randint(25, 100),    # Small
+            random.randint(400, 600),  # Large
+            random.randint(150, 350),  # Medium
+            random.randint(25, 100),   # Small
             ]
 
         # Shuffle the widths and use a mirrored version for red
         random.shuffle(grn_widths)
 
         red_widths = reversed(grn_widths)
-
-        start_x = random.choice([50,100,150,200])
-        start_y = random.choice([50,100])
-        step    = random.choice([10,20,25])
+        start_x = random.choice([50, 100, 150, 200])
+        start_y = random.choice([50, 100])
+        step = random.choice([10, 20, 25])
 
         # Draw Red line
         x, y = start_x, start_y
@@ -393,11 +347,10 @@ class Counter(Canvas):
         self.font = self.parent.app.console_font
         self.bg = colour_map.get('background', "gray30")
         self.active = True
-        # Use 4 beats for now - will update in future?
-        
+
     def hide(self):
         self.active = False
-        self.grid_remove()        
+        self.grid_remove()
 
     def unhide(self):
         self.active = True
@@ -413,37 +366,28 @@ class Counter(Canvas):
         """
         Draw boxes and highlight current beat
         """
-        
         if not self.active:
-            
             return
-        
+
         cycle = self.metro.meter[0]
-
         # Need to adjust for latency
-
         beat = int((self.metro.now() - self.metro.get_latency()) % cycle)
-
         w = self.winfo_width()
         h = self.winfo_height()
-
         self.delete("all")
-
         width = 120
-
         box_width = width / cycle
         h_offset = 8
         box_height = h - h_offset
-
         for n in range(cycle):
-            x1, x2 = [(val * box_width) + (w - width - 35) for val in [n, (n + 1)]]
+            x1, x2 = [(val*box_width)+(w-width-35) for val in [n, (n+1)]]
             y1, y2 = h_offset / 2, box_height + (h_offset / 2)
             bg = "red" if n == beat else self.bg
             self.create_rectangle(x1, y1, x2, y2, fill=bg, outline="gray30", )
             # self.create_rectangle(x1, y1, x2, y2, fill=bg, outline=self.bg, )
-
-        self.create_text(x2 + (w - x2)/2, h / 2,
-                             justify=RIGHT,
-                             text=beat + 1,
-                             font=self.font,
-                             fill="#c9c9c9")
+        self.create_text(x2 + (w - x2)/2,
+                         h / 2,
+                         justify=RIGHT,
+                         text=beat + 1,
+                         font=self.font,
+                         fill="#c9c9c9")
