@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 
 import multiprocessing
+import os
 from .tkimport import *
 from .Format import *
 from renardo_lib.Settings import *
@@ -11,8 +12,9 @@ from renardo_gatherer import SAMPLES_DIR_PATH
 
 try:
     from playsound import playsound
-except:
+except Exception:
     print("playsound library not installed...")
+
 
 class SampleChart:
 
@@ -26,9 +28,7 @@ class SampleChart:
         self.root.geometry(str(self.width) + "x" + str(self.height))
         self.root.title("FoxDot >> Samples Database Chart")
         self.root.resizable(True, True)
-
-        #self.root.iconbitmap('img/foxdot.ico')
-
+        # self.root.iconbitmap('img/foxdot.ico')
         # Call init methods
         self.db_view()
         self.create_dics(spack_num=0)
@@ -36,7 +36,10 @@ class SampleChart:
         self.root.mainloop()
 
     def create_dics(self, spack_num=0):
-        """Iterating through subfolders and writing all file names into dictionary lists"""
+        """
+        Iterating through subfolders and writing all file names into dictionary
+        lists
+        """
         self.spack_num_str = str(spack_num)
         self.ext = ('.wav', 'aif')
         self.dict_letters = {}
@@ -56,7 +59,7 @@ class SampleChart:
         for i in self.dir_list_l:
             if i != "_" and i != "_loop_":
                 self.new_path = self.db_path_l + str(i) + "/lower/"
-                #self.smpl_list = os.path.isdir(self.new_path)
+                # self.smpl_list = os.path.isdir(self.new_path)
                 self.smpl_list = [
                     f for f in os.listdir(self.new_path)
                     if os.path.isfile(os.path.join(self.new_path, f))
@@ -78,7 +81,8 @@ class SampleChart:
                         self.smpl_list.remove(n)
                 self.dict_letters[i.upper()] = self.smpl_list
 
-        # Fill dictionary with specials as key and file names of audio as values
+        # Fill dictionary with specials as key and file names of
+        # audio as values
         self.db_path_s = str(spack_manager.get_spack(int(self.spack_num_str)).path) + "/_/"
         self.dir_list_s = []
         for filename in os.listdir(self.db_path_s):
@@ -111,9 +115,10 @@ class SampleChart:
     def db_view(self):
         """Generate a button for each sample database by spack folder"""
         # Set DB_SAMPLES Frame
-        self.db_count = len([name for name in os.listdir(str(SAMPLES_DIR_PATH))])
+        self.db_count = len(
+            [name for name in os.listdir(str(SAMPLES_DIR_PATH))])
         self.db_frame = LabelFrame(
-            self.root, text="SAMPLES_DB", padx=20, pady=20)
+            self.root, text="SAMPLES_PACK", padx=20, pady=20)
         self.db_frame.grid(row=0, column=0)
 
         # Add Buttons
@@ -125,12 +130,15 @@ class SampleChart:
 
         self.db_frame.grid_rowconfigure(1, weight=1)
         self.db_frame.grid_columnconfigure(1, weight=1)
-        self.txt_frame = LabelFrame(self.db_frame, text="Code Example", height=1)
-        self.txt_frame.grid(columnspan=self.db_count, row=1, column=0, sticky='w')
+        self.txt_frame = LabelFrame(self.db_frame,
+                                    text="Code Example", height=1)
+        self.txt_frame.grid(columnspan=self.db_count,
+                            row=1, column=0, sticky='w')
         self.txt = Text(self.txt_frame, width=80, height=1)
         self.txt.pack()
         self.lbl_file = Label(self.db_frame, text="Filename: ", anchor="w")
-        self.lbl_file.grid(columnspan=self.db_count, row=2, column=0, pady=5, sticky="w")
+        self.lbl_file.grid(columnspan=self.db_count,
+                           row=2, column=0, pady=5, sticky="w")
 
     def smpl_view(self, w, h):
         """Generate a button for each sample arranged by character folder"""
@@ -162,7 +170,8 @@ class SampleChart:
         self.canvas.create_window((0, 0), window=self.btn_frame, anchor='nw')
         # Generate sample buttons
         self.smpl_btns()
-        # Update buttons frames idle tasks to let tkinter calculate buttons sizes
+        # Update buttons frames idle tasks to let tkinter calculate
+        # buttons sizes
         self.btn_frame.update_idletasks()
         self.canvas['xscrollcommand'] = self.xsb.set
         # Resize the canvas frame
@@ -180,7 +189,7 @@ class SampleChart:
         self.btn_frame.bind("<Prior>", self.on_mousewheel)  # Bind to PageUp
         self.btn_frame.bind("<Next>", self.on_mousewheel)  # Bind to PageDown
         # play audio
-        #self.root.bind("<space>", self.space_play)
+        # self.root.bind("<space>", self.space_play)
         # windows scroll
         self.btn_frame.bind("<MouseWheel>", self.on_mousewheel)
         self.btn_frame.bind("<space>", self.press_space)
@@ -205,7 +214,8 @@ class SampleChart:
             self.special = list(nonalpha.keys())[
                                 list(nonalpha.values()).index(n)]
             self.btn = Button(self.btn_frame, text=self.special,
-                              width=10, fg='white', bg=colour_map['background'])
+                              width=10, fg='white',
+                              bg=colour_map['background'])
             self.btn.grid(row=counter, column=0)
             counter += 1
         self.btn = Button(self.btn_frame, text="loop", width=10,
@@ -222,8 +232,14 @@ class SampleChart:
                     self.word = self.word.replace('-', '_')
                     self.word = self.word.split('_')
                 self.color = ""
-                self.btn = Button(self.btn_frame, text=fcounter,  width=1, command=lambda r=m, c=fcounter,
-                                  p=v, d=dcounter, f=fcounter+self.col_space: self.play_audio(r, c, p, d, f))
+                self.btn = Button(self.btn_frame,
+                                  text=fcounter,
+                                  width=1,
+                                  command=lambda r=m,
+                                  c=fcounter,
+                                  p=v,
+                                  d=dcounter,
+                                  f=fcounter+self.col_space: self.play_audio(r, c, p, d, f))
                 for c in self.colors:
                     if c in self.word:
                         self.color = c
@@ -243,8 +259,14 @@ class SampleChart:
                     self.word = self.word.replace('-', '_')
                     self.word = self.word.split('_')
                 self.color = ""
-                self.btn = Button(self.btn_frame, text=fcounter,  width=1, command=lambda r=n, c=fcounter,
-                                  p=w, d=dcounter, f=fcounter+self.col_space: self.play_audio(r, c, p, d, f))
+                self.btn = Button(self.btn_frame,
+                                  text=fcounter,
+                                  width=1,
+                                  command=lambda r=n,
+                                  c=fcounter,
+                                  p=w,
+                                  d=dcounter,
+                                  f=fcounter+self.col_space: self.play_audio(r, c, p, d, f))
                 for c in self.colors:
                     if c in self.word:
                         self.color = c
@@ -256,9 +278,17 @@ class SampleChart:
             dcounter += 1
         fcounter = 0
         for path in self.dict_loops:
-            self.btn = Button(self.btn_frame, text=fcounter, width=1, fg="white",
-                              bg=colour_map["loops"], command=lambda r="loops", c=fcounter, p=path, d=dcounter, f=fcounter+self.col_space: self.play_audio(r, c, p, d, f))
-            #self.btn_frame.bind('<Return>', lambda event=None: button.invoke())
+            self.btn = Button(self.btn_frame,
+                              text=fcounter,
+                              width=1,
+                              fg="white",
+                              bg=colour_map["loops"],
+                              command=lambda r="loops",
+                              c=fcounter,
+                              p=path,
+                              d=dcounter,
+                              f=fcounter+self.col_space: self.play_audio(r, c, p, d, f))
+            # self.btn_frame.bind('<Return>', lambda event=None: button.invoke())
             self.btn.grid(row=dcounter, column=fcounter + self.col_space)
             fcounter += 1
 
@@ -297,7 +327,7 @@ class SampleChart:
         self.processes.append(self.p)
 
     def press_space(self, event):
-        #self.play_audio(char, sample, path, row, col)
+        # self.play_audio(char, sample, path, row, col)
         pass
 
     def change_db(self, spack_num):
