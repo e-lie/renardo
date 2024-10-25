@@ -1,0 +1,21 @@
+{
+    "one_dark":
+    {
+        "plaintext":    "#abb2bf",
+        "background":   "#282c34",
+        "functions":    "#61afef",
+        "key_types":    "#56b6c2",
+        "user_defn":    "#61afef",
+        "other_kws":    "#e06c75",
+        "comments":     "#5c6370",
+        "numbers":      "#d19a66",
+        "strings":      "#98c379",
+        "dollar":       "#c678dd",
+        "players":      "#c678dd",
+        "arrow":        "#61afef",
+        "prompt_fg":    "#abb2bf",
+        "prompt_bg":    "#21252b",
+        "console_text": "#abb2bf",
+        "console_bg":   "#282c34"
+    }
+}

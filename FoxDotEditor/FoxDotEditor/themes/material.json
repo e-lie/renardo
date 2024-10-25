@@ -1,0 +1,21 @@
+{
+    "material":
+    {
+        "plaintext":    "#d8dee9",
+        "background":   "#2e3440",
+        "functions":    "#88c0d0",
+        "key_types":    "#5e81ac",
+        "user_defn":    "#88c0d0",
+        "other_kws":    "#81a1c1",
+        "comments":     "#4c566a",
+        "numbers":      "#bf616a",
+        "strings":      "#a3be8c",
+        "dollar":       "#81a1c1",
+        "players":      "#81a1c1",
+        "arrow":        "#88c0d0",
+        "prompt_fg":    "#d8dee9",
+        "prompt_bg":    "#2e3440",
+        "console_text": "#d8dee9",
+        "console_bg":   "#2e3440"
+    }
+}

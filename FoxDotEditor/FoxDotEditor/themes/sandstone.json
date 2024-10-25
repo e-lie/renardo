@@ -1,0 +1,21 @@
+{
+    "sandstone":
+    {
+        "plaintext":    "#2c3e50",
+        "background":   "#f9f7f3",
+        "functions":    "#2980b9",
+        "key_types":    "#f39c12",
+        "user_defn":    "#f39c12",
+        "other_kws":    "#8e44ad",
+        "comments":     "#7f8c8d",
+        "numbers":      "#c0392b",
+        "strings":      "#d35400",
+        "dollar":       "#e67e22",
+        "players":      "#e67e22",
+        "arrow":        "#d35400",
+        "prompt_fg":    "#2c3e50",
+        "prompt_bg":    "#fef9e7",
+        "console_text": "#2c3e50",
+        "console_bg":   "#f9f7f3"
+    }
+}
