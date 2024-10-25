@@ -9,7 +9,6 @@ try:
     windll.shcore.SetProcessDpiAwareness(1)
 except Exception:
     pass
-
 # Tkinter Interface
 from FoxDotEditor.tkimport import *
 # Custom app modules
@@ -23,7 +22,9 @@ from .BracketHandler import BracketHandler
 from .TextBox import ThreadedText
 from .LineNumbers import LineNumbers
 from .MenuBar import MenuBar, PopupMenu
+from .Treeview import TreeView
 from .SampleChart import SampleChart
+from .SearchBar import SearchBar
 from functools import partial
 # from distutils.version import LooseVersion as VersionNumber
 import webbrowser
@@ -31,13 +32,7 @@ import os
 import re
 import socket
 # Code execution
-from renardo_lib.Settings import (
-    FONT, FOXDOT_ICON, FOXDOT_ICON_GIF,
-    FOXDOT_HELLO, SC3_PLUGINS, FOXDOT_CONFIG_FILE,
-    ALPHA_VALUE, USE_ALPHA, FOXDOT_TEMP_FILE,
-    MENU_ON_STARTUP, TRANSPARENT_ON_STARTUP, RECOVER_WORK,
-    CHECK_FOR_UPDATE
-)
+from renardo_lib.Settings import *
 from renardo_lib.Code import execute
 from renardo_lib.ServerManager import TempoServer
 
@@ -51,8 +46,9 @@ class workspace:
         # Configure Renardo's namespace to include the editor
         CodeClass.namespace['GUI'] = self
         CodeClass.namespace['Player'].widget = self
-        self.version = this_version = '0.9.13.dev3'
+        self.version = this_version = '0.9.13.dev9'
         pypi_version = get_pypi_version()
+        self.theme = COLOR_THEME
 
         def check_versions():
             # if pypi_version is not None and VersionNumber(pypi_version)
@@ -62,52 +58,65 @@ class workspace:
             # to your command prompt and running:\n\n
             # pip install Renardo --upgrade")
             return
-
         # Used for docstring prompt
         self.namespace = CodeClass.namespace
         # Set up master widget
-        self.root = Tk(className='Renardo')
-        self.set_window_title()
+        self.root = tb.Window(themename=self.theme)
+        self.root.title("FoxDot >> Renardo")
+        self.root.minsize(800, 600)
+        self.width = 1024
+        self.height = 576
+        self.root.geometry(f"{self.width}x{self.height}")
         self.root.rowconfigure(0, weight=1)  # Text box
-        self.root.rowconfigure(1, weight=0)  # Separator
-        self.root.rowconfigure(2, weight=0)  # Console
-        self.root.grid_columnconfigure(0, weight=0)  # line numbers
-        self.root.grid_columnconfigure(1, weight=1)  # Text boxes
+        self.root.rowconfigure(1, weight=0)  # Search box
+        self.root.rowconfigure(2, weight=0)  # Separator
+        self.root.rowconfigure(3, weight=0)  # Console
+        # self.root.rowconfigure(3, weight=0)  # Console
+        self.root.grid_columnconfigure(0, weight=0)  # tree view
+        self.root.grid_columnconfigure(1, weight=0)  # line numbers
+        self.root.grid_columnconfigure(2, weight=1)  # Scrollbars
         self.root.protocol("WM_DELETE_WINDOW", self.kill)
-
         # Track whether user wants transparent background
         self.transparent = BooleanVar()
         self.transparent.set(False)
         self.using_alpha = USE_ALPHA
-
         # Boolean for connection
         self.listening_for_connections = BooleanVar()
         self.listening_for_connections.set(False)
-
-        self.true_fullscreen_toggled = BooleanVar()
-        self.true_fullscreen_toggled.set(False)
-
+        # Boolean for views
+        self.fullscreen_toggled = BooleanVar()
+        self.fullscreen_toggled.set(False)
+        self.menu_toggled = BooleanVar()
+        self.menu_toggled.set(MENU_ON_STARTUP)
+        self.treeview_toggled = BooleanVar()
+        self.treeview_toggled.set(TREEVIEW_ON_STARTUP)
+        self.linenumbers_toggled = BooleanVar()
+        self.linenumbers_toggled.set(LINENUMBERS_ON_STARTUP)
+        self.searchbar_toggled = BooleanVar()
+        self.searchbar_toggled.set(False)
+        self.console_toggled = BooleanVar()
+        self.console_toggled.set(CONSOLE_ON_STARTUP)
         # Boolean for beat counter
         self.show_counter = BooleanVar()
         self.show_counter.set(False)
-
         # Boolean for showing auto-complete prompt
         self.show_prompt = BooleanVar()
         self.show_prompt.set(True)
-
         # --- Set icon
         try:
             # Use .ico file by default
             self.root.iconbitmap(FOXDOT_ICON)
         except TclError:
             # Use .gif if necessary
-            self.root.tk.call('wm', 'iconphoto', self.root._w, PhotoImage(file=FOXDOT_ICON_GIF))
-
+            self.root.tk.call('wm',
+                              'iconphoto',
+                              self.root._w,
+                              PhotoImage(file=FOXDOT_ICON_GIF))
         # --- Setup font
         system_fonts = tkFont.families()
         self.codefont = "CodeFont"  # name for font
         if self.default_font not in system_fonts:
-            if SYSTEM == WINDOWS  and "Consolas" in system_fonts:
+            if SYSTEM == WINDOWS and "Consolas" in system_fonts:
                 self.default_font = "Consolas"
             elif SYSTEM == MAC_OS and "Monaco" in system_fonts:
                 self.default_font = "Monaco"
@@ -118,7 +127,8 @@ class workspace:
             else:
                 self.console_font = self.codefont = self.default_font = "TkFixedFont"
         if self.codefont == "CodeFont":
-            self.font = tkFont.Font(font=(self.default_font, 12), name=self.codefont)
+            self.font = tkFont.Font(font=(self.default_font, 12),
+                                    name=self.codefont)
             self.font.configure(family=self.default_font)
             self.console_font = (self.default_font, 12)
         self.help_key = "K" if SYSTEM == MAC_OS else "H"
@@ -126,30 +136,33 @@ class workspace:
         self.menu = MenuBar(self, visible=MENU_ON_STARTUP)
         self.popup = PopupMenu(self)
         # Create y-axis scrollbar
-        self.y_scroll = Scrollbar(self.root)
-        self.y_scroll.grid(row=0, column=2, sticky='nsew')
+        self.y_scroll = tb.Scrollbar(self.root)
+        self.y_scroll.grid(row=0, column=3, sticky='ns')
         # Create text box for code
         self.text = ThreadedText(self.root,
-                                 padx=5, pady=5,
+                                 padx=5,
+                                 pady=5,
                                  bg=colour_map['background'],
                                  fg=colour_map['plaintext'],
-                                 insertbackground="White",
+                                 insertbackground="white",
                                  font=self.codefont,
                                  yscrollcommand=self.y_scroll.set,
                                  width=100,
                                  height=20,
                                  bd=0,
-                                 undo=True, autoseparators=True,
+                                 undo=True,
+                                 autoseparators=True,
                                  maxundo=50)
-        self.text.grid(row=0, column=1, sticky="nsew")
+        self.text.grid(row=0, column=2, sticky="nsew")
         self.y_scroll.config(command=self.text.yview)
         self.text.focus_set()
         self.text_as_string = ""
         # Create box for line numbers
         self.linenumbers = LineNumbers(self, width=50,
                                        bg=colour_map['background'],
-                                       bd=0, highlightthickness=0)
-        self.linenumbers.grid(row=0, column=0, sticky='nsew')
+                                       bd=0,
+                                       highlightthickness=0)
+        self.linenumbers.grid(row=0, column=1, sticky='nsew')
         # Docstring prompt label
         self.prompt = TextPrompt(self)
         # Key bindings (Use command key on Mac)
@@ -160,7 +173,8 @@ class workspace:
         self.text.bind("<BackSpace>", self.backspace)
         self.text.bind("<Delete>", self.delete)
         self.text.bind("<Tab>", self.tab)
-        self.text.bind("<Escape>", self.toggle_true_fullscreen)
+        self.text.bind("<Escape>", self.toggle_fullscreen)
+        # self.text.bind("<F11>", self.toggle_true_fullscreen)
         self.text.bind("<Key>", self.keypress)
         self.text.bind("<Button-{}>".format(2 if SYSTEM == MAC_OS else 3),
                        self.show_popup)
@@ -181,7 +195,7 @@ class workspace:
         self.text.bind("<{}-a>".format(ctrl), self.select_all)
         self.text.bind("<{}-d>".format(ctrl), self.duplicate_line)
         self.text.bind("<{}-period>".format(ctrl), self.killall)
-        self.text.bind("<Alt-period>".format(ctrl), self.releaseNodes)
+        self.text.bind("<Alt-period>", self.releaseNodes)
         self.text.bind("<{}-c>".format(ctrl), self.edit_copy)
         self.text.bind("<{}-x>".format(ctrl), self.edit_cut)
         self.text.bind("<{}-v>".format(ctrl), self.edit_paste)
@@ -195,6 +209,11 @@ class workspace:
         self.text.bind("<{}-o>".format(ctrl), self.openfile)
         self.text.bind("<{}-n>".format(ctrl), self.newfile)
         self.text.bind("<{}-m>".format(ctrl), self.toggle_menu)
+        self.text.bind("<{}-u>".format(ctrl), self.toggle_treeview)
+        self.text.bind("<{}-f>".format(ctrl), self.toggle_searchbar)
+        self.text.bind("<{}-k>".format(ctrl), self.toggle_console)
+        self.text.bind("<{}-0>".format(ctrl), self.toggle_linenumbers)
+        self.text.bind("<{}-p>".format(ctrl), self.open_preferences)
         # insert lambda
         self.text.bind("<{}-l>".format(ctrl),
                        lambda event: self.insert_char(u"\u03BB"))
@@ -227,8 +246,8 @@ class workspace:
             self.text.bind("<{}-#>".format(ctrl), self.toggle_console)
             self.toggle_key = "#"
         except Exception:
-            self.text.bind("<{}-G>".format(ctrl), self.toggle_console)
-            self.toggle_key = "G"
+            self.text.bind("<{}-K>".format(ctrl), self.toggle_console)
+            self.toggle_key = "K"
         # Save feature variabes
         self.saved = False
         self.file = None
@@ -239,15 +258,28 @@ class workspace:
         for tier in tag_weights:
             for tag_name in tier:
                 self.text.tag_config(tag_name, foreground=colour_map[tag_name])
-        # --- Create console
-        self.console = console(self)
-        self.console_visible = True
-        sys.stdout = self.console
+        # Create searchbar
+        self.searchbar = SearchBar(self)
+        if self.searchbar_toggled.get() is True:
+            self.searchbar.show()
+        # Create treeview
+        self.treeview = TreeView(self)
+        if self.treeview_toggled.get() is True:
+            self.treeview.show()
+        else:
+            self.treeview.hide()
+        if self.linenumbers_toggled.get() is True:
+            self.linenumbers.show()
+        else:
+            self.linenumbers.hide()
         self.root.bind("<Button-1>", self.mouse_press)
         # Store original location of cursor
         self.origin = "origin"
         self.text.mark_set(self.origin, INSERT)
         self.text.mark_gravity(self.origin, LEFT)
+        # --- Create console
+        self.console = console(self)
+        sys.stdout = self.console
 
         # Say Hello to the user
         def hello():
@@ -302,7 +334,7 @@ class workspace:
                 self.root.mainloop()
                 break
             # Temporary fix to unicode issues with Mac OS
-            except(UnicodeDecodeError):
+            except (UnicodeDecodeError):
                 pass
             except (KeyboardInterrupt, SystemExit):
                 # Clean exit
@@ -313,14 +345,14 @@ class workspace:
             self.set_temp_file(self.text_as_string)
         return
 
-    def toggle_true_fullscreen(self, event=None, zoom=False):
+    def toggle_fullscreen(self, event=None, zoom=False):
         """ Zoom the screen - close with Escape """
         if self.root.attributes('-fullscreen'):
             self.root.attributes('-fullscreen', 0)
-            self.true_fullscreen_toggled.set(False)
+            self.fullscreen_toggled.set(False)
         elif zoom:
             self.root.attributes('-fullscreen', 1)
-            self.true_fullscreen_toggled.set(True)
+            self.fullscreen_toggled.set(True)
         return
 
     def reload(self):
@@ -455,31 +487,34 @@ class workspace:
             ctrl = "Ctrl"
         print("Renardo Help:")
         print("-----------------------------------------")
-        print("{}+Return           : Execute code".format(ctrl))
-        print("{}+.                : Stop all sound".format(ctrl))
-        print("{}+=                : Increase font size".format(ctrl))
-        print("{}+-                : Decrease font size".format(ctrl))
-        print("{}+L                : Insert lambda symbol".format(ctrl))
-        print("{}+T                : Insert tilde symbol".format(ctrl))
-        print("{}+S                : Save your work".format(ctrl))
-        print("{}+O                : Open a file".format(ctrl))
-        print("{}+M                : Toggle the menu".format(ctrl))
-        print("{}+{}                : Toggle console window".format(ctrl, self.toggle_key))
+        print("{}+Return: Execute code".format(ctrl))
+        print("{}+.     : Stop all sound".format(ctrl))
+        print("{}+=     : Increase font size".format(ctrl))
+        print("{}+-     : Decrease font size".format(ctrl))
+        print("{}+L     : Insert lambda symbol".format(ctrl))
+        print("{}+T     : Insert tilde symbol".format(ctrl))
+        print("{}+S     : Save your work".format(ctrl))
+        print("{}+O     : Open a file".format(ctrl))
+        print("{}+M     : Toggle Menu".format(ctrl))
+        print("{}+K     : Toggle Console".format(ctrl))
+        print("{}+U     : Toggle Treeview".format(ctrl))
+        print("{}+F     : Toggle Searchbar".format(ctrl))
+        print("{}+P     : Open Preferences".format(ctrl))
         print("print(SynthDefs)      : View available SynthDefs")
         print("print(Samples)        : View character-to-sample mapping")
         print("print(FxList)         : View audio effects")
         print("print(Attributes)     : View Player attributes")
         print("print(PatternMethods) : View Pattern methods")
-        print("---------------------------------------------------")
-        print("Please visit foxdot.org for more information")
-        print("---------------------------------------------------")
+        print("----------------------------------------------------------")
+        print("Please visit foxdot.org / renardo.org for more information")
+        print("----------------------------------------------------------")
         return "break"
 
     # Save the current text: Ctrl+s
     # ------------------------------
     def save(self, event=None):
         """ Saves the contents of the text editor """
-        text = self.text.get("0.0",END)
+        text = self.text.get("0.0", END)
         if not self.saved:
             self.filename = tkFileDialog.asksaveasfilename(filetypes=[("Python files", ".py")],
                                                            defaultextension=".py")
@@ -496,12 +531,15 @@ class workspace:
         text = self.text.get("0.0", END)
         self.filename = tkFileDialog.asksaveasfilename(filetypes=[("Python files", ".py")],
                                                        defaultextension=".py")
-        if self.filename is not None:
+        if not self.filename:
+            pass
+        else:
             write_to_file(self.filename, text)
             self.saved = True
-            print("Save successful!")
             # Remove tmp file
             self.clear_temp_file()
+        if self.saved:
+            print("Save successful!")
         return bool(self.filename)
 
     # Open a file: Ctrl+o
@@ -509,12 +547,22 @@ class workspace:
     def openfile(self, event=None):
         path = tkFileDialog.askopenfilename()
         if path != "":
-            f = open(path)
-            text = f.read()
-            f.close()
-            self.set_all(text)
-            self.set_window_title(path)
+            try:
+                f = open(path)
+                text = f.read()
+                f.close()
+                self.set_all(text)
+                self.set_window_title(path)
+            except Exception:
+                pass
         return "break"
+
+    def opentvfile(self, file):
+        f = open(file)
+        text = f.read()
+        f.close()
+        self.set_all(text)
+        self.set_window_title(file)
 
     def loadfile(self, path):
         try:
@@ -540,14 +588,14 @@ class workspace:
 
     def export_console(self):
         fn = tkFileDialog.asksaveasfilename(filetypes=[("Plain Text File", ".txt")],
-                                            defaultextension='.txt')
+                                            defaultextension=".txt")
         with open(fn, 'w') as f:
             f.write(self.console.read())
         return
 
-    def open_config_file(self):
-        from FoxDotEditor.ConfigFile import Config
-        Config(FOXDOT_CONFIG_FILE).start()
+    def open_preferences(self, event=None):
+        from FoxDotEditor.Preferences import Preferences
+        Preferences().start()
         return
 
     def open_samples_folder(self):
@@ -573,21 +621,78 @@ class workspace:
             print("Hmm... Looks like we couldn't open the chart app.")
         return
 
+    # Toggle linenumbers: ctrl+0
+    # -----------------------------
+    def toggle_linenumbers(self, event=None):
+        linenumbers_toggle = self.linenumbers_toggled.get()
+        if linenumbers_toggle:
+            self.menu.viewmenu.entryconfigure(1, label="Show Line Numbers")
+            self.linenumbers.hide()
+            # self.text.config(height=self.text.cget('height')+self.searchbar.height)
+            self.linenumbers_toggled.set(False)
+        elif not linenumbers_toggle:
+            self.menu.viewmenu.entryconfigure(1, label="Hide Line Numbers")
+            self.linenumbers.show()
+            # self.text.config(height=self.text.cget('height')-self.searchbar.height)
+            self.linenumbers_toggled.set(True)
+        return
+
     # Toggle console: Ctrl+#
     # -----------------------------
     def toggle_console(self, event=None):
-        if self.console_visible:
+        console_toggle = self.console_toggled.get()
+        if console_toggle:
+            self.menu.viewmenu.entryconfigure(5, label="Show Console")
             self.console.hide()
             self.text.config(height=self.text.cget('height')+self.console.height)
-            self.console_visible = False
-        else:
+            self.console_toggled.set(False)
+        elif not console_toggle:
+            self.menu.viewmenu.entryconfigure(5, label="Hide Console")
             self.console.show()
             self.text.config(height=self.text.cget('height')-self.console.height)
-            self.console_visible = True
+            self.console_toggled.set(True)
+        return
+
+    # Toggle treeview: ctrl+t
+    # -----------------------------
+    def toggle_treeview(self, event=None):
+        treeview_toggle = self.treeview_toggled.get()
+        if treeview_toggle:
+            self.menu.viewmenu.entryconfigure(2, label="Show Treeview")
+            self.treeview.hide()
+            # self.text.config(height=self.text.cget('height')+self.searchbar.height)
+            self.treeview_toggled.set(False)
+        elif not treeview_toggle:
+            self.menu.viewmenu.entryconfigure(2, label="Hide Treeview")
+            self.treeview.show()
+            # self.text.config(height=self.text.cget('height')-self.searchbar.height)
+            self.treeview_toggled.set(True)
+        return
+
+    # Toggle searchbar: ctrl+f
+    # -----------------------------
+    def toggle_searchbar(self, event=None):
+        searchbar_toggle = self.searchbar_toggled.get()
+        if searchbar_toggle:
+            self.menu.viewmenu.entryconfigure(3, label="Show Searchbar")
+            self.searchbar.hide()
+            # self.text.config(height=self.text.cget('height')+self.searchbar.height)
+            self.searchbar_toggled.set(False)
+        elif not searchbar_toggle:
+            self.menu.viewmenu.entryconfigure(3, label="Hide Searchbar")
+            self.searchbar.show()
+            # self.text.config(height=self.text.cget('height')-self.searchbar.height)
+            self.searchbar_toggled.set(True)
         return
 
     def toggle_menu(self, event=None):
         self.menu.toggle()
+        if self.menu_toggled.get() is True:
+            self.menu.viewmenu.entryconfigure(0, label="Show Menu")
+            self.menu_toggled.set(False)
+        elif self.menu_toggled.get() is False:
+            self.menu.viewmenu.entryconfigure(0, label="Hide Menu")
+            self.menu_toggled.set(True)
         return "break"
 
     def toggle_sc3_plugins(self, event=None):
@@ -619,9 +724,10 @@ class workspace:
                 if not self.using_alpha:
                     try:
                         alpha = "#000001" if SYSTEM == WINDOWS else "systemTransparent"
-                        self.text.config(background=alpha)
+                        # self.text.config(background=alpha)
                         self.linenumbers.config(background=alpha)
                         self.console.config(background=alpha)
+
                         if SYSTEM == WINDOWS:
                             self.root.wm_attributes('-transparentcolor', alpha)
                         else:
@@ -632,9 +738,10 @@ class workspace:
                     self.root.wm_attributes("-alpha", ALPHA_VALUE)
             # Re-set the colours
             elif not self.using_alpha:
-                self.text.config(background=colour_map['background'])
+                # self.text.config(background=colour_map['background'])
                 self.linenumbers.config(background=colour_map['background'])
                 self.console.config(background="Black")
+
                 if SYSTEM == WINDOWS:
                     self.root.wm_attributes('-transparentcolor', "")
                 else:
@@ -704,7 +811,8 @@ class workspace:
     def tab(self, event=None, insert=INSERT):
         """ Move selected text forward 4 spaces """
         try:  # Move any selected lines forwards
-            a, b = (index(a)[0] for a in (self.text.index(SEL_FIRST), self.text.index(SEL_LAST)))
+            a, b = (index(a)[0] for a in (self.text.index(SEL_FIRST),
+                                          self.text.index(SEL_LAST)))
             if a < b:
                 self.indent(event)
                 return "break"
@@ -879,7 +987,6 @@ class workspace:
         Keyboard Shortcuts
         ==================
     """
-
     # Select all: Ctrl+a
     # -------------------
     def select_all(self, event=None):
@@ -965,7 +1072,6 @@ class workspace:
         Methods that view the Renardo namespace
         --------------------------------------
     """
-
     def update_prompt(self, visible=True):
         if visible:
             self.prompt.show()
@@ -1003,7 +1109,6 @@ class workspace:
         Methods that update the contents of the IDE
         -------------------------------------------
     """
-
     def on_text_modified(self, event):
         self.text.modifying = not self.text.modifying
         if self.text.modifying:
@@ -1046,7 +1151,9 @@ class workspace:
                     self.text.tag_remove(tag_name, start_of_line, end_of_line)
             # Re-apply tags
             for tag_name, start, end in findstyles(thisline):
-                self.text.tag_add(tag_name, index(line, start), index(line, end))
+                self.text.tag_add(tag_name,
+                                  index(line, start),
+                                  index(line, end))
         except Exception as e:
             print(e)
         # Find comments (not done with regex)
@@ -1212,7 +1319,6 @@ class workspace:
         - Correct exiting
         - Tabspace (todo: customise)
     """
-
     def kill(self):
         """ Proper exit function """
         self.terminate()
@@ -1290,11 +1396,11 @@ class workspace:
         return self.text.get("1.0", END).strip()
 
     def openhomepage(self):
-        webbrowser.open("https://foxdot.org/")
+        webbrowser.open("https://renardo.org/")
         return
 
     def opendocumentation(self):
-        webbrowser.open("https://foxdot.org/docs/")
+        webbrowser.open("https://renardo.org/about/renardo/")
         return
 
     def set_temp_file(self, text):

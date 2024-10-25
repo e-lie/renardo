@@ -1,0 +1,21 @@
+{
+    "cosmos":
+    {
+        "plaintext":    "#2c3e50",
+        "background":   "#f7f9fc",
+        "functions":    "#3498db",
+        "key_types":    "#e74c3c",
+        "user_defn":    "#1abc9c",
+        "other_kws":    "#d35400",
+        "comments":     "#7f8c8d",
+        "numbers":      "#c0392b",
+        "strings":      "#8e44ad",
+        "dollar":       "#e67e22",
+        "players":      "#e67e22",
+        "arrow":        "#8e44ad",
+        "prompt_fg":    "#2c3e50",
+        "prompt_bg":    "#f9f9f9",
+        "console_text": "#2c3e50",
+        "console_bg":   "#f7f9fc"
+    }
+}

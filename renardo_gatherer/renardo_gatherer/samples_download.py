@@ -7,41 +7,54 @@ from bs4 import BeautifulSoup
 
 from renardo_gatherer.config_dir import SAMPLES_DIR_PATH
 
+
 SAMPLES_DOWNLOAD_SERVER = 'https://samples.renardo.org'
-#DEFAULT_SAMPLES_PACK_NAME = '0_foxdot_default_testing'
+# DEFAULT_SAMPLES_PACK_NAME = '0_foxdot_default_testing'
 DEFAULT_SAMPLES_PACK_NAME = '0_foxdot_default'
 LOOP_SUBDIR = '_loop_'
+
 
 class SampleDownloadError(Exception):
     pass
 
-nonalpha = {"&" : "ampersand",
-            "*" : "asterix",
-            "@" : "at",
-            "\\" : "backslash",
-            "|" : "bar",
-            "^" : "caret",
-            ":" : "colon",
-            "$" : "dollar",
-            "=" : "equals",
-            "!" : "exclamation",
-            "/" : "forwardslash",
-            "#" : "hash",
-            "-" : "hyphen",
-            "<" : "lessthan",
-            "%" : "percent",
-            "+" : "plus",
-            "?" : "question",
-            ";" : "semicolon",
-            "~" : "tilde",
-            "1" : "1",
-            "2" : "2",
-            "3" : "3",
-            "4" : "4" }
+
+nonalpha = {"&": "ampersand",
+            "*": "asterix",
+            "@": "at",
+            "\\": "backslash",
+            "|": "bar",
+            "^": "caret",
+            ":": "colon",
+            "$": "dollar",
+            "=": "equals",
+            "!": "exclamation",
+            "/": "forwardslash",
+            "#": "hash",
+            "-": "hyphen",
+            "<": "lessthan",
+            "%": "percent",
+            "+": "plus",
+            "?": "question",
+            ";": "semicolon",
+            "~": "tilde",
+            ",": "comma",
+            "0": "0",
+            "1": "1",
+            "2": "2",
+            "3": "3",
+            "4": "4",
+            "5": "5",
+            "6": "6",
+            "7": "7",
+            "8": "8",
+            "9": "9"}
 
 
 class SPack:
-    '''Type Samples Pack to describe this resource and avoid string -> pattern conversion in Player'''
+    '''
+    Type Samples Pack to describe this resource and avoid string
+    -> pattern conversion in Player
+    '''
 
     def __init__(self, name):
         self.name = name
@@ -84,10 +97,12 @@ class SPack:
         else:
             print(f"Downloaded file {filename}")
 
+
 class SPackManager:
     def __init__(self):
         self.logger = None
-        self._samples_packs = IndexedOrderedDict() # usefull to access from key OR index directly
+        # usefull to access from key OR index directly
+        self._samples_packs = IndexedOrderedDict()
         # Workaround to rename the folder temporarily
         if (SAMPLES_DIR_PATH / 'foxdot_default').exists() and not (SAMPLES_DIR_PATH/DEFAULT_SAMPLES_PACK_NAME).exists():
             (SAMPLES_DIR_PATH / 'foxdot_default').rename(SAMPLES_DIR_PATH / DEFAULT_SAMPLES_PACK_NAME)
@@ -181,4 +196,3 @@ class SPackManager:
                 ):
                     # print(link['href'])
                     audiofile_links.append(current_path + link['href'])
-

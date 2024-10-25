@@ -26,11 +26,13 @@ elif sys.platform.startswith('linux'):
 # Directory informations
 USER_CWD = os.path.realpath(".")
 FOXDOT_ROOT = os.path.realpath(__file__ + "/../../")
+FOXDOT_SETTINGS = os.path.realpath(__file__ + "/../../Settings/")
 FOXDOT_EDITOR_ROOT = os.path.realpath(__file__ + "/../../../../FoxDotEditor/FoxDotEditor")
 FOXDOT_ICON = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/icon.ico")
 FOXDOT_ICON_GIF = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/icon.gif")
 FOXDOT_HELLO = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/hello.txt")
 FOXDOT_STARTUP_PATH = os.path.realpath(FOXDOT_ROOT + "/Custom/startup.py")
+FOXDOT_EDITOR_THEMES = os.path.realpath(FOXDOT_EDITOR_ROOT + "/themes")
 # FOXDOT_SND = SAMPLES_FOLDER_PATH / 'foxdot_default'
 FOXDOT_SND = get_samples_dir_path()
 # FOXDOT_LOOP = SAMPLES_FOLDER_PATH / 'foxdot_default' / '_loop_'
@@ -96,12 +98,17 @@ ADDRESS = conf.ADDRESS
 PORT = conf.PORT
 PORT2 = conf.PORT2
 FONT = conf.FONT
+BOOT_ON_STARTUP = conf.BOOT_ON_STARTUP
+SUPERCOLLIDER = conf.SUPERCOLLIDER
 SC3_PLUGINS = conf.SC3_PLUGINS
 MAX_CHANNELS = conf.MAX_CHANNELS
 GET_SC_INFO = conf.GET_SC_INFO
 USE_ALPHA = conf.USE_ALPHA
 ALPHA_VALUE = conf.ALPHA_VALUE
 MENU_ON_STARTUP = conf.MENU_ON_STARTUP
+CONSOLE_ON_STARTUP = conf.CONSOLE_ON_STARTUP
+LINENUMBERS_ON_STARTUP = conf.LINENUMBERS_ON_STARTUP
+TREEVIEW_ON_STARTUP = conf.TREEVIEW_ON_STARTUP
 TRANSPARENT_ON_STARTUP = conf.TRANSPARENT_ON_STARTUP
 RECOVER_WORK = conf.RECOVER_WORK
 CHECK_FOR_UPDATE = conf.CHECK_FOR_UPDATE
@@ -111,7 +118,10 @@ CPU_USAGE = conf.CPU_USAGE
 CLOCK_LATENCY = conf.CLOCK_LATENCY
 FORWARD_ADDRESS = conf.FORWARD_ADDRESS
 FORWARD_PORT = conf.FORWARD_PORT
+SAMPLES_DIR = conf.SAMPLES_DIR
 SAMPLES_PACK_NUMBER = conf.SAMPLES_PACK_NUMBER
+COLOR_THEME = conf.COLOR_THEME
+TEXT_COLORS = conf.TEXT_COLORS
 
 if conf.SAMPLES_DIR is not None and conf.SAMPLES_DIR != "":
     FOXDOT_SND = os.path.realpath(conf.SAMPLES_DIR)
@@ -162,6 +172,7 @@ OSC_MIDI_ADDRESS = "/foxdot_midi"
 
 # Colours
 class COLOURS:
+    # Text area colours
     plaintext = conf.plaintext
     background = conf.background
     functions = conf.functions
@@ -174,6 +185,12 @@ class COLOURS:
     dollar = conf.dollar
     arrow = conf.arrow
     players = conf.players
+    prompt_fg = conf.prompt_fg
+    prompt_bg = conf.prompt_bg
+    # Console area colours
+    console_text = conf.console_text
+    console_bg = conf.console_bg
+    # Sample chart colours
     kick = conf.kick
     various = conf.various
     vocal = conf.vocal
