@@ -1,0 +1,21 @@
+{
+    "monokai":
+    {
+        "plaintext":    "#f8f8f2",
+        "background":   "#272822",
+        "functions":    "#a6e22e",
+        "key_types":    "#fd971f",
+        "user_defn":    "#a6e22e",
+        "other_kws":    "#f92672",
+        "comments":     "#75715e",
+        "numbers":      "#ae81ff",
+        "strings":      "#e6db74",
+        "dollar":       "#66d9ef",
+        "players":      "#66d9ef",
+        "arrow":        "#66d9ef",
+        "prompt_fg":    "#f8f8f2",
+        "prompt_bg":    "#333333",
+        "console_text": "#f8f8f2",
+        "console_bg":   "#272822"
+    }
+}

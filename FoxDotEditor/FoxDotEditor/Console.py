@@ -15,21 +15,20 @@ except ImportError:
 
 class console:
 
-    def __init__(self, master):
-        self.app = master
-        self.root = master.root
-        self.y_scroll = Scrollbar(self.root)
-        self.y_scroll.grid(row=2, column=2, sticky='nsew', rowspan=3)
+    def __init__(self, parent):
+        self.app = parent
+        self.root = parent.root
+        self.y_scroll = tb.Scrollbar(self.root)
+        self.y_scroll.grid(row=3, column=3, sticky='nsew', rowspan=2)
         self.scrollable = False
         # Right-click menu
         self.popup = ConsolePopupMenu(self)
         # Create a bar for changing console size and displaying info about
         # beat number
-        self.drag = Frame(
+        self.drag = tb.Frame(
             self.root,
-            bg="white",
-            height=2,
-            cursor="sb_v_double_arrow"
+            cursor="sb_v_double_arrow",
+            height=3
         )
         self.counter = Counter(
             self,
@@ -39,19 +38,17 @@ class console:
             height=25,
             highlightthickness=0
         )
-
         # Create canvas
-
         self.height = 10
         self.max_offset = 0
         self.root_h = self.height + self.app.text.height
-
-        self.canvas = Canvas(self.root,
-                             bg="black",
-                             bd=0,
-                             height=300,
-                             yscrollincrement=1,
-                             highlightthickness=0)
+        self.canvas = tb.Canvas(
+            self.root,
+            bg=colour_map['console_bg'],
+            bd=0,
+            height=200,
+            yscrollincrement=1,
+            highlightthickness=0)
 
         self.canvas.bind("<Button-1>",
                          self.canvas_mouseclick)
@@ -71,11 +68,11 @@ class console:
         self.text_height = 0
         self.canvas_height = 0
         # Draw logo
-        self.draw_logo()
+        # self.draw_logo()
         # Create text
         self.text = self.canvas.create_text((self.padx, self.pady),
                                             anchor=NW,
-                                            fill="white",
+                                            fill=colour_map['console_text'],
                                             font=self.app.console_font)
         self.text_cursor = None
         self.y_scroll.config(command=self.scroll_text)
@@ -87,9 +84,9 @@ class console:
                        self.drag_mouserelease)
         self.drag.bind("<B1-Motion>",
                        self.drag_mousedrag)
-        self.drag.grid(row=1, column=0, stick="nsew", columnspan=3)
-        self.canvas.grid(row=2, column=0, sticky="nsew", columnspan=2)
-        self.counter.grid(row=3, column=0, sticky="nsew", columnspan=2)
+        self.drag.grid(row=2, column=1, stick="nsew", columnspan=3)
+        self.canvas.grid(row=3, column=1, sticky="nsew", columnspan=2)
+        self.counter.grid(row=4, column=1, sticky="nsew", columnspan=2)
         self.counter.hide()
         self.queue = Queue.Queue()
         self.update()
@@ -103,7 +100,7 @@ class console:
         self.canvas.dchars(self.text, 0, "end")
         return
 
-    def config(self, *args, **kwargs):
+    def configure(self, *args, **kwargs):
         self.canvas.config(*args, **kwargs)
         return
 
@@ -137,7 +134,7 @@ class console:
             new_height = (self.canvas.winfo_height() +
                           (widget_y - event.y_root))
             self.height, old_height = new_height, self.height
-            self.canvas.config(height=max(self.height, 50))
+            self.canvas.configure(height=max(self.height, 200))
             return "break"
 
     def update(self):
@@ -189,25 +186,19 @@ class console:
         self.canvas.insert(self.text, "end", "")
         self.canvas.focus_set()
         self.canvas.focus(self.text)
-
         # Remove current selection
         self.canvas.select_clear()
-
         # Calculate current mouse pos
         x = self.canvas.canvasx(event.x)
         y = self.canvas.canvasx(event.y)
-
         self.text_cursor = "@%d,%d" % (x, y)
-
         return
 
     def canvas_mousedrag(self, event):
         """ Changes selection """
         x = self.canvas.canvasx(event.x)
         y = self.canvas.canvasx(event.y)
-
         xy = "@%d,%d" % (x, y)
-
         self.canvas.select_from(self.text, self.text_cursor)
         self.canvas.select_to(self.text, xy)
         return
@@ -237,15 +228,21 @@ class console:
         # Dragging the scroll bar
         elif args[0] == "moveto":
             new_y = float(args[1])
+            if new_y > 1:
+                new_y = 1
+            elif new_y < 0:
+                new_y = 0
             a, b = self.update_scrollbar(new_y)
             size = b - a
-            self.text_y = (new_y / (1 - size)) * self.max_offset + self.pady
+            try:
+                self.text_y = (new_y / (1 - size)) * self.max_offset + self.pady
+            except ZeroDivisionError:
+                self.text_y = 0
             self.canvas.coords(self.text, (self.padx, self.text_y))
         return
 
     def move_text(self, delta):
         """ Moves the text up (negative) or down (positive) """
-
         if SYSTEM != MAC_OS:
             delta /= 100
         x, y = self.canvas.coords(self.text)
@@ -310,21 +307,17 @@ class console:
             random.randint(150, 350),  # Medium
             random.randint(25, 100),   # Small
             ]
-
         # Shuffle the widths and use a mirrored version for red
         random.shuffle(grn_widths)
-
         red_widths = reversed(grn_widths)
         start_x = random.choice([50, 100, 150, 200])
         start_y = random.choice([50, 100])
         step = random.choice([10, 20, 25])
-
         # Draw Red line
         x, y = start_x, start_y
         for w in red_widths:
             x, y = self.draw_arrow(x, y, w, '#571d0c', "down")
             x += step
-
         # Draw Green line
         # Define start point
         x, y = start_x, start_y + 100
@@ -345,7 +338,7 @@ class Counter(Canvas):
         self.parent = parent
         self.metro = self.parent.app.namespace['Clock']
         self.font = self.parent.app.console_font
-        self.bg = colour_map.get('background', "gray30")
+        self.bg = colour_map.get('background', )
         self.active = True
 
     def hide(self):
@@ -368,7 +361,6 @@ class Counter(Canvas):
         """
         if not self.active:
             return
-
         cycle = self.metro.meter[0]
         # Need to adjust for latency
         beat = int((self.metro.now() - self.metro.get_latency()) % cycle)
@@ -383,7 +375,7 @@ class Counter(Canvas):
             x1, x2 = [(val*box_width)+(w-width-35) for val in [n, (n+1)]]
             y1, y2 = h_offset / 2, box_height + (h_offset / 2)
             bg = "red" if n == beat else self.bg
-            self.create_rectangle(x1, y1, x2, y2, fill=bg, outline="gray30", )
+            self.create_rectangle(x1, y1, x2, y2)
             # self.create_rectangle(x1, y1, x2, y2, fill=bg, outline=self.bg, )
         self.create_text(x2 + (w - x2)/2,
                          h / 2,

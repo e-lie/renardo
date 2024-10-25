@@ -1,0 +1,21 @@
+{
+    "flatly":
+    {
+        "plaintext":    "#212529",
+        "background":   "#f8f9fa",
+        "functions":    "#2ecc71",
+        "key_types":    "#ffcc00",
+        "user_defn":    "#f39c12",
+        "other_kws":    "#f39c12",
+        "comments":     "#6c757d",
+        "numbers":      "#d9534f",
+        "strings":      "#5bc0de",
+        "dollar":       "#d9534f",
+        "players":      "#d9534f",
+        "arrow":        "#5bc0de",
+        "prompt_fg":    "#212529",
+        "prompt_bg":    "#e9ecef",
+        "console_text": "#212529",
+        "console_bg":   "#f8f9fa"
+    }
+}

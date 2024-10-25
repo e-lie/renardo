@@ -1,0 +1,21 @@
+{
+    "gruvbox":
+    {
+        "plaintext":    "#ebdbb2",
+        "background":   "#282828",
+        "functions":    "#fabd2f",
+        "key_types":    "#d79921",
+        "user_defn":    "#fabd2f",
+        "other_kws":    "#fb4934",
+        "comments":     "#928374",
+        "numbers":      "#83a598",
+        "strings":      "#b8bb26",
+        "dollar":       "#fe8019",
+        "players":      "#fe8019",
+        "arrow":        "#fe8019",
+        "prompt_fg":    "#ebdbb2",
+        "prompt_bg":    "#3c3836",
+        "console_text": "#ebdbb2",
+        "console_bg":   "#282828"
+    }
+}

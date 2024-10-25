@@ -1,11 +1,11 @@
-from FoxDotEditor import tkimport as Tk
+from FoxDotEditor.tkimport import *
 from renardo_lib.Settings import LINE_NUMBER_MARKER_OFFSET
 from renardo_lib.Code import execute
 
 
-class LineNumbers(Tk.Canvas):
+class LineNumbers(tb.Canvas):
     def __init__(self, master, *args, **kwargs):
-        Tk.Canvas.__init__(self, *args, **kwargs)
+        tb.Canvas.__init__(self, *args, **kwargs)
         self.root = master
         self.textwidget = master.text
 
@@ -28,7 +28,7 @@ class LineNumbers(Tk.Canvas):
             y = dline[1]
             h = dline[3]
             linenum = int(str(i).split(".")[0])
-            curr_row = int(self.textwidget.index(Tk.INSERT).split(".")[0])
+            curr_row = int(self.textwidget.index(INSERT).split(".")[0])
 
             if linenum == curr_row:
                 x1, y1 = 0, y + LINE_NUMBER_MARKER_OFFSET
@@ -41,7 +41,7 @@ class LineNumbers(Tk.Canvas):
                                       outline="gray30")
 
             self.create_text(w - 4, y, anchor="ne",
-                             justify=Tk.RIGHT,
+                             justify=RIGHT,
                              text=linenum,
                              font=self.root.codefont,
                              fill="#c9c9c9")
@@ -51,3 +51,12 @@ class LineNumbers(Tk.Canvas):
         # Update console beat counter here too
         self.root.console.counter.redraw()
         self.after(30, self.redraw)
+
+    def hide(self):
+        """ Removes treeview from interface """
+        self.grid_remove()
+        return
+
+    def show(self):
+        self.grid()
+        return
