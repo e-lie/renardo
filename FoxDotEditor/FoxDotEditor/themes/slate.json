@@ -1,0 +1,21 @@
+{
+    "slate":
+    {
+        "plaintext":    "#ffffff",
+        "background":   "#2f3542",
+        "functions":    "#ff6348",
+        "key_types":    "#ff6348",
+        "user_defn":    "#f78c1f",
+        "other_kws":    "#ffeaa7",
+        "comments":     "#a6a6a6",
+        "numbers":      "#e1e1e1",
+        "strings":      "#48dbfb",
+        "dollar":       "#e84393",
+        "players":      "#e84393",
+        "arrow":        "#48dbfb",
+        "prompt_fg":    "#ffffff",
+        "prompt_bg":    "#34495e",
+        "console_text": "#ffffff",
+        "console_bg":   "#2f3542"
+    }
+}

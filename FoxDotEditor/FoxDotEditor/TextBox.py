@@ -90,12 +90,9 @@ class ThreadedText(Text):
             reverse = True
         else:
             reverse = False
-
         a_row, a_col = self.row_col(index1)
         b_row, b_col = self.row_col(index2)
-
         data = []
-
         for row in range(a_row, b_row + 1,):
             if row == a_row:
                 x1_col = a_col

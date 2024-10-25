@@ -1,5 +1,6 @@
 from FoxDotEditor.tkimport import *
 from renardo_lib.Settings import FONT
+from .Format import *
 from FoxDotEditor.AppFunctions import index as get_index
 from FoxDotEditor.Format import get_keywords
 import re
@@ -12,7 +13,7 @@ class TextPrompt:
     def __init__(self, root):
         self.root = root
         self.master = self.root.text  # text box
-        # TODO // sort out the name space to check for suggestions
+        # ToDo // sort out the name space to check for suggestions
         # keywords = list(self.root.namespace["get_keywords"]())
         keywords = list(get_keywords())
         synthdefs = list(self.root.namespace["SynthDefs"])
@@ -36,8 +37,8 @@ class TextPrompt:
                              pady=self.pady) for n in range(self.num_items)]
 
         self.selected = 0
-        self.bg = "gray40"
-        self.fg = "gray30"
+        self.bg = colour_map['prompt_bg']
+        self.fg = colour_map['prompt_fg']
         self.suggestions = []
         self.x = 0
         self.y = 0

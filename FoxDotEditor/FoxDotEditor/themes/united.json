@@ -1,0 +1,21 @@
+{
+    "united":
+    {
+        "plaintext":    "#2c3e50",
+        "background":   "#ffffff",
+        "functions":    "#28a745",
+        "key_types":    "#007bff",
+        "user_defn":    "#ffc107",
+        "other_kws":    "#6f42c1",
+        "comments":     "#7f8c8d",
+        "numbers":      "#fd7e14",
+        "strings":      "#007bff",
+        "dollar":       "#dc3545",
+        "players":      "#dc3545",
+        "arrow":        "#007bff",
+        "prompt_fg":    "#2c3e50",
+        "prompt_bg":    "#f8f9fa",
+        "console_text": "#2c3e50",
+        "console_bg":   "#ffffff"
+    }
+}

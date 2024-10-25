@@ -1,0 +1,21 @@
+{
+    "solarized_dark":
+    {
+        "plaintext":    "#839496",
+        "background":   "#002b36",
+        "functions":    "#268bd2",
+        "key_types":    "#cb4b16",
+        "user_defn":    "#268bd2",
+        "other_kws":    "#b58900",
+        "comments":     "#586e75",
+        "numbers":      "#d33682",
+        "strings":      "#2aa198",
+        "dollar":       "#859900",
+        "players":      "#859900",
+        "arrow":        "#b58900",
+        "prompt_fg":    "#93a1a1",
+        "prompt_bg":    "#073642",
+        "console_text": "#839496",
+        "console_bg":   "#002b36"
+    }
+}

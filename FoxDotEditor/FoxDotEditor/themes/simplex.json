@@ -1,0 +1,21 @@
+{
+    "simplex":
+    {
+        "plaintext":    "#212529",
+        "background":   "#f7f9fc",
+        "functions":    "#28a745",
+        "key_types":    "#6f42c1",
+        "user_defn":    "#ffc107",
+        "other_kws":    "#007bff",
+        "comments":     "#6c757d",
+        "numbers":      "#c9302c",
+        "strings":      "#007bff",
+        "dollar":       "#dc3545",
+        "players":      "#dc3545",
+        "arrow":        "#007bff",
+        "prompt_fg":    "#212529",
+        "prompt_bg":    "#e9ecef",
+        "console_text": "#212529",
+        "console_bg":   "#f7f9fc"
+    }
+}
