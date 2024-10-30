@@ -1,0 +1,21 @@
+{
+    "spacelab":
+    {
+        "plaintext":    "#2c3e50",
+        "background":   "#f4f7fa",
+        "functions":    "#2ecc71",
+        "key_types":    "#e74c3c",
+        "user_defn":    "#f39c12",
+        "other_kws":    "#d35400",
+        "comments":     "#7f8c8d",
+        "numbers":      "#c0392b",
+        "strings":      "#3498db",
+        "dollar":       "#e67e22",
+        "players":      "#e67e22",
+        "arrow":        "#3498db",
+        "prompt_fg":    "#2c3e50",
+        "prompt_bg":    "#e9ecef",
+        "console_text": "#2c3e50",
+        "console_bg":   "#f4f7fa"
+    }
+}

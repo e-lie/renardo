@@ -1,0 +1,21 @@
+{
+    "darkly":
+    {
+        "plaintext":    "#f8f9fa",
+        "background":   "#343a40",
+        "functions":    "#38c172",
+        "key_types":    "#ffcc00",
+        "user_defn":    "#f1c40f",
+        "other_kws":    "#007bff",
+        "comments":     "#6c757d",
+        "numbers":      "#d63384",
+        "strings":      "#66d9ef",
+        "dollar":       "#e83e8c",
+        "players":      "#e83e8c",
+        "arrow":        "#38c172",
+        "prompt_fg":    "#f8f9fa",
+        "prompt_bg":    "#3a3f43",
+        "console_text": "#f8f9fa",
+        "console_bg":   "#343a40"
+    }
+}

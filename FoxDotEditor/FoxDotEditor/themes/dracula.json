@@ -1,0 +1,21 @@
+{
+    "dracula":
+    {
+        "plaintext":    "#f8f8f2",
+        "background":   "#282a36",
+        "functions":    "#ff79c6",
+        "key_types":    "#ff79c6",
+        "user_defn":    "#ff79c6",
+        "other_kws":    "#bd93f9",
+        "comments":     "#6272a4",
+        "numbers":      "#ffb86c",
+        "strings":      "#50fa7b",
+        "dollar":       "#8be9fd",
+        "players":      "#8be9fd",
+        "arrow":        "#50fa7b",
+        "prompt_fg":    "#f8f8f2",
+        "prompt_bg":    "#44475a",
+        "console_text": "#f8f8f2",
+        "console_bg":   "#282a36"
+    }
+}

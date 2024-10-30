@@ -5,6 +5,7 @@ indexed
 playsound
 midiutil
 python-rtmidi
+ttkbootstrap
 
 textual
 

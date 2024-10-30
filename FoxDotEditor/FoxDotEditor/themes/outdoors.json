@@ -1,0 +1,21 @@
+{
+    "outdoors":
+    {
+        "plaintext":    "#000000",
+        "background":   "#ffffff",
+        "functions":    "#008000",
+        "key_types":    "#000000",
+        "user_defn":    "#ff4500",
+        "other_kws":    "#800080",
+        "comments":     "#7f7f7f",
+        "numbers":      "#ff0000",
+        "strings":      "#0000cc",
+        "dollar":       "#0000ff",
+        "players":      "#0000ff",
+        "arrow":        "#0000cc",
+        "prompt_fg":    "#000000",
+        "prompt_bg":    "#f0f0f0",
+        "console_text": "#000000",
+        "console_bg":   "#ffffff"
+    }
+}

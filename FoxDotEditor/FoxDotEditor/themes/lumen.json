@@ -1,0 +1,21 @@
+{
+    "lumen":
+    {
+        "plaintext":    "#373a3c",
+        "background":   "#ffffff",
+        "functions":    "#5cb85c",
+        "key_types":    "#007bff",
+        "user_defn":    "#f0ad4e",
+        "other_kws":    "#5bc0de",
+        "comments":     "#6c757d",
+        "numbers":      "#c9302c",
+        "strings":      "#5bc0de",
+        "dollar":       "#d9534f",
+        "players":      "#d9534f",
+        "arrow":        "#5bc0de",
+        "prompt_fg":    "#373a3c",
+        "prompt_bg":    "#f7f7f9",
+        "console_text": "#373a3c",
+        "console_bg":   "#ffffff"
+    }
+}

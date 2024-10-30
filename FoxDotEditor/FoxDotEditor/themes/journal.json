@@ -1,0 +1,21 @@
+{
+    "journal":
+    {
+        "plaintext":    "#3c3f4e",
+        "background":   "#f7f9fc",
+        "functions":    "#28a745",
+        "key_types":    "#ffc107",
+        "user_defn":    "#e83e8c",
+        "other_kws":    "#dc3545",
+        "comments":     "#b1b2b6",
+        "numbers":      "#17a2b8",
+        "strings":      "#007bff",
+        "dollar":       "#ffc107",
+        "players":      "#ffc107",
+        "arrow":        "#007bff",
+        "prompt_fg":    "#3c3f4e",
+        "prompt_bg":    "#f0f3f5",
+        "console_text": "#3c3f4e",
+        "console_bg":   "#f7f9fc"
+    }
+}
