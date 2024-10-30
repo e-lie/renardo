@@ -16,13 +16,12 @@ setup(
     packages=['FoxDotEditor', 'FoxDotEditor.Settings'],
     long_description=long_description,
     long_description_content_type="text/markdown",
-    entry_points={'gui_scripts' : ['FoxDotEditor = FoxDotEditor.__init__:main']},
+    entry_points={'gui_scripts': ['FoxDotEditor = FoxDotEditor.__init__:main']},
     # data_files=[('', 'LICENSE')],
-    package_data = {'FoxDotEditor': ['README.md','img/*','tmp/*'],},
+    package_data={'FoxDotEditor': ['README.md', 'img/*', 'tmp/*'], },
     install_requires=[
         'renardo-lib==0.9.13.dev3',
         'psutil',
+        'playsound',
     ],
 )
-
-

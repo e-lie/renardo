@@ -1,0 +1,21 @@
+{
+    "readable":
+    {
+        "plaintext":    "#333333",
+        "background":   "#ffffff",
+        "functions":    "#27ae60",
+        "key_types":    "#e74c3c",
+        "user_defn":    "#e67e22",
+        "other_kws":    "#8e44ad",
+        "comments":     "#7f8c8d",
+        "numbers":      "#e74c3c",
+        "strings":      "#2980b9",
+        "dollar":       "#c0392b",
+        "players":      "#c0392b",
+        "arrow":        "#2980b9",
+        "prompt_fg":    "#333333",
+        "prompt_bg":    "#f9f9f9",
+        "console_text": "#333333",
+        "console_bg":   "#ffffff"
+    }
+}

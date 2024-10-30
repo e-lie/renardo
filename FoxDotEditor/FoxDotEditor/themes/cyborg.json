@@ -1,0 +1,21 @@
+{
+    "cyborg":
+    {
+        "plaintext":    "#ffffff",
+        "background":   "#1b1b1b",
+        "functions":    "#a6e22e",
+        "key_types":    "#ff79c6",
+        "user_defn":    "#f92672",
+        "other_kws":    "#f8f8f2",
+        "comments":     "#6c757d",
+        "numbers":      "#f8f8f2",
+        "strings":      "#66d9ef",
+        "dollar":       "#fd971f",
+        "players":      "#fd971f",
+        "arrow":        "#66d9ef",
+        "prompt_fg":    "#ffffff",
+        "prompt_bg":    "#222222",
+        "console_text": "#ffffff",
+        "console_bg":   "#1b1b1b"
+    }
+}

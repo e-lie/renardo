@@ -49,7 +49,7 @@ class RenardoApp:
             self.sc_instance.start_sclang_subprocess()
             output_line = self.sc_instance.read_stdout_line()
             while "Welcome to" not in output_line:
-                print(output_line[:-1]) # remove \n at the end to avoid double newline
+                print(output_line[:-1])  # remove \n at the end to avoid double newline
                 output_line = self.sc_instance.read_stdout_line()
             self.sc_instance.evaluate_sclang_code("Renardo.start;")
             time.sleep(3)
@@ -66,7 +66,7 @@ class RenardoApp:
         elif self.args.no_tui:
             print("You need to choose a launching mode : TUI, --pipe or --foxdot-editor...")
         print("Quitting...")
-    
+
     @staticmethod
     def parse_args():
         parser = argparse.ArgumentParser(
@@ -85,4 +85,3 @@ class RenardoApp:
         parser.add_argument('-c', '--create-scfiles', action='store_true', help="Create Renardo class file and startup file in SuperCollider user conf dir.")
 
         return parser.parse_args()
-

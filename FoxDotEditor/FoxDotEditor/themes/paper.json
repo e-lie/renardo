@@ -1,0 +1,21 @@
+{
+    "paper":
+    {
+        "plaintext":    "#212529",
+        "background":   "#ffffff",
+        "functions":    "#28a745",
+        "key_types":    "#5cb85c",
+        "user_defn":    "#ffc107",
+        "other_kws":    "#28a745",
+        "comments":     "#6c757d",
+        "numbers":      "#17a2b8",
+        "strings":      "#007bff",
+        "dollar":       "#dc3545",
+        "players":      "#dc3545",
+        "arrow":        "#007bff",
+        "prompt_fg":    "#212529",
+        "prompt_bg":    "#f5f5f5",
+        "console_text": "#212529",
+        "console_bg":   "#ffffff"
+    }
+}
