@@ -1,6 +1,8 @@
 
 from FoxDotEditor.tkimport import *
 from renardo_lib.Settings import *
+from .Format import *
+from ttkbootstrap.dialogs.colorchooser import ColorChooserDialog
 try:
     import tkMessageBox
 except ImportError:
@@ -12,12 +14,11 @@ class Preferences:
     def __init__(self):
         self.w = 850
         self.h = 600
-        self.stop = tb.Toplevel()
+        self.stop = tb.Toplevel(topmost=True)
         self.stop.title("Preferences")
         self.stop.protocol("WM_DELETE_WINDOW", self.save_and_close)
         self.stop.minsize(400, 300)
         self.stop.resizable(True, True)
-        self.stop.attributes("-topmost", 0)
         self.stop.geometry(str(self.w)+"x"+str(self.h))
         try:
             # Use .ico file by default
@@ -71,6 +72,7 @@ class Preferences:
             print("conf.json file not found")
         # Add binds?
         self.textbox.bind()
+        self.theme_name = ""
         # Settings values
         self.menu_start = BooleanVar()
         self.menu_start.set(MENU_ON_STARTUP)
@@ -137,6 +139,28 @@ class Preferences:
         self.alpha_val.set(ALPHA_VALUE)
         self.alpha_start = BooleanVar()
         self.alpha_start.set(TRANSPARENT_ON_STARTUP)
+        # Colors
+        # ------------------
+        self.plaintext = colour_map['plaintext']
+        self.background = colour_map['background']
+        self.functions = colour_map['functions']
+        self.key_types = colour_map['key_types']
+        self.user_defn = colour_map['user_defn']
+        self.other_kws = colour_map['other_kws']
+        self.comments = colour_map['comments']
+        self.numbers = colour_map['numbers']
+        self.strings = colour_map['strings']
+        self.dollar = colour_map['dollar']
+        self.arrow = colour_map['arrow']
+        self.players = colour_map['players']
+        # Prompt colours
+        # ------------------
+        self.prompt_fg = colour_map['prompt_fg']
+        self.prompt_bg = colour_map['prompt_bg']
+        # Console area colours
+        # ------------------
+        self.console_text = colour_map['console_text']
+        self.console_bg = colour_map['console_bg']
         # x distance for widgets
         self.padx = 10
         # Widgets in section General
@@ -313,14 +337,20 @@ class Preferences:
             self.g4, textvariable=self.sample_pack)
         self.entry_smplpck.grid(column=3, row=9, padx=self.padx*2, pady=5,
                                 sticky="nw")
-        # COLOURS
+        # APPEARENCE COLOURS
         self.a1 = tb.Frame(self.colors)
-        self.a1.grid(row=0, column=0)
+        self.a1.grid(row=0, column=0, padx=self.padx*2, sticky="nw")
         self.a2 = tb.Frame(self.colors)
-        self.a2.grid(row=0, column=1, columnspan=3)
+        self.a2.grid(row=0, column=1, padx=self.padx*2, sticky="nw")
+        self.a3 = tb.Frame(self.a2)
+        self.a3.grid(row=0, column=0, sticky="nw")
+        self.a4 = tb.Frame(self.a2)
+        self.a4.grid(row=1, column=0, pady=self.padx, sticky="nw")
+        self.a5 = tb.Frame(self.a2)
+        self.a5.grid(row=1, column=1, pady=self.padx, sticky="nw")
         self.lbl_themes = tb.Label(
             self.a1, text="Theme")
-        self.lbl_themes.grid(column=0, row=0, padx=self.padx, pady=self.padx,
+        self.lbl_themes.grid(column=0, row=0, padx=self.padx, pady=self.padx/2,
                              sticky="nw")
         self.themes_opt = tb.Combobox(
             self.a1, textvariable=self.theme)
@@ -329,7 +359,7 @@ class Preferences:
                                      "pulse", "sandstone", "united", "yeti",
                                      "morph", "simplex", "cerulean", "solar",
                                      "superhero", "darkly", "cyborg", "vapor")
-        self.themes_opt.grid(column=0, row=1, padx=self.padx, pady=10,
+        self.themes_opt.grid(column=0, row=1, padx=self.padx, pady=self.padx/2,
                              sticky="nw")
         self.lbl_text_colors = tb.Label(
             self.a1, text="Text Color Theme")
@@ -338,25 +368,276 @@ class Preferences:
         self.text_colors_opt = tb.Combobox(
             self.a1, textvariable=self.text_theme)
         self.text_colors_opt["values"] = self.text_themes
-        self.text_colors_opt.grid(column=0, row=3, padx=self.padx, pady=10,
-                                  sticky="nw")
+        self.text_colors_opt.grid(column=0, row=3, padx=self.padx,
+                                  pady=self.padx/2, sticky="nw")
+        self.btn_load = tb.Button(self.a1, text="Load",
+                                  command=self.load_tt)
+        self.btn_load.grid(column=0, row=4, padx=self.padx*3,
+                           pady=self.padx/2, sticky="sw")
+        self.btn_save = tb.Button(self.a1, text="Save", command=self.save_tt)
+        self.btn_save.grid(column=0, row=4, padx=self.padx*12,
+                           pady=self.padx/2, sticky="sw")
         self.lbl_font = tb.Label(
             self.a1, text="Font")
-        self.lbl_font.grid(column=0, row=4, padx=self.padx, sticky="sw")
+        self.lbl_font.grid(column=0, row=5, padx=self.padx,
+                           pady=self.padx/2, sticky="sw")
         self.entry_font = tb.Entry(
             self.a1, textvariable=self.font)
-        self.entry_font.grid(column=0, row=5, padx=self.padx, pady=5,
+        self.entry_font.grid(column=0, row=6, padx=self.padx, pady=self.padx/2,
                              sticky="nw")
         self.tgl_use_alpha = tb.Checkbutton(
             self.a1, text="Use Alpha", variable=self.use_alpha,
             style='Roundtoggle.Toolbutton')
-        self.tgl_use_alpha.grid(column=0, row=6, padx=self.padx, pady=10,
-                                sticky="nw")
+        self.tgl_use_alpha.grid(column=0, row=7, padx=self.padx,
+                                pady=self.padx, sticky="nw")
         self.tgl_alpha_start = tb.Checkbutton(
             self.a1, text="Transparent on Start", variable=self.alpha_start,
             style='Roundtoggle.Toolbutton')
-        self.tgl_alpha_start.grid(column=0, row=7, padx=self.padx, pady=10,
-                                  sticky="nw")
+        self.tgl_alpha_start.grid(column=0, row=8, padx=self.padx,
+                                  pady=self.padx, sticky="nw")
+        # COLOR CHOICE
+        self.lbl_colorlist = tb.Label(self.a3, text="Text Colors Editor")
+        self.lbl_colorlist.grid(column=0, row=0,
+                                padx=self.padx,
+                                pady=self.padx,
+                                sticky="nw")
+        # plaintext
+        self.lbl_plaintext = tb.Label(
+            self.a4, text="plaintext")
+        self.lbl_plaintext.grid(column=0, row=0, padx=self.padx, sticky="nw")
+        self.btn_plaintext = Button(
+            self.a4, width=5,
+            command=lambda: self.cc(self.btn_plaintext, self.plaintext))
+        self.btn_plaintext.config(bg=self.plaintext)
+        self.btn_plaintext.grid(column=1, row=0, sticky="nw")
+        # background
+        self.lbl_background = tb.Label(
+            self.a4, text="background")
+        self.lbl_background.grid(column=0, row=2, padx=self.padx, sticky="nw")
+        self.btn_background = Button(
+            self.a4, width=5,
+            command=lambda: self.cc(self.btn_background, self.background))
+        self.btn_background.config(bg=self.background)
+        self.btn_background.grid(column=1, row=2, sticky="nw")
+        # functions
+        self.lbl_functions = tb.Label(
+            self.a4, text="functions")
+        self.lbl_functions.grid(column=0, row=3, padx=self.padx, sticky="nw")
+        self.btn_functions = Button(
+            self.a4, width=5,
+            command=lambda: self.cc(self.btn_functions, self.functions))
+        self.btn_functions.config(bg=self.functions)
+        self.btn_functions.grid(column=1, row=3, sticky="nw")
+        # key_types
+        self.lbl_key_types = tb.Label(
+            self.a4, text="key_types")
+        self.lbl_key_types.grid(column=0, row=4, padx=self.padx, sticky="nw")
+        self.btn_key_types = Button(
+            self.a4, width=5,
+            command=lambda: self.cc(self.btn_key_types, self.key_types))
+        self.btn_key_types.config(bg=self.key_types)
+        self.btn_key_types.grid(column=1, row=4, sticky="nw")
+        # user_defn
+        self.lbl_user_defn = tb.Label(
+            self.a4, text="user_defn")
+        self.lbl_user_defn.grid(column=0, row=5, padx=self.padx, sticky="nw")
+        self.btn_user_defn = Button(
+            self.a4, width=5,
+            command=lambda: self.cc(self.btn_user_defn, self.user_defn))
+        self.btn_user_defn.config(bg=self.user_defn)
+        self.btn_user_defn.grid(column=1, row=5, sticky="nw")
+        # other_kws
+        self.lbl_other_kws = tb.Label(
+            self.a4, text="other_kws")
+        self.lbl_other_kws.grid(column=0, row=6, padx=self.padx, sticky="nw")
+        self.btn_other_kws = Button(
+            self.a4, width=5,
+            command=lambda: self.cc(self.btn_other_kws, self.other_kws))
+        self.btn_other_kws.config(bg=self.other_kws)
+        self.btn_other_kws.grid(column=1, row=6, sticky="nw")
+        # comments
+        self.lbl_comments = tb.Label(
+            self.a4, text="comments")
+        self.lbl_comments.grid(column=0, row=7, padx=self.padx, sticky="nw")
+        self.btn_comments = Button(
+            self.a4, width=5,
+            command=lambda: self.cc(self.btn_comments, self.comments))
+        self.btn_comments.config(bg=self.comments)
+        self.btn_comments.grid(column=1, row=7, sticky="nw")
+        # numbers
+        self.lbl_numbers = tb.Label(
+            self.a4, text="numbers")
+        self.lbl_numbers.grid(column=0, row=8, padx=self.padx, sticky="nw")
+        self.btn_numbers = Button(
+            self.a4, width=5,
+            command=lambda: self.cc(self.btn_numbers, self.numbers))
+        self.btn_numbers.config(bg=self.numbers)
+        self.btn_numbers.grid(column=1, row=8, sticky="nw")
+        # strings
+        self.lbl_strings = tb.Label(
+            self.a4, text="strings")
+        self.lbl_strings.grid(column=0, row=9, padx=self.padx, sticky="nw")
+        self.btn_strings = Button(
+            self.a4, width=5,
+            command=lambda: self.cc(self.btn_strings, self.strings))
+        self.btn_strings.config(bg=self.strings)
+        self.btn_strings.grid(column=1, row=9, sticky="nw")
+        # dollar
+        self.lbl_dollar = tb.Label(
+            self.a4, text="dollar")
+        self.lbl_dollar.grid(column=0, row=10, padx=self.padx, sticky="nw")
+        self.btn_dollar = Button(
+            self.a4, width=5,
+            command=lambda: self.cc(self.btn_dollar, self.dollar))
+        self.btn_dollar.config(bg=self.dollar)
+        self.btn_dollar.grid(column=1, row=10, sticky="nw")
+        # arrow
+        self.lbl_arrow = tb.Label(
+            self.a4, text="arrow")
+        self.lbl_arrow.grid(column=0, row=11, padx=self.padx, sticky="nw")
+        self.btn_arrow = Button(
+            self.a4, width=5,
+            command=lambda: self.cc(self.btn_arrow, self.arrow))
+        self.btn_arrow.config(bg=self.arrow)
+        self.btn_arrow.grid(column=1, row=11, sticky="nw")
+        # players
+        self.lbl_players = tb.Label(
+            self.a4, text="players")
+        self.lbl_players.grid(column=0, row=12, padx=self.padx, sticky="nw")
+        self.btn_players = Button(
+            self.a4, width=5,
+            command=lambda: self.cc(self.btn_players, self.players))
+        self.btn_players.config(bg=self.players)
+        self.btn_players.grid(column=1, row=12, sticky="nw")
+        # prompt_fg
+        self.lbl_prompt_fg = tb.Label(
+            self.a5, text="prompt_fg")
+        self.lbl_prompt_fg.grid(column=0, row=0, padx=self.padx, sticky="nw")
+        self.btn_prompt_fg = Button(
+            self.a5, width=5,
+            command=lambda: self.cc(self.btn_prompt_fg, self.prompt_fg))
+        self.btn_prompt_fg.config(bg=self.prompt_fg)
+        self.btn_prompt_fg.grid(column=1, row=0, sticky="nw")
+        # prompt_bg
+        self.lbl_prompt_bg = tb.Label(
+            self.a5, text="prompt_bg")
+        self.lbl_prompt_bg.grid(column=0, row=1, padx=self.padx, sticky="nw")
+        self.btn_prompt_bg = Button(
+            self.a5, width=5,
+            command=lambda: self.cc(self.btn_prompt_bg, self.prompt_bg))
+        self.btn_prompt_bg.config(bg=self.prompt_bg)
+        self.btn_prompt_bg.grid(column=1, row=1, sticky="nw")
+        # console_text
+        self.lbl_console_text = tb.Label(
+            self.a5, text="console_text")
+        self.lbl_console_text.grid(column=0, row=2, padx=self.padx, sticky="nw")
+        self.btn_console_text = Button(
+            self.a5, width=5,
+            command=lambda: self.cc(self.btn_console_text, self.console_text))
+        self.btn_console_text.config(bg=self.console_text)
+        self.btn_console_text.grid(column=1, row=2, sticky="nw")
+        # console_bg
+        self.lbl_console_bg = tb.Label(
+            self.a5, text="console_bg")
+        self.lbl_console_bg.grid(column=0, row=3, padx=self.padx, sticky="nw")
+        self.btn_console_bg = Button(
+            self.a5, width=5,
+            command=lambda: self.cc(self.btn_console_bg, self.console_bg))
+        self.btn_console_bg.config(bg=self.console_bg)
+        self.btn_console_bg.grid(column=1, row=3, sticky="nw")
+
+    def load_tt(self):
+        self.theme_name = self.text_colors_opt.get()
+        try:
+            file = FOXDOT_EDITOR_THEMES + '/' + self.theme_name + '.json'
+            # Opening JSON file
+            with open(file, 'r') as openfile:
+                # Reading from json file
+                json_object = json.load(openfile)
+                self.btn_plaintext.config(
+                    bg=json_object[self.theme_name]['plaintext'])
+                self.btn_background.config(
+                    bg=json_object[self.theme_name]['background'])
+                self.btn_functions.config(
+                    bg=json_object[self.theme_name]['functions'])
+                self.btn_key_types.config(
+                    bg=json_object[self.theme_name]['key_types'])
+                self.btn_user_defn.config(
+                    bg=json_object[self.theme_name]['user_defn'])
+                self.btn_other_kws.config(
+                    bg=json_object[self.theme_name]['other_kws'])
+                self.btn_comments.config(
+                    bg=json_object[self.theme_name]['comments'])
+                self.btn_numbers.config(
+                    bg=json_object[self.theme_name]['numbers'])
+                self.btn_strings.config(
+                    bg=json_object[self.theme_name]['strings'])
+                self.btn_dollar.config(
+                    bg=json_object[self.theme_name]['dollar'])
+                self.btn_arrow.config(
+                    bg=json_object[self.theme_name]['arrow'])
+                self.btn_players.config(
+                    bg=json_object[self.theme_name]['players'])
+                self.btn_prompt_fg.config(
+                    bg=json_object[self.theme_name]['prompt_fg'])
+                self.btn_prompt_bg.config(
+                    bg=json_object[self.theme_name]['prompt_bg'])
+                self.btn_console_text.config(
+                    bg=json_object[self.theme_name]['console_text'])
+                self.btn_console_bg.config(
+                    bg=json_object[self.theme_name]['console_bg'])
+        except FileNotFoundError:
+            pass
+
+    def save_tt(self):
+        # Colors
+        # ------------------
+        new_theme = {self.theme_name: {}}
+        new_theme[self.theme_name]['plaintext'] = self.plaintext
+        new_theme[self.theme_name]['background'] = self.background
+        new_theme[self.theme_name]['functions'] = self.functions
+        new_theme[self.theme_name]['key_types'] = self.key_types
+        new_theme[self.theme_name]['user_defn'] = self.user_defn
+        new_theme[self.theme_name]['other_kws'] = self.other_kws
+        new_theme[self.theme_name]['comments'] = self.comments
+        new_theme[self.theme_name]['numbers'] = self.numbers
+        new_theme[self.theme_name]['strings'] = self.strings
+        new_theme[self.theme_name]['dollar'] = self.dollar
+        new_theme[self.theme_name]['arrow'] = self.arrow
+        new_theme[self.theme_name]['players'] = self.players
+        # Prompt colours
+        # ------------------
+        new_theme[self.theme_name]['prompt_fg'] = self.prompt_fg
+        new_theme[self.theme_name]['prompt_bg'] = self.prompt_bg
+        # Console area colours
+        # ------------------
+        new_theme[self.theme_name]['console_text'] = self.console_text
+        new_theme[self.theme_name]['console_bg'] = self.console_bg
+        self.stop.iconify()
+        self.filename = tkFileDialog.asksaveasfilename(
+            filetypes=[("JSON files", ".json")],
+            initialdir=FOXDOT_EDITOR_THEMES + '/',
+            defaultextension=".json")
+        if self.filename:
+            new_file = open(self.filename, "w")
+            json.dump(new_theme, new_file, indent=6)
+            new_file.close()
+            print("Theme saved.")
+        else:
+            pass
+        self.stop.deiconify()
+
+    def cc(self, button, color):
+        self.cchooser = ColorChooserDialog(initialcolor=color)
+        self.stop.iconify()
+        self.cchooser.show()
+        self.stop.deiconify()
+        if not self.cchooser.result:
+            pass
+        else:
+            colors = self.cchooser.result
+            color = colors.hex
+            button.config(bg=color)
 
     def convert2number(self, selection, option):
         if selection == "Low":
@@ -388,12 +669,14 @@ class Preferences:
 
     def save_and_close(self, event=None):
         """ Asks the user if they want to save changes """
-        answer = tkMessageBox.askquestion("Save changes",
-                                          "Do you want to save your changes?",
-                                          parent=self.stop)
+        answer = tkMessageBox.askyesno("Save changes",
+                                       "Do you want to save your changes?",
+                                       parent=self.stop)
         self.stop.lift(aboveThis=None)
         if answer:
             return self.save_changes()
+        else:
+            pass
         return self.stop.destroy()
         pass
 
