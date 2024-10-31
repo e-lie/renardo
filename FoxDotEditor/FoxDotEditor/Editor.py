@@ -282,25 +282,8 @@ class workspace:
         # --- Create console
         self.console = console(self)
         sys.stdout = self.console
-
-        # Say Hello to the user
-        def hello():
-            if SYSTEM == MAC_OS:
-                ctrl = "Cmd"
-            else:
-                ctrl = "Ctrl"
-            # with open(FOXDOT_HELLO) as f:
-            #     hello = f.read()
-            # print()
-            # print(hello)
-            # print()
-            hello = "Welcome to Renardo! Press {}+{} for help.".format(ctrl, self.help_key)
-            print(hello)
-            print("-" * len(hello))
         # Ask after widget loaded
         self.linenumbers.redraw()  # ToDo: move to generic redraw functions
-        self.root.after(50, hello)
-
         # Check temporary file
         def recover_work():
             with open(FOXDOT_TEMP_FILE) as f:
