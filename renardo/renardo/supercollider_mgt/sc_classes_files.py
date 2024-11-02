@@ -37,7 +37,7 @@ def write_sc_renardo_files_in_user_config():
             classvar midiout;
 
             *configure {
-              
+
                 arg remote = false;
 
                 server = Server.default;
@@ -143,7 +143,7 @@ def write_sc_renardo_files_in_user_config():
                 ("Sending Renardo MIDI messages to" + MIDIClient.destinations[port].name).postln;
             }
         }
-   
+
    '''
 
     stagelimiter_sc_class = '''
@@ -151,22 +151,22 @@ def write_sc_renardo_files_in_user_config():
         StageLimiterBis
         {
             classvar lmSynth, lmFunc, activeSynth;
-            
+
             *activate
             { |numChannels = 2|
                 fork
                 {
-                    lmFunc = 
-                    { 
-                        { 
-                            activeSynth = 
+                    lmFunc =
+                    {
+                        {
+                            activeSynth =
                                 Synth(\\stageLimiter,
-                                    target: RootNode(Server.default), 
+                                    target: RootNode(Server.default),
                                     addAction: \\addToTail
                                 );
-                        }.defer(0.01) 
+                        }.defer(0.01)
                     };
-                    lmSynth = SynthDef(\\stageLimiter, 
+                    lmSynth = SynthDef(\\stageLimiter,
                     {
                         var input = In.ar(0, numChannels);
                         input = Select.ar(CheckBadValues.ar(input, 0, 0), [input, DC.ar(0), DC.ar(0), input]);
@@ -178,7 +178,7 @@ def write_sc_renardo_files_in_user_config():
                     "StageLimiter active".postln;
                 }
             }
-            
+
             *deactivate
             {
                 activeSynth.free;
@@ -201,5 +201,3 @@ def write_sc_renardo_files_in_user_config():
 
     with open(SC_USER_CONFIG_DIR / 'start_renardo.scd', mode="w") as file:
         file.write(renardo_start_code)
-
-
