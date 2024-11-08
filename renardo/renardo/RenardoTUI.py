@@ -6,6 +6,7 @@ from textual import work
 from textual.binding import Binding
 from textual.css.query import NoMatches
 from renardo.supercollider_mgt.sc_classes_files import is_renardo_sc_classes_initialized, write_sc_renardo_files_in_user_config
+from renardo_gatherer.collections import is_default_spack_initialized, download_default_sample_pack
 from textual.containers import Horizontal, Vertical, Center, Grid
 from textual.widgets import (
     Header,
@@ -39,7 +40,7 @@ class RenardoTUI(App[None]):
         self.right_pane_mode = self.get_right_pane_mode()
         self.right_pane_maximized = None # maximization feature TODO ?
         self.renardo_sc_class_initialized = is_renardo_sc_classes_initialized()
-        self.base_sample_pack_downloaded = self.renardo_app.spack_manager.is_default_spack_initialized()
+        self.base_sample_pack_downloaded = is_default_spack_initialized()
         self.sc_backend_started = self.test_sclang_connection()
         self.supercollider_found = self.renardo_app.sc_instance.supercollider_ready
         self.pulsar_found = self.renardo_app.pulsar_instance.pulsar_ready
@@ -68,7 +69,7 @@ class RenardoTUI(App[None]):
 
     def update_app_state(self):
         self.renardo_sc_class_initialized = is_renardo_sc_classes_initialized()
-        self.base_sample_pack_downloaded = self.renardo_app.spack_manager.is_default_spack_initialized()
+        self.base_sample_pack_downloaded = is_default_spack_initialized()
         self.sc_backend_started = self.test_sclang_connection()
         self.supercollider_found = self.renardo_app.sc_instance.supercollider_ready
         self.pulsar_found = self.renardo_app.pulsar_instance.pulsar_ready
@@ -129,16 +130,14 @@ class RenardoTUI(App[None]):
     #     self.renardo_app.args.boot = True if event.radio_set.pressed_index == 1 else False
 
 
-
-
-
     ################ Background Jobs
 
     @work(exclusive=True, thread=True)
     def dl_samples_background(self) -> None:
-        log_output_widget = self.query_one("#spack-dl-log-output", Log)
-        self.renardo_app.spack_manager.set_logger(log_output_widget)
-        self.renardo_app.spack_manager.init_default_spack()
+        log_output_widget = self.query_one("#sclang-log-output", Log)
+        #log_output_widget = None
+        log_output_widget.write_line("testounet")
+        download_default_sample_pack(logger=log_output_widget)
         self.update_app_state()
 
     @work(exclusive=True, thread=True)
