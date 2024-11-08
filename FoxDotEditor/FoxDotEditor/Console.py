@@ -69,11 +69,15 @@ class console:
         self.canvas_height = 0
         # Draw logo
         # self.draw_logo()
+        self.hello_msg = "Welcome to Renardo! Press Ctrl/Cmd + H for help."
+        self.hello_lines = "-" * len(self.hello_msg)
+        self.hello_txt = f"{self.hello_msg}\n{self.hello_lines}\n"
         # Create text
         self.text = self.canvas.create_text((self.padx, self.pady),
                                             anchor=NW,
                                             fill=colour_map['console_text'],
-                                            font=self.app.console_font)
+                                            font=self.app.console_font,
+                                            text=self.hello_txt)
         self.text_cursor = None
         self.y_scroll.config(command=self.scroll_text)
         # Allow for resizing
