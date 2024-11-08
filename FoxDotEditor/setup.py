@@ -13,7 +13,7 @@ setup(
     author_email='eliegavoty@free.fr',
     license='cc-by-sa-4.0',
     url='http://foxdot.org/',
-    packages=['FoxDotEditor', 'FoxDotEditor.Settings'],
+    packages=['FoxDotEditor'],
     long_description=long_description,
     long_description_content_type="text/markdown",
     entry_points={'gui_scripts': ['FoxDotEditor = FoxDotEditor.__init__:main']},
@@ -22,6 +22,5 @@ setup(
     install_requires=[
         'renardo-lib==1.0.0.dev13',
         'psutil',
-        'playsound',
     ],
 )
