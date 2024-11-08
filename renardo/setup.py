@@ -28,7 +28,7 @@ setup(
         'FoxDotEditor==0.9.13.dev3',
         'renardo_gatherer==0.1.3',
         'psutil',
-        'textual',
+        'textual==0.79.1',
     ],
     entry_points={
         'console_scripts': [
