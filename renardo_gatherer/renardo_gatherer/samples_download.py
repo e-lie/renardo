@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from renardo_gatherer.config_dir import SAMPLES_DIR_PATH
 
 
-SAMPLES_DOWNLOAD_SERVER = 'https://samples.renardo.org'
+SAMPLES_DOWNLOAD_SERVER = 'https://collections.renardo.org/samples'
 # DEFAULT_SAMPLES_PACK_NAME = '0_foxdot_default_testing'
 DEFAULT_SAMPLES_PACK_NAME = '0_foxdot_default'
 LOOP_SUBDIR = '_loop_'
@@ -77,9 +77,19 @@ class SPack:
 
     def download_file(self, audiofile_relative_path, logger=None):
         url = f'{SAMPLES_DOWNLOAD_SERVER}/{self.name}/' + audiofile_relative_path
-        response = requests.get(url)
-        if logger:
-            logger.write_line(url)
+
+        attempt = 1
+        while attempt <= 5:
+            try:
+                response = requests.get(url)
+                response.raise_for_status()
+                break
+            except requests.exceptions.RequestException as e:
+                print(f"Attempt {attempt} failed for {url}: {e}")
+                attempt += 1
+        
+        # if logger:
+            # logger.write_line(url)
         else:
             print(url)
         if response.status_code != 200:
@@ -93,7 +103,10 @@ class SPack:
         with open(self.path / audiofile_relative_path, mode="wb") as file:
             file.write(response.content)
         if logger:
-            logger.write_line(f"Downloaded file {filename}")
+            try:
+                logger.write_line(f"Downloaded file {filename}")
+            except Exception as e:
+                print(e)
         else:
             print(f"Downloaded file {filename}")
 
@@ -167,9 +180,11 @@ class SPackManager:
 
         for audiofile in audiofile_links:
             samples_pack.download_file(audiofile, self.logger)
-
-        with open(SAMPLES_DIR_PATH / samples_pack_name / 'downloaded_at.txt', mode="w") as file:
-            file.write(str(datetime.now()))
+        try:
+            with open(SAMPLES_DIR_PATH / samples_pack_name / 'downloaded_at.txt', mode="w") as file:
+                file.write(str(datetime.now()))
+        except Exception as e:
+            print(e)
 
     def link_is_directory(self, url):
         return url.endswith('/')
@@ -181,7 +196,7 @@ class SPackManager:
         for link in maybe_directories:
             # print(f"link : {link['href']}")
             # print(link_is_directory(link['href']))
-            if self.link_is_directory(link['href']) and link["href"] != '../':
+            if self.link_is_directory(link['href']) and '.. (Parent Directory)' not in link["href"] :
                 new_path = current_path + link['href']
                 directory_links.append(new_path)
                 self.find_audio_links_recursive(base_url, directory_links, audiofile_links, current_path=new_path)
