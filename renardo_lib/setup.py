@@ -37,6 +37,7 @@ setup(
         'renardo_lib.preset.reaper',
         'renardo_lib.preset.reaper.Presets',
         'renardo_lib.preset.reaper.UtilityFunctions',
+        'renardo_lib.runtime',
     ],
     long_description=long_description,
     long_description_content_type="text/markdown",
