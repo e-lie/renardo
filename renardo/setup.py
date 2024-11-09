@@ -7,7 +7,7 @@ with open("README.md", "r") as f:
 
 setup(
     name='renardo',
-    version="0.9.13.dev6",
+    version="0.9.13.dev7",
     description='Launcher/config editor for Renardo livecoding environment',
     author='Elie Gavoty',
     author_email='eliegavoty@free.fr',
@@ -24,8 +24,8 @@ setup(
     # data_files=[('', 'LICENSE')],
     package_data = {'renardo': ['RenardoTUI.tcss'],},
     install_requires=[
-        'renardo-lib==0.9.13.dev6',
-        'FoxDotEditor==0.9.13.dev6',
+        'renardo-lib==0.9.13.dev7',
+        'FoxDotEditor==0.9.13.dev7',
         'renardo_gatherer==0.1.4.dev1',
         'psutil',
         'textual==0.79.1',
