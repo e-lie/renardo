@@ -7,7 +7,7 @@ with open("README.md", "r") as f:
 
 setup(
     name='renardo_lib',
-    version="0.9.13.dev3",
+    version="0.9.13.dev4",
     description='Python livecoding environment - New fork of FoxDot',
     author='Elie Gavoty',
     author_email='eliegavoty@free.fr',
@@ -32,7 +32,7 @@ setup(
     # data_files=[('', 'LICENSE')],
     package_data = {'renardo_lib': ['README.md','demo/**', 'osc/**'],},
     install_requires=[
-        'renardo_gatherer==0.1.3',
+        'renardo_gatherer==0.1.4.dev1',
         'midiutil',
     ],
 )
