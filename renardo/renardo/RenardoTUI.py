@@ -134,9 +134,8 @@ class RenardoTUI(App[None]):
 
     @work(exclusive=True, thread=True)
     def dl_samples_background(self) -> None:
-        log_output_widget = self.query_one("#sclang-log-output", Log)
+        log_output_widget = self.query_one("#collection-dl-log-output", Log)
         #log_output_widget = None
-        log_output_widget.write_line("testounet")
         download_default_sample_pack(logger=log_output_widget)
         self.update_app_state()
 
