@@ -19,7 +19,7 @@ from contextlib import closing
 from itertools import chain
 from os.path import abspath, join, isabs, isfile, isdir, splitext
 
-from renardo_lib.runtime import spack_manager
+from renardo_lib.runtime import sample_path_from_symbol, default_loop_path
 from renardo_lib.Code import WarningMsg
 from renardo_lib.Logging import Timing
 from renardo_lib.ServerManager.default_server import Server
@@ -124,13 +124,13 @@ class BufferManager(object):
         self._nextbuf = 1
         self._buffers = [None for _ in range(self._max_buffers)]
         self._fn_to_buf = {}
-        self._paths = [spack_manager.default_spack().loop_path] + list(paths)
+        self._paths = [default_loop_path()] + list(paths)
         self._ext = ['wav', 'wave', 'aif', 'aiff', 'flac']
 
         self.loops = [
             sample_path.with_suffix('').name #file name without extension
             for sample_path
-            in spack_manager.default_spack().loop_path.iterdir()
+            in default_loop_path().iterdir()
         ]
 
     def __str__(self):
@@ -210,7 +210,7 @@ class BufferManager(object):
         """ Get buffer information from a symbol """
         if symbol.isspace():
             return nil
-        sample_path = spack_manager.get_spack(spack).sample_path_from_symbol(symbol)
+        sample_path = sample_path_from_symbol(symbol)
         if sample_path is None:
             return nil
         sample_path = self._findSample(sample_path, index)

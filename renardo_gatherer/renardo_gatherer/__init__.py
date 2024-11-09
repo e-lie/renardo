@@ -1,5 +1,5 @@
 from renardo_gatherer.config_dir import SAMPLES_DIR_PATH
-from renardo_gatherer.samples_download import DEFAULT_SAMPLES_PACK_NAME
+from renardo_gatherer.collections import DEFAULT_SAMPLES_PACK_NAME
 
 
 def main():
