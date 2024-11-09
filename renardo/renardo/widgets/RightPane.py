@@ -21,7 +21,7 @@ class ResourcesRightPane(Static):
         if not self.app.base_sample_pack_downloaded:
             yield Label("Default samples pack needs to be downloaded")
             yield Button("Download renardo default samples pack", id="dl-renardo-samples-btn")
-            yield Log(id="spack-dl-log-output")
+            yield Log(id="collection-dl-log-output")
         else:
             yield Label("The default sample pack is downloaded")
 
