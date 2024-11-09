@@ -3,7 +3,7 @@ import requests
 import time
 from datetime import datetime
 from renardo_gatherer.config_dir import SAMPLES_DIR_PATH
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 SAMPLES_DOWNLOAD_SERVER = 'https://collections.renardo.org/samples'
@@ -15,53 +15,8 @@ def ensure_renardo_samples_directory():
     if not SAMPLES_DIR_PATH.exists():
         SAMPLES_DIR_PATH.mkdir(parents=True, exist_ok=True)
 
-def download_collection_json_index_from_url(url):
-    response = requests.get(url)
-    response.raise_for_status()  # Raise an error for bad status
-    return response.json()
-
-
-def download_files_from_json_index(json_url, download_dir, logger=None):
-
-    def download_file(url, destination, retries=5, logger=logger):
-        attempt = 1
-        while attempt <= retries:
-            try:
-                response = requests.get(url, stream=True)
-                response.raise_for_status()
-                with open(destination, "wb") as f:
-                    for chunk in response.iter_content(chunk_size=8192):
-                        f.write(chunk)
-                if logger:
-                    logger.write_line(f"Downloaded {destination}")
-                return  # Successful download, exit the function
-            except requests.exceptions.RequestException as e:
-                print(f"Attempt {attempt} failed for {url}: {e}")
-                attempt += 1
-                if attempt <= retries:
-                    time.sleep(1)  # Wait before retrying
-        print(f"Failed to download {url} after {retries} attempts")
-
-    def process_node(node, base_path):
-        if "url" in node:
-            # This is a file node; download it
-            file_path = os.path.join(base_path, node["name"])
-            os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            download_file(node["url"], file_path)
-        elif "children" in node:
-            # This is a folder node; process its children
-            folder_path = os.path.join(base_path, node["name"])
-            os.makedirs(folder_path, exist_ok=True)
-            for child in node["children"]:
-                process_node(child, folder_path)
-
-    file_tree = download_collection_json_index_from_url(json_url)
-
-    process_node(file_tree, download_dir)
-    logger.write_line(f"All files downloaded to {download_dir}")
-
 def download_file_in_pool(url, dest_path, retries=5, delay=1, logger=None):
-    filename = url.split('/')[-1]
+    filename = os.path.basename(urlparse(url).path)
     for attempt in range(retries):
         try:
             response = requests.get(url, stream=True)
@@ -83,8 +38,10 @@ def download_file_in_pool(url, dest_path, retries=5, delay=1, logger=None):
                 if logger:
                     logger.write_line(f"Failed to download {url} after {retries} attempts")
                 return False
+
+                
 def download_files_from_json_index_concurrent(json_url, download_dir, max_workers=3, logger=None):
-    def download_json_from_url(url, logger=logger):
+    def download_json_index_from_url(url, logger=logger):
         try:
             response = requests.get(url)
             response.raise_for_status()
@@ -92,19 +49,6 @@ def download_files_from_json_index_concurrent(json_url, download_dir, max_worker
         except requests.exceptions.RequestException as e:
             logger.write_line(f"Error downloading collection JSON index: {e}")
             return None
-
-    #def process_node(node, base_url=""):
-    #    tasks = []
-    #    if "url" in node:
-    #        # Full file download URL
-    #        file_url = urljoin(base_url, node["url"])
-    #        dest_path = os.path.join(download_dir, os.path.basename(node["path"]))
-    #        tasks.append((file_url, dest_path))
-    #    if "children" in node:
-    #        for child in node["children"]:
-    #            tasks.extend(process_node(child, base_url))
-    #    return tasks
-
 
     def process_node(node, base_url="", current_dir=""):
         tasks = []
@@ -127,13 +71,10 @@ def download_files_from_json_index_concurrent(json_url, download_dir, max_worker
     os.makedirs(download_dir, exist_ok=True)
 
     # Download JSON content from URL
-    file_tree = download_json_from_url(json_url)
+    file_tree = download_json_index_from_url(json_url)
 
     # Generate list of all files to download
     download_tasks = process_node(file_tree, json_url)
-
-    for tassk in download_tasks:
-        logger.write_line(f"{tassk[0]},{tassk[1]}")
 
     # Use ThreadPoolExecutor to download files concurrently
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
