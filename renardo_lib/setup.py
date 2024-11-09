@@ -45,7 +45,7 @@ setup(
     long_description_content_type="text/markdown",
     # entry_points={'gui_scripts' : ['FoxDotEditor = FoxDotEditor.__init__:main']},
     # data_files=[('', 'LICENSE')],
-    package_data = {'renardo_lib': ['README.md','demo/**', 'osc/**'],},
+    package_data = {'renardo_lib': ['README.md','demo/**', 'osc/**', ],},
     install_requires=[
         'renardo_gatherer==0.1.4.dev1',
         'fastnumbers',
