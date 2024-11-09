@@ -22,5 +22,6 @@ setup(
     install_requires=[
         'renardo-lib==1.0.0.dev13',
         'psutil',
+        'ttkbootstrap==1.10.1',
     ],
 )
