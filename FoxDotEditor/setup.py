@@ -21,6 +21,7 @@ setup(
     package_data={'FoxDotEditor': ['README.md', 'img/*', 'tmp/*'], },
     install_requires=[
         'renardo-lib==1.0.0.dev13',
+        'renardo_gatherer==0.1.4.dev1',
         'psutil',
         'ttkbootstrap==1.10.1',
     ],

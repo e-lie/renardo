@@ -26,7 +26,7 @@ setup(
     install_requires=[
         'renardo-lib==1.0.0.dev13',
         'FoxDotEditor==1.0.0.dev13',
-        'renardo_gatherer==0.1.3',
+        'renardo_gatherer==0.1.4.dev1',
         'psutil',
         'textual==0.79.1',
     ],
