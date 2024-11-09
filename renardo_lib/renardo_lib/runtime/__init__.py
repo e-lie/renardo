@@ -1,11 +1,10 @@
 import logging
 
 from renardo_lib.Code import *
-from renardo_gatherer.samples_download import SPackManager
 
 FoxDotCode.namespace = globals()
 
-spack_manager = SPackManager()
+from renardo_gatherer.collections import sample_path_from_symbol, default_loop_path
 
 from renardo_lib.TempoClock import *
 from renardo_lib.SynthDefManagement.BufferManagement import *
