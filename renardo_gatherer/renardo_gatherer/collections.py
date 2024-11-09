@@ -11,6 +11,39 @@ SAMPLES_DOWNLOAD_SERVER = 'https://collections.renardo.org/samples'
 DEFAULT_SAMPLES_PACK_NAME = '0_foxdot_default'
 LOOP_SUBDIR = '_loop_'
 
+
+nonalpha = {"&": "ampersand",
+            "*": "asterix",
+            "@": "at",
+            "\\": "backslash",
+            "|": "bar",
+            "^": "caret",
+            ":": "colon",
+            "$": "dollar",
+            "=": "equals",
+            "!": "exclamation",
+            "/": "forwardslash",
+            "#": "hash",
+            "-": "hyphen",
+            "<": "lessthan",
+            "%": "percent",
+            "+": "plus",
+            "?": "question",
+            ";": "semicolon",
+            "~": "tilde",
+            ",": "comma",
+            "0": "0",
+            "1": "1",
+            "2": "2",
+            "3": "3",
+            "4": "4",
+            "5": "5",
+            "6": "6",
+            "7": "7",
+            "8": "8",
+            "9": "9"}
+
+
 def ensure_renardo_samples_directory():
     if not SAMPLES_DIR_PATH.exists():
         SAMPLES_DIR_PATH.mkdir(parents=True, exist_ok=True)
@@ -108,3 +141,17 @@ def download_default_sample_pack(logger=None):
 
 def is_default_spack_initialized():
     return (SAMPLES_DIR_PATH / DEFAULT_SAMPLES_PACK_NAME / 'downloaded_at.txt').exists()
+
+def sample_path_from_symbol(symbol, spack_path=SAMPLES_DIR_PATH/DEFAULT_SAMPLES_PACK_NAME):
+    """ Return the sample search directory for a symbol """
+    sample_path = None
+    if symbol.isalpha():
+        low_up_dirname = 'upper' if symbol.isupper() else 'lower'
+        sample_path = spack_path / symbol.lower() / low_up_dirname
+    elif symbol in nonalpha:
+        longname = nonalpha[symbol]
+        sample_path = spack_path / '_' / longname
+    return sample_path
+
+def default_loop_path():
+    return SAMPLES_DIR_PATH/DEFAULT_SAMPLES_PACK_NAME/LOOP_SUBDIR
