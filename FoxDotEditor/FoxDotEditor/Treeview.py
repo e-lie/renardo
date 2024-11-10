@@ -3,7 +3,7 @@
 """
 from FoxDotEditor.tkimport import *
 from pathlib import Path
-from FoxDotEditor.EditorSettings import FOXDOT_EDITOR_ROOT
+from renardo_lib.Settings import FOXDOT_EDITOR_ROOT
 
 
 class TreeView:
