@@ -27,6 +27,12 @@ elif sys.platform.startswith('linux'):
 USER_CWD = os.path.realpath(".")
 FOXDOT_ROOT = os.path.realpath(__file__ + "/../../")
 FOXDOT_SETTINGS = os.path.realpath(__file__ + "/../../Settings/")
+FOXDOT_EDITOR_ROOT = os.path.realpath(__file__ + "/../../../../FoxDotEditor/FoxDotEditor")
+FOXDOT_ICON = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/icon.ico")
+FOXDOT_ICON_GIF = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/icon.gif")
+FOXDOT_HELLO = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/hello.txt")
+FOXDOT_STARTUP_PATH = os.path.realpath(FOXDOT_ROOT + "/Custom/startup.py")
+FOXDOT_EDITOR_THEMES = os.path.realpath(FOXDOT_EDITOR_ROOT + "/themes")
 # FOXDOT_SND = SAMPLES_FOLDER_PATH / 'foxdot_default'
 FOXDOT_SND = get_samples_dir_path()
 # FOXDOT_LOOP = SAMPLES_FOLDER_PATH / 'foxdot_default' / '_loop_'
@@ -34,6 +40,7 @@ FOXDOT_LOOP = "_loop_"
 # FOXDOT_LOOP = os.path.realpath(FOXDOT_ROOT+"/../../renardo_samples/_loop_/")
 TUTORIAL_DIR = os.path.realpath(FOXDOT_ROOT + "/demo/")
 RECORDING_DIR = os.path.realpath(FOXDOT_ROOT + "/rec/")
+FOXDOT_TEMP_FILE = os.path.realpath(FOXDOT_EDITOR_ROOT + "/tmp/tempfile.txt")
 SCLANG_EXEC = 'sclang.exe' if SYSTEM == WINDOWS else 'sclang'
 
 
@@ -59,7 +66,13 @@ FOXDOT_EFFECTS_FILE = str(get_synthdefs_dir_path() / "Effects.scd")
 FOXDOT_INFO_FILE = str(get_synthdefs_dir_path() / "Info.scd")
 FOXDOT_RECORD_FILE = str(get_synthdefs_dir_path() / "Record.scd")
 
-
+# If the tempfile doesn't exist, create it
+if not os.path.isfile(FOXDOT_TEMP_FILE):
+    try:
+        with open(FOXDOT_TEMP_FILE, "w") as f:
+            pass
+    except FileNotFoundError:
+        pass
 
 
 # def GET_SYNTHDEF_FILES():
