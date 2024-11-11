@@ -46,7 +46,7 @@ class workspace:
         # Configure Renardo's namespace to include the editor
         CodeClass.namespace['GUI'] = self
         CodeClass.namespace['Player'].widget = self
-        self.version = this_version = '0.9.13.dev11'
+        self.version = this_version = '0.9.13.dev12'
         pypi_version = get_pypi_version()
         self.theme = COLOR_THEME
 
