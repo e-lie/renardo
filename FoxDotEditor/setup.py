@@ -18,7 +18,7 @@ setup(
     long_description_content_type="text/markdown",
     entry_points={'gui_scripts': ['FoxDotEditor = FoxDotEditor.__init__:main']},
     # data_files=[('', 'LICENSE')],
-    package_data={'FoxDotEditor': ['README.md', 'img/*', 'tmp/*'], },
+    package_data={'FoxDotEditor': ['README.md', 'img/*', 'tmp/*', 'themes/*'], },
     install_requires=[
         'renardo-lib==1.0.0.dev13',
         'renardo_gatherer==0.1.4.dev1',
