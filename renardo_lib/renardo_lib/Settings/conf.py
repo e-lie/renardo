@@ -112,7 +112,7 @@ try:
         console_bg = json_object[TEXT_COLORS]['console_bg']
 
 except FileNotFoundError:
-    print(f"{TEXT_COLORS} file not found! Use defaults instead.")
+    print(f"{FOXDOT_EDITOR_THEMES + '/' + TEXT_COLORS + '.json'} color config file not found! Use default values instead.")
     # Text area colours
     # ------------------
     plaintext = '#ffffff'
