@@ -1,6 +1,6 @@
 # Pattern function
 import math
-from renardo_lib import Pvar, player_method, linvar, TimeVar, var, expvar, sinvar, Pattern, xvar, yvar, P, PTri
+from renardo_lib.runtime import Pvar, player_method, linvar, TimeVar, var, expvar, sinvar, Pattern, xvar, yvar, P, PTri
 
 def octo_panning_beta(value):
     value = value % 8

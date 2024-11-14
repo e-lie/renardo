@@ -14,6 +14,7 @@ from renardo_lib.Constants import *
 from renardo_lib.Midi import *
 from renardo_lib.Settings import *
 from renardo_lib.ServerManager import *
+from renardo_lib.Groups import *
 #from renardo_lib.SynthDefManagement import Effects
 from renardo_lib.SynthDefManagement.SynthDict import SynthDefs
 

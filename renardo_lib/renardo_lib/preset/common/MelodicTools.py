@@ -1,4 +1,4 @@
-from renardo_lib import Pvar
+from renardo_lib.runtime import Pvar
 
 import enum
 from fastnumbers import isfloat, isint

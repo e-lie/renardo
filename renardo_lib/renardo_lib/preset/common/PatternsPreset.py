@@ -1,4 +1,4 @@
-from renardo_lib import P, linvar, sinvar, var, PWhite, Pattern, PTri
+from renardo_lib.runtime import P, linvar, sinvar, var, PWhite, Pattern, PTri
 
 dynvars = {}
 

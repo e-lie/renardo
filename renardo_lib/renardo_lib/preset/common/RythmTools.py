@@ -2,7 +2,7 @@
 from copy import Error
 
 import math
-from renardo_lib import Pvar, Pattern, PEuclid, P
+from renardo_lib.runtime import Pvar, Pattern, PEuclid, P
 
 def groove_rythm_combination(rythm, groove):
     """

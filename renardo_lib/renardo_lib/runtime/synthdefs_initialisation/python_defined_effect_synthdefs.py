@@ -339,7 +339,7 @@ fx.add("osc = osc * EnvGen.ar(Env([0,1,0], [revatk,revsus], curve: 'welch'))")
 fx.add("osc = SelectX.ar(mix2, [dry, osc])")
 fx.save()
 
-fx = FxList.new('output','output', {'output': 0}, order=2)
+fx = effect_manager.new('output','output', {'output': 0}, order=2)
 fx.doc("Output select Bus")
 fx.add("Out.ar(output, osc)")
 fx.save()

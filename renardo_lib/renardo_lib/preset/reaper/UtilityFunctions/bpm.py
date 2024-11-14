@@ -1,4 +1,4 @@
-from renardo_lib import Clock, nextBar, inf, linvar
+from renardo_lib.runtime import Clock, nextBar, inf, linvar
 from ..Presets import reaproject, ReaTask
 
 # def change_bpm(bpm, midi_nudge=False, nudge_base=0.72):
