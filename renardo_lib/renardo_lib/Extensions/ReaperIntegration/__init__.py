@@ -5,9 +5,9 @@ from pprint import pprint
 from renardo_lib.runtime import Clock, player_method
 
 from .ReaperInstruments import ReaperInstrumentFacade
-from renardo_lib.Extensions.ReaperIntegrationLib.ReaProject import ReaProject
-from renardo_lib.Extensions.ReaperIntegrationLib.ReaTrack import ReaTrack
-from renardo_lib.Extensions.ReaperIntegrationLib.ReaTaskQueue import ReaTask
+from renardo_reaper.ReaperIntegrationLib.ReaProject import ReaProject
+from renardo_reaper.ReaperIntegrationLib.ReaTrack import ReaTrack
+from renardo_reaper.ReaperIntegrationLib.ReaTaskQueue import ReaTask
 
 def init_reapy_project():
     project = None

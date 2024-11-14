@@ -140,8 +140,8 @@ from renardo_lib.TimeVar import TimeVar, mapvar, linvar, inf, var
 from renardo_lib.Code import WarningMsg
 from renardo_lib.Utils import get_first_item
 
-from renardo_lib.Extensions.ReaperIntegrationLib.ReaProject import get_reaper_object_and_param_name, set_reaper_param, get_reaper_param
-from renardo_lib.Extensions.ReaperIntegrationLib.ReaTrack import ReaTrack
+from renardo_reaper.ReaperIntegrationLib.ReaProject import get_reaper_object_and_param_name, set_reaper_param, get_reaper_param
+from renardo_reaper.ReaperIntegrationLib.ReaTrack import ReaTrack
 
 
 class EmptyPlayer(object):
