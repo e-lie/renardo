@@ -3,10 +3,13 @@
 
 ### Problems to solve
 
-- [ ] crash of reapy connection
-- [ ] update param queue saturation (redesign queue)
 - [ ] use volume adjustement to get rid of useless sends
 - [ ] create the project from scratch
+- [ ] crash of reapy connection (when python is killed for example)
+- [ ] update param queue saturation (redesign queue)
+- [ ] handle presets and utility function as modules/assets
+- [ ] handle loading renardo_reaper conditionnally with try
+- [ ] create cleaner extensibility of renardo by creating hooks where necessary (in Player and Clock etc)
 
 ### Improvement features ideas
 
