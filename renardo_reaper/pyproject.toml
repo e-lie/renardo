@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "renardo-reaper"
+dynamic = ["version"]
+description = 'A Python package integrating the Reaper API with Renardo functionalities'
+readme = "README.md"
+requires-python = ">=3.8"
+license = "GPL-3.0"
+keywords = ['music', 'livecoding', 'algorave', 'supercollider', 'reaper']
+authors = [
+  { name = "Elie Gavoty", email = "mail@eliegavoty.fr" },
+]
+
+dependencies = [
+  "python-reapy",
+  "renardo-lib==1.0.0.dev13"
+]
+
+[project.urls]
+Documentation = "https://github.com/e-lie/renardo/renardo-reaper/README.md"
+Issues = "https://github.com/e-lie/renardo/issues"
+Source = "https://github.com/e-lie/renardo/renardo-reaper"
+
+[tool.hatch.version]
+path = "src/renardo_reaper/__about__.py"
