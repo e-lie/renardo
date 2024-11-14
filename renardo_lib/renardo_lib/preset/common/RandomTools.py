@@ -1,5 +1,5 @@
 # Pattern function
-from renardo_lib import player_method, PWhite
+from renardo_lib.runtime import player_method, PWhite
 
 # Param shortcut functions to use with dict unpack : **lpf(linvar([0,.3],8))
 @player_method

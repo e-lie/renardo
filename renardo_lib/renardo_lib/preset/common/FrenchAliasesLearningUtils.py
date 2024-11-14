@@ -1,4 +1,4 @@
-from renardo_lib import Player, Group, play, Clock, Scale, blip, bbass
+from renardo_lib.runtime import Player, Group, play, Clock, Scale, blip, bbass
 
 joueur1 = Player()
 joueur2 = Player()

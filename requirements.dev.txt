@@ -2,7 +2,7 @@ psutil
 requests
 bs4
 indexed
-playsound
+#playsound
 midiutil
 python-rtmidi
 fastnumbers
@@ -10,6 +10,7 @@ python-reapy
 mido
 JACK-Client
 ttkbootstrap
+python-reapy
 
 textual
 

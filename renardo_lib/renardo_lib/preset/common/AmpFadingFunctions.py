@@ -1,6 +1,6 @@
 from pprint import pprint
 
-from renardo_lib import player_method, linvar, inf, Clock, nextBar
+from renardo_lib.runtime import player_method, linvar, inf, Clock, nextBar
 
 
 @player_method

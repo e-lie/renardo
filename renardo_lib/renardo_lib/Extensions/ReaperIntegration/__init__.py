@@ -2,7 +2,7 @@
 from typing import Mapping
 from pprint import pprint
 
-from renardo_lib import Clock, player_method
+from renardo_lib.runtime import Clock, player_method
 
 from .ReaperInstruments import ReaperInstrumentFacade
 from renardo_lib.Extensions.ReaperIntegrationLib.ReaProject import ReaProject

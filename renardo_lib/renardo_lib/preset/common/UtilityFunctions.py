@@ -1,6 +1,6 @@
 # Pattern function
 
-from renardo_lib import (
+from renardo_lib.runtime import (
     Player, Group, player_method,
     linvar,
     var,

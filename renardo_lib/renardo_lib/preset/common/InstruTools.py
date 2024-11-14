@@ -1,4 +1,4 @@
-from renardo_lib import Player
+from renardo_lib.runtime import Player
 
 def switch(player_running, new_player, dur=8):
     player_running.fadeout(dur)
