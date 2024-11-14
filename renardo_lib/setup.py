@@ -21,7 +21,6 @@ setup(
         'renardo_lib.Extensions',
         'renardo_lib.Extensions.VRender',
         'renardo_lib.Extensions.SonicPiSynthDefImporter',
-        'renardo_lib.Extensions.ReaperIntegration',
         'renardo_lib.Extensions.MidiMapFactory',
         'renardo_lib.Patterns',
         'renardo_lib.SynthDefManagement',
