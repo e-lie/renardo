@@ -16,6 +16,7 @@ from renardo_lib.Settings import *
 from renardo_lib.ServerManager import *
 #from renardo_lib.SynthDefManagement import Effects
 from renardo_lib.SynthDefManagement.SynthDict import SynthDefs
+from renardo_lib.Shabda import samples, speech
 
 
 @PatternMethod
