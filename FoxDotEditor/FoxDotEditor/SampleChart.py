@@ -6,9 +6,7 @@ import os
 from .tkimport import *
 from .Format import *
 from renardo_lib.Settings import *
-from renardo_lib.runtime import spack_manager
-from renardo_gatherer.samples_download import nonalpha
-from renardo_gatherer import SAMPLES_DIR_PATH
+from renardo_gatherer.collections import nonalpha, SAMPLES_DIR_PATH
 
 try:
     from playsound import playsound

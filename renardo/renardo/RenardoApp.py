@@ -2,7 +2,6 @@ from renardo.supercollider_mgt.sc_classes_files import write_sc_renardo_files_in
 from renardo.supercollider_mgt.sclang_instances_mgt import SupercolliderInstance
 from .pulsar_mgt import PulsarInstance
 from .RenardoTUI import RenardoTUI
-from renardo_gatherer.samples_download import SPackManager
 
 import argparse
 import time
@@ -11,7 +10,6 @@ class RenardoApp:
 
     def __init__(self):
         self.sc_instance = None
-        self.spack_manager = SPackManager()
         self.args = RenardoApp.parse_args()
         self.sc_instance = SupercolliderInstance()
         self.pulsar_instance = PulsarInstance()
