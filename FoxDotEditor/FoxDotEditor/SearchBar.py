@@ -25,6 +25,7 @@ class SearchBar:
         self.search_btn = tb.Button(
             self.sb_frame, text="Search", command=self.search_task)
         self.search_btn.grid(row=0, column=2, padx=10, pady=5, sticky="e")
+        self.root.bind('<Return>', self.search_task)
 
     def reset_list(self):
         if self.search != self.search_entry.get():
