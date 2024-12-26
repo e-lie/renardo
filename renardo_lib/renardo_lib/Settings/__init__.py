@@ -4,6 +4,14 @@ import pathlib
 # Anything that needs to be updated
 from importlib import reload
 from renardo_gatherer.config_dir import get_samples_dir_path
+
+try:
+    from FoxDotEditor.EditorSettings import FOXDOT_EDITOR_ROOT
+except ImportError:
+    FOXDOT_EDITOR_ROOT = os.path.realpath(__file__ + "/../../../../FoxDotEditor/FoxDotEditor")
+
+
+
 # Check for OS -> mac, linux, win
 SYSTEM = 0
 WINDOWS = 0
@@ -27,7 +35,6 @@ elif sys.platform.startswith('linux'):
 USER_CWD = os.path.realpath(".")
 FOXDOT_ROOT = os.path.realpath(__file__ + "/../../")
 FOXDOT_SETTINGS = os.path.realpath(__file__ + "/../../Settings/")
-FOXDOT_EDITOR_ROOT = os.path.realpath(__file__ + "/../../../../FoxDotEditor/FoxDotEditor")
 FOXDOT_ICON = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/icon.ico")
 FOXDOT_ICON_GIF = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/icon.gif")
 FOXDOT_HELLO = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/hello.txt")

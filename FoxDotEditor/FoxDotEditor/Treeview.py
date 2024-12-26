@@ -4,6 +4,7 @@
 from FoxDotEditor.tkimport import *
 from pathlib import Path
 from renardo_lib.Settings import FOXDOT_EDITOR_ROOT
+import os
 
 
 class TreeView:
@@ -43,7 +44,7 @@ class TreeView:
         self.file_image = PhotoImage(file=FOXDOT_EDITOR_ROOT+"/img/file.png")
         self.folder_image = PhotoImage(file=FOXDOT_EDITOR_ROOT+"/img/folder.png")
         # Load the user directory.
-        self.home_path = os.environ['HOME']
+        self.home_path = str(Path.home())
         self.load_tree(Path(os.path.expanduser(self.home_path)))
         self.mouse_down = False
         self.drag.bind("<Button-1>",
@@ -67,7 +68,7 @@ class TreeView:
             node.insert(0, self.treeview.item(parent_iid)['text'])
             parent_iid = self.treeview.parent(parent_iid)
         i = self.treeview.item(item, "text")
-        path = self.home_path + "/" + os.path.join(*node, i)
+        path = self.home_path + os.path.sep + os.path.join(*node, i)
         if path.endswith(".py"):
             self.app.opentvfile(path)
         return

@@ -46,3 +46,8 @@ p1 >> pluck([0,1,2,3], amp=(p1.degree==1)*4 + (p1.degree==2)*1)
 
 # Which is the same as
 p1 >> pluck([0,1,2,3], amp=p1.degree.map({1:4, 2:1}))
+
+# O cámbialo por otro amplificador multiplicando por 4
+p1 >> pluck([0,1,2,3], amp=(p1.degree==1))
+
+p1 >> pluck([0,1,2,3], amp=(p1.degree>1))
