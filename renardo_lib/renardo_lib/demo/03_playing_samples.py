@@ -16,13 +16,13 @@ bd >> play("x")
 
 # A character refers to a sound and whitespace is used for silence, so
 # you can spread sounds out in time:
-bd >> play("x  x  x  ")
+bd >> play("x..x..x..")
 
-hh >> play(" -")
+hh >> play(".-")
 
 # You can lace patterns using round brackets
 # Whick plays like: "x o  xo "
-d1 >> play("(x )( x)o ")
+d1 >> play("(x.)(.x)o.")
 
 # The following is the same as "-------="
 hh >> play("---(-=)")
@@ -49,9 +49,9 @@ d1 >> play("x-o[-(o )]")
 d1 >> play("x-o{-=[--][-o]}")
 
 # Angle brackets combine patterns to be play simultaneously
-d1 >> play("<X   ><-   ><#   ><V   >")
+d1 >> play("<X...><-...><#...><V...>")
 
-d1 >> play("<X   >< -  ><  # ><   V>")
+d1 >> play("<X...><.-..><..#.><...V>")
 
 # Each character is mapped to a folder of sound files and you can select different
 # samples by using the "sample" keyword argument
@@ -65,10 +65,10 @@ d1 >> play("(x[--])xu[--]", sample=2)
 d1 >> play("(x[--])xu[--]", sample=[1,2,3])
 
 # You can layer two patterns together - note the "P", look at tutorial 4 for more information.
-d1 >> play(P["x-o-"] & P[" **"])
+d1 >> play(P["x-o-"] & P[".**"])
 
 # And change effects applied to all the layered patterns at the same time
-d1 >> play(P["x-o-"] & P[" **"], room=0.5)
+d1 >> play(P["x-o-"] & P[".**"], room=0.5)
 
 # Example from the player tutorial, but with samples instead
 # Conditionals...
