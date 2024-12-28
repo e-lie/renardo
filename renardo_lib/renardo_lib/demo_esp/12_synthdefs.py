@@ -43,13 +43,13 @@ example.add()
 
 # Cómo crear un SynthDef
 
-with SynthDef("pads") as pads:
-	pads.osc = SinOsc.ar(pads.freq)
-	pads.env = Env.perc()
+with SynthDef("charm") as charm:
+	charm.osc = SinOsc.ar(charm.freq)
+	charm.env = Env.perc()
 
 #Es equivalente a 
 
-pads = SynthDef("pads")
-pads.osc = SinOsc.ar(pads.freq)
-pads.env = Env.perc()
-pads.add()
+charm = SynthDef("charm")
+charm.osc = SinOsc.ar(charm.freq)
+charm.env = Env.perc()
+charm.add()
