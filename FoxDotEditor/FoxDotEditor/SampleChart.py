@@ -3,15 +3,16 @@ from __future__ import absolute_import
 
 import multiprocessing
 import os
+import time
 from .tkimport import *
 from .Format import *
 from renardo_lib.Settings import *
 from renardo_gatherer.collections import nonalpha, SAMPLES_DIR_PATH
 
 try:
-    from playsound import playsound
+    from soundplay import playsound
 except Exception:
-    print("playsound library not installed...")
+    print("soundplay library not installed...")
 
 
 class SampleChart:
@@ -21,6 +22,7 @@ class SampleChart:
         self.root = Tk()
         self.width = 800
         self.height = 600
+        self.root.geometry(str(self.width)+"x"+str(self.height))
         self.wheel_count = 0
         self.root.minsize(self.width, self.height)
         self.root.title("FoxDot >> Samples Database Chart")
@@ -215,9 +217,21 @@ class SampleChart:
         """Generate audio sample buttons"""
         self.colors = list(colour_map.keys())
         self.col_space = 12
+        self.bar_length = 260
         # First delete all in btn_frame
         for widgets in self.btn_frame.winfo_children():
             widgets.destroy()
+        self.total_max = len(self.dict_letters) + len(self.dict_specials) + 1
+        self.tl = tb.Toplevel(topmost=True, width=self.bar_length, height=20)
+        self.tl.title("Loading Samples")
+        self.pbar = ttk.Progressbar(self.tl,
+                                    length=self.bar_length,
+                                    mode="indeterminate",
+                                    max=self.total_max
+                                    )
+        self.pbar.grid()
+        self.pbar.start()
+        self.pbar_count = 0
         # Add category buttons
         self.counter = 0
         for k in self.dict_letters.keys():
@@ -262,6 +276,10 @@ class SampleChart:
                         self.btn.configure(bg=colour_map["default"])
                 self.btn.grid(row=self.dcounter, column=self.fcounter + self.col_space)
                 self.fcounter += 1
+                self.pbar_count += 1
+                # time.sleep(0.1)
+                self.pbar["value"] = self.pbar_count
+                self.tl.update_idletasks()
             self.dcounter += 1
         # Create buttons for each sample in the specials dictionary
         for n in self.dict_specials:
@@ -289,6 +307,10 @@ class SampleChart:
                         self.btn.configure(bg=colour_map["default"])
                 self.btn.grid(row=self.dcounter, column=self.fcounter + self.col_space)
                 self.fcounter += 1
+                self.pbar_count += 1
+                # time.sleep(0.1)
+                self.pbar["value"] = self.pbar_count
+                self.tl.update_idletasks()
             self.dcounter += 1
         self.fcounter = 0
         for path in self.dict_loops:
@@ -305,6 +327,13 @@ class SampleChart:
             # self.btn_frame.bind('<Return>', lambda event=None: button.invoke())
             self.btn.grid(row=self.dcounter, column=self.fcounter + self.col_space)
             self.fcounter += 1
+            self.pbar["value"] = self.pbar_count
+            self.tl.update_idletasks()
+            # time.sleep(0.1)
+        self.pbar_count = 76
+        self.tl.update_idletasks()
+        self.pbar.stop()
+        self.tl.withdraw()
 
     def play_audio(self, char, sample, path, row, col):
         """Displays sample code to copy and plays audio"""
