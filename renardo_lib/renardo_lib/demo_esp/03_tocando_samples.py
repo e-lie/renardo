@@ -16,13 +16,13 @@ bd >> play("x")
 
 # Un carácter se refiere a un sonido y el espacio en blanco se usa para el silencio, así que
 # puedes separar los sonidos en el tiempo:
-bd >> play("x  x  x  ")
+bd >> play("x..x..x..")
 
-hh >> play(" -")
+hh >> play(".-")
 
 # Puedes encajar patrones usando corchetes redondos
 # Whick juega como: "x o xo "
-d1 >> play("(x )( x)o ")
+d1 >> play("(x.)(.x)o.")
 
 # Lo siguiente es lo mismo que "-------="
 hh >> play("---(-=)")
@@ -49,9 +49,9 @@ d1 >> play("x-o[-(o )]")
 d1 >> play("x-o{-=[--][-o]}")
 
 # Los corchetes angulares combinan patrones para que se reproduzcan simultáneamente
-d1 >> play("<X   ><-   ><#   ><V   >")
+d1 >> play("<X...><-...><#...><V...>")
 
-d1 >> play("<X   >< -  ><  # ><   V>")
+d1 >> play("<X...><.-..><..#.><...V>")
 
 # Cada carácter se asigna a una carpeta de archivos de sonido y puede seleccionar diferentes
 # ejemplos mediante el argumento de la palabra clave "sample"
@@ -65,10 +65,10 @@ d1 >> play("(x[--])xu[--]", sample=2)
 d1 >> play("(x[--])xu[--]", sample=[1,2,3])
 
 # Puede superponer dos patrones juntos - observe la "P", mire el tutorial 4 para obtener más información.
-d1 >> play(P["x-o-"] & P[" **"])
+d1 >> play(P["x-o-"] & P[".**"])
 
 # Y cambiar los efectos aplicados a todos los patrones en capas al mismo tiempo
-d1 >> play(P["x-o-"] & P[" **"], room=0.5)
+d1 >> play(P["x-o-"] & P[".**"], room=0.5)
 
 # Ejemplo del tutorial del reproductor, pero con samples en su lugar
 # condicionales...

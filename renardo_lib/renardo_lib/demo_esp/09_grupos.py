@@ -1,17 +1,17 @@
 # Tutorial 9: Grupos
 
 # Los atributos de los players, como el grado o la escala, también pueden modificarse asignándole directamente valores tales que
-p1 >> pads([0,2,4,2], scale=Scale.majorPentatonic)
+p1 >> charm([0,2,4,2], scale=Scale.majorPentatonic)
 
 # es equivaklente a
-p1 >> pads()
+p1 >> charm()
 p1.degree = [0,2,4,2]
 p1.scale = Scale.majorPentatonic
 
 # Esto es útil si quieres asignar los mismos valores a múltiples objetos player simultáneamente, así:
-p1 >> pads([0,2,4,2])
-p2 >> pads([2,1,0,4])
-p3 >> pads([2,3])
+p1 >> charm([0,2,4,2])
+p2 >> charm([2,1,0,4])
+p3 >> charm([2,3])
 p1.dur=p2.dur=p3.dur=[1,1/2,1/4,1/4]
 
 p1.stop()
@@ -31,9 +31,9 @@ p_all.stop()
 p_all.solo()
 
 # Para reducir la cantidad de escritura, los objetos player pueden ser agrupados y sus atributos modificados de una manera más simple:
-p1 >> pads([0,2,4,2])
-p2 >> pads([2,1,0,4])
-p3 >> pads([2,3])
+p1 >> charm([0,2,4,2])
+p2 >> charm([2,1,0,4])
+p3 >> charm([2,3])
 g1 = Group(p1, p2, p3)
 g1.dur=[1,1/2,1/4,1/4]
 
