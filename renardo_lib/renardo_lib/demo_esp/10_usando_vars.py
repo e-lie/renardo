@@ -39,7 +39,7 @@ print(int(Clock.now()), b) # Después de 12 beats, el valor cambia a 3
 # Usa 'var' con tus objetos player para crear progresiones de acordes.
 a = var([0,4,5,3], 4)
 b1 >> bass(a, dur=PDur(3,8))
-p1 >> pads(a + (0,2), dur=PDur(7,16))
+p1 >> charm(a + (0,2), dur=PDur(7,16))
 
 # Puedes añadir un 'var' a un objeto player o a un var.
 b1 >> bass(a, dur=PDur(3,8)) + var([0,1],[3,1])
@@ -70,14 +70,14 @@ c = linvar([0,1],16)
 print(int(Clock.now()), c)
 
 # Cambia el amplificador basado en ese linvar
-p1 >> pads(a, amp=c)
+p1 >> charm(a, amp=c)
 
 # un 'Pvar' es una 'var' que puede almacenar patrones (a diferencia de, digamos, números enteros)
 d = Pvar([P[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], P[0, 1, 2, 3, 4, 5, 4, 3, 2, 1]], 8)
 
 print(int(Clock.now()), d)
 
-p1 >> pads(a, amp=c, dur=1/4) + d
+p1 >> charm(a, amp=c, dur=1/4) + d
 
 # Cambia la escala cada 16 tiempos
 Scale.default = Pvar([Scale.major, Scale.minor],16)

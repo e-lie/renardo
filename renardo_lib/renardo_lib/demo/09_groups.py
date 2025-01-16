@@ -2,17 +2,17 @@
 
 
 # Attributes of players, such as degree or scale, can also be changed by directly assigning values to it such that
-p1 >> pads([0,2,4,2], scale=Scale.majorPentatonic)
+p1 >> charm([0,2,4,2], scale=Scale.majorPentatonic)
 
 # is equivalent to
-p1 >> pads()
+p1 >> charm()
 p1.degree = [0,2,4,2]
 p1.scale = Scale.majorPentatonic
 
 # This is useful if you want to assign the same values to multiple Player Object simultaneously, like so:
-p1 >> pads([0,2,4,2])
-p2 >> pads([2,1,0,4])
-p3 >> pads([2,3])
+p1 >> charm([0,2,4,2])
+p2 >> charm([2,1,0,4])
+p3 >> charm([2,3])
 p1.dur=p2.dur=p3.dur=[1,1/2,1/4,1/4]
 
 p1.stop()
@@ -32,9 +32,9 @@ p_all.stop()
 p_all.solo()
 
 # To reduce the amount of typing, Player Objects can be grouped together and their attributes modified in a simpler way:
-p1 >> pads([0,2,4,2])
-p2 >> pads([2,1,0,4])
-p3 >> pads([2,3])
+p1 >> charm([0,2,4,2])
+p2 >> charm([2,1,0,4])
+p3 >> charm([2,3])
 g1 = Group(p1, p2, p3)
 g1.dur=[1,1/2,1/4,1/4]
 

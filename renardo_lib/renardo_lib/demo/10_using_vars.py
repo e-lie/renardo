@@ -39,7 +39,7 @@ print(int(Clock.now()), b)   # After 12 beats, the value changes to 3
 # Use 'var' with your Player objects to create chord progressions.
 a = var([0,4,5,3], 4)
 b1 >> bass(a, dur=PDur(3,8))
-p1 >> pads(a + (0,2), dur=PDur(7,16))
+p1 >> charm(a + (0,2), dur=PDur(7,16))
 
 # You can add a 'var' to a Player object or a var.
 b1 >> bass(a, dur=PDur(3,8)) + var([0,1],[3,1])
@@ -70,14 +70,14 @@ c = linvar([0,1],16)
 print(int(Clock.now()), c)
 
 # Change the amp based off that linvar
-p1 >> pads(a, amp=c)
+p1 >> charm(a, amp=c)
 
 # a 'Pvar' is a 'var' that can store patterns (as opposed to say, integers)
 d = Pvar([P[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], P[0, 1, 2, 3, 4, 5, 4, 3, 2, 1]], 8)
 
 print(int(Clock.now()), d)
 
-p1 >> pads(a, amp=c, dur=1/4) + d
+p1 >> charm(a, amp=c, dur=1/4) + d
 
 # Change the scale every 16 beats
 Scale.default = Pvar([Scale.major, Scale.minor],16)
