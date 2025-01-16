@@ -70,8 +70,8 @@ except FileNotFoundError:
     settings["CLOCK_LATENCY"] = 0
     settings["FORWARD_ADDRESS"] = ''
     settings["FORWARD_PORT"] = 0
-    settings["COLOR_THEME"] = 'cyborg'
-    settings["TEXT_COLORS"] = 'default'
+    settings["COLOR_THEME"] = 'vapor'
+    settings["TEXT_COLORS"] = 'vapor'
     # Write Settings into json file
     filename = os.path.join(os.path.dirname(__file__), "conf.json")
     try:
