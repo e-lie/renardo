@@ -10,8 +10,6 @@ try:
 except ImportError:
     FOXDOT_EDITOR_ROOT = os.path.realpath(__file__ + "/../../../../FoxDotEditor/FoxDotEditor")
 
-
-
 # Check for OS -> mac, linux, win
 SYSTEM = 0
 WINDOWS = 0
@@ -40,6 +38,7 @@ FOXDOT_ICON_GIF = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/icon.gif")
 FOXDOT_HELLO = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/hello.txt")
 FOXDOT_STARTUP_PATH = os.path.realpath(FOXDOT_ROOT + "/Custom/startup.py")
 FOXDOT_EDITOR_THEMES = os.path.realpath(FOXDOT_EDITOR_ROOT + "/themes")
+FOXDOT_MIDI_MAPS = os.path.realpath(FOXDOT_ROOT + "/MidiMaps")
 # FOXDOT_SND = SAMPLES_FOLDER_PATH / 'foxdot_default'
 FOXDOT_SND = get_samples_dir_path()
 # FOXDOT_LOOP = SAMPLES_FOLDER_PATH / 'foxdot_default' / '_loop_'
@@ -127,6 +126,7 @@ FORWARD_ADDRESS = conf.FORWARD_ADDRESS
 FORWARD_PORT = conf.FORWARD_PORT
 SAMPLES_DIR = conf.SAMPLES_DIR
 SAMPLES_PACK_NUMBER = conf.SAMPLES_PACK_NUMBER
+SAMPLES_MAX = 40
 COLOR_THEME = conf.COLOR_THEME
 TEXT_COLORS = conf.TEXT_COLORS
 

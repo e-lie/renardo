@@ -336,9 +336,9 @@ class console:
         self.app.popup.hide(*args)
 
 
-class Counter(Canvas):
+class Counter(tb.Canvas):
     def __init__(self, parent, *args, **kwargs):
-        Canvas.__init__(self, *args, **kwargs)
+        tb.Canvas.__init__(self, *args, **kwargs)
         self.parent = parent
         self.metro = self.parent.app.namespace['Clock']
         self.font = self.parent.app.console_font
@@ -378,8 +378,9 @@ class Counter(Canvas):
         for n in range(cycle):
             x1, x2 = [(val*box_width)+(w-width-35) for val in [n, (n+1)]]
             y1, y2 = h_offset / 2, box_height + (h_offset / 2)
-            bg = "red" if n == beat else self.bg
-            self.create_rectangle(x1, y1, x2, y2)
+            bg = "#3cff00" if n == beat else self.bg
+            # self.create_rectangle(x1, y1, x2, y2)
+            self.create_rectangle(x1, y1, x2, y2, fill=bg, outline="gray30", )
             # self.create_rectangle(x1, y1, x2, y2, fill=bg, outline=self.bg, )
         self.create_text(x2 + (w - x2)/2,
                          h / 2,

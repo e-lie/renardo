@@ -15,6 +15,7 @@ SC3_PLUGINS = False
 MAX_CHANNELS = 2
 SAMPLES_DIR = ""
 SAMPLES_PACK_NUMBER = 0
+SAMPLES_MAX = 40
 GET_SC_INFO = True
 USE_ALPHA = True
 ALPHA_VALUE = 0.8
@@ -30,8 +31,8 @@ CPU_USAGE = 2  # 0=low, 1=medium, 2=high
 CLOCK_LATENCY = 0  # 0=low, 1=medium, 2=high
 FORWARD_ADDRESS = ''
 FORWARD_PORT = 0
-COLOR_THEME = 'cyborg'
-TEXT_COLORS = 'default'
+COLOR_THEME = 'vapor'
+TEXT_COLORS = 'vapor'
 
 # Loading from file
 # ------------------
@@ -154,7 +155,7 @@ tom = '#ff3838'
 noise = '#6b5e9b'
 ride = '#ffffa6'
 perc = '#ff8000'
-snare = '#ffff38'
+snare = '#f9e644'
 rim = '#ffff38'
 loops = '#1e1e19'
 default = '#b2b2b2'

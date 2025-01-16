@@ -24,6 +24,7 @@ from .LineNumbers import LineNumbers
 from .MenuBar import MenuBar, PopupMenu
 from .Treeview import TreeView
 from .SampleChart import SampleChart
+from .MidiMapper import MidiMapper
 from .SearchBar import SearchBar
 from functools import partial
 # from distutils.version import LooseVersion as VersionNumber
@@ -99,9 +100,12 @@ class workspace:
         # Boolean for beat counter
         self.show_counter = BooleanVar()
         self.show_counter.set(False)
+        # Boolean for beat counter
+        self.show_midival = BooleanVar()
+        self.show_midival.set(False)
         # Boolean for showing auto-complete prompt
         self.show_prompt = BooleanVar()
-        self.show_prompt.set(True)
+        self.show_prompt.set(False)
         # --- Set icon
         try:
             # Use .ico file by default
@@ -601,7 +605,15 @@ class workspace:
             sample_chart = SampleChart()
         except OSError as e:
             print(e)
-            print("Hmm... Looks like we couldn't open the chart app.")
+            print("Hmm... Looks like we couldn't open the sample chart app.")
+        return
+
+    def open_midi_mapper_app(self):
+        try:
+            midi_mapper = MidiMapper()
+        except OSError as e:
+            print(e)
+            print("Hmm... Looks like we couldn't open the midi mapper app.")
         return
 
     # Toggle linenumbers: ctrl+0
@@ -741,6 +753,10 @@ class workspace:
 
     def toggle_counter(self, event=None):
         self.console.counter.toggle()
+        return "break"
+
+    def toggle_midival(self, event=None):
+        self.console.midival.toggle()
         return "break"
 
     # Copy/paste etc

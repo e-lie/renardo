@@ -4,6 +4,7 @@ import os.path
 from functools import partial
 from renardo_lib.Settings import *
 from renardo_lib.Code import FoxDotCode
+from .Format import *
 
 # Code menu
 ctrl = "Command" if SYSTEM == MAC_OS else "Ctrl"
@@ -146,6 +147,10 @@ class MenuBar(Menu):
                                       command=self.root.toggle_counter,
                                       variable=self.root.show_counter,
                                       font=self.menu_fontsize)
+        self.viewmenu.add_checkbutton(label="Toggle Show Midi Value",
+                                      command=self.root.toggle_midival,
+                                      variable=self.root.show_midival,
+                                      font=self.menu_fontsize)
         self.add_cascade(label="View",
                          menu=self.viewmenu,
                          font=self.menu_fontsize)
@@ -170,6 +175,36 @@ class MenuBar(Menu):
         self.add_cascade(label="Language",
                          menu=self.codemenu,
                          font=self.menu_fontsize)
+        # Tools
+        self.toolsmenu = Menu(self, tearoff=0)
+        self.toolsmenu.add_command(label="Samples Chart App",
+                                   command=self.root.open_samples_chart_app,
+                                   font=self.menu_fontsize)
+        # self.toolsmenu.add_separator()
+        self.toolsmenu.add_command(label="Midi Mapper",
+                                   command=self.root.open_midi_mapper_app,
+                                   font=self.menu_fontsize)
+        self.midi_devices_menu = Menu(self, tearoff=0)
+        # Check in /midi for saved files and create dropdwn menu
+        self.add_cascade(label="Tools",
+                         menu=self.toolsmenu,
+                         font=self.menu_fontsize)
+        self.toolsmenu.add_cascade(label="Midi Maps",
+                                   menu=self.midi_devices_menu)
+        self.mm_path = FOXDOT_MIDI_MAPS + '/'
+        self.mm_maps = []
+        for map in os.listdir(self.mm_path):
+            if map.endswith(".json"):
+                map = os.path.splitext(map)[0]
+                self.mm_maps.append(map)
+        mcount = 0
+        self.mm_maps.sort()
+        for map in self.mm_maps:
+            self.midi_devices_menu.add_checkbutton(
+                label=map + " ID: " + str(mcount),
+                font=self.menu_fontsize,
+                state=DISABLED)
+            mcount += 1
         # Help
         self.helpmenu = Menu(self, tearoff=0)
         self.helpmenu.add_command(label="Display help message",
@@ -199,9 +234,6 @@ class MenuBar(Menu):
         self.helpmenu.add_separator()
         self.helpmenu.add_command(label="Open Samples Folder",
                                   command=self.root.open_samples_folder,
-                                  font=self.menu_fontsize)
-        self.helpmenu.add_command(label="Open Samples Chart App",
-                                  command=self.root.open_samples_chart_app,
                                   font=self.menu_fontsize)
         self.add_cascade(label="Help",
                          menu=self.helpmenu,

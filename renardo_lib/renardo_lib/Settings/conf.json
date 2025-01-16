@@ -9,6 +9,7 @@
       "MAX_CHANNELS": 2,
       "SAMPLES_DIR": "",
       "SAMPLES_PACK_NUMBER": 0,
+      "SAMPLES_MAX": 40,
       "GET_SC_INFO": true,
       "USE_ALPHA": true,
       "ALPHA_VALUE": 0.8,
@@ -25,6 +26,6 @@
       "CLOCK_LATENCY": 0,
       "FORWARD_ADDRESS": "",
       "FORWARD_PORT": 0,
-      "COLOR_THEME": "cyborg",
-      "TEXT_COLORS": "default"
+      "COLOR_THEME": "vapor",
+      "TEXT_COLORS": "vapor"
 }

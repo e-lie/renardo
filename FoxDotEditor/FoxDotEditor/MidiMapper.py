@@ -1,389 +1,624 @@
-#!/usr/bin/env python
-from __future__ import absolute_import
 
-import multiprocessing
-import os
-from .tkimport import *
-from .Format import *
+from FoxDotEditor.tkimport import *
 from renardo_lib.Settings import *
-from renardo_lib.runtime import spack_manager
-from renardo_gatherer.samples_download import nonalpha
-from renardo_gatherer import SAMPLES_DIR_PATH
-
+from .Format import *
 try:
-    from playsound import playsound
-except Exception:
-    print("playsound library not installed...")
+    import tkMessageBox
+except ImportError:
+    from tkinter import messagebox as tkMessageBox
+try:
+    from rtmidi import *
+except ImportError:
+    pass
+import os.path
+import time
 
 
 class MidiMapper:
-
     def __init__(self):
-        # Basic TKinter function
-        self.root = Tk()
-        self.width = 800
-        self.height = 600
-        self.wheel_count = 0
-        self.root.minsize(self.width, self.height)
-        self.root.title("FoxDot >> Samples Database Chart")
-        self.root.resizable(True, True)
-        self.root.grid_rowconfigure(0, weight=1)  # configure grid system
-        self.root.grid_columnconfigure(0, weight=1)
-        # self.root.iconbitmap('img/foxdot.ico')
-        # Call init methods
-        self.sp_count = len([name for name in os.listdir(str(SAMPLES_DIR_PATH))])
-        self.sp_names = os.listdir(str(SAMPLES_DIR_PATH))
-        self.sp_names.sort()
-        self.sp_view()
-        self.create_dics(spack_id="0_foxdot_default")
-        self.smpl_view(self.width, self.height)
-        self.root.mainloop()
-
-    def sp_view(self):
-        """Generate a button for each sample database by spack folder"""
-        # Set SoundPack_SAMPLES Frame
-        self.sp_frame = Frame(self.root)
-        self.sp_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nswe")
-        # Label for SoundPack List
-        self.sp_label = Label(
-            self.sp_frame,
-            text="SAMPLES_PACK",
-            compound="left")
-        self.sp_label.grid(row=0, column=0, padx=10, sticky="w")
-        # Add Buttons
-        for count in range(self.sp_count):
-            lbl = self.sp_names[count]
-            btn_sp = Button(
-                self.sp_frame,
-                text=lbl,
-                command=lambda sp=lbl: self.change_sp(sp))
-            btn_sp.grid(row=1, column=count, padx=10, pady=10, sticky="w")
-        self.txt_frame = Frame(self.sp_frame)
-        self.txt_frame.grid(columnspan=self.sp_count,
-                            row=2, column=0, padx=20, pady=10, sticky="nsew")
-        self.lbl_file = Label(
-            self.txt_frame,
-            text="Filename: ",
-            anchor="w")
-        self.lbl_file.grid(columnspan=self.sp_count,
-                           row=0,
-                           column=0,
-                           padx=20,
-                           pady=5,
-                           sticky="w")
-        self.txt = Text(self.txt_frame, width=80, height=1)
-        self.txt.grid(row=1, column=0, padx=20, pady=20, sticky="nsew")
-
-    def create_dics(self, spack_id="0_foxdot_default"):
-        """
-        Iterating through subfolders and writing all file names into dictionary
-        lists
-        """
-        self.spack_id_str = str(spack_id)
-        self.ext = ('.wav', 'aif')
-        self.dict_letters = {}
-        self.dict_letters.clear()
-        self.dict_specials = {}
-        self.dict_specials.clear()
-        self.dict_loops = []
-        # First go through all letters and get file paths in upper and lower
-        # Fill dictionary with letters as key and file names of audio as values
-        self.sp_path_l = str(SAMPLES_DIR_PATH) + "/" + spack_id + "/"
-        self.dir_list_l = []
-
-        for filename in os.listdir(self.sp_path_l):
-            if os.path.isdir(os.path.join(self.sp_path_l, filename)):
-                self.dir_list_l.append(filename)
-
-        self.dir_list_l.sort()
-
-        for i in self.dir_list_l:
-            if i != "_" and i != "_loop_":
-                self.new_path = self.sp_path_l + str(i) + "/lower/"
-                # self.smpl_list = os.path.isdir(self.new_path)
-                self.smpl_list = [
-                    f for f in os.listdir(self.new_path)
-                    if os.path.isfile(os.path.join(self.new_path, f))
-                ]
-                self.smpl_list.sort()
-                for n in self.smpl_list:
-                    if not n.endswith(self.ext):
-                        self.smpl_list.remove(n)
-                self.dict_letters[i.upper()] = self.smpl_list
-                self.dict_letters[i] = self.smpl_list
-                self.new_path = self.sp_path_l + str(i) + "/upper/"
-                self.smpl_list = [
-                    f for f in os.listdir(self.new_path)
-                    if os.path.isfile(os.path.join(self.new_path, f))
-                ]
-                self.smpl_list.sort()
-                for n in self.smpl_list:
-                    if not n.endswith(self.ext):
-                        self.smpl_list.remove(n)
-                self.dict_letters[i.upper()] = self.smpl_list
-
-        # Fill dictionary with specials as key and file names of
-        # audio as values
-        self.sp_path_s = self.sp_path_s = str(SAMPLES_DIR_PATH)+"/"+spack_id+"/_/"
-        self.dir_list_s = []
-        for filename in os.listdir(self.sp_path_s):
-            if os.path.isdir(os.path.join(self.sp_path_s, filename)):
-                self.dir_list_s.append(filename)
-        self.dir_list_s.sort()
-        for j in self.dir_list_s:
-            self.new_path = self.sp_path_s + str(j) + "/"
-            self.smpl_list = [
-                f for f in os.listdir(self.new_path)
-                if os.path.isfile(os.path.join(self.new_path, f))
-            ]
-            self.smpl_list.sort()
-            for n in self.smpl_list:
-                if not n.endswith(self.ext):
-                    self.smpl_list.remove(n)
-            self.dict_specials[j] = self.smpl_list
-        # Fill dictionary with loops as value
-        self.sp_path_loops = str(SAMPLES_DIR_PATH)+"/"+spack_id+"/"+FOXDOT_LOOP
-        self.smpl_list = [
-            f for f in os.listdir(self.sp_path_loops)
-            if os.path.isfile(os.path.join(self.sp_path_loops, f))
-        ]
-        self.smpl_list.sort()
-        for n in self.smpl_list:
-            if not n.endswith(self.ext):
-                self.smpl_list.remove(n)
-        self.dict_loops = self.smpl_list
-
-    def smpl_view(self, w, h):
-        """Generate a button for each sample arranged by character folder"""
-        self.w = self.width
-        self.h = self.height
-        self.processes = []
-        # Create basic frame that will contain all
-        self.frame = Frame(self.root)
-        self.frame.grid(row=2, column=0, sticky='news')
-        self.frame.grid_columnconfigure(0, weight=1)
-        self.frame_label = Label(self.frame,
-                                 text="SAMPLES",
-                                 compound="left")
-        self.frame_label.grid(row=0, column=0, padx=20, sticky="w")
-        # Add a canvas in that frame
-        self.canvas = Canvas(self.frame, bg=colour_map['background'])
-        self.canvas.grid(row=1, column=0, sticky='news')
-        # Link a scrollbar to the canvas
-        self.xsb = Scrollbar(self.frame, orient="horizontal",
-                             command=self.canvas.xview)
-        self.ysb = Scrollbar(self.frame, orient="vertical",
-                             command=self.canvas.yview)
-        self.xsb.grid(row=2, column=0, sticky='we')
-        self.ysb.grid(row=1, column=1, sticky='ns')
-        self.canvas.configure(xscrollcommand=self.xsb.set,
-                              yscrollcommand=self.ysb.set)
-        self.canvas.grid_rowconfigure(0, weight=1)
-        self.canvas.grid_rowconfigure(1, weight=1)
-        self.canvas.grid_columnconfigure(0, weight=1)
-        self.canvas.grid_columnconfigure(1, weight=1)
-        # Create a frame to contain Buttons
-        self.btn_frame = Frame(self.canvas, bg=colour_map['background'])
-        self.canvas.create_window((0, 0), window=self.btn_frame, anchor='nw')
-        # Generate sample buttons
-        self.smpl_btns()
-        # Update buttons frames idle tasks to let tkinter calculate
-        # buttons sizes
-        self.btn_frame.update_idletasks()
-        self.canvas['xscrollcommand'] = self.xsb.set
-        # Resize the canvas frame
-        self.canvas.config(width=self.w - self.ysb.winfo_width(),
-                           height=self.h - self.xsb.winfo_height())
-        # Set the canvas scrolling region
-        self.canvas.config(scrollregion=self.canvas.bbox("all"))
-        self.canvas.grid_propagate(True)
-        # This is what enables using the mouse:
-        self.btn_frame.bind("<ButtonPress-1>", self.move_start)
-        self.btn_frame.bind("<B1-Motion>", self.move_move)
-        # linux scroll
-        self.btn_frame.bind("<Button-4>", self.on_mousewheel)
-        self.btn_frame.bind("<Button-5>", self.on_mousewheel)
-        self.btn_frame.bind("<Prior>", self.on_mousewheel)  # Bind to PageUp
-        self.btn_frame.bind("<Next>", self.on_mousewheel)  # Bind to PageDown
-        # play audio
-        # self.root.bind("<space>", self.space_play)
-        # windows scroll
-        self.btn_frame.bind("<MouseWheel>", self.on_mousewheel)
-        self.btn_frame.bind("<space>", self.press_space)
-        # Update canvas when changing window size
-        self.root.bind("<Configure>", self.on_resize)
-
-    def smpl_btns(self):
-        """Generate audio sample buttons"""
-        self.colors = list(colour_map.keys())
-        self.col_space = 12
-        # First delete all in btn_frame
-        for widgets in self.btn_frame.winfo_children():
-            widgets.destroy()
-        # Add category buttons
-        self.counter = 0
-        for k in self.dict_letters.keys():
-            self.btn = Button(self.btn_frame, text=k, width=10,
-                              fg='white', bg=colour_map['background'])
-            self.btn.grid(row=self.counter, column=0)
-            self.counter += 1
-        for n in self.dict_specials.keys():
-            self.special = list(nonalpha.keys())[list(nonalpha.values()).index(n)]
-            self.btn = Button(self.btn_frame, text=self.special,
-                              width=10, fg='white',
-                              bg=colour_map['background'])
-            self.btn.grid(row=self.counter, column=0)
-            self.counter += 1
-        self.btn = Button(self.btn_frame, text="loop", width=10,
-                          fg='white', bg=colour_map['background'])
-        self.btn.grid(row=self.counter, column=0)
-        # Create buttons for each sample in the letters dictionary
-        self.dcounter = 0
-        for m in self.dict_letters:
-            self.fcounter = 0
-            for v in self.dict_letters[m]:
-                self.word = v.lower()
-                if "_" in self.word or "-" in self.word:
-                    self.word = self.word.replace('.', '_')
-                    self.word = self.word.replace('-', '_')
-                    self.word = self.word.split('_')
-                self.color = ""
-                self.btn = Button(self.btn_frame,
-                                  text=self.fcounter,
-                                  width=1,
-                                  command=lambda r=m,
-                                  c=self.fcounter,
-                                  p=v,
-                                  d=self.dcounter,
-                                  f=self.fcounter+self.col_space: self.play_audio(r, c, p, d, f))
-                for c in self.colors:
-                    if c in self.word:
-                        self.color = c
-                        self.btn.configure(bg=colour_map[self.color])
-                    elif self.color == "":
-                        self.btn.configure(bg=colour_map["default"])
-                self.btn.grid(row=self.dcounter, column=self.fcounter + self.col_space)
-                self.fcounter += 1
-            self.dcounter += 1
-        # Create buttons for each sample in the specials dictionary
-        for n in self.dict_specials:
-            self.fcounter = 0
-            for w in self.dict_specials[n]:
-                self.word = w.lower()
-                if "_" in self.word or "-" in self.word:
-                    self.word = self.word.replace('.', '_')
-                    self.word = self.word.replace('-', '_')
-                    self.word = self.word.split('_')
-                self.color = ""
-                self.btn = Button(self.btn_frame,
-                                  text=self.fcounter,
-                                  width=1,
-                                  command=lambda r=n,
-                                  c=self.fcounter,
-                                  p=w,
-                                  d=self.dcounter,
-                                  f=self.fcounter+self.col_space: self.play_audio(r, c, p, d, f))
-                for c in self.colors:
-                    if c in self.word:
-                        self.color = c
-                        self.btn.configure(bg=colour_map[self.color])
-                    elif self.color == "":
-                        self.btn.configure(bg=colour_map["default"])
-                self.btn.grid(row=self.dcounter, column=self.fcounter + self.col_space)
-                self.fcounter += 1
-            self.dcounter += 1
-        self.fcounter = 0
-        for path in self.dict_loops:
-            self.btn = Button(self.btn_frame,
-                              text=self.fcounter,
-                              width=1,
-                              fg="white",
-                              bg=colour_map["loops"],
-                              command=lambda r="loops",
-                              c=self.fcounter,
-                              p=path,
-                              d=self.dcounter,
-                              f=self.fcounter+self.col_space: self.play_audio(r, c, p, d, f))
-            # self.btn_frame.bind('<Return>', lambda event=None: button.invoke())
-            self.btn.grid(row=self.dcounter, column=self.fcounter + self.col_space)
-            self.fcounter += 1
-
-    def play_audio(self, char, sample, path, row, col):
-        """Displays sample code to copy and plays audio"""
-        if len(self.processes) > 0:
-            for p in self.processes:
-                p.terminate()
-        self.info = [row, col]
-        self.txt.delete('1.0', END)
-        self.char = char
-        self.cmd = ""
-
-        if len(self.char) == 1 and self.char.isalpha():
-            if self.char.isupper():
-                self.path = self.sp_path_l + self.char.lower() + "/upper/" + path
-            elif self.char.islower():
-                self.path = self.sp_path_l + self.char + "/lower/" + path
-            self.cmd = "play"
-        elif self.char == "loops":
-            self.path = self.sp_path_l + FOXDOT_LOOP + "/" + path
-            self.cmd = "loop"
-            self.char = os.path.splitext(path)[0]
-        else:
-            self.char = list(nonalpha.keys())[list(
-                nonalpha.values()).index(self.char)]
-            self.path = self.sp_path_s + char + "/" + path
-            self.cmd = "play"
+        self.w = 850
+        self.h = 600
+        self.mm_top = tb.Toplevel(topmost=True)
+        self.mm_top.title("Midi Mapper")
+        self.mm_top.protocol("WM_DELETE_WINDOW", self.save_and_close)
+        self.mm_top.minsize(400, 300)
+        self.mm_top.resizable(True, True)
+        self.mm_top.geometry(str(self.w)+"x"+str(self.h))
+        self.item_colors = ["#000000", "#ff1900", "#ff8800", "#057dff",
+                            "#00ff2e", "#00ddff", "#9800ff",
+                            "#ff00e4", "#ff008c", "#d400ff"]
+        self.style = ttk.Style()
+        self.tgl_edit = False
+        self.tgl_conn = False
+        self.msg = [0, 0, 0]
+        self.midimap_name = "No Midi Map Loaded"
         try:
-            self.p = multiprocessing.Process(target=playsound, args=(self.path,))
-        except Exception:
-            print("playsound library not installed...")
-        if self.spack_id_str == "0_foxdot_default":
-            spack = "0"
+            # Use .ico file by default
+            self.mm_top.iconbitmap(FOXDOT_ICON)
+        except TclError:
+            # Use .gif if necessary
+            self.mm_top.tk.call('wm',
+                                'iconphoto',
+                                self.mm_top._w,
+                                PhotoImage(file=FOXDOT_ICON_GIF))
+        # Row 1
+        self.mm_title = tb.Label(self.mm_top,
+                                 text="MIDI MAPPER >> Map Your Midi Devices, Load and Save It. Choose your device in Menu >> Tools >> Midi Devices",
+                                 style="primary.Inverse.TLabel",
+                                 justify="center")
+        self.mm_title.grid(row=0,
+                           column=0,
+                           columnspan=5,
+                           padx=20,
+                           pady=15,
+                           sticky="WE")
+        # Row 2
+        self.device_lbl = tb.Label(self.mm_top,
+                                   text="MIDI DEVICE",
+                                   width=30)
+        self.device_lbl.grid(row=1,
+                             column=0,
+                             columnspan=2,
+                             pady=15,
+                             padx=20,
+                             sticky="W")
+        self.device_chkbtn = tb.Button(self.mm_top,
+                                       text="Check Devices",
+                                       width=15,
+                                       command=self.check_devices)
+        self.device_chkbtn.grid(row=1,
+                                column=2,
+                                pady=15,
+                                padx=5,
+                                sticky="E")
+        self.device_chkbox = tb.Combobox(self.mm_top, width=20)
+        self.device_chkbox.set("No Devices Available")
+        self.device_chkbox.grid(row=1,
+                                column=3,
+                                pady=15,
+                                padx=5,
+                                sticky="W")
+        self.device_connbtn = tb.Button(self.mm_top,
+                                        text="Connect It!",
+                                        width=15,
+                                        command=self.conn_device)
+        self.device_connbtn.grid(row=1,
+                                 column=4,
+                                 pady=15,
+                                 padx=5,
+                                 sticky="W")
+        # Row 3
+        self.device_state = tb.Label(self.mm_top,
+                                     text="No Device Connected",
+                                     width=30)
+        self.device_state.grid(row=2,
+                               column=0,
+                               columnspan=2,
+                               padx=20,
+                               sticky="W")
+        self.txt_output = tb.Label(self.mm_top,
+                                   text="No Midi Output Yet!")
+        self.txt_output.grid(row=2,
+                             column=2,
+                             columnspan=3,
+                             padx=20,
+                             sticky="W")
+        self.file_lbl = tb.Label(self.mm_top,
+                                 text="MIDI MAP",
+                                 width=30)
+        self.file_lbl.grid(row=3,
+                           column=0,
+                           columnspan=2,
+                           padx=20,
+                           pady=15,
+                           sticky="W")
+        self.file_new = tb.Button(self.mm_top,
+                                  text="New Midi Map",
+                                  width=15,
+                                  command=self.new_file)
+        self.file_new.grid(row=3,
+                           column=2,
+                           pady=15,
+                           padx=5,
+                           sticky="E")
+        self.file_open = tb.Button(self.mm_top,
+                                   text="Load Midi Map",
+                                   width=20,
+                                   command=self.load_mmf)
+        self.file_open.grid(row=3,
+                            column=3,
+                            pady=15,
+                            padx=5,
+                            sticky="E")
+        self.file_save = tb.Button(self.mm_top,
+                                   text="Save Midi Map",
+                                   width=15,
+                                   command=self.save_mmf)
+        self.file_save.grid(row=3,
+                            column=4,
+                            pady=15,
+                            padx=5,
+                            sticky="W")
+        self.file_state = tb.Label(self.mm_top,
+                                   text=self.midimap_name,
+                                   width=30)
+        self.file_state.grid(row=4,
+                             column=0,
+                             columnspan=2,
+                             padx=20,
+                             pady=5,
+                             sticky="W")
+        self.valmap_info = tb.Button(self.mm_top,
+                                     text="ValMap Info",
+                                     width=15,
+                                     command=self.info_vmf)
+        self.valmap_info.grid(row=4,
+                              column=3,
+                              pady=5,
+                              padx=5,
+                              sticky="E")
+        self.valmap_gen = tb.Button(self.mm_top,
+                                    text="Generate ValMap",
+                                    width=15,
+                                    command=self.gen_vmf)
+        self.valmap_gen.grid(row=4,
+                             column=4,
+                             pady=5,
+                             padx=5,
+                             sticky="W")
+
+        self.items_frame = tb.Frame(self.mm_top)
+        self.items_frame.grid(row=5,
+                              column=0,
+                              columnspan=5,
+                              padx=20,
+                              pady=10,
+                              sticky="W")
+        # Elements Of Item Frame
+        self.name_entry = tb.Entry(self.items_frame, width=15)
+        self.name_entry.insert(0, "U0:E0")
+        self.name_entry.grid(row=0,
+                             column=0,
+                             sticky="W")
+        self.types_drpdwn = tb.Combobox(self.items_frame, width=20)
+        self.types_drpdwn.set("Choose Type")
+        self.types_drpdwn["values"] = ("Slider",
+                                       "Knob",
+                                       "Pad",
+                                       "Button",
+                                       "Switch",
+                                       "Wheel",
+                                       "XY-X",
+                                       "XY-Y",
+                                       "XY-Off",)
+        self.types_drpdwn.grid(row=0,
+                               column=1,
+                               sticky="W")
+        # Add CC # Dropdwn menu
+        self.cc_drpdwn = tb.Combobox(self.items_frame, width=20)
+        cc_values = ()
+        for i in range(128):
+            cc_values += (str(i),)
+        self.cc_drpdwn["values"] = cc_values
+        self.cc_drpdwn.grid(row=0,
+                            column=2,
+                            sticky="W")
+        self.cc_drpdwn.set("Choose CC #")
+        # Add CC # Dropdwn menu
+        self.val_drpdwn = tb.Combobox(self.items_frame, width=20)
+        self.val_drpdwn["values"] = ("0-127",
+                                     "-64-64",
+                                     "Push",
+                                     "Switch",
+                                     "Count",)
+        self.val_drpdwn.grid(row=0,
+                             column=3,
+                             sticky="W")
+        self.val_drpdwn.set("Choose Range")
+        # Add Add button
+        self.add_btn = tb.Button(self.items_frame,
+                                 text="Add",
+                                 command=self.add_list_item)
+        self.add_btn.grid(row=0,
+                          column=4,
+                          sticky="WE")
+
+        self.list_frame = tb.Frame(self.items_frame)
+        self.list_frame.grid(row=1,
+                             column=0,
+                             columnspan=5,
+                             pady=15,
+                             sticky="WE")
+        self.list_scroll = tb.Scrollbar(self.list_frame)
+        self.list_scroll.grid(row=0, column=1, sticky="NSEW")
+        # Add Treeview to use as Midi Controller List
+        self.items_list = tb.Treeview(self.list_frame,
+                                      style='primary.Treeview',
+                                      yscrollcommand=self.list_scroll.set)
+        self.list_scroll.config(command=self.items_list.yview)
+        # Add all colums for this list
+        self.items_list['columns'] = ("Name",
+                                      "Type",
+                                      "CC #",
+                                      "Value")
+        # Add columns configuration
+        self.items_list.column("#0", width=0, stretch=NO)
+        self.items_list.column("Name", anchor=W, width=200)
+        self.items_list.column("Type", anchor=W, width=140)
+        self.items_list.column("CC #", anchor=W, width=120)
+        self.items_list.column("Value", anchor=W, width=220)
+        # Add heading
+        self.items_list.heading("#0", text="", anchor=W)
+        self.items_list.heading("Name", text="Name", anchor=W)
+        self.items_list.heading("Type", text="Type", anchor=W)
+        self.items_list.heading("CC #", text="CC #", anchor=W)
+        self.items_list.heading("Value", text="Value", anchor=W)
+        # Gather data from xml file
+        self.data = []
+        # Add it to list
+        self.count = 0
+        for record in self.data:
+            self.items_list.insert(parent="",
+                                   index="end",
+                                   iid=self.count,
+                                   text="",
+                                   values=(record[0],
+                                           record[1],
+                                           record[2],
+                                           record[3]))
+            self.count += 1
+        # Adding list to Frame
+        self.items_list.grid(row=0,
+                             column=0,
+                             sticky="WE")
+        # Configure row colors
+        self.items_list.tag_configure('Choose Type',
+                                      background=self.item_colors[0])
+        self.items_list.tag_configure('Slider',
+                                      background=self.item_colors[1])
+        self.items_list.tag_configure('Knob',
+                                      background=self.item_colors[2])
+        self.items_list.tag_configure('Pad',
+                                      background=self.item_colors[3])
+        self.items_list.tag_configure('Button',
+                                      background=self.item_colors[4])
+        self.items_list.tag_configure('Switch',
+                                      background=self.item_colors[5])
+        self.items_list.tag_configure('Wheel',
+                                      background=self.item_colors[6])
+        self.items_list.tag_configure('XY-X',
+                                      background=self.item_colors[7])
+        self.items_list.tag_configure('XY-Y',
+                                      background=self.item_colors[7])
+        self.items_list.tag_configure('XY-Off',
+                                      background=self.item_colors[8])
+        # Add buttons
+        self.edit_btn = tb.Button(self.items_frame,
+                                  text="Edit",
+                                  command=self.edit_list_item)
+        self.edit_btn.grid(row=2,
+                           column=1,
+                           padx=10,
+                           sticky="WE")
+        self.up_btn = tb.Button(self.items_frame,
+                                text="Move Up",
+                                command=self.move_up_item)
+        self.up_btn.grid(row=2,
+                         column=2,
+                         padx=10,
+                         sticky="WE")
+        self.dwn_btn = tb.Button(self.items_frame,
+                                 text="Move Dwn",
+                                 command=self.move_dwn_item)
+        self.dwn_btn.grid(row=2,
+                          column=3,
+                          padx=10,
+                          sticky="WE")
+        self.del_btn = tb.Button(self.items_frame,
+                                 text="Delete",
+                                 command=self.del_list_item)
+        self.del_btn.grid(row=2,
+                          column=4,
+                          padx=10,
+                          sticky="WE")
+
+    def add_list_item(self):
+        self.items_list.insert(parent="",
+                               index="end",
+                               iid=self.count,
+                               text="",
+                               tags=(self.types_drpdwn.get(),),
+                               values=(self.name_entry.get(),
+                                       self.types_drpdwn.get(),
+                                       self.cc_drpdwn.get(),
+                                       self.val_drpdwn.get()))
+        self.count += 1
+        # Clear boxes
+        # self.name_entry.delete(0, END)
+        # self.name_entry.insert(0, "U0:E0")
+        # self.types_drpdwn.set("Choose Type")
+        # self.cc_drpdwn.set("Choose CC #")
+        # self.val_drpdwn.set("Choose Range")
+
+    def del_list_item(self):
+        items = self.items_list.selection()
+        for record in items:
+            self.items_list.delete(record)
+
+    def edit_list_item(self):
+        if not self.tgl_edit:
+            selected = self.items_list.focus()
+            values = self.items_list.item(selected, "values")
+            self.name_entry.delete(0, END)
+            self.name_entry.insert(0, values[0])
+            self.types_drpdwn.set(values[1])
+            self.cc_drpdwn.set(values[2])
+            self.val_drpdwn.set(values[3])
+            self.edit_btn.config(text="Append")
+            self.add_btn.state(["disabled"])
+            self.del_btn.state(["disabled"])
+            self.up_btn.state(["disabled"])
+            self.dwn_btn.state(["disabled"])
+            self.tgl_edit = True
         else:
-            spack = self.spack_id_str
-        self.code = f'{self.cmd}("{self.char}", spack={spack}, sample={sample})'
-        self.txt.insert(END, self.code)
-        self.change_fname(path)
-        self.p.start()
-        self.processes.append(self.p)
+            selected = self.items_list.focus()
+            self.items_list.item(selected,
+                                 text="",
+                                 tags=(self.types_drpdwn.get(),),
+                                 values=(self.name_entry.get(),
+                                         self.types_drpdwn.get(),
+                                         self.cc_drpdwn.get(),
+                                         self.val_drpdwn.get()))
+            # Clear boxes
+            self.name_entry.delete(0, END)
+            self.name_entry.insert(0, "U0:E0")
+            self.types_drpdwn.set("Choose Type")
+            self.cc_drpdwn.set("Choose CC #")
+            self.val_drpdwn.set("Choose Range")
+            self.edit_btn.config(text="Edit")
+            self.add_btn.state(["!disabled"])
+            self.del_btn.state(["!disabled"])
+            self.up_btn.state(["!disabled"])
+            self.dwn_btn.state(["!disabled"])
+            self.tgl_edit = False
 
-    def press_space(self, event):
-        # self.play_audio(char, sample, path, row, col)
-        pass
+    def move_up_item(self):
+        rows = self.items_list.selection()
+        for row in rows:
+            self.items_list.move(row,
+                                 self.items_list.parent(row),
+                                 self.items_list.index(row)-1)
 
-    def change_sp(self, spack_id):
-        """Deletes buttons and regenerate dictionaries and buttons with set database number"""
-        self.sp_id = spack_id
-        self.create_dics(self.sp_id)
-        self.smpl_btns()
-        # Update buttons frames idle tasks to let tkinter calculate buttons sizes
-        self.btn_frame.update_idletasks()
-        # Resize the canvas frame
-        self.canvas.config(width=self.w - self.ysb.winfo_width(),
-                           height=self.h - self.xsb.winfo_height())
-        # Set the canvas scrolling region
-        self.canvas.config(scrollregion=self.canvas.bbox("all"))
-        self.canvas.grid_propagate(True)
+    def move_dwn_item(self):
+        rows = self.items_list.selection()
+        for row in reversed(rows):
+            self.items_list.move(row,
+                                 self.items_list.parent(row),
+                                 self.items_list.index(row)+1)
 
-    def change_fname(self, path):
-        self.lbl_file["text"] = "Filename: " + path
+    def new_file(self):
+        self.count = 0
+        self.file_state.config(text=self.midimap_name)
+        for record in self.items_list.get_children():
+            self.items_list.delete(record)
 
-    def on_mousewheel(self, event):
-        """respond to Linux or Windows wheel event"""
-        if event.num == 5 or event.delta == -120:
-            self.wheel_count -= 1
-        if event.num == 4 or event.delta == 120:
-            self.wheel_count += 1
+    def check_devices(self):
+        try:
+            self.device = MidiIn()
+        except NameError:
+            raise ImportError("rtmidi not imported")
 
-    def move_start(self, event):
-        self.canvas.scan_mark(event.x, event.y)
+        self.available_ports = self.device.get_ports()
+        devices = ()
+        for port in self.available_ports:
+            devices += (port,)
+        self.device_chkbox["values"] = devices
+        self.device_chkbox.set("Choose Device")
 
-    def move_move(self, event):
-        self.canvas.scan_dragto(event.x, event.y, gain=1)
+    def conn_device(self):
+        if not self.tgl_conn:
+            self.device.set_callback(self.callback)
+            self.device_id = self.device_chkbox.current()
+            self.device.open_port(self.device_id)
+            self.device.ignore_types(timing=False)
+            self.device_chkbox.state(["disabled"])
+            self.device_state.config(text=self.device_chkbox.get())
+            self.device_connbtn.config(text="Disconnect!")
+            self.tgl_conn = True
+        else:
+            self.tgl_conn = False
+            self.device.close_port()
+            self.device_chkbox.state(["!disabled"])
+            self.device_connbtn.config(text="Connect It!")
+            self.device_state.config(text="No Device Connected")
+            self.txt_output.config(text="No Midi Output Yet!")
 
-    def on_resize(self, event):
-        self.width = self.root.winfo_width() - 10
-        self.height = self.root.winfo_height() - self.sp_frame.winfo_reqheight() - 30
-        # resize the canvas
-        self.canvas.config(width=self.width - self.ysb.winfo_width(),
-                           height=self.height - self.xsb.winfo_height())
+    def callback(self, msg: list, timestamp: float):
+        msg_update = "Status: "+str(msg[0][0])+" -- CC/Note: "+str(msg[0][1])+" -- Value/Velocity: "+str(msg[0][2])+" -- Time: "+str(round(msg[1], 3))
+        self.txt_output.config(text=msg_update)
+
+    def load_mmf(self):
+        self.mm_top.iconify()
+        self.new_file()
+        self.filename = tkFileDialog.askopenfilename(
+            title="Load Midi Map",
+            filetypes=[("JSON files", ".json")],
+            initialdir=FOXDOT_MIDI_MAPS + '/',
+            defaultextension=".json")
+        if self.filename:
+            new_name = os.path.split(self.filename)[1]
+            new_name = os.path.splitext(new_name)[0]
+            self.file_state.config(text=self.filename)
+            with open(self.filename, "r") as openfile:
+                # Reading from json file
+                json_object = json.load(openfile)
+                mm_name = list(json_object.keys())[0]
+                self.file_state.config(text=mm_name)
+                for key, value in json_object.items():
+                    mm_dict = value
+                self.count = 0
+                for key, val in mm_dict.items():
+                    name = val[0]
+                    type = val[1]
+                    cc = val[2]
+                    value = val[3]
+                    self.items_list.insert(parent="",
+                                           index="end",
+                                           iid=self.count,
+                                           text="",
+                                           tags=(type,),
+                                           values=(name, type, cc, value))
+                    self.count += 1
+        self.mm_top.deiconify()
+
+    def save_mmf(self):
+        # Save it into a json file
+        self.mm_top.iconify()
+        self.filename = tkFileDialog.asksaveasfilename(
+            title="Save Midi Map",
+            filetypes=[("JSON files", ".json")],
+            initialdir=FOXDOT_MIDI_MAPS + '/',
+            defaultextension=".json")
+        if self.filename:
+            # Get data from treeview list
+            new_name = os.path.split(self.filename)[1]
+            new_name = os.path.splitext(new_name)[0]
+            new_midimap = {new_name: {}}
+            for line in self.items_list.get_children():
+                id = line
+                name = self.items_list.item(line)["values"][0]
+                type = self.items_list.item(line)["values"][1]
+                cc = self.items_list.item(line)["values"][2]
+                value = self.items_list.item(line)["values"][3]
+                new_midimap[new_name][id] = [name, type, cc, value]
+            self.file_state.config(text=new_name)
+            new_file = open(self.filename, "w")
+            json.dump(new_midimap, new_file, indent=6)
+            new_file.close()
+            print("Midi Map saved.")
+        else:
+            pass
+        self.mm_top.deiconify()
+
+    def gen_vmf(self):
+        vmf_dict = {}
+        name = self.file_state.cget("text")
+        if name != self.midimap_name:
+            vmf_dict[name] = {}
+            tmp_list = []
+            for line in self.items_list.get_children():
+                vals = []
+                vals.append(self.items_list.item(line)["values"][0])
+                vals.append(self.items_list.item(line)["values"][3])
+                tmp_list.append(vals)
+            for element in tmp_list:
+                vmf_dict[name][element[0]] = {}
+                if element[1] == "Push" or element[1] == "Switch" or element[1] == "Count":
+                    vmf_dict[name][element[0]][element[1]] = []
+                else:
+                    vmf_dict[name][element[0]][element[1]] = {}
+            # Save it into a json file
+            self.mm_top.iconify()
+            self.filename = tkFileDialog.asksaveasfilename(
+                title="Save Value Map",
+                filetypes=[("JSON files", ".json")],
+                initialdir=FOXDOT_ROOT,
+                defaultextension=".json")
+            if self.filename:
+                # Get data from treeview list
+                new_name = os.path.split(self.filename)[1]
+                new_name = os.path.splitext(new_name)[0]
+                new_valmap = vmf_dict
+                new_file = open(self.filename, "w")
+                json.dump(new_valmap, new_file, indent=6)
+                new_file.close()
+                print("Value Map saved.")
+            else:
+                pass
+            self.mm_top.deiconify()
+        else:
+            self.mm_top.iconify()
+            alert_text = "There is no Midi Map saved or loaded.\nPlease save/load a Midi Map, and try again!"
+            alert_message = Messagebox.ok(alert_text)
+            self.mm_top.deiconify()
+
+    def info_vmf(self):
+        info = '''
+        VALUE MAPPING DICTIONARY
+        -------------------------------------------------------------------------------------------
+
+        To be able to generate a ValMap template that is useable, a naming convention is needed
+        to remember the relation to your Midi Map setup. The generated template will created
+        nested dictionaries with this names.
+
+        The default name is U0:E0 (Unit 0, Element 0), whereby Unit can be e.g. a row, a column,
+        a X-shape, or a L-shape.
+
+        An element can be an Exchangable Element (EE), e.g. knobs, slider, pads. The template
+        generator will create a dictionary with the Elements' value range as key. The value will
+        be another nested empty dictionary, that can be filled with synth or group attributes as
+        keys later, and list value with the according attribute Minimum and Maximum.
+
+            e.g. {
+                    "0-127": {"room": [1/2, 1], "hpf": [80, 4000], "lpf": [4000, 20]},
+                 }
+
+        On the other hand, it can be a Control Element (CE), e.g. switch, button. As with EE, the
+        template will contain an empty dictionary with the value as key. This might be "Push",
+        "Switch", or "Count". The value of this dictionary is going to have the related EE or CE
+        names go through the values of several EEs' at the same time, or to add more functionality
+        to another CE.
+
+            e.g. {
+                    "Count": ["U0:E1", "U0:E2"],
+                 }
+
+        {
+        "Name of Midi Device": [
+                "U0:E0": {
+                        "Hold": {},
+                },
+                "U0:E1": {
+                        "0-127": {},
+                },
+                "U0:E2": {
+                        "X: 0-127": {},
+                        "Y: 0-127": {},
+                },
+                "U1:E0": {
+                        "-64-64": {},
+                },
+                "U1:E1": {
+                        "Push": {},
+                },
+            ]
+        }
+        '''
+        self.info_box = tb.Toplevel(topmost=True)
+        self.info_text = ScrolledText(self.info_box,
+                                      wrap=WORD,
+                                      autohide=False,
+                                      bootstyle="info",
+                                      hbar=True)
+        self.info_text.insert(END, info)
+        self.info_text.grid(row=0,
+                            column=0,
+                            padx=20,
+                            pady=15,
+                            sticky="WE")
+        self.ok_btn = tb.Button(self.info_box,
+                                text="Close Info",
+                                command=self.close_infobox)
+        self.ok_btn.grid(row=1,
+                         column=0,
+                         padx=20,
+                         pady=15,
+                         sticky="E")
+
+    def close_infobox(self):
+        self.info_box.lift(aboveThis=None)
+        self.info_box.destroy()
+
+    def save_and_close(self, event=None):
+        self.mm_top.lift(aboveThis=None)
+        self.mm_top.destroy()

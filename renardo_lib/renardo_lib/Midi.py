@@ -3,7 +3,7 @@ Module for converting handling MIDI in/out and functions relating to MIDI pitch
 calculation.
 """
 from renardo_lib.SynthDefManagement import SynthDefProxy
-
+from renardo_lib.Settings import FOXDOT_MIDI_MAPS
 try:
     import rtmidi
     from rtmidi import midiconstants
@@ -14,6 +14,7 @@ try:
 except ImportError:
     pass
 import time
+from renardo_lib.Code import execute
 
 
 class MidiInputHandler(object):
@@ -37,21 +38,17 @@ class MidiInputHandler(object):
         self.msg = message
         if self.print_msg is True:
             print(self.msg)
-        if (self.msg[0] == 144 or self.msg[0] == 145):
+        if (self.msg[0] == 144 + self.midi_ctrl):
             if len(self.msg_list) == 0:
                 self.msg_list.append(self.msg)
             else:
                 if self.msg not in self.msg_list:
                     self.msg_list.append(self.msg)
-        elif self.msg[0] == 128:
+        elif self.msg[0] == 128 + self.midi_ctrl:
             if len(self.msg_list) > 0:
                 for count, item in enumerate(self.msg_list):
                     if self.msg[1] == item[1]:
                         self.msg_list.remove(self.msg_list[count])
-        elif self.msg[0] == 129:
-            for count, item in enumerate(self.msg_list):
-                if self.msg[1] == item[1]:
-                    self.msg_list[count][2] = 0
         else:
             if len(self.msg_list) == 0:
                 self.msg_list.append(self.msg)
@@ -65,7 +62,7 @@ class MidiInputHandler(object):
                             self.msg_list.append(self.msg)
 
         # print(self.msg_list)
-        if self.tt and message[0] == 128 and message[1] == 0:
+        if self.tt and message[0] == (128 + self.midi_ctrl) and message[1] == 0:
             self.tt_time = time.time()
             if self.tt_ptime < self.tt_time:
                 self.tt_bpm = (1/(self.tt_time - self.tt_ptime)) * 60
@@ -87,7 +84,7 @@ class MidiInputHandler(object):
 class MidiIn:
     metro = None
 
-    def __init__(self, port_id=0):
+    def __init__(self, port_id=0, use_midimap=False, midimap_id=0):
         """ Class for listening for MIDI clock messages
             from a midi device """
         try:
@@ -104,6 +101,9 @@ class MidiIn:
 
         self.device.open_port(port_id)
         self.device.ignore_types(timing=False)
+        self.use_midimap = use_midimap
+        self.midimap_id = midimap_id
+        self.midimap_path = FOXDOT_MIDI_MAPS + "/"
         self.pulse = 0
         self.delta = 0.0
         self.bpm = 120.0
