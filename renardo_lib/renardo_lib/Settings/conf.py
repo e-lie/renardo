@@ -22,6 +22,7 @@ MENU_ON_STARTUP = True
 CONSOLE_ON_STARTUP = True
 LINENUMBERS_ON_STARTUP = True
 TREEVIEW_ON_STARTUP = False
+MIDIBAR_ON_STARTUP = False
 TRANSPARENT_ON_STARTUP = False
 RECOVER_WORK = True
 LINE_NUMBER_MARKER_OFFSET = 0
@@ -62,6 +63,7 @@ except FileNotFoundError:
     settings["CONSOLE_ON_STARTUP"] = True
     settings["LINENUMBERS_ON_STARTUP"] = True
     settings["TREEVIEW_ON_STARTUP"] = False
+    settings["MIDIBAR_ON_STARTUP"] = False
     settings["TRANSPARENT_ON_STARTUP"] = False
     settings["RECOVER_WORK"] = True
     settings["LINE_NUMBER_MARKER_OFFSET"] = 0

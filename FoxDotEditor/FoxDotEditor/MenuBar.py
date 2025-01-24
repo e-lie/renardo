@@ -120,6 +120,14 @@ class MenuBar(Menu):
                                   command=self.root.toggle_searchbar,
                                   accelerator="Ctrl+F",
                                   font=self.menu_fontsize)
+        if self.root.midibar_toggled.get() is True:
+            lbl_midibar = "Hide Midibar"
+        else:
+            lbl_midibar = "Show Midibar"
+        self.viewmenu.add_command(label=lbl_midibar,
+                                  command=self.root.toggle_midibar,
+                                  accelerator="Ctrl+F",
+                                  font=self.menu_fontsize)
         self.viewmenu.add_separator()
         if self.root.console_toggled.get() is True:
             lbl_console = "Hide Console"
@@ -146,10 +154,6 @@ class MenuBar(Menu):
         self.viewmenu.add_checkbutton(label="Toggle Beat Counter",
                                       command=self.root.toggle_counter,
                                       variable=self.root.show_counter,
-                                      font=self.menu_fontsize)
-        self.viewmenu.add_checkbutton(label="Toggle Show Midi Value",
-                                      command=self.root.toggle_midival,
-                                      variable=self.root.show_midival,
                                       font=self.menu_fontsize)
         self.add_cascade(label="View",
                          menu=self.viewmenu,

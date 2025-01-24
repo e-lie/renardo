@@ -146,7 +146,12 @@ class MidiMapper:
                              column=0,
                              columnspan=2,
                              padx=20,
-                             pady=5,
+                             pady=5,        # Clear boxes
+        # self.name_entry.delete(0, END)
+        # self.name_entry.insert(0, "U0:E0")
+        # self.types_drpdwn.set("Choose Type")
+        # self.cc_drpdwn.set("Choose CC #")
+        # self.val_drpdwn.set("Choose Range")
                              sticky="W")
         self.valmap_info = tb.Button(self.mm_top,
                                      text="ValMap Info",
@@ -210,7 +215,7 @@ class MidiMapper:
                                      "-64-64",
                                      "Push",
                                      "Switch",
-                                     "Count",)
+                                     "Count")
         self.val_drpdwn.grid(row=0,
                              column=3,
                              sticky="W")
@@ -333,12 +338,6 @@ class MidiMapper:
                                        self.cc_drpdwn.get(),
                                        self.val_drpdwn.get()))
         self.count += 1
-        # Clear boxes
-        # self.name_entry.delete(0, END)
-        # self.name_entry.insert(0, "U0:E0")
-        # self.types_drpdwn.set("Choose Type")
-        # self.cc_drpdwn.set("Choose CC #")
-        # self.val_drpdwn.set("Choose Range")
 
     def del_list_item(self):
         items = self.items_list.selection()
@@ -458,10 +457,10 @@ class MidiMapper:
                     mm_dict = value
                 self.count = 0
                 for key, val in mm_dict.items():
-                    name = val[0]
-                    type = val[1]
-                    cc = val[2]
-                    value = val[3]
+                    name = key
+                    type = val[0]
+                    cc = val[1]
+                    value = val[2]
                     self.items_list.insert(parent="",
                                            index="end",
                                            iid=self.count,
@@ -485,12 +484,11 @@ class MidiMapper:
             new_name = os.path.splitext(new_name)[0]
             new_midimap = {new_name: {}}
             for line in self.items_list.get_children():
-                id = line
                 name = self.items_list.item(line)["values"][0]
                 type = self.items_list.item(line)["values"][1]
                 cc = self.items_list.item(line)["values"][2]
                 value = self.items_list.item(line)["values"][3]
-                new_midimap[new_name][id] = [name, type, cc, value]
+                new_midimap[new_name][name] = [type, cc, value]
             self.file_state.config(text=new_name)
             new_file = open(self.filename, "w")
             json.dump(new_midimap, new_file, indent=6)
@@ -511,12 +509,9 @@ class MidiMapper:
                 vals.append(self.items_list.item(line)["values"][0])
                 vals.append(self.items_list.item(line)["values"][3])
                 tmp_list.append(vals)
+            print(tmp_list)
             for element in tmp_list:
-                vmf_dict[name][element[0]] = {}
-                if element[1] == "Push" or element[1] == "Switch" or element[1] == "Count":
-                    vmf_dict[name][element[0]][element[1]] = []
-                else:
-                    vmf_dict[name][element[0]][element[1]] = {}
+                vmf_dict[name][element[0]] = [element[1], {}]
             # Save it into a json file
             self.mm_top.iconify()
             self.filename = tkFileDialog.asksaveasfilename(
