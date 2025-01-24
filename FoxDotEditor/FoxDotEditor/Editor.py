@@ -26,6 +26,7 @@ from .Treeview import TreeView
 from .SampleChart import SampleChart
 from .MidiMapper import MidiMapper
 from .SearchBar import SearchBar
+from .MidiBar import MidiBar
 from functools import partial
 # from distutils.version import LooseVersion as VersionNumber
 import webbrowser
@@ -93,6 +94,8 @@ class workspace:
         self.treeview_toggled.set(TREEVIEW_ON_STARTUP)
         self.linenumbers_toggled = BooleanVar()
         self.linenumbers_toggled.set(LINENUMBERS_ON_STARTUP)
+        self.midibar_toggled = BooleanVar()
+        self.midibar_toggled.set(MIDIBAR_ON_STARTUP)
         self.searchbar_toggled = BooleanVar()
         self.searchbar_toggled.set(False)
         self.console_toggled = BooleanVar()
@@ -262,6 +265,12 @@ class workspace:
         for tier in tag_weights:
             for tag_name in tier:
                 self.text.tag_config(tag_name, foreground=colour_map[tag_name])
+        # Show midibar
+        self.midibar = MidiBar(self)
+        if self.midibar_toggled.get() is True:
+            self.midibar.show()
+        else:
+            self.midibar.hide()
         # Create searchbar
         self.searchbar = SearchBar(self)
         if self.searchbar_toggled.get() is True:
@@ -286,6 +295,7 @@ class workspace:
         sys.stdout = self.console
         # Ask after widget loaded
         self.linenumbers.redraw()  # ToDo: move to generic redraw functions
+
         # Check temporary file
         def recover_work():
             with open(FOXDOT_TEMP_FILE) as f:
@@ -637,12 +647,12 @@ class workspace:
     def toggle_console(self, event=None):
         console_toggle = self.console_toggled.get()
         if console_toggle:
-            self.menu.viewmenu.entryconfigure(5, label="Show Console")
+            self.menu.viewmenu.entryconfigure(6, label="Show Console")
             self.console.hide()
             self.text.config(height=self.text.cget('height')+self.console.height)
             self.console_toggled.set(False)
         elif not console_toggle:
-            self.menu.viewmenu.entryconfigure(5, label="Hide Console")
+            self.menu.viewmenu.entryconfigure(6, label="Hide Console")
             self.console.show()
             self.text.config(height=self.text.cget('height')-self.console.height)
             self.console_toggled.set(True)
@@ -671,13 +681,26 @@ class workspace:
         if searchbar_toggle:
             self.menu.viewmenu.entryconfigure(3, label="Show Searchbar")
             self.searchbar.hide()
-            # self.text.config(height=self.text.cget('height')+self.searchbar.height)
             self.searchbar_toggled.set(False)
         elif not searchbar_toggle:
             self.menu.viewmenu.entryconfigure(3, label="Hide Searchbar")
             self.searchbar.show()
             # self.text.config(height=self.text.cget('height')-self.searchbar.height)
             self.searchbar_toggled.set(True)
+        return
+
+    # Toggle midibar
+    # -----------------------------
+    def toggle_midibar(self, event=None):
+        midibar_toggle = self.midibar_toggled.get()
+        if midibar_toggle:
+            self.menu.viewmenu.entryconfigure(4, label="Show Midibar")
+            self.midibar.hide()
+            self.midibar_toggled.set(False)
+        elif not midibar_toggle:
+            self.menu.viewmenu.entryconfigure(4, label="Hide Midibar")
+            self.midibar.show()
+            self.midibar_toggled.set(True)
         return
 
     def toggle_menu(self, event=None):
@@ -1320,6 +1343,7 @@ class workspace:
     """
     def kill(self):
         """ Proper exit function """
+        self.midibar.close()
         self.terminate()
         self.root.destroy()
         return

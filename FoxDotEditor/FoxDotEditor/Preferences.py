@@ -82,6 +82,8 @@ class Preferences:
         self.console_start.set(CONSOLE_ON_STARTUP)
         self.treeview_start = BooleanVar()
         self.treeview_start.set(TREEVIEW_ON_STARTUP)
+        self.midibar_start = BooleanVar()
+        self.midibar_start.set(MIDIBAR_ON_STARTUP)
         self.recover_work = BooleanVar()
         self.recover_work.set(RECOVER_WORK)
         self.check_update = BooleanVar()
@@ -198,33 +200,38 @@ class Preferences:
             style='Roundtoggle.Toolbutton')
         self.tgl_treeview.grid(column=0, row=3, padx=self.padx*2, pady=10,
                                sticky="nw")
+        self.tgl_midibar = tb.Checkbutton(
+            self.g1, text="MidiBar", variable=self.midibar_start,
+            style='Roundtoggle.Toolbutton')
+        self.tgl_midibar.grid(column=0, row=4, padx=self.padx*2, pady=10,
+                              sticky="nw")
         self.tgl_recover = tb.Checkbutton(
             self.g1, text="Recover Work", variable=self.recover_work,
             style='Roundtoggle.Toolbutton')
-        self.tgl_recover.grid(column=0, row=4, padx=self.padx*2, pady=10,
+        self.tgl_recover.grid(column=0, row=5, padx=self.padx*2, pady=10,
                               sticky="nw")
         self.tgl_update = tb.Checkbutton(
             self.g1, text="Check for Updates", variable=self.check_update,
             style='Roundtoggle.Toolbutton')
-        self.tgl_update.grid(column=0, row=5, padx=self.padx*2, pady=10,
+        self.tgl_update.grid(column=0, row=6, padx=self.padx*2, pady=10,
                              sticky="nw")
         # EDITOR
         self.lbl_on_start = tb.Label(
             self.g1, text="EDITOR")
-        self.lbl_on_start.grid(column=0, row=6, padx=self.padx*2, pady=10,
+        self.lbl_on_start.grid(column=0, row=7, padx=self.padx*2, pady=10,
                                sticky="nw")
         self.tgl_update = tb.Checkbutton(
             self.g1, text="Autocomplete Brackets", variable=self.brackets_auto,
             style='Roundtoggle.Toolbutton')
-        self.tgl_update.grid(column=0, row=7, padx=self.padx*2, pady=10,
+        self.tgl_update.grid(column=0, row=8, padx=self.padx*2, pady=10,
                              sticky="nw")
         self.lbl_line_offset = tb.Label(
             self.g1, text="Linenumber Marker Offset")
-        self.lbl_line_offset.grid(column=0, row=8, padx=self.padx*2,
+        self.lbl_line_offset.grid(column=0, row=9, padx=self.padx*2,
                                   sticky="sw")
         self.entry_linenum_offset = tb.Entry(
             self.g1, textvariable=self.linenumber_offset)
-        self.entry_linenum_offset.grid(column=0, row=9, padx=self.padx*2,
+        self.entry_linenum_offset.grid(column=0, row=10, padx=self.padx*2,
                                        pady=5, sticky="nw")
         # CONNECTIONS
         self.lbl_connect = tb.Label(
@@ -707,6 +714,7 @@ class Preferences:
             self.settings['CONSOLE_ON_STARTUP'] = self.console_start.get()
             self.settings['LINENUMBERS_ON_STARTUP'] = self.linenumbers_start.get()
             self.settings['TREEVIEW_ON_STARTUP'] = self.treeview_start.get()
+            self.settings['MIDIBAR_ON_STARTUP'] = self.midibar_start.get()
             self.settings['TRANSPARENT_ON_STARTUP'] = self.alpha_start.get()
             self.settings['RECOVER_WORK'] = self.recover_work.get()
             self.settings['CHECK_FOR_UPDATE'] = self.check_update.get()

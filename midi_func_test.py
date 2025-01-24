@@ -1,5 +1,5 @@
 midi = MidiIn(1)
-midimap = midi.load_midimap(0)#
+midimap = midi.load_midimap(0)
 valmap = midi.load_valmap("/home/bbscar/Projects/Music/Renardo_Dev/src/MidiMax_ValMap_Set.json")
 
 midi.run()
@@ -33,7 +33,7 @@ midi.set_value("U0:E1", "s1.hpr", [1, 1/8, 1])
 midi.set_value("U0:E0", "s1.shape", [0, 2, 0])
 midi.set_value("U0:E1", "s1.formnat", [0, 4, 0])
 
-midi.del_value()
+midi.del_value("U0:E1", "s1.formnat")
 
 # Set values of second unit
 midi.set_value("U1:E0", "s1.room", [1/3, 1, 0])
