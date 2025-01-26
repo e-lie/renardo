@@ -328,7 +328,8 @@ class MidiIn:
                             self.new_val = self.valmap[self.name][1][self.a][0]
                             self.command = f"{self.a}={self.new_val}"
                             self.midi_exe(self.command)
-                            self.midi_cmd.set_msg([self.name, self.command])
+                            self.midi_cmd.set_msg([self.name,
+                                                   self.command])
                         except Exception:
                             pass
                     else:
@@ -356,7 +357,9 @@ class MidiIn:
                                 self.valstore[attr] = self.new_val
                                 self.command = f"{attr}={self.new_val}"
                                 self.midi_exe(self.command)
-                                self.midi_cmd.set_msg([self.name, self.command])
+                                self.midi_cmd.set_msg([self.name,
+                                                       self.command,
+                                                       ])
                         except Exception:
                             pass
                 elif rtype == "Count":
@@ -376,11 +379,14 @@ class MidiIn:
                             try:
                                 for element in element_list:
                                     self.command = ""
-                                    attr = list(self.valmap[element][1].keys())[self.valstore[self.name]]
+                                    cnt_num = self.valstore[self.name]
+                                    attr = list(self.valmap[element][1].keys())[cnt_num]
                                     new_val = self.valstore[element][0][self.valstore[element][1]]
                                     self.command = f"{attr}={new_val}"
                                     self.midi_exe(self.command)
-                                    self.midi_cmd.set_msg([self.name, self.command])
+                                    self.midi_cmd.set_msg([self.name,
+                                                           self.command,
+                                                           cnt_num])
                             except Exception:
                                 pass
                         except Exception:
@@ -398,6 +404,7 @@ class MidiIn:
                         rng = list(self.valmap[self.name][1].keys())[0]
                         if rng == "Group":
                             element_list = self.valmap[self.name][1][rng]
+                            self.command = ""
                             for element in element_list:
                                 cnt_num = self.valstore[element][1]
                                 try:
@@ -409,11 +416,16 @@ class MidiIn:
                                                                   self.valmap[element][1][attr][2],
                                                                   self.valstore[element][0][cnt_num])
                                     self.new_val = round(self.new_val, 3)
-                                    self.command = f"{attr}={self.new_val}"
-                                    self.midi_exe(self.command)
-                                    self.midi_cmd.set_msg([self.name, self.command])
+                                    self.command = self.command + f"{attr}={self.new_val}; "
                                 except Exception:
                                     print(f"Slot: {cnt_num} empty")
+                            self.midi_exe(self.command)
+                            unit = self.name.split(":")[0]
+                            new_val = round(value/127, 3)
+                            ufader = f"{unit}={new_val}"
+                            self.midi_cmd.set_msg([self.name,
+                                                   ufader,
+                                                   cnt_num])
                         else:
                             cnt_num = self.valstore[self.name][1]
                             try:
@@ -428,7 +440,9 @@ class MidiIn:
                                 self.command = f"{attr}={self.new_val}"
                                 self.valstore[self.name][0][cnt_num] = self.new_val
                                 self.midi_exe(self.command)
-                                self.midi_cmd.set_msg([self.name, self.command])
+                                self.midi_cmd.set_msg([self.name,
+                                                       self.command,
+                                                       cnt_num])
                             except Exception:
                                 print(f"Slot: {cnt_num} empty")
                     except Exception:
