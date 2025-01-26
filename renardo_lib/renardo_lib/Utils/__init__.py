@@ -190,7 +190,7 @@ class midi_cmd:
     def __init__(self):
         global cmd_msg
         global is_running
-        cmd_msg = ["", ""]
+        cmd_msg = ["", "", ""]
         is_running = False
 
     # get message
@@ -201,4 +201,8 @@ class midi_cmd:
     # set message
     def set_msg(self, msg):
         global cmd_msg
-        cmd_msg = msg
+        if len(msg) == 2:
+            msg.append("")
+            cmd_msg = msg
+        else:
+            cmd_msg = msg

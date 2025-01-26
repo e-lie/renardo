@@ -16,7 +16,7 @@
       "CONSOLE_ON_STARTUP": true,
       "LINENUMBERS_ON_STARTUP": true,
       "TREEVIEW_ON_STARTUP": false,
-      "MIDIBAR_ON_STARTUP": true,
+      "MIDIBAR_ON_STARTUP": false,
       "TRANSPARENT_ON_STARTUP": false,
       "RECOVER_WORK": true,
       "CHECK_FOR_UPDATE": true,
