@@ -15,12 +15,14 @@ echo '####### bundling with pyinstaller'
 export DISTP="/tmp/renardo-$RENARDO_VERSION"
 mkdir -p $DISTP
 pyinstaller "../renardo-entrypoint.py" \
+    --onefile \
     --name "renardo-$RENARDO_VERSION" \
     --collect-all renardo_gatherer \
     --collect-all renardo_lib \
     --collect-all FoxDotEditor \
     --collect-all renardo \
     --collect-all textual \
+    --hidden-import='PIL._tkinter_finder' \
     --clean \
     --noconfirm \
     --distpath $DISTP \
