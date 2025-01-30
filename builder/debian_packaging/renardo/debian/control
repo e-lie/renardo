@@ -1,0 +1,17 @@
+Source: renardo
+Section: multimedia
+Priority: optional
+Maintainer: Elie Gavoty <eliegavoty@free.fr>
+Rules-Requires-Root: no
+Build-Depends:
+ debhelper-compat (= 13),
+Standards-Version: 4.6.2
+Homepage: renardo.org
+
+Package: renardo
+Architecture: amd64
+Depends:
+ tk,
+ supercollider,
+Description: <insert up to 60 chars description>
+ <Insert long description, indented with spaces.>

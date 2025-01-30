@@ -1,0 +1,11 @@
+Package: renardo
+Version: 0.9.13
+Architecture: amd64
+Maintainer: Elie Gavoty <eliegavoty@free.fr>
+Installed-Size: 25093
+Depends: tk, supercollider
+Section: multimedia
+Priority: optional
+Homepage: renardo.org
+Description: <insert up to 60 chars description>
+ <Insert long description, indented with spaces.>
