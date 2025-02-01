@@ -146,12 +146,7 @@ class MidiMapper:
                              column=0,
                              columnspan=2,
                              padx=20,
-                             pady=5,        # Clear boxes
-        # self.name_entry.delete(0, END)
-        # self.name_entry.insert(0, "U0:E0")
-        # self.types_drpdwn.set("Choose Type")
-        # self.cc_drpdwn.set("Choose CC #")
-        # self.val_drpdwn.set("Choose Range")
+                             pady=5,
                              sticky="W")
         self.valmap_info = tb.Button(self.mm_top,
                                      text="ValMap Info",
@@ -442,7 +437,7 @@ class MidiMapper:
         self.filename = tkFileDialog.askopenfilename(
             title="Load Midi Map",
             filetypes=[("JSON files", ".json")],
-            initialdir=FOXDOT_MIDI_MAPS + '/',
+            initialdir=os.path.join(FOXDOT_MIDI_MAPS, ""),
             defaultextension=".json")
         if self.filename:
             new_name = os.path.split(self.filename)[1]
@@ -476,7 +471,7 @@ class MidiMapper:
         self.filename = tkFileDialog.asksaveasfilename(
             title="Save Midi Map",
             filetypes=[("JSON files", ".json")],
-            initialdir=FOXDOT_MIDI_MAPS + '/',
+            initialdir=os.path.join(FOXDOT_MIDI_MAPS, ""),
             defaultextension=".json")
         if self.filename:
             # Get data from treeview list
@@ -509,7 +504,6 @@ class MidiMapper:
                 vals.append(self.items_list.item(line)["values"][0])
                 vals.append(self.items_list.item(line)["values"][3])
                 tmp_list.append(vals)
-            print(tmp_list)
             for element in tmp_list:
                 vmf_dict[name][element[0]] = [element[1], {}]
             # Save it into a json file
@@ -517,7 +511,7 @@ class MidiMapper:
             self.filename = tkFileDialog.asksaveasfilename(
                 title="Save Value Map",
                 filetypes=[("JSON files", ".json")],
-                initialdir=FOXDOT_ROOT,
+                initialdir=os.path.join(FOXDOT_ROOT, ""),
                 defaultextension=".json")
             if self.filename:
                 # Get data from treeview list

@@ -88,7 +88,7 @@ class SampleChart:
         self.dict_loops = []
         # First go through all letters and get file paths in upper and lower
         # Fill dictionary with letters as key and file names of audio as values
-        self.sp_path_l = str(SAMPLES_DIR_PATH) + "/" + spack_id + "/"
+        self.sp_path_l = os.path.join(SAMPLES_DIR_PATH, spack_id, "")
         self.dir_list_l = []
 
         for filename in os.listdir(self.sp_path_l):
@@ -99,7 +99,10 @@ class SampleChart:
 
         for i in self.dir_list_l:
             if i != "_" and i != "_loop_":
-                self.new_path = self.sp_path_l + str(i) + "/lower/"
+                self.new_path = os.path.join(self.sp_path_l,
+                                             str(i),
+                                             "lower",
+                                             "")
                 # self.smpl_list = os.path.isdir(self.new_path)
                 self.smpl_list = [
                     f for f in os.listdir(self.new_path)
@@ -111,7 +114,10 @@ class SampleChart:
                         self.smpl_list.remove(n)
                 self.dict_letters[i.upper()] = self.smpl_list
                 self.dict_letters[i] = self.smpl_list
-                self.new_path = self.sp_path_l + str(i) + "/upper/"
+                self.new_path = os.path.join(self.sp_path_l,
+                                             str(i),
+                                             "upper",
+                                             "")
                 self.smpl_list = [
                     f for f in os.listdir(self.new_path)
                     if os.path.isfile(os.path.join(self.new_path, f))
@@ -124,14 +130,17 @@ class SampleChart:
 
         # Fill dictionary with specials as key and file names of
         # audio as values
-        self.sp_path_s = self.sp_path_s = str(SAMPLES_DIR_PATH)+"/"+spack_id+"/_/"
+        self.sp_path_s = self.sp_path_s = os.path.join(SAMPLES_DIR_PATH,
+                                                       str(spack_id),
+                                                       "_",
+                                                       "")
         self.dir_list_s = []
         for filename in os.listdir(self.sp_path_s):
             if os.path.isdir(os.path.join(self.sp_path_s, filename)):
                 self.dir_list_s.append(filename)
         self.dir_list_s.sort()
         for j in self.dir_list_s:
-            self.new_path = self.sp_path_s + str(j) + "/"
+            self.new_path = os.path.join(self.sp_path_s, str(j), "")
             self.smpl_list = [
                 f for f in os.listdir(self.new_path)
                 if os.path.isfile(os.path.join(self.new_path, f))
@@ -142,7 +151,9 @@ class SampleChart:
                     self.smpl_list.remove(n)
             self.dict_specials[j] = self.smpl_list
         # Fill dictionary with loops as value
-        self.sp_path_loops = str(SAMPLES_DIR_PATH)+"/"+spack_id+"/"+FOXDOT_LOOP
+        self.sp_path_loops = os.path.join(str(SAMPLES_DIR_PATH),
+                                          spack_id,
+                                          FOXDOT_LOOP)
         self.smpl_list = [
             f for f in os.listdir(self.sp_path_loops)
             if os.path.isfile(os.path.join(self.sp_path_loops, f))

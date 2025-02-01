@@ -392,15 +392,15 @@ class Preferences:
             self.a1, textvariable=self.font)
         self.entry_font.grid(column=0, row=6, padx=self.padx, pady=self.padx/2,
                              sticky="nw")
-        self.tgl_use_alpha = tb.Checkbutton(
-            self.a1, text="Use Alpha", variable=self.use_alpha,
-            style='Roundtoggle.Toolbutton')
-        self.tgl_use_alpha.grid(column=0, row=7, padx=self.padx,
-                                pady=self.padx, sticky="nw")
+        # self.tgl_use_alpha = tb.Checkbutton(
+        #     self.a1, text="Use Alpha", variable=self.use_alpha,
+        #     style='Roundtoggle.Toolbutton')
+        # self.tgl_use_alpha.grid(column=0, row=7, padx=self.padx,
+        #                         pady=self.padx, sticky="nw")
         self.tgl_alpha_start = tb.Checkbutton(
             self.a1, text="Transparent on Start", variable=self.alpha_start,
             style='Roundtoggle.Toolbutton')
-        self.tgl_alpha_start.grid(column=0, row=8, padx=self.padx,
+        self.tgl_alpha_start.grid(column=0, row=7, padx=self.padx,
                                   pady=self.padx, sticky="nw")
         # COLOR CHOICE
         self.lbl_colorlist = tb.Label(self.a3, text="Text Colors Editor")
