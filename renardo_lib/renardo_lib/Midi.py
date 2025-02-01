@@ -111,7 +111,7 @@ class MidiIn:
 
         self.device.open_port(port_id)
         self.device.ignore_types(timing=False)
-        self.mmap_path = FOXDOT_MIDI_MAPS + "/"
+        self.mmap_path = os.path.join(FOXDOT_MIDI_MAPS, "")
         self.mmaps = []
         self.midimap_name = ""
         self.valmap_name = ""
@@ -418,7 +418,7 @@ class MidiIn:
                                     self.new_val = round(self.new_val, 3)
                                     self.command = self.command + f"{attr}={self.new_val}; "
                                 except Exception:
-                                    print(f"Slot: {cnt_num} empty")
+                                    pass
                             self.midi_exe(self.command)
                             unit = self.name.split(":")[0]
                             new_val = round(value/127, 3)

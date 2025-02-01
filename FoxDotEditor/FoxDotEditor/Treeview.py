@@ -41,8 +41,10 @@ class TreeView:
         # This dictionary maps the treeview items IDs with the
         # path of the file or folder.
         self.fsobjects: dict[str, Path] = {}
-        self.file_image = PhotoImage(file=FOXDOT_EDITOR_ROOT+"/img/file.png")
-        self.folder_image = PhotoImage(file=FOXDOT_EDITOR_ROOT+"/img/folder.png")
+        file_img_path = os.path.join(FOXDOT_EDITOR_ROOT, "img", "file.png")
+        folder_img_path = os.path.join(FOXDOT_EDITOR_ROOT, "img", "folder.png")
+        self.file_image = PhotoImage(file=file_img_path)
+        self.folder_image = PhotoImage(file=folder_img_path)
         # Load the user directory.
         self.home_path = str(Path.home())
         self.load_tree(Path(os.path.expanduser(self.home_path)))

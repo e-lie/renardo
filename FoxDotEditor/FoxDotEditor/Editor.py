@@ -48,7 +48,7 @@ class workspace:
         # Configure Renardo's namespace to include the editor
         CodeClass.namespace['GUI'] = self
         CodeClass.namespace['Player'].widget = self
-        self.version = this_version = '0.9.13'
+        self.version = this_version = '0.9.14'
         pypi_version = get_pypi_version()
         self.theme = COLOR_THEME
 
@@ -78,10 +78,12 @@ class workspace:
         self.root.grid_columnconfigure(1, weight=0)  # line numbers
         self.root.grid_columnconfigure(2, weight=1)  # Scrollbars
         self.root.protocol("WM_DELETE_WINDOW", self.kill)
+        self.style = tb.Style()
+        self.root.style.master
         # Track whether user wants transparent background
-        self.transparent = BooleanVar()
-        self.transparent.set(False)
         self.using_alpha = USE_ALPHA
+        self.transparent = BooleanVar()
+        self.transparent.set(self.using_alpha)
         # Boolean for connection
         self.listening_for_connections = BooleanVar()
         self.listening_for_connections.set(False)
@@ -145,6 +147,7 @@ class workspace:
         # Create y-axis scrollbar
         self.y_scroll = tb.Scrollbar(self.root)
         self.y_scroll.grid(row=0, column=3, sticky='ns')
+        # Add OpenGl frame
         # Create text box for code
         self.text = ThreadedText(self.root,
                                  padx=5,
@@ -621,6 +624,7 @@ class workspace:
     def open_midi_mapper_app(self):
         try:
             midi_mapper = MidiMapper()
+            pass
         except OSError as e:
             print(e)
             print("Hmm... Looks like we couldn't open the midi mapper app.")

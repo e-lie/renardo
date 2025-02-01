@@ -138,7 +138,7 @@ class console:
             new_height = (self.canvas.winfo_height() +
                           (widget_y - event.y_root))
             self.height, old_height = new_height, self.height
-            self.canvas.configure(height=max(self.height, 200))
+            self.canvas.configure(height=max(self.height, 50))
             return "break"
 
     def update(self):
