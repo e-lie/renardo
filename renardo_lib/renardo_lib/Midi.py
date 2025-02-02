@@ -381,12 +381,15 @@ class MidiIn:
                                     self.command = ""
                                     cnt_num = self.valstore[self.name]
                                     attr = list(self.valmap[element][1].keys())[cnt_num]
-                                    new_val = self.valstore[element][0][self.valstore[element][1]]
-                                    self.command = f"{attr}={new_val}"
-                                    self.midi_exe(self.command)
-                                    self.midi_cmd.set_msg([self.name,
-                                                           self.command,
-                                                           cnt_num])
+                                    if attr == "":
+                                        pass
+                                    else:
+                                        new_val = self.valstore[element][0][self.valstore[element][1]]
+                                        self.command = f"{attr}={new_val}"
+                                        self.midi_exe(self.command)
+                                        self.midi_cmd.set_msg([self.name,
+                                                               self.command,
+                                                               cnt_num])
                             except Exception:
                                 pass
                         except Exception:
@@ -417,15 +420,16 @@ class MidiIn:
                                                                   self.valstore[element][0][cnt_num])
                                     self.new_val = round(self.new_val, 3)
                                     self.command = self.command + f"{attr}={self.new_val}; "
+                                    self.midi_exe(self.command)
+                                    unit = self.name.split(":")[0]
+                                    new_val = round(value/127, 3)
+                                    ufader = f"{unit}={new_val}"
+                                    self.midi_cmd.set_msg([self.name,
+                                                           ufader,
+                                                           cnt_num])
                                 except Exception:
                                     pass
-                            self.midi_exe(self.command)
-                            unit = self.name.split(":")[0]
-                            new_val = round(value/127, 3)
-                            ufader = f"{unit}={new_val}"
-                            self.midi_cmd.set_msg([self.name,
-                                                   ufader,
-                                                   cnt_num])
+
                         else:
                             cnt_num = self.valstore[self.name][1]
                             try:
@@ -452,7 +456,7 @@ class MidiIn:
                 # Update message to compare with new incoming message
                 self.cur_msg = self.handler.msg
             # Wait a little
-            time.sleep(0.01)
+            time.sleep(0.1)
 
     def midi_exe(self, command):
         # Execute new attribute value
