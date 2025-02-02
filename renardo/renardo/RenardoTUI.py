@@ -6,7 +6,7 @@ from textual import work
 from textual.binding import Binding
 from textual.css.query import NoMatches
 from renardo.supercollider_mgt.sc_classes_files import is_renardo_sc_classes_initialized, write_sc_renardo_files_in_user_config
-from renardo_gatherer.collections import is_default_spack_initialized, download_default_sample_pack
+from renardo_gatherer import is_default_spack_initialized, download_default_sample_pack
 from textual.containers import Horizontal, Vertical, Center, Grid
 from textual.widgets import (
     Header,
