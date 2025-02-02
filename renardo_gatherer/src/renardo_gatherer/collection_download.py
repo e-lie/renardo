@@ -1,52 +1,11 @@
 import os
-import requests
 import time
-from datetime import datetime
-from renardo_gatherer.config_dir import SAMPLES_DIR_PATH
-from urllib.parse import urljoin, urlparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from urllib.parse import urlparse, urljoin
+
+import requests
 
 SAMPLES_DOWNLOAD_SERVER = 'https://collections.renardo.org/samples'
-# DEFAULT_SAMPLES_PACK_NAME = '0_foxdot_default_testing'
-DEFAULT_SAMPLES_PACK_NAME = '0_foxdot_default'
-LOOP_SUBDIR = '_loop_'
-
-
-nonalpha = {"&": "ampersand",
-            "*": "asterix",
-            "@": "at",
-            "\\": "backslash",
-            "|": "bar",
-            "^": "caret",
-            ":": "colon",
-            "$": "dollar",
-            "=": "equals",
-            "!": "exclamation",
-            "/": "forwardslash",
-            "#": "hash",
-            "-": "hyphen",
-            "<": "lessthan",
-            "%": "percent",
-            "+": "plus",
-            "?": "question",
-            ";": "semicolon",
-            "~": "tilde",
-            ",": "comma",
-            "0": "0",
-            "1": "1",
-            "2": "2",
-            "3": "3",
-            "4": "4",
-            "5": "5",
-            "6": "6",
-            "7": "7",
-            "8": "8",
-            "9": "9"}
-
-
-def ensure_renardo_samples_directory():
-    if not SAMPLES_DIR_PATH.exists():
-        SAMPLES_DIR_PATH.mkdir(parents=True, exist_ok=True)
 
 def download_file_in_pool(url, dest_path, retries=5, delay=1, logger=None):
     filename = os.path.basename(urlparse(url).path)
@@ -72,7 +31,7 @@ def download_file_in_pool(url, dest_path, retries=5, delay=1, logger=None):
                     logger.write_line(f"Failed to download {url} after {retries} attempts")
                 return False
 
-                
+
 def download_files_from_json_index_concurrent(json_url, download_dir, max_workers=3, logger=None):
     def download_json_index_from_url(url, logger=logger):
         try:
@@ -123,35 +82,3 @@ def download_files_from_json_index_concurrent(json_url, download_dir, max_worker
                     logger.write_line("A download failed.")
 
 
-def download_default_sample_pack(logger=None):
-
-    logger.write_line(f"Downloading Default Sample Pack {DEFAULT_SAMPLES_PACK_NAME} from {SAMPLES_DOWNLOAD_SERVER}\n")
-    download_files_from_json_index_concurrent(
-        json_url=f'{SAMPLES_DOWNLOAD_SERVER}/{DEFAULT_SAMPLES_PACK_NAME}/collection_index.json',
-        download_dir=SAMPLES_DIR_PATH,
-        logger=logger
-    )
-
-    try:
-        with open(SAMPLES_DIR_PATH / DEFAULT_SAMPLES_PACK_NAME / 'downloaded_at.txt', mode="w") as file:
-            file.write(str(datetime.now()))
-    except Exception as e:
-        print(e)
-
-
-def is_default_spack_initialized():
-    return (SAMPLES_DIR_PATH / DEFAULT_SAMPLES_PACK_NAME / 'downloaded_at.txt').exists()
-
-def sample_path_from_symbol(symbol, spack_path=SAMPLES_DIR_PATH/DEFAULT_SAMPLES_PACK_NAME):
-    """ Return the sample search directory for a symbol """
-    sample_path = None
-    if symbol.isalpha():
-        low_up_dirname = 'upper' if symbol.isupper() else 'lower'
-        sample_path = spack_path / symbol.lower() / low_up_dirname
-    elif symbol in nonalpha:
-        longname = nonalpha[symbol]
-        sample_path = spack_path / '_' / longname
-    return sample_path
-
-def default_loop_path():
-    return SAMPLES_DIR_PATH/DEFAULT_SAMPLES_PACK_NAME/LOOP_SUBDIR
