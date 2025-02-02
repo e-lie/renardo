@@ -18,7 +18,6 @@ elif platform == "win32":
     appdata_roaming_path = pathlib.Path(os.getenv('APPDATA'))
     USER_CONFIG_DIR_PATH = appdata_roaming_path / 'renardo'
 
+
 def get_samples_dir_path():
     return USER_CONFIG_DIR_PATH / 'samples'
-
-SAMPLES_DIR_PATH = get_samples_dir_path()

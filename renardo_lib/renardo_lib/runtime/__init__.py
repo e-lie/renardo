@@ -4,7 +4,7 @@ from renardo_lib.Code import *
 
 FoxDotCode.namespace = globals()
 
-from renardo_gatherer.collections import sample_path_from_symbol, default_loop_path
+from renardo_gatherer import sample_path_from_symbol, default_loop_path
 
 from renardo_lib.TempoClock import *
 from renardo_lib.SynthDefManagement.BufferManagement import *
