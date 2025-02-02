@@ -35,7 +35,7 @@ setup(
     # data_files=[('', 'LICENSE')],
     package_data = {'renardo_lib': ['README.md','demo/**', 'SynthDefManagement/sclang_code/**'],},
     install_requires=[
-        'renardo_gatherer==0.1.4.dev1',
+        'renardo_gatherer==0.1.4.dev2',
         'midiutil',
     ],
 )

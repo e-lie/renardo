@@ -19,7 +19,7 @@ from contextlib import closing
 from itertools import chain
 from os.path import abspath, join, isabs, isfile, isdir, splitext
 
-from renardo_lib.runtime import sample_path_from_symbol, default_loop_path
+from renardo_gatherer import sample_path_from_symbol, default_loop_path
 from renardo_lib.Code import WarningMsg
 from renardo_lib.Logging import Timing
 from renardo_lib.ServerManager.default_server import Server
