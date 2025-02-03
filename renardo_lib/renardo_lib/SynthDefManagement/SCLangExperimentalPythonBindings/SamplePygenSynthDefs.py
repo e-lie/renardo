@@ -1,4 +1,4 @@
-from renardo_lib.SynthDefManagement.BufferManagement import Samples
+from renardo_sc_backend import buffer_manager
 from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings.PygenSynthDef import PygenSynthDefBaseClass
 from renardo_lib.Settings import SAMPLES_PACK_NUMBER
 
@@ -32,7 +32,7 @@ class LoopPygenSynthDef(SamplePygenSynthDef):
         self.osc = self.osc * self.amp
         self.add()
     def __call__(self, filename, pos=0, sample=0, **kwargs):
-        kwargs["buf"] = Samples.loadBuffer(filename, sample)
+        kwargs["buf"] = buffer_manager.loadBuffer(filename, sample)
         proxy = SamplePygenSynthDef.__call__(self, pos, **kwargs)
         proxy.kwargs["filename"] = filename
         return proxy
@@ -46,7 +46,7 @@ class StretchPygenSynthDef(SamplePygenSynthDef):
         self.osc = self.osc * self.amp
         self.add()
     def __call__(self, filename, pos=0, sample=0, **kwargs):
-        kwargs["buf"] = Samples.loadBuffer(filename, sample)
+        kwargs["buf"] = buffer_manager.loadBuffer(filename, sample)
         proxy = SamplePygenSynthDef.__call__(self, pos, **kwargs)
         proxy.kwargs["filename"] = filename
         return proxy
@@ -65,6 +65,6 @@ class GranularPygenSynthDef(SamplePygenSynthDef):
         self.osc = self.osc * self.amp
         self.add()
     def __call__(self, filename, pos=0, sample=0, **kwargs):
-        kwargs["buf"] = Samples.loadBuffer(filename, sample)
+        kwargs["buf"] = buffer_manager.loadBuffer(filename, sample)
         return SamplePygenSynthDef.__call__(self, pos, **kwargs)
 

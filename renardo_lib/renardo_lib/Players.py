@@ -81,7 +81,7 @@
     to play short audio files rather than specify pitches. In this case
     you use a string of characters as the first argument where each character
     refers to a different folder of audio files. You can see more information
-    by evaluating `print(Samples)`. The following line of code creates
+    by evaluating `print(DefaultSamples)`. The following line of code creates
     a basic drum beat: ::
 
         d1 >> play("x-o-")
@@ -129,7 +129,7 @@ from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings.PygenSynthD
 from renardo_lib.SynthDefManagement import SynthDefProxy
 from renardo_lib.SynthDefManagement.SynthDict import SynthDefs
 from renardo_lib.runtime.synthdefs_initialisation import effect_manager
-from renardo_lib.SynthDefManagement.BufferManagement import Samples
+from renardo_sc_backend import buffer_manager
 from renardo_lib.Key import PlayerKey, NumberKey
 from renardo_lib.Repeat import Repeatable
 from renardo_lib.Patterns import *
@@ -232,7 +232,7 @@ class Player(Repeatable):
     fx_keys       = effect_manager.kwargs()
 
     # Load default sample bank
-    samples = Samples
+    samples = buffer_manager
 
     # Set in __init__.py
     metro   = None
@@ -1888,7 +1888,7 @@ class Player(Repeatable):
 
         if self.synthdef == LoopPlayer:
 
-            Samples.reload(self.filename)
+            buffer_manager.reload(self.filename)
 
         return self
 
