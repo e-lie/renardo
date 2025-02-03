@@ -5,8 +5,9 @@ from renardo_lib.Code import *
 FoxDotCode.namespace = globals()
 
 
+from renardo_sc_backend import buffer_manager, DefaultSamples, Samples
+# from renardo_sc_backend import *
 from renardo_lib.TempoClock import *
-from renardo_lib.SynthDefManagement.BufferManagement import *
 from renardo_lib.Players import *
 from renardo_lib.TimeVar import *
 from renardo_lib.Constants import *
@@ -126,14 +127,14 @@ def _reload_synths():
     from renardo_lib import SynthDefManagement
     reload(SynthDefManagement._SynthDefs)
     reload(Effects)
-    Samples._reset_buffers()
+    buffer_manager._reset_buffers()
     return
 
 def foxdot_reload():
     Server.init_connection()
     SynthDefs.reload()
     effect_manager.reload()
-    Samples.reset()
+    buffer_manager.reset()
     return
 
 def _convert_json_bpm(clock, data):
@@ -214,7 +215,7 @@ class _util:
         Server.init_connection()
         SynthDefs.reload()
         effect_manager.reload()
-        Samples.reset()
+        buffer_manager.reset()
         return
     def reassign_clock(self):
         FoxDotCode.namespace['Clock'] = _Clock
