@@ -19,7 +19,7 @@ from contextlib import closing
 from itertools import chain
 from os.path import abspath, join, isabs, isfile, isdir, splitext
 
-from renardo_gatherer import sample_path_from_symbol, default_loop_path
+from renardo_gatherer import default_loop_path, sample_pack_library
 from renardo_lib.Code import WarningMsg
 from renardo_lib.Logging import Timing
 from renardo_lib.ServerManager.default_server import Server
@@ -64,32 +64,6 @@ DESCRIPTIONS = { 'a' : "Gameboy hihat",      'A' : "Gameboy kick drum",
                  '2' : 'Vocals (Two)',
                  '3' : 'Vocals (Three)',
                  '4' : 'Vocals (Four)'}
-
-
-# class _get_sample_path_from_symbol:
-#     '''Function-like (singleton pattern) class to search the directory for a sample
-#     file based on input symbol'''
-#     def __init__(self, samples_directory, _):
-#         if os.path.isdir(samples_directory):
-#             self.samples_directory = os.path.realpath(samples_directory)
-#         else:
-#             raise OSError("{!r} is not a valid directory".format(samples_directory))
-#     def __call__(self, symbol, samples_pack):
-#         """ Return the sample search directory for a symbol """
-#         samples_pack = (
-#             spack_manager.get_spack_from_num(samples_pack) if isinstance(samples_pack, int)
-#             else samples_pack
-#         )
-#         sample_path = None
-#         if symbol.isalpha():
-#             low_up_dirname = 'upper' if symbol.isupper() else 'lower'
-#             samples_path = samples_pack.path / symbol.lower() / low_up_dirname
-#         elif symbol in nonalpha:
-#             longname = nonalpha[symbol]
-#             samples_path = samples_pack.path / '_' / longname
-#         return sample_path
-#
-# get_sample_path_from_symbol = _get_sample_path_from_symbol(FOXDOT_SND, SAMPLES_PACK_NUMBER) # singleton
 
 class Buffer(object):
     def __init__(self, fn, number, channels=1):
@@ -210,7 +184,7 @@ class BufferManager(object):
         """ Get buffer information from a symbol """
         if symbol.isspace():
             return nil
-        sample_path = sample_path_from_symbol(symbol)
+        sample_path = sample_pack_library.sample_category_path_from_symbol(symbol)
         if sample_path is None:
             return nil
         sample_path = self._findSample(sample_path, index)
