@@ -22,7 +22,7 @@ dependencies = [
 [project.urls]
 Documentation = "https://github.com/e-lie/renardo/renardo-gatherer/README.md"
 Issues = "https://github.com/e-lie/renardo/issues"
-Source = "https://github.com/e-lie/renardo/renardo-gatherer"
+Source = "https://github.com/e-lie/renardo/renardo_gatherer"
 
 [tool.hatch.version]
 path = "src/renardo_gatherer/__about__.py"
