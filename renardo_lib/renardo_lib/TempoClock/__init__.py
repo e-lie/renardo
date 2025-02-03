@@ -62,7 +62,7 @@ from renardo_lib.Patterns import asStream
 from renardo_lib.TimeVar import TimeVar
 from renardo_lib.Midi import MidiIn, MIDIDeviceNotFound
 from renardo_lib.Utils import modi
-from renardo_lib.ServerManager import TempoClient, ServerManager, RequestTimeout
+from renardo_sc_backend import TempoClient, ServerManager, RequestTimeout
 from renardo_lib.Settings import CPU_USAGE
 
 class TempoClock(object):
