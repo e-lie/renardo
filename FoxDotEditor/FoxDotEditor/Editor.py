@@ -486,7 +486,7 @@ class workspace:
         print("{}+F     : Toggle Searchbar".format(ctrl))
         print("{}+P     : Open Preferences".format(ctrl))
         print("print(SynthDefs)      : View available SynthDefs")
-        print("print(Samples)        : View character-to-sample mapping")
+        print("print(DefaultSamples)        : View character-to-sample mapping")
         print("print(FxList)         : View audio effects")
         print("print(Attributes)     : View Player attributes")
         print("print(PatternMethods) : View Pattern methods")

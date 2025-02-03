@@ -8,7 +8,7 @@
 # Each character represents a different audio file, which is stored in a buffer in SuperCollider.
 
 # To view which character relates to which audio file, execute
-print(Samples)
+print(DefaultSamples)
 
 # You can play audio samples in the FoxDot/snd/ sub-directories by using the
 # 'play' Synth and using a string of characters instead of list of notes.

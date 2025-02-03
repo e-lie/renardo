@@ -3,11 +3,11 @@ from __future__ import division, absolute_import, print_function
 from random import choice
 from copy import copy
 
+from renardo_sc_backend.src.renardo_sc_backend import buffer_manager
 from .SCLang.SynthDef import SynthDef
 from .Players import Player
 from .Patterns import PwRand, PRand, PGroup, PGroupPrime, asStream
 from .TimeVar import mapvar, var, linvar, inf
-from .Buffers import Samples
 from .Settings import LoopPlayer
 
 def player_method(f):
@@ -309,10 +309,10 @@ def versus(self, other_key, rule=lambda x, y: x > y, attr=None):
 
 @player_method
 def reload(self):
-    """ If this is a 'play' or 'loop' SynthDef, reload the filename used"""
-    if self.synthdef == LoopPlayer:
-        Samples.reload(self.filename)
-    return self
+        """ If this is a 'play' or 'loop' SynthDef, reload the filename used"""
+        if self.synthdef == LoopPlayer:
+            buffer_manager.reload(self.filename)
+        return self
 
 @player_method
 def only(self):
