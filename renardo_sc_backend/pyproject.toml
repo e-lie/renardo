@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "renardo-sc-backend"
+dynamic = ["version"]
+description = 'SuperCollider(standard) backend for Renardo. Handles OSC communication with Supercollider Quark server, SynthDef Loading, Buffer loading, etc'
+readme = "README.md"
+requires-python = ">=3.8"
+license = "GPL-3.0"
+keywords = ['music', 'livecoding', 'algorave', 'supercollider']
+authors = [
+  { name = "Elie Gavoty", email = "mail@eliegavoty.fr" },
+]
+
+dependencies = []
+
+[project.urls]
+Documentation = "https://github.com/e-lie/renardo/renardo-sc-backend/README.md"
+Issues = "https://github.com/e-lie/renardo/issues"
+Source = "https://github.com/e-lie/renardo/renardo_sc_backend"
+
+[tool.hatch.version]
+path = "src/renardo_sc_backend/__about__.py"
