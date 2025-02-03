@@ -1,7 +1,40 @@
 from pathlib import Path
 from typing import Dict, Optional, List, Tuple, Iterator
 
-from .sample_file import SampleFile
+from renardo_gatherer.sample_management.sample_file import SampleFile
+
+
+alpha    = "abcdefghijklmnopqrstuvwxyz"
+nonalpha = {"&": "_ampersand",
+            "*": "_asterix",
+            "@": "_at",
+            "\\": "_backslash",
+            "|": "_bar",
+            "^": "_caret",
+            ":": "_colon",
+            "$": "_dollar",
+            "=": "_equals",
+            "!": "_exclamation",
+            "/": "_forwardslash",
+            "#": "_hash",
+            "-": "_hyphen",
+            "<": "_lessthan",
+            "%": "_percent",
+            "+": "_plus",
+            "?": "_question",
+            ";": "_semicolon",
+            "~": "_tilde",
+            ",": "_comma",
+            "0": "0",
+            "1": "1",
+            "2": "2",
+            "3": "3",
+            "4": "4",
+            "5": "5",
+            "6": "6",
+            "7": "7",
+            "8": "8",
+            "9": "9"}
 
 class SampleCategory:
     """Represents a collection of indexed samples under a letter/symbol category."""
@@ -42,3 +75,4 @@ class SampleCategory:
 
     def __str__(self) -> str:
         return f"SampleCategory({self.category}, {len(self)} samples)"
+
