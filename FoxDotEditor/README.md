@@ -51,7 +51,7 @@ The keyword arguments `dur`, `oct`, and `scale` apply to all player objects - an
 
 ### 'Sample Player' Objects
 
-In FoxDot, sound files can be played through using a specific SynthDef called `play`. A player object that uses this SynthDef is referred to as a Sample Player object. Instead of specifying a list of numbers to generate notes, the Sample Player takes a string of characters (known as a "PlayString") as its first argument. To see a list of what samples are associated to what characters, use `print(Samples)`. To create a basic drum beat, you can execute the following line of code:
+In FoxDot, sound files can be played through using a specific SynthDef called `play`. A player object that uses this SynthDef is referred to as a Sample Player object. Instead of specifying a list of numbers to generate notes, the Sample Player takes a string of characters (known as a "PlayString") as its first argument. To see a list of what samples are associated to what characters, use `print(DefaultSamples)`. To create a basic drum beat, you can execute the following line of code:
 
 ``` python
 d1 >> play("x-o-")

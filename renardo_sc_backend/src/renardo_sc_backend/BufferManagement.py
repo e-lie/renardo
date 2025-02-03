@@ -1,17 +1,3 @@
-"""
-
-This module manages the allocation of buffer numbers and samples. To see
-a list of descriptions of what sounds are mapped to what characters,
-simply evaluate
-
-    print(Samples)
-
-Future:
-
-Aiming on being able to set individual sample banks for different players
-that can be proggrammed into performance.
-
-"""
 import fnmatch
 import os
 import wave
@@ -26,44 +12,7 @@ from renardo_lib.ServerManager.default_server import Server
 
 alpha    = "abcdefghijklmnopqrstuvwxyz"
 
-DESCRIPTIONS = { 'a' : "Gameboy hihat",      'A' : "Gameboy kick drum",
-                 'b' : "Noisy beep",         'B' : "Short saw",
-                 'c' : "Voice/string",       'C' : "Choral",
-                 'd' : "Woodblock",          'D' : "Dirty snare",
-                 'e' : "Electronic Cowbell", 'E' : "Ringing percussion",
-                 'f' : "Pops",               'F' : "Trumpet stabs",
-                 'g' : "Ominous",            'G' : "Ambient stabs",
-                 'h' : "Finger snaps",       'H' : "Clap",
-                 'i' : "Jungle snare",       'I' : "Rock snare",
-                 'j' : "Whines",             'J' : "Ambient stabs",
-                 'k' : "Wood shaker",        'K' : "Percussive hits",
-                 'l' : "Robot noise",        'L' : "Noisy percussive hits",
-                 'm' : "808 toms",           'M' : "Acoustic toms",
-                 'n' : "Noise",              'N' : "Gameboy SFX",
-                 'o' : "Snare drum",         'O' : "Heavy snare",
-                 'p' : "Tabla",              'P' : "Tabla long",
-                 'q' : "Ambient stabs",      'Q' : "Electronic stabs",
-                 'r' : "Metal",              'R' : "Metallic",
-                 's' : "Shaker",             'S' : "Tamborine",
-                 't' : "Rimshot",            'T' : "Cowbell",
-                 'u' : "Soft snare",         'U' : "Misc. Fx",
-                 'v' : "Soft kick",          'V' : "Hard kick",
-                 'w' : "Dub hits",           'W' : "Distorted",
-                 'x' : "Bass drum",          'X' : "Heavy kick",
-                 'y' : "Percussive hits",    'Y' : "High buzz",
-                 'z' : "Scratch",            "Z" : "Loud stabs",
-                 '-' : "Hi hat closed",      "|" : "Hangdrum",
-                 '=' : "Hi hat open",        "/" : "Reverse sounds",
-                 '*' : "Clap",               "\\" : "Lazer",
-                 '~' : "Ride cymbal",        "%" : "Noise bursts",
-                 '^' : "'Donk'",             "$" : "Beatbox",
-                 '#' : "Crash",              "!" : "Yeah!",
-                 '+' : "Clicks",             "&" : "Chime",
-                 '@' : "Gameboy noise",      ":" : "Hi-hats",
-                 '1' : "Vocals (One)",
-                 '2' : 'Vocals (Two)',
-                 '3' : 'Vocals (Three)',
-                 '4' : 'Vocals (Four)'}
+
 
 class Buffer(object):
     def __init__(self, fn, number, channels=1):
@@ -108,13 +57,13 @@ class BufferManager(object):
         ]
 
     def __str__(self):
-        return "\n".join(["%r: %s" % (k, v) for k, v in sorted(DESCRIPTIONS.items())])
+        return 
 
     def __repr__(self):
         return '<BufferManager>'
 
     def __getitem__(self, key):
-        """ Short-hand access for getBufferFromSymbol() i.e. Samples['x'] """
+        """ Short-hand access for getBufferFromSymbol() i.e. buffer_manager['x'] """
         if isinstance(key, tuple):
             return self.getBufferFromSymbol(*key)
         return self.getBufferFromSymbol(key)
@@ -374,4 +323,46 @@ def hasext(filename):
     return bool(splitext(filename)[1])
 
 
-Samples = BufferManager()
+DESCRIPTIONS = { 'a' : "Gameboy hihat",      'A' : "Gameboy kick drum",
+                 'b' : "Noisy beep",         'B' : "Short saw",
+                 'c' : "Voice/string",       'C' : "Choral",
+                 'd' : "Woodblock",          'D' : "Dirty snare",
+                 'e' : "Electronic Cowbell", 'E' : "Ringing percussion",
+                 'f' : "Pops",               'F' : "Trumpet stabs",
+                 'g' : "Ominous",            'G' : "Ambient stabs",
+                 'h' : "Finger snaps",       'H' : "Clap",
+                 'i' : "Jungle snare",       'I' : "Rock snare",
+                 'j' : "Whines",             'J' : "Ambient stabs",
+                 'k' : "Wood shaker",        'K' : "Percussive hits",
+                 'l' : "Robot noise",        'L' : "Noisy percussive hits",
+                 'm' : "808 toms",           'M' : "Acoustic toms",
+                 'n' : "Noise",              'N' : "Gameboy SFX",
+                 'o' : "Snare drum",         'O' : "Heavy snare",
+                 'p' : "Tabla",              'P' : "Tabla long",
+                 'q' : "Ambient stabs",      'Q' : "Electronic stabs",
+                 'r' : "Metal",              'R' : "Metallic",
+                 's' : "Shaker",             'S' : "Tamborine",
+                 't' : "Rimshot",            'T' : "Cowbell",
+                 'u' : "Soft snare",         'U' : "Misc. Fx",
+                 'v' : "Soft kick",          'V' : "Hard kick",
+                 'w' : "Dub hits",           'W' : "Distorted",
+                 'x' : "Bass drum",          'X' : "Heavy kick",
+                 'y' : "Percussive hits",    'Y' : "High buzz",
+                 'z' : "Scratch",            "Z" : "Loud stabs",
+                 '-' : "Hi hat closed",      "|" : "Hangdrum",
+                 '=' : "Hi hat open",        "/" : "Reverse sounds",
+                 '*' : "Clap",               "\\" : "Lazer",
+                 '~' : "Ride cymbal",        "%" : "Noise bursts",
+                 '^' : "'Donk'",             "$" : "Beatbox",
+                 '#' : "Crash",              "!" : "Yeah!",
+                 '+' : "Clicks",             "&" : "Chime",
+                 '@' : "Gameboy noise",      ":" : "Hi-hats",
+                 '1' : "Vocals (One)",
+                 '2' : 'Vocals (Two)',
+                 '3' : 'Vocals (Three)',
+                 '4' : 'Vocals (Four)'}
+
+# Samples and DefaultSamples just display default samples list (compat with FoxDot print(Samples))
+DefaultSamples = Samples = "\n".join(["%r: %s" % (k, v) for k, v in sorted(DESCRIPTIONS.items())])
+
+buffer_manager =  BufferManager()

@@ -178,7 +178,7 @@ class Editor(wx.Frame):
         print("{}+S                : Save your work".format(ctrl))
         print("{}+O                : Open a file".format(ctrl))
         print("print(SynthDefs)      : View available SynthDefs")
-        print("print(Samples)        : View character-to-sample mapping")
+        print("print(DefaultSamples)        : View character-to-sample mapping")
         print("print(FxList)         : View audio effects")
         print("print(Attributes)     : View Player attributes")
         print("print(PatternMethods) : View Pattern methods")

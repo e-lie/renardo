@@ -4,11 +4,11 @@ import os
 import wave
 from contextlib import closing
 from itertools import chain
+from collections import OrderedDict
 
-from renardo_gatherer import default_loop_path, sample_pack_library
+from renardo_gatherer import default_loop_path, SampleFile, SamplePackLibrary, LOOP_SUBDIR
 from renardo_lib.Code import WarningMsg
 from renardo_lib.Logging import Timing
-from renardo_lib.ServerManager.default_server import Server
 
 alpha    = "abcdefghijklmnopqrstuvwxyz"
 
@@ -52,10 +52,10 @@ DESCRIPTIONS = { 'a' : "Gameboy hihat",      'A' : "Gameboy kick drum",
                  '4' : 'Vocals (Four)'}
 
 class Buffer(object):
-    def __init__(self, file_name, number, channels=1):
-        self.fn = file_name
-        self.bufnum   = int(number)
-        self.channels = channels
+    def __init__(self, sample_file: SampleFile, buffer_number, num_audio_channel=1):
+        self.sample_file = sample_file
+        self.bufnum   = int(buffer_number)
+        self.num_audio_channels = num_audio_channel
 
     def __repr__(self):
         return "<Buffer num {}>".format(self.bufnum)
@@ -77,30 +77,34 @@ nil = Buffer('', 0)
 
 
 class BufferManager(object):
-    def __init__(self, server=Server, paths=[]):
-        self._server = server
-        self._max_buffers = server.max_buffers
-        # Keep buffer 0 unallocated because we use it as the "nil" buffer
-        self._nextbuf = 1
-        self._buffers = [None for _ in range(self._max_buffers)]
-        self._fn_to_buf = {}
-        self._paths = [default_loop_path()] + list(paths)
-        self._ext = ['wav', 'wave', 'aif', 'aiff', 'flac']
+    """
+    This class handles keeping track of audio files loaded as supercollider Buffers
+    and loads new files if not already loaded (samples are lazy loaded) "
+    """
+    def __init__(self, supercollider_server, sample_pack_library: SamplePackLibrary, extra_paths=[]):
+        self._supercollider_server = supercollider_server # where to load the audio files
+        self._sample_pack_library: SamplePackLibrary = sample_pack_library # where to find the audio files
+        # self._max_buffers = supercollider_server.max_buffers
+        self._buffers: OrderedDict[str, Buffer] = OrderedDict()
+        self._extra_paths = [default_loop_path()] + list(extra_paths)
+        # Buffer 0 if for "nil"/empty buffer
+        self._buffers["."] = Buffer(sample_file=None, buffer_number=0)
 
-        self.loops = [
-            sample_path.with_suffix('').name #file name without extension
-            for sample_path
-            in default_loop_path().iterdir()
-        ]
+    def supported_audio_files(self):
+        return ['wav', 'wave', 'aif', 'aiff', 'flac', 'ogg']
+
+    def get_loops(self, spack: int):
+       return self._sample_pack_library.get_pack(spack).get_category(LOOP_SUBDIR).list_samples()
 
     def __str__(self):
+        # TODO move this to default sample pack metadata
         return "\n".join(["%r: %s" % (k, v) for k, v in sorted(DESCRIPTIONS.items())])
 
     def __repr__(self):
-        return '<BufferManager>'
+        return f"<BufferManager - loaded buffers: {len(self._buffers)}>"
 
     def __getitem__(self, key):
-        """ Short-hand access for getBufferFromSymbol() i.e. Samples['x'] """
+        """ Short-hand access for getBufferFromSymbol() i.e. buffer_manager['x'] """
         if isinstance(key, tuple):
             return self.getBufferFromSymbol(*key)
         return self.getBufferFromSymbol(key)
@@ -132,10 +136,6 @@ class BufferManager(object):
         self._incr_nextbuf()
         return freebuf
 
-    def addAPath(self, path):
-        """ Add a path to the search paths for samples """
-        self._paths.append(abspath(path))
-
     def free(self, filenameOrBuf):
         """ Free a buffer. Accepts a filename or buffer number """
         if isinstance(filenameOrBuf, int):
@@ -144,27 +144,13 @@ class BufferManager(object):
             buf = self._fn_to_buf[filenameOrBuf]
         del self._fn_to_buf[buf.fn]
         self._buffers[buf.bufnum] = None
-        self._server.bufferFree(buf.bufnum)
+        self._supercollider_server.bufferFree(buf.bufnum)
 
     def freeAll(self):
         """ Free all buffers """
         buffers = list(self._fn_to_buf.values())
         for buf in buffers:
             self.free(buf.bufnum)
-
-    def setMaxBuffers(self, max_buffers):
-        """ Set the max buffers on the SC server """
-        if max_buffers < self._max_buffers:
-            if any(self._buffers[max_buffers:]):
-                raise RuntimeError(
-                    "Cannot shrink buffer size. Buffers already allocated."
-                )
-            self._buffers = self._buffers[:max_buffers]
-        elif max_buffers > self._max_buffers:
-            while len(self._buffers) < max_buffers:
-                self._buffers.append(None)
-        self._max_buffers = max_buffers
-        self._nextbuf = self._nextbuf % max_buffers
 
     def getBufferFromSymbol(self, symbol, spack, index=0):
         """ Get buffer information from a symbol """
@@ -187,12 +173,12 @@ class BufferManager(object):
         if filename not in self._fn_to_buf:
             bufnum = self._getNextBufnum()
             buf = Buffer.fromFile(filename, bufnum)
-            self._server.bufferRead(filename, bufnum)
+            self._supercollider_server.bufferRead(filename, bufnum)
             self._fn_to_buf[filename] = buf
             self._buffers[bufnum] = buf
         elif force:
             buf = self._fn_to_buf[filename]
-            self._server.bufferRead(filename, buf.bufnum)
+            self._supercollider_server.bufferRead(filename, buf.bufnum)
             # self._fn_to_buf[filename] = bufnum
             # self._buffers[bufnum] = buf
         return self._fn_to_buf[filename]
@@ -210,7 +196,7 @@ class BufferManager(object):
                 return filename
         else:
             # Otherwise, look for all possible extensions
-            for ext in self._ext:
+            for ext in self.supported_audio_files():
                 # Look for .wav and .WAV
                 for tryext in [ext, ext.upper()]:
                     extpath = filename + '.' + tryext
@@ -232,7 +218,7 @@ class BufferManager(object):
         if isabs(filename):
             return self._getSoundFileOrDir(filename)
         else:
-            for root in self._paths:
+            for root in self._extra_paths:
                 fullpath = join(root, filename)
                 foundfile = self._getSoundFileOrDir(fullpath)
                 if foundfile:
@@ -246,7 +232,7 @@ class BufferManager(object):
             name, ext = splitext(filename)
             if 'Placeholder' in name:
                 continue
-            if ext.lower()[1:] in self._ext:
+            if ext.lower()[1:] in self.supported_audio_files():
                 fullpath = join(dirname, filename)
                 if len(candidates) == index:
                     return fullpath
@@ -280,7 +266,7 @@ class BufferManager(object):
                     yield join(path, c)
 
         candidates = []
-        queue = self._paths[:]
+        queue = self._extra_paths[:]
         subpaths = filename.split(os.sep)
         filepat = subpaths.pop()
         while subpaths:
@@ -297,7 +283,7 @@ class BufferManager(object):
             for subpath, _, filenames in os.walk(path):
                 for filename in sorted(filenames):
                     basename, ext = splitext(filename)
-                    if ext[1:].lower() not in self._ext:
+                    if ext[1:].lower() not in self.supported_audio_files():
                         continue
                     if match_base:
                         ismatch = fnmatch.fnmatch(basename, filepat)
@@ -356,8 +342,3 @@ class BufferManager(object):
             return buf.bufnum
 
 
-def hasext(filename):
-    return bool(splitext(filename)[1])
-
-
-Samples = BufferManager()

@@ -301,7 +301,7 @@ v0.2.10 fixes and updates
 * New SynthDefs added. Use ``print SynthDefs`` to view.
 * Improved timing in the ``TempoClock`` class through use of threading and a latency value. Thanks to Yaxu and Charlie Roberts for the help.
 * Dubstep samples added to the 'K' character. 
-* Sample banks re-arranged. Use ``print Samples`` for more information.
+* Sample banks re-arranged. Use ``print(DefaultSamples)`` for more information.
 * Sample Player argument, ``scrub`` removed. You can now use ``slide``/``slidefrom`` and ``vib`` as you would do with a normal Player object to manipulate playback rate.
 * ``Pattern`` class now has a ``layer`` method that takes a name of a ``Pattern`` method as its first argument and then arguments and keyword arguments for that method and creates a pattern of ``PGroups`` with their values zipped together. ::
 
