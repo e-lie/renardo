@@ -8,7 +8,7 @@ from os.path import abspath, join, isabs, isfile, isdir, splitext
 from renardo_gatherer import default_loop_path, sample_pack_library
 from renardo_lib.Code import WarningMsg
 from renardo_lib.Logging import Timing
-from renardo_lib.ServerManager.default_server import Server
+from renardo_sc_backend.ServerManager.default_server import Server
 
 alpha    = "abcdefghijklmnopqrstuvwxyz"
 

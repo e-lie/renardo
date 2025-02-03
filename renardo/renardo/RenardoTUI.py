@@ -1,6 +1,6 @@
 from textual.app import App, ComposeResult
 from textual.reactive import reactive
-from renardo_lib.ServerManager import ServerManager
+from renardo_sc_backend import ServerManager
 from renardo_lib.Settings import ADDRESS, PORT, PORT2
 from textual import work
 from textual.binding import Binding
