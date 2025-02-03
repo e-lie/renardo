@@ -61,7 +61,7 @@
 
 import os.path
 from renardo_lib.Settings import TMP_EFFECTS_DIR
-from renardo_lib.ServerManager.default_server import Server
+from renardo_sc_backend import Server
 
 
 class Effect:

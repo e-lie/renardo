@@ -34,7 +34,7 @@ import socket
 # Code execution
 from renardo_lib.Settings import *
 from renardo_lib.Code import execute
-from renardo_lib.ServerManager import TempoServer
+from renardo_sc_backend import TempoServer
 
 
 # App object
