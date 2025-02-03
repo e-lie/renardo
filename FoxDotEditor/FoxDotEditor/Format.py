@@ -135,7 +135,7 @@ def find_multiline(text):
 
 
 # Use our regex to read patterns.py and add all the functions to key_types
-foxdot_kw = ["Clock", "Group", "Scale", "Server", "Root", "Samples", "var",
+foxdot_kw = ["Clock", "Group", "Scale", "Server", "Root", "DefaultSamples", "var",
              "Pvar", "Attributes", "PatternMethods", "PatternTypes", "now",
              "linvar", "expvar", "mapvar", "sinvar", "inf", "when", "lambda",
              u"λ", decorator]

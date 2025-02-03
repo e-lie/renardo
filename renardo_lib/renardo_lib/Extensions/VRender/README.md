@@ -74,7 +74,7 @@ vrender([3,2,1,0,4,4,4,4],name="v2")
 v2 >> loop('v2',P[4:12],dur=1)
 
 vrender([3,3,3,4],name="v2")
-Samples.free(int(v2.buf))
+buffer_manager.free(int(v2.buf))
 v2 >> loop('v2',P[4:12],dur=1)
 
 

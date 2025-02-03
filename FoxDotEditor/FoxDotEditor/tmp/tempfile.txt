@@ -1,1 +1,7 @@
-d1 >> play("X-o")
+d1 >> play("X-o", room2=1)
+
+s1 >> loop('foxdot', dur=4, room2=.5)
+
+
+
+print(DefaultSamples)
