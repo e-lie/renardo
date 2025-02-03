@@ -2,7 +2,7 @@ import os
 from renardo_lib.Code import WarningMsg
 from renardo_lib.SynthDefManagement import SynthDefProxy
 from renardo_lib.SynthDefManagement.SynthDict import SynthDefs
-from renardo_lib.ServerManager.default_server import Server
+from renardo_sc_backend import Server
 from renardo_lib.Settings import SYNTHDEF_DIR, TMP_SYNTHDEF_DIR
 
 class SimpleSynthDef(object):
