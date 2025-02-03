@@ -2,8 +2,9 @@ import re
 from pathlib import Path
 from typing import Dict, Optional, List, Iterator
 
-from .sample_category import SampleCategory
-from .sample_file import SampleFile
+from renardo_gatherer.sample_management.sample_category import SampleCategory, nonalpha, alpha
+from renardo_gatherer.sample_management.sample_file import SampleFile
+from renardo_gatherer.sample_management.default_samples import LOOP_SUBDIR
 
 
 class SamplePack:
@@ -14,6 +15,7 @@ class SamplePack:
         self.name = self._parse_pack_name(directory.name)
         self.index = self._parse_pack_index(directory.name)
         self._load_categories()
+        self.complete = self._is_complete()
 
     @staticmethod
     def _parse_pack_name(dirname: str) -> str:
@@ -49,6 +51,16 @@ class SamplePack:
             return category_obj.get_sample(index)
         return None
 
+    def _is_complete(self) -> bool:
+        "check if every basic symbol/letter is provided with a sample"
+        # IMPROVE define what complete means and effectively check if there is a sample in each category
+        complete = True
+        all_base_categories = list(alpha) + list(alpha.upper()) + list(nonalpha.values()) + [LOOP_SUBDIR]
+        for cat in all_base_categories:
+            if cat not in self._categories.keys():
+                complete = False
+        return complete
+
     def list_categories(self) -> List[str]:
         """List all category letters/symbols."""
         return list(self._categories.keys())
@@ -60,4 +72,4 @@ class SamplePack:
         return iter(self._categories.values())
 
     def __str__(self) -> str:
-        return f"SamplePack({self.index}: {self.name}, {len(self)} categories)"
+        return f"SamplePack({self.index}: {self.name}, {len(self)} categories, complete: {self.complete})"

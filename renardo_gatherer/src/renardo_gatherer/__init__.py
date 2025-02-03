@@ -5,8 +5,10 @@
 # from renardo_gatherer.sample_management import sample_file, sample_category, sample_pack, sample_pack_dict, default_samples
 
 # Expose effectively used only
+
 from renardo_gatherer.config_dir import get_samples_dir_path
-from renardo_gatherer.sample_management.sample_pack_dict import nonalpha, sample_path_from_symbol
+from renardo_gatherer.sample_management.sample_pack_library import sample_pack_library
+from sample_management.sample_category import nonalpha
 from renardo_gatherer.sample_management.default_samples import is_default_spack_initialized, download_default_sample_pack, default_loop_path
 
 # def main():

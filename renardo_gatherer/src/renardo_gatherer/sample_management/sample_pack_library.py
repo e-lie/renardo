@@ -3,44 +3,13 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import Optional, List, Iterator
 
-from .sample_pack import SamplePack
-from .default_samples import DEFAULT_SAMPLES_PACK_NAME
+from renardo_gatherer.sample_management.sample_category import nonalpha
+from renardo_gatherer.sample_management.sample_pack import SamplePack
+from renardo_gatherer.sample_management.default_samples import DEFAULT_SAMPLES_PACK_NAME
 from renardo_gatherer.config_dir import get_samples_dir_path
 
-SAMPLES_DIR_PATH = get_samples_dir_path()
 
-nonalpha = {"&": "ampersand",
-            "*": "asterix",
-            "@": "at",
-            "\\": "backslash",
-            "|": "bar",
-            "^": "caret",
-            ":": "colon",
-            "$": "dollar",
-            "=": "equals",
-            "!": "exclamation",
-            "/": "forwardslash",
-            "#": "hash",
-            "-": "hyphen",
-            "<": "lessthan",
-            "%": "percent",
-            "+": "plus",
-            "?": "question",
-            ";": "semicolon",
-            "~": "tilde",
-            ",": "comma",
-            "0": "0",
-            "1": "1",
-            "2": "2",
-            "3": "3",
-            "4": "4",
-            "5": "5",
-            "6": "6",
-            "7": "7",
-            "8": "8",
-            "9": "9"}
-
-class SamplePackDict:
+class SamplePackLibrary:
     """Manages multiple sample packs in an ordered dictionary."""
     def __init__(self, root_directory: Path):
         self.root_directory = Path(root_directory)
@@ -82,6 +51,10 @@ class SamplePackDict:
         """List all pack names with their indices."""
         return [f"{pack.index}: {pack.name}" for pack in self._packs.values()]
 
+    def sample_category_path_from_symbol(self, symbol: str, spack=0):
+        category = nonalpha[symbol] if symbol in nonalpha.keys() else symbol
+        return self.get_pack(spack).get_category(category).directory
+
     def __len__(self) -> int:
         return len(self._packs)
 
@@ -100,17 +73,8 @@ def ensure_renardo_samples_directory():
         SAMPLES_DIR_PATH.mkdir(parents=True, exist_ok=True)
 
 
-def sample_path_from_symbol(symbol: str, spack_path=SAMPLES_DIR_PATH / DEFAULT_SAMPLES_PACK_NAME):
-    """ Return the sample search directory for a symbol """
-    sample_path = None
-    if symbol.isalpha():
-        low_up_dirname = 'upper' if symbol.isupper() else 'lower'
-        sample_path = spack_path / symbol.lower() / low_up_dirname
-    elif symbol in nonalpha:
-        longname = nonalpha[symbol]
-        sample_path = spack_path / '_' / longname
-    return sample_path
-
+SAMPLES_DIR_PATH = get_samples_dir_path()
+sample_pack_library = SamplePackLibrary(SAMPLES_DIR_PATH)
 
 # Example usage
 if __name__ == "__main__":
@@ -128,7 +92,8 @@ if __name__ == "__main__":
     #       hihat_1.wav
 
     root_dir = get_samples_dir_path()
-    sample_packs = SamplePackDict(root_dir)
+    sample_packs = SamplePackLibrary(root_dir)
+    print(sample_packs[0])
 
     # List all packs
     print("Available sample packs:")
