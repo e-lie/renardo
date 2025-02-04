@@ -7,6 +7,7 @@ from .SimpleText import Text
 from .SimpleMenu import Menu
 # FoxDot imports
 from ....Settings import *
+from FoxDotEditor.EditorSettings import SYSTEM
 from ...Code import execute
 
 
