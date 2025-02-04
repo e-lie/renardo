@@ -14,7 +14,10 @@ authors = [
   { name = "Elie Gavoty", email = "mail@eliegavoty.fr" },
 ]
 
-dependencies = []
+dependencies = [
+  "tomli",
+  "tomli-w"
+]
 
 [project.urls]
 Documentation = "https://github.com/e-lie/renardo/renardo-sc-backend/README.md"

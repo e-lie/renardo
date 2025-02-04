@@ -3,6 +3,7 @@ from FoxDotEditor.tkimport import *
 from FoxDotEditor.Format import *
 from FoxDotEditor.AppFunctions import stdout
 from FoxDotEditor.MenuBar import ConsolePopupMenu
+from FoxDotEditor.EditorSettings import SYSTEM, MAC_OS
 import math
 import random
 try:

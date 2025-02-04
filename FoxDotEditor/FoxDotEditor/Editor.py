@@ -32,7 +32,12 @@ import os
 import re
 import socket
 # Code execution
-from renardo_lib.Settings import *
+from FoxDotEditor.EditorSettings import SYSTEM, WINDOWS, MAC_OS, LINUX, FOXDOT_TEMP_FILE
+from renardo_lib.Settings import (
+    FONT, COLOR_THEME, USE_ALPHA, MENU_ON_STARTUP, TREEVIEW_ON_STARTUP,
+    LINENUMBERS_ON_STARTUP, CONSOLE_ON_STARTUP, FOXDOT_ICON, FOXDOT_ICON_GIF,
+    CHECK_FOR_UPDATE, RECOVER_WORK, TRANSPARENT_ON_STARTUP, 
+)
 from renardo_lib.Code import execute
 from renardo_sc_backend import TempoServer
 
