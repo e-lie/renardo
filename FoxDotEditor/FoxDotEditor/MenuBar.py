@@ -2,7 +2,12 @@ from FoxDotEditor.tkimport import Menu, BooleanVar, IntVar, DISABLED
 from FoxDotEditor.tkimport import *
 import os.path
 from functools import partial
-from renardo_lib.Settings import *
+#from renardo_lib.Settings import *
+from renardo_lib.Settings import (
+    SC3_PLUGINS, CPU_USAGE, CLOCK_LATENCY,
+    get_tutorial_files
+)
+from FoxDotEditor.EditorSettings import SYSTEM, MAC_OS
 from renardo_lib.Code import FoxDotCode
 
 # Code menu
@@ -184,7 +189,7 @@ class MenuBar(Menu):
                                   font=self.menu_fontsize)
         # Tutorials
         self.tutomenu = Menu(self, tearoff=0)
-        for tutorial in GET_TUTORIAL_FILES():
+        for tutorial in get_tutorial_files():
             filename = os.path.basename(tutorial)
             if filename.endswith(".py"):
                 filename = filename.replace(".py", "")

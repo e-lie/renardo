@@ -3,7 +3,8 @@
 import re
 from os.path import abspath, join, dirname
 from renardo_lib.Code import classes, functions, instances
-from renardo_lib.Settings import *
+# from renardo_lib.Settings import *
+from renardo_lib.Settings import COLOURS
 from renardo_lib.Patterns import Main, Sequences, Generators
 from renardo_lib.SynthDefManagement import SCLangExperimentalPythonBindings
 

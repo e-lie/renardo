@@ -18,3 +18,5 @@ build
 twine
 
 python-reapy
+tomli
+tomli-w

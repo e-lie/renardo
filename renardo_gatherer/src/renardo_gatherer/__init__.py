@@ -6,7 +6,7 @@
 
 # Expose effectively used only
 
-from renardo_gatherer.config_dir import get_samples_dir_path
+from renardo_gatherer.config_dir import get_samples_dir_path, get_user_config_dir_path
 from renardo_gatherer.sample_management.sample_pack_library import SamplePackLibrary, sample_pack_library
 from renardo_gatherer.sample_management.sample_file import SampleFile
 from renardo_gatherer.sample_management.sample_category import nonalpha

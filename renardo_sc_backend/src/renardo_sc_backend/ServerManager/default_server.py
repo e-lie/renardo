@@ -1,4 +1,4 @@
-from renardo_lib.Settings import ADDRESS, PORT, PORT2, FORWARD_PORT, FORWARD_ADDRESS
+from renardo_sc_backend.supercollider_settings import ADDRESS, PORT, PORT2, FORWARD_PORT, FORWARD_ADDRESS
 from renardo_sc_backend.ServerManager import ServerManager
 
 # DefaultServer = SCLangServerManager(ADDRESS, PORT, PORT2)

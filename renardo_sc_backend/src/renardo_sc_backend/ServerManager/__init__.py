@@ -12,12 +12,17 @@ from time import sleep
 from collections import namedtuple
 from threading import Thread
 
-from renardo_lib.Settings import (
+from renardo_sc_backend.supercollider_settings import (
     OSC_MIDI_ADDRESS, GET_SC_INFO, FOXDOT_INFO_FILE, FOXDOT_RECORD_FILE,
-    RECORDING_DIR, SamplePlayer, LoopPlayer, get_timestamp, SCLANG_EXEC,
-    FOXDOT_STARTUP_FILE, FOXDOT_OSC_FUNC, USER_CWD, FOXDOT_BUFFERS_FILE,
+    RECORDING_DIR,
 )
-from renardo_lib.OSC3 import *
+
+from renardo_sc_backend.SynthDefManagement.SpecialSynthDefs import SamplePlayer, LoopPlayer
+from renardo_sc_backend.custom_osc_lib import *
+
+def get_timestamp():
+    import time
+    return time.strftime("%Y%m%d-%H%M%S")
 
 # Keep in sync with Info.scd
 ServerInfo = namedtuple(
