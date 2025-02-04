@@ -8,6 +8,10 @@ from threading import Thread
 
 from renardo_lib.Code import execute
 
+def get_timestamp():
+    import time
+    return time.strftime("%Y%m%d-%H%M%S")
+
 class Bang:
 
     duration = 0.1

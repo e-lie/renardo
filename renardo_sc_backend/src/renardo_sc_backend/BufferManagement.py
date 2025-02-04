@@ -6,13 +6,11 @@ from itertools import chain
 from os.path import abspath, join, isabs, isfile, isdir, splitext
 
 from renardo_gatherer import default_loop_path, sample_pack_library
-from renardo_lib.Code import WarningMsg
-from renardo_lib.Logging import Timing
+# from renardo_lib.Code import WarningMsg
+# from renardo_lib.Logging import Timing
 from renardo_sc_backend.ServerManager.default_server import Server
 
 alpha    = "abcdefghijklmnopqrstuvwxyz"
-
-
 
 class Buffer(object):
     def __init__(self, fn, number, channels=1):
@@ -275,7 +273,7 @@ class BufferManager(object):
             return candidates[index % len(candidates)]
         return None
 
-    @Timing('bufferSearch', logargs=True)
+    # @Timing('bufferSearch', logargs=True)
     def _findSample(self, filename, index=0):
         """
         Find a sample from a filename or pattern
@@ -295,10 +293,10 @@ class BufferManager(object):
                 if foundfile:
                     return foundfile
                 else:
-                    WarningMsg("No sound files in %r" % path)
+                    # WarningMsg("No sound files in %r" % path)
                     return None
             else:
-                WarningMsg("File %r is neither a file nor a directory" % path)
+                # WarningMsg("File %r is neither a file nor a directory" % path)
                 return None
         else:
             # If we couldn't find a dir or file with this name, then we use it
@@ -306,7 +304,7 @@ class BufferManager(object):
             foundfile = self._patternSearch(filename, index)
             if foundfile:
                 return foundfile
-            WarningMsg("Could not find any sample matching %r" % filename)
+            # WarningMsg("Could not find any sample matching %r" % filename)
             return None
 
     def loadBuffer(self, filename, index=0, force=False):

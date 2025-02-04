@@ -124,12 +124,12 @@
 
 from copy import copy
 
-from renardo_lib.Settings import SamplePlayer, LoopPlayer
+from renardo_sc_backend import SamplePlayer, LoopPlayer
+from renardo_sc_backend import buffer_manager
 from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings.PygenSynthDef import DefaultPygenSynthDef
 from renardo_lib.SynthDefManagement import SynthDefProxy
 from renardo_lib.SynthDefManagement.SynthDict import SynthDefs
 from renardo_lib.runtime.synthdefs_initialisation import effect_manager
-from renardo_sc_backend import buffer_manager
 from renardo_lib.Key import PlayerKey, NumberKey
 from renardo_lib.Repeat import Repeatable
 from renardo_lib.Patterns import *
