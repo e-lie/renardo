@@ -8,6 +8,7 @@ from typing import Optional, List, Iterator
 from renardo_gatherer.sample_management.default_samples import default_loop_path
 from renardo_gatherer.sample_management.sample_category import nonalpha
 from renardo_gatherer.sample_management.sample_pack import SamplePack
+from renardo_gatherer.sample_management.sample_file import SampleFile
 #from renardo_gatherer.sample_management.default_samples import DEFAULT_SAMPLES_PACK_NAME
 from renardo_gatherer.config_dir import get_samples_dir_path
 
@@ -64,7 +65,7 @@ class SamplePackLibrary:
         category = nonalpha[symbol] if symbol in nonalpha.keys() else symbol
         return self.get_pack(spack).get_category(category).directory
 
-    def _find_sample(self, sample_glob: str, index: int = 0) -> Optional[Path]:
+    def _find_sample(self, sample_glob: str, index: int = 0) -> Optional[SampleFile]:
         """
         Find a sample file by name, category/symbol, or pattern.
         If multiple matches are found (e.g., in a directory), returns the nth match
@@ -82,7 +83,7 @@ class SamplePackLibrary:
             index: Index of the sample to return when multiple matches found (default: 0)
 
         Returns:
-            Path to the sample if found, None otherwise
+            SampleFile object if found, None otherwise
         """
         # First try to interpret as an absolute path
         path = Path(sample_glob)
@@ -90,11 +91,12 @@ class SamplePackLibrary:
             if path.is_dir():
                 samples = self._find_samples_in_directory(path)
                 if samples:
-                    return samples[index % len(samples)]
+                    chosen_path = samples[index % len(samples)]
+                    return SampleFile(chosen_path, path.name, index)
             else:
                 result = self._find_exact_file(path)
                 if result:
-                    return result
+                    return SampleFile(result, result.parent.name, 0)
 
         # Try to find in sample packs by category/symbol
         for pack in self._packs.values():
@@ -103,7 +105,7 @@ class SamplePackLibrary:
             if category:
                 samples = list(category)
                 if samples:
-                    return samples[index % len(samples)].full_path
+                    return samples[index % len(samples)]
 
         # Try as relative path in extra paths (first try exact file match)
         for base_path in self._extra_paths:
@@ -111,7 +113,7 @@ class SamplePackLibrary:
             full_path = base_path / sample_glob
             result = self._find_exact_file(full_path)
             if result:
-                return result
+                return SampleFile(result, result.parent.name, 0)
 
             # Then try recursive search for the filename
             matches = [
@@ -119,7 +121,8 @@ class SamplePackLibrary:
                 if self._is_valid_audio_file(p)
             ]
             if matches:
-                return sorted(matches)[index % len(matches)]
+                chosen_path = sorted(matches)[index % len(matches)]
+                return SampleFile(chosen_path, chosen_path.parent.name, index)
 
         # Look for directory with matching name in extra paths
         for base_path in self._extra_paths:
@@ -128,7 +131,8 @@ class SamplePackLibrary:
                     # Found matching directory, get nth sample
                     samples = self._find_samples_in_directory(dir_path)
                     if samples:
-                        return samples[index % len(samples)]
+                        chosen_path = samples[index % len(samples)]
+                        return SampleFile(chosen_path, dir_path.name, index)
 
         # Try pattern matching in extra paths
         all_matches = []
@@ -137,7 +141,8 @@ class SamplePackLibrary:
             all_matches.extend(matches)
 
         if all_matches:
-            return sorted(all_matches)[index % len(all_matches)]
+            chosen_path = sorted(all_matches)[index % len(all_matches)]
+            return SampleFile(chosen_path, chosen_path.parent.name, index)
 
         return None
 
