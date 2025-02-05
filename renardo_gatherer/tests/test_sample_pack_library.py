@@ -12,7 +12,7 @@ import pytest
 from pathlib import Path
 import tempfile
 import shutil
-from renardo_sc_backend import BufferManager
+from renardo_gatherer import SamplePackLibrary, get_samples_dir_path
 
 
 @pytest.fixture
@@ -59,82 +59,81 @@ def sample_dir():
 
 
 @pytest.fixture
-def buffer_manager(sample_dir):
-    """Create a BufferManager instance configured with the sample directory."""
-    bm = BufferManager()
-    bm._paths = [sample_dir['root']]
-    return bm
+def sample_pack_lib(sample_dir):
+    """Create a Sample Pack Library instance configured with the sample directory."""
+    spack_lib = SamplePackLibrary(root_directory=get_samples_dir_path(), extra_paths=[sample_dir['root']])
+    return spack_lib
 
 
-def test_abspath(buffer_manager, sample_dir):
+def test_abspath(sample_pack_lib, sample_dir):
     """Test finding sample file using absolute path."""
     sample = str(sample_dir['yeah'])
-    found = buffer_manager._find_sample(sample)
+    found = sample_pack_lib._find_sample(sample)
     assert found == sample
 
 
-def test_abspath_no_ext(buffer_manager, sample_dir):
+def test_abspath_no_ext(sample_pack_lib, sample_dir):
     """Test finding sample file using absolute path without extension."""
     sample = str(sample_dir['yeah'].with_suffix(''))
-    found = buffer_manager._find_sample(sample)
+    found = sample_pack_lib._find_sample(sample)
     assert found == str(sample_dir['yeah'])
 
 
-def test_relpath(buffer_manager, sample_dir):
+def test_relpath(sample_pack_lib, sample_dir):
     """Test finding sample file using relative path."""
-    found = buffer_manager._find_sample('yeah.wav')
+    found = sample_pack_lib._find_sample('yeah.wav')
     assert found == str(sample_dir['yeah'])
 
 
-def test_relpath_no_ext(buffer_manager, sample_dir):
+def test_relpath_no_ext(sample_pack_lib, sample_dir):
     """Test finding sample file using relative path without extension."""
-    found = buffer_manager._find_sample('yeah')
+    found = sample_pack_lib._find_sample('yeah')
     assert found == str(sample_dir['yeah'])
 
 
-def test_dir_first(buffer_manager, sample_dir):
+def test_dir_first(sample_pack_lib, sample_dir):
     """Test loading first sample from directory."""
-    found = buffer_manager._find_sample('snares')
+    found = sample_pack_lib._find_sample('snares')
     assert found == str(sample_dir['snare1'])
 
 
-def test_dir_nth(buffer_manager, sample_dir):
+def test_dir_nth(sample_pack_lib, sample_dir):
     """Test loading nth sample from directory."""
-    found = buffer_manager._find_sample('snares', 1)
+    found = sample_pack_lib._find_sample('snares', 1)
     assert found == str(sample_dir['snare2'])
 
 
-def test_dir_nth_overflow(buffer_manager, sample_dir):
+def test_dir_nth_overflow(sample_pack_lib, sample_dir):
     """Test loading nth sample from directory when n exceeds file count."""
-    found = buffer_manager._find_sample('snares', 2)
+    found = sample_pack_lib._find_sample('snares', 2)
     assert found == str(sample_dir['snare1'])
 
 
-def test_nested_filename(buffer_manager, sample_dir):
+def test_nested_filename(sample_pack_lib, sample_dir):
     """Test finding sample by filename in nested directory."""
-    found = buffer_manager._find_sample('snare1.wav')
+    found = sample_pack_lib._find_sample('snare1.wav')
     assert found == str(sample_dir['snare1'])
 
 
-def test_nested_filename_no_ext(buffer_manager, sample_dir):
+def test_nested_filename_no_ext(sample_pack_lib, sample_dir):
     """Test finding sample by filename without extension in nested directory."""
-    found = buffer_manager._find_sample('snare1')
+    found = sample_pack_lib._find_sample('snare1')
     assert found == str(sample_dir['snare1'])
 
 
-def test_pathpattern(buffer_manager, sample_dir):
+def test_pathpattern(sample_pack_lib, sample_dir):
     """Test finding sample using path pattern."""
-    found = buffer_manager._find_sample('k?c*/*')
+    found = sample_pack_lib._find_sample('k?c*/*')
     assert found == str(sample_dir['808'])
 
 
-def test_pathpattern_doublestar(buffer_manager, sample_dir):
+def test_pathpattern_doublestar(sample_pack_lib, sample_dir):
     """Test finding sample using pattern with double asterisk."""
-    found = buffer_manager._find_sample('**/snare*')
+    found = sample_pack_lib._find_sample('**/snare*')
     assert found == str(sample_dir['snare1'])
 
 
-def test_doublestar_deep_path(buffer_manager, sample_dir):
+def test_doublestar_deep_path(sample_pack_lib, sample_dir):
     """Test finding sample in deep path using double asterisk."""
-    found = buffer_manager._find_sample('**/house/*')
+    found = sample_pack_lib._find_sample('**/house/*')
     assert found == str(sample_dir['house_kick'])
