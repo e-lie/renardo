@@ -1,4 +1,5 @@
 from datetime import datetime
+from pathlib import Path
 
 from renardo_gatherer.config_dir import get_samples_dir_path
 from renardo_gatherer.collection_download import download_files_from_json_index_concurrent, SAMPLES_DOWNLOAD_SERVER
@@ -12,7 +13,7 @@ def is_default_spack_initialized():
     return (SAMPLES_DIR_PATH / DEFAULT_SAMPLES_PACK_NAME / 'downloaded_at.txt').exists()
 
 
-def default_loop_path():
+def default_loop_path() -> Path:
     return SAMPLES_DIR_PATH/DEFAULT_SAMPLES_PACK_NAME/LOOP_SUBDIR
 
 

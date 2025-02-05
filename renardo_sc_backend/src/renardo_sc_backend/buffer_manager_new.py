@@ -1,20 +1,29 @@
 from typing import Dict, Optional
-from renardo_gatherer import SampleFile, SamplePackLibrary, LOOP_SUBDIR
 import heapq
+from pathlib import Path
+
+from renardo_gatherer import SampleFile, SamplePackLibrary, LOOP_SUBDIR, get_samples_dir_path
+from renardo_sc_backend.ServerManager.default_server import Server
 
 class Buffer:
     """Represents a SuperCollider buffer with its associated sample file."""
 
-    def __init__(self, buffer_num: int, sample_file: SampleFile):
+    def __init__(self, buffer_num: int, sample_file: Optional[SampleFile], channels=1):
         self.buffer_num = buffer_num
         self.sample_file = sample_file
         self.name = sample_file.name
+        self.channels = channels
 
     def __str__(self) -> str:
         return f"Buffer({self.buffer_num}: {self.name})"
 
     def __repr__(self) -> str:
         return self.__str__()
+
+    def __int__(self):
+        return self.buffer_num
+
+nil = Buffer(buffer_num=0, sample_file=None)
 
 
 class BufferManager:
@@ -111,7 +120,7 @@ class BufferManager:
         """Get a dictionary of allocated buffer numbers and their sample names."""
         return {num: buf.name for num, buf in self._buffers.items()}
 
-    def clear(self):
+    def free_all(self):
         """Free all allocated buffers."""
         # Reset buffers dictionary
         self._buffers.clear()
@@ -126,6 +135,70 @@ class BufferManager:
 
     def __str__(self) -> str:
         return f"BufferManager({len(self)}/{self.max_buffers} buffers allocated)"
+
+
+
+
+DESCRIPTIONS = { 'a' : "Gameboy hihat",      'A' : "Gameboy kick drum",
+                 'b' : "Noisy beep",         'B' : "Short saw",
+                 'c' : "Voice/string",       'C' : "Choral",
+                 'd' : "Woodblock",          'D' : "Dirty snare",
+                 'e' : "Electronic Cowbell", 'E' : "Ringing percussion",
+                 'f' : "Pops",               'F' : "Trumpet stabs",
+                 'g' : "Ominous",            'G' : "Ambient stabs",
+                 'h' : "Finger snaps",       'H' : "Clap",
+                 'i' : "Jungle snare",       'I' : "Rock snare",
+                 'j' : "Whines",             'J' : "Ambient stabs",
+                 'k' : "Wood shaker",        'K' : "Percussive hits",
+                 'l' : "Robot noise",        'L' : "Noisy percussive hits",
+                 'm' : "808 toms",           'M' : "Acoustic toms",
+                 'n' : "Noise",              'N' : "Gameboy SFX",
+                 'o' : "Snare drum",         'O' : "Heavy snare",
+                 'p' : "Tabla",              'P' : "Tabla long",
+                 'q' : "Ambient stabs",      'Q' : "Electronic stabs",
+                 'r' : "Metal",              'R' : "Metallic",
+                 's' : "Shaker",             'S' : "Tamborine",
+                 't' : "Rimshot",            'T' : "Cowbell",
+                 'u' : "Soft snare",         'U' : "Misc. Fx",
+                 'v' : "Soft kick",          'V' : "Hard kick",
+                 'w' : "Dub hits",           'W' : "Distorted",
+                 'x' : "Bass drum",          'X' : "Heavy kick",
+                 'y' : "Percussive hits",    'Y' : "High buzz",
+                 'z' : "Scratch",            "Z" : "Loud stabs",
+                 '-' : "Hi hat closed",      "|" : "Hangdrum",
+                 '=' : "Hi hat open",        "/" : "Reverse sounds",
+                 '*' : "Clap",               "\\" : "Lazer",
+                 '~' : "Ride cymbal",        "%" : "Noise bursts",
+                 '^' : "'Donk'",             "$" : "Beatbox",
+                 '#' : "Crash",              "!" : "Yeah!",
+                 '+' : "Clicks",             "&" : "Chime",
+                 '@' : "Gameboy noise",      ":" : "Hi-hats",
+                 '1' : "Vocals (One)",
+                 '2' : 'Vocals (Two)',
+                 '3' : 'Vocals (Three)',
+                 '4' : 'Vocals (Four)'}
+
+# Samples and DefaultSamples just display default samples list (compat with FoxDot print(Samples))
+DefaultSamples = Samples = "\n".join(["%r: %s" % (k, v) for k, v in sorted(DESCRIPTIONS.items())])
+
+
+sample_pack_library = SamplePackLibrary(root_directory=get_samples_dir_path())
+
+buffer_manager =  BufferManager(supercollider_server=Server, sample_pack_library=sample_pack_library)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # Example usage
