@@ -2,18 +2,10 @@
 #
 # SPDX-License-Identifier: MIT
 
-
-
-# def test_get_reaper_track_names():
-#     track_names = get_reaper_track_names()
-#     assert isinstance(track_names, list), "Track names should be a list"
-
 import pytest
 from pathlib import Path
 import tempfile
-import shutil
 from renardo_gatherer import SamplePackLibrary, get_samples_dir_path
-
 
 @pytest.fixture
 def sample_dir():
@@ -57,83 +49,97 @@ def sample_dir():
             'house_kick': house_kick
         }
 
-
 @pytest.fixture
 def sample_pack_lib(sample_dir):
     """Create a Sample Pack Library instance configured with the sample directory."""
-    spack_lib = SamplePackLibrary(root_directory=get_samples_dir_path(), extra_paths=[sample_dir['root']])
+    spack_lib = SamplePackLibrary(
+        root_directory=get_samples_dir_path(),
+        extra_paths=[sample_dir['root']]
+    )
     return spack_lib
-
 
 def test_abspath(sample_pack_lib, sample_dir):
     """Test finding sample file using absolute path."""
-    sample = sample_dir['yeah']
-    found = sample_pack_lib._find_sample(str(sample))
-    assert found == sample
-
+    sample = str(sample_dir['yeah'])
+    found = sample_pack_lib._find_sample(sample)
+    assert found is not None
+    assert found.path == sample_dir['yeah']
+    assert found.index == 0
 
 def test_abspath_no_ext(sample_pack_lib, sample_dir):
     """Test finding sample file using absolute path without extension."""
-    sample = sample_dir['yeah'].with_suffix('')
-    found = sample_pack_lib._find_sample(str(sample))
-    assert found == sample_dir['yeah']
-
+    sample = str(sample_dir['yeah'].with_suffix(''))
+    found = sample_pack_lib._find_sample(sample)
+    assert found is not None
+    assert found.path == sample_dir['yeah']
 
 def test_relpath(sample_pack_lib, sample_dir):
     """Test finding sample file using relative path."""
     found = sample_pack_lib._find_sample('yeah.wav')
-    assert found == sample_dir['yeah']
-
+    assert found is not None
+    assert found.path == sample_dir['yeah']
 
 def test_relpath_no_ext(sample_pack_lib, sample_dir):
     """Test finding sample file using relative path without extension."""
     found = sample_pack_lib._find_sample('yeah')
-    assert found == sample_dir['yeah']
-
+    assert found is not None
+    assert found.path == sample_dir['yeah']
 
 def test_dir_first(sample_pack_lib, sample_dir):
     """Test loading first sample from directory."""
     found = sample_pack_lib._find_sample('snares')
-    assert found == sample_dir['snare1']
-
+    assert found is not None
+    assert found.path == sample_dir['snare1']
+    assert found.category == "snares"
+    assert found.index == 0
 
 def test_dir_nth(sample_pack_lib, sample_dir):
     """Test loading nth sample from directory."""
     found = sample_pack_lib._find_sample('snares', 1)
-    assert found == sample_dir['snare2']
-
+    assert found is not None
+    assert found.path == sample_dir['snare2']
+    assert found.category == "snares"
+    assert found.index == 1
 
 def test_dir_nth_overflow(sample_pack_lib, sample_dir):
     """Test loading nth sample from directory when n exceeds file count."""
     found = sample_pack_lib._find_sample('snares', 2)
-    assert found == sample_dir['snare1']
-
+    assert found is not None
+    assert found.path == sample_dir['snare1']
+    assert found.category == "snares"
+    assert found.index == 2
 
 def test_nested_filename(sample_pack_lib, sample_dir):
     """Test finding sample by filename in nested directory."""
     found = sample_pack_lib._find_sample('snare1.wav')
-    assert found == sample_dir['snare1']
-
+    assert found is not None
+    assert found.path == sample_dir['snare1']
+    assert found.category == "snares"
 
 def test_nested_filename_no_ext(sample_pack_lib, sample_dir):
     """Test finding sample by filename without extension in nested directory."""
     found = sample_pack_lib._find_sample('snare1')
-    assert found == sample_dir['snare1']
-
+    assert found is not None
+    assert found.path == sample_dir['snare1']
+    assert found.category == "snares"
 
 def test_pathpattern(sample_pack_lib, sample_dir):
     """Test finding sample using path pattern."""
     found = sample_pack_lib._find_sample('k?c*/*')
-    assert found == sample_dir['808']
-
+    assert found is not None
+    assert found.path == sample_dir['808']
+    assert found.category == "kicks"
 
 def test_pathpattern_doublestar(sample_pack_lib, sample_dir):
     """Test finding sample using pattern with double asterisk."""
     found = sample_pack_lib._find_sample('**/snare*')
-    assert found == sample_dir['snare1']
-
+    assert found is not None
+    assert found.path == sample_dir['snare1']
+    assert found.category == "snares"
 
 def test_doublestar_deep_path(sample_pack_lib, sample_dir):
     """Test finding sample in deep path using double asterisk."""
     found = sample_pack_lib._find_sample('**/house/*')
-    assert found == sample_dir['house_kick']
+    assert found is not None
+    assert found.path == sample_dir['house_kick']
+    assert found.category == "house"
