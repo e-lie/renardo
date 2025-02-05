@@ -71,10 +71,10 @@ class SamplePackLibrary:
         based on the index parameter.
 
         Search order:
-        1. Try as absolute path
+        1. Try as absolute path (file or directory)
         2. Search in sample packs by category/symbol
-        3. Look for directory with matching name and get nth sample
-        4. Search in extra paths as relative path
+        3. Try as relative path in extra paths (file or directory)
+        4. Look for directory with matching name and get nth sample
         5. Try pattern matching in extra paths
 
         Args:
@@ -105,6 +105,22 @@ class SamplePackLibrary:
                 if samples:
                     return samples[index % len(samples)].full_path
 
+        # Try as relative path in extra paths (first try exact file match)
+        for base_path in self._extra_paths:
+            # Try exact file match first (with or without extension)
+            full_path = base_path / sample_glob
+            result = self._find_exact_file(full_path)
+            if result:
+                return result
+
+            # Then try recursive search for the filename
+            matches = [
+                p for p in base_path.rglob(f"{sample_glob}.*")
+                if self._is_valid_audio_file(p)
+            ]
+            if matches:
+                return sorted(matches)[index % len(matches)]
+
         # Look for directory with matching name in extra paths
         for base_path in self._extra_paths:
             for dir_path in base_path.iterdir():
@@ -113,18 +129,6 @@ class SamplePackLibrary:
                     samples = self._find_samples_in_directory(dir_path)
                     if samples:
                         return samples[index % len(samples)]
-
-        # Try as relative path in extra paths
-        for base_path in self._extra_paths:
-            full_path = base_path / sample_glob
-            if full_path.is_dir():
-                samples = self._find_samples_in_directory(full_path)
-                if samples:
-                    return samples[index % len(samples)]
-            else:
-                result = self._find_exact_file(full_path)
-                if result:
-                    return result
 
         # Try pattern matching in extra paths
         all_matches = []
@@ -211,36 +215,3 @@ def ensure_renardo_samples_directory():
 
 SAMPLES_DIR_PATH = get_samples_dir_path()
 sample_pack_library = SamplePackLibrary(SAMPLES_DIR_PATH, [])
-
-# Example usage
-if __name__ == "__main__":
-    # Example directory structure:
-    # sample_packs/
-    #   0_drum_kit/
-    #     k/  # kick drums
-    #       kick_0.wav
-    #       kick_1.wav
-    #     s/  # snares
-    #       snare_0.wav
-    #       snare_1.wav
-    #     h/  # hi-hats
-    #       hihat_0.wav
-    #       hihat_1.wav
-
-    root_dir = get_samples_dir_path()
-    sample_packs = SamplePackLibrary(root_dir)
-    print(sample_packs[0])
-
-    # List all packs
-    print("Available sample packs:")
-    for pack_name in sample_packs.list_packs():
-        print(f"  {pack_name}")
-
-    # Get a specific pack
-    pack = sample_packs.get_pack(0)
-    if pack:
-        print(f"\nCategories in {pack.name}:")
-        for category in pack:
-            print(f"  {category}")
-            for sample in category:
-                print(f"    {sample}")
