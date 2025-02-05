@@ -1,22 +1,20 @@
 import re
 from collections import OrderedDict
 from pathlib import Path
-import os
-from os.path import isfile, isdir, splitext, join, abspath, isabs
-from itertools import chain
+#import os
+#from os.path import isfile, isdir, splitext, join, abspath, isabs
 from typing import Optional, List, Iterator
-import fnmatch
 
 from renardo_gatherer.sample_management.default_samples import default_loop_path
 from renardo_gatherer.sample_management.sample_category import nonalpha
 from renardo_gatherer.sample_management.sample_pack import SamplePack
-from renardo_gatherer.sample_management.default_samples import DEFAULT_SAMPLES_PACK_NAME
+#from renardo_gatherer.sample_management.default_samples import DEFAULT_SAMPLES_PACK_NAME
 from renardo_gatherer.config_dir import get_samples_dir_path
 
-def hasext(filename):
-    return bool(splitext(filename)[1])
+#def hasext(filename):
+#    return bool(splitext(filename)[1])
 
-supported_sound_file_extensions = ['wav', 'wave', 'aif', 'aiff', 'flac']
+#supported_sound_file_extensions = ['wav', 'wave', 'aif', 'aiff', 'flac']
 
 class SamplePackLibrary:
     """Manages multiple sample packs in an ordered dictionary."""
@@ -24,6 +22,7 @@ class SamplePackLibrary:
         self.root_directory = Path(root_directory)
         self._packs: OrderedDict[int, SamplePack] = OrderedDict()
         self._load_packs()
+        self._extra_paths = [Path(p) for p in extra_paths]
         self._extra_paths = extra_paths + [default_loop_path()]
 
     def _load_packs(self):
@@ -65,149 +64,132 @@ class SamplePackLibrary:
         category = nonalpha[symbol] if symbol in nonalpha.keys() else symbol
         return self.get_pack(spack).get_category(category).directory
 
-    def _get_sound_file(self, filename):
-        """ Look for a file with all possible extensions """
-        base, cur_ext = splitext(filename)
-        if cur_ext:
-            # If the filename already has an extensions, keep it
-            if isfile(filename):
-                return filename
-        else:
-            # Otherwise, look for all possible extensions
-            for ext in supported_sound_file_extensions:
-                # Look for .wav and .WAV
-                for tryext in [ext, ext.upper()]:
-                    extpath = filename + '.' + tryext
-                    if isfile(extpath):
-                        return extpath
-        return None
-
-    def _get_sound_file_or_dir(self, filename):
-        """ Get a matching sound file or directory """
-        if isdir(filename):
-            return abspath(filename)
-        foundfile = self._get_sound_file(filename)
-        if foundfile:
-            return abspath(foundfile)
-        return None
-
-    def _search_paths(self, filename):
-        """ Search our search paths for an audio file or directory """
-        if isabs(filename):
-            return self._get_sound_file_or_dir(filename)
-        else:
-            for root in self._extra_paths:
-                fullpath = join(root, filename)
-                foundfile = self._get_sound_file_or_dir(fullpath)
-                if foundfile:
-                    return foundfile
-        return None
-
-    def _get_file_in_dir(self, dirname, index):
-        """ Return nth sample in a directory """
-        candidates = []
-        for filename in sorted(os.listdir(dirname)):
-            name, ext = splitext(filename)
-            if 'Placeholder' in name:
-                continue
-            if ext.lower()[1:] in supported_sound_file_extensions:
-                fullpath = join(dirname, filename)
-                if len(candidates) == index:
-                    return fullpath
-                candidates.append(fullpath)
-        if candidates:
-            return candidates[int(index) % len(candidates)]
-        return None
-
-    def _pattern_search(self, filename, index):
+    def _find_sample(self, sample_glob: str, index: int = 0) -> Optional[Path]:
         """
-        Return nth sample that matches a path pattern
+        Find a sample file by name, category/symbol, or pattern.
+        If multiple matches are found (e.g., in a directory), returns the nth match
+        based on the index parameter.
 
-        Path pattern is a relative path that can contain wildcards such as *
-        and ? (see fnmatch for more details). Some example paths:
+        Search order:
+        1. Try as absolute path
+        2. Search in sample packs by category/symbol
+        3. Look for directory with matching name and get nth sample
+        4. Search in extra paths as relative path
+        5. Try pattern matching in extra paths
 
-            samp*
-            **/voices/*
-            perc*/bass*
+        Args:
+            sample_glob: Sample identifier (can be path, category, or pattern)
+            index: Index of the sample to return when multiple matches found (default: 0)
 
+        Returns:
+            Path to the sample if found, None otherwise
         """
-
-        def _find_next_subpaths(path, pattern):
-            """ For a path pattern, find all subpaths that match """
-            # ** is a special case meaning "all recursive directories"
-            if pattern == '**':
-                for dirpath, _, _ in os.walk(path):
-                    yield dirpath
+        # First try to interpret as an absolute path
+        path = Path(sample_glob)
+        if path.is_absolute():
+            if path.is_dir():
+                samples = self._find_samples_in_directory(path)
+                if samples:
+                    return samples[index % len(samples)]
             else:
-                children = os.listdir(path)
-                for c in fnmatch.filter(children, pattern):
-                    yield join(path, c)
+                result = self._find_exact_file(path)
+                if result:
+                    return result
 
-        candidates = []
-        queue = self._extra_paths[:]
-        subpaths = filename.split(os.sep)
-        filepat = subpaths.pop()
-        while subpaths:
-            subpath = subpaths.pop(0)
-            queue = list(chain.from_iterable(
-                (_find_next_subpaths(p, subpath) for p in queue)
-            ))
+        # Try to find in sample packs by category/symbol
+        for pack in self._packs.values():
+            # Check if it's a category name
+            category = pack.get_category(sample_glob)
+            if category:
+                samples = list(category)
+                if samples:
+                    return samples[index % len(samples)].full_path
 
-        # If the filepat (ex. 'foo*.wav') has an extension, we want to match
-        # the full filename. If not, we just match against the basename.
-        match_base = not hasext(filepat)
+        # Look for directory with matching name in extra paths
+        for base_path in self._extra_paths:
+            for dir_path in base_path.iterdir():
+                if dir_path.is_dir() and dir_path.name == sample_glob:
+                    # Found matching directory, get nth sample
+                    samples = self._find_samples_in_directory(dir_path)
+                    if samples:
+                        return samples[index % len(samples)]
 
-        for path in queue:
-            for subpath, _, filenames in os.walk(path):
-                for filename in sorted(filenames):
-                    basename, ext = splitext(filename)
-                    if ext[1:].lower() not in supported_sound_file_extensions:
-                        continue
-                    if match_base:
-                        ismatch = fnmatch.fnmatch(basename, filepat)
-                    else:
-                        ismatch = fnmatch.fnmatch(filename, filepat)
-                    if ismatch:
-                        fullpath = join(subpath, filename)
-                        if len(candidates) == index:
-                            return fullpath
-                        candidates.append(fullpath)
-        if candidates:
-            return candidates[index % len(candidates)]
+        # Try as relative path in extra paths
+        for base_path in self._extra_paths:
+            full_path = base_path / sample_glob
+            if full_path.is_dir():
+                samples = self._find_samples_in_directory(full_path)
+                if samples:
+                    return samples[index % len(samples)]
+            else:
+                result = self._find_exact_file(full_path)
+                if result:
+                    return result
+
+        # Try pattern matching in extra paths
+        all_matches = []
+        for base_path in self._extra_paths:
+            matches = self._find_pattern_matches(base_path, sample_glob)
+            all_matches.extend(matches)
+
+        if all_matches:
+            return sorted(all_matches)[index % len(all_matches)]
+
         return None
 
-    def _find_sample(self, sample_glob: str, index=0):
-        """
-        Find a sample from a filename or pattern
+    def _find_samples_in_directory(self, directory: Path) -> List[Path]:
+        """Find all sample files in a directory, sorted alphabetically."""
+        return sorted([
+            path for path in directory.iterdir()
+            if path.is_file() and self._is_valid_audio_file(path)
+        ])
 
-        Will first attempt to find an exact match (by abspath or relative to
-        the search paths). Then will attempt to pattern match in search paths.
-
-        """
-        path = self._search_paths(sample_glob)
-        if path:
-            # If it's a file, use that sample
-            if isfile(path):
+    def _find_exact_file(self, path: Path) -> Optional[Path]:
+        """Find an exact file match, trying different extensions if needed."""
+        # If path has extension, try exact match
+        if path.suffix:
+            if path.is_file() and self._is_valid_audio_file(path):
                 return path
-            # If it's a dir, use one of the samples in that dir
-            elif isdir(path):
-                foundfile = self._get_file_in_dir(path, index)
-                if foundfile:
-                    return foundfile
-                else:
-                    # WarningMsg("No sound files in %r" % path)
-                    return None
-            else:
-                # WarningMsg("File %r is neither a file nor a directory" % path)
-                return None
-        else:
-            # If we couldn't find a dir or file with this name, then we use it
-            # as a pattern and recursively walk our paths
-            foundfile = self._pattern_search(sample_glob, index)
-            if foundfile:
-                return foundfile
-            # WarningMsg("Could not find any sample matching %r" % filename)
             return None
+
+        # Try all possible extensions
+        for ext in self._get_audio_extensions():
+            with_ext = path.with_suffix(f".{ext}")
+            if with_ext.is_file():
+                return with_ext
+
+        return None
+
+    def _find_pattern_matches(self, base_path: Path, pattern: str) -> List[Path]:
+        """Find all files matching a glob pattern."""
+        matches = []
+
+        # Handle **/ pattern specially
+        if "**" in pattern:
+            # Replace **/ with recursive glob
+            pattern = pattern.replace("**/", "")
+            glob_pattern = f"**/{pattern}"
+        else:
+            glob_pattern = pattern
+
+        # Find all matching files
+        for path in sorted(base_path.rglob(glob_pattern)):
+            if path.is_file() and self._is_valid_audio_file(path):
+                matches.append(path)
+
+        return matches
+
+    @staticmethod
+    def _get_audio_extensions() -> List[str]:
+        """Get list of supported audio file extensions."""
+        extentions =  ['wav', 'wave', 'aif', 'aiff', 'flac']
+        return extentions + [extention.upper() for extention in extentions]
+
+    @staticmethod
+    def _is_valid_audio_file(path: Path) -> bool:
+        """Check if file has a supported audio extension."""
+        return path.suffix.lower()[1:] in SamplePackLibrary._get_audio_extensions()
+
 
     def __len__(self) -> int:
         return len(self._packs)
