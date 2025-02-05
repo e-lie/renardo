@@ -10,4 +10,3 @@ from renardo_sc_backend.ServerManager import ServerManager, TempoServer, TempoCl
 from renardo_sc_backend.ServerManager.default_server import Server
 from renardo_sc_backend.SynthDefManagement.SpecialSynthDefs import SamplePlayer, LoopPlayer
 
-buffer_manager = BufferManager()
