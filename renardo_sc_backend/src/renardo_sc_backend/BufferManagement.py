@@ -1,317 +1,185 @@
-import fnmatch
-import os
+#import fnmatch
+#import os
+#import wave
+#from contextlib import closing
+#from itertools import chain
+#from os.path import abspath, join, isabs, isfile, isdir, splitext
+#
+#from renardo_gatherer import default_loop_path, sample_pack_library
+## from renardo_lib.Code import WarningMsg
+## from renardo_lib.Logging import Timing
+#from renardo_sc_backend.ServerManager.default_server import Server
+
+from typing import Dict, Optional
 import wave
 from contextlib import closing
-from itertools import chain
-from os.path import abspath, join, isabs, isfile, isdir, splitext
+from pathlib import Path
+import heapq
 
-from renardo_gatherer import default_loop_path, sample_pack_library
-# from renardo_lib.Code import WarningMsg
-# from renardo_lib.Logging import Timing
+from renardo_gatherer import sample_pack_library
 from renardo_sc_backend.ServerManager.default_server import Server
 
 alpha    = "abcdefghijklmnopqrstuvwxyz"
 
-class Buffer(object):
-    def __init__(self, fn, number, channels=1):
-        self.fn = fn
-        self.bufnum   = int(number)
+
+class Buffer:
+    def __init__(self, sample_file, buffer_num: int, channels: int = 1):
+        self.sample_file = sample_file
+        self.bufnum = int(buffer_num)  # Keep bufnum for backward compatibility
+        self.buffer_num = int(buffer_num)  # New style naming
         self.channels = channels
+        self.fn = str(sample_file.path) if sample_file else ""  # Keep fn for backward compatibility
 
     def __repr__(self):
-        return "<Buffer num {}>".format(self.bufnum)
+        return f"<Buffer num {self.bufnum}>"
 
     def __int__(self):
         return self.bufnum
 
     @classmethod
-    def fromFile(cls, filename, number):
+    def fromFile(cls, sample_file, number):
+        """Create Buffer from a sample file, detecting number of channels."""
         try:
-            with closing(wave.open(filename)) as snd:
+            with closing(wave.open(str(sample_file.path))) as snd:
                 numChannels = snd.getnchannels()
-        except wave.Error:
+        except (wave.Error, AttributeError):
             numChannels = 1
-        return cls(filename, number, numChannels)
+        return cls(sample_file, number, numChannels)
 
 
-nil = Buffer('', 0)
+# Create empty buffer (buffer 0)
+nil = Buffer(None, 0)
 
 
-class BufferManager(object):
-    def __init__(self, server=Server, paths=[]):
+class BufferManager:
+    def __init__(self, server=Server, paths=None):
         self._server = server
         self._max_buffers = server.max_buffers
-        # Keep buffer 0 unallocated because we use it as the "nil" buffer
-        self._nextbuf = 1
-        self._buffers = [None for _ in range(self._max_buffers)]
-        self._fn_to_buf = {}
-        self._paths = [default_loop_path()] + list(paths)
-        self._ext = ['wav', 'wave', 'aif', 'aiff', 'flac']
 
-        self.loops = [
-            sample_path.with_suffix('').name #file name without extension
-            for sample_path
-            in default_loop_path().iterdir()
-        ]
+        # Initialize available buffer numbers (skip 0 for nil buffer)
+        self._available_numbers = []
+        for i in range(1, self._max_buffers):
+            heapq.heappush(self._available_numbers, i)
 
-    def __str__(self):
-        return 
+        # Storage for buffers
+        self._buffers: Dict[int, Buffer] = {}  # number -> Buffer
+        self._path_to_buffer: Dict[str, Buffer] = {}  # path -> Buffer
 
-    def __repr__(self):
-        return '<BufferManager>'
+        # Set up sample pack library paths
+        self._sample_library = sample_pack_library
+        if paths:
+            for path in paths:
+                self._sample_library._extra_paths.append(Path(path))
 
     def __getitem__(self, key):
-        """ Short-hand access for getBufferFromSymbol() i.e. buffer_manager['x'] """
+        """Get buffer from symbol (e.g., buffer_manager['x'])"""
         if isinstance(key, tuple):
             return self.getBufferFromSymbol(*key)
         return self.getBufferFromSymbol(key)
 
-    def reset(self):
-        """ Clears the cache of loaded buffers """
-        files = list(self._fn_to_buf.keys())
-        self._fn_to_buf = {}
-        for fn in files:
-            self.loadBuffer(fn)
-        return
-
-    def _incr_nextbuf(self):
-        self._nextbuf += 1
-        if self._nextbuf >= self._max_buffers:
-            self._nextbuf = 1
-
-    def _getNextBufnum(self):
-        """ Get the next free buffer number """
-        start = self._nextbuf
-        while self._buffers[self._nextbuf] is not None:
-            self._incr_nextbuf()
-            if self._nextbuf == start:
-                raise RuntimeError("Buffers full! Cannot allocate additional buffers.")
-        freebuf = self._nextbuf
-        self._incr_nextbuf()
-        return freebuf
-
-    def addAPath(self, path):
-        """ Add a path to the search paths for samples """
-        self._paths.append(abspath(path))
-
-    def free(self, filenameOrBuf):
-        """ Free a buffer. Accepts a filename or buffer number """
-        if isinstance(filenameOrBuf, int):
-            buf = self._buffers[filenameOrBuf]
-        else:
-            buf = self._fn_to_buf[filenameOrBuf]
-        del self._fn_to_buf[buf.fn]
-        self._buffers[buf.bufnum] = None
-        self._server.bufferFree(buf.bufnum)
-
-    def freeAll(self):
-        """ Free all buffers """
-        buffers = list(self._fn_to_buf.values())
-        for buf in buffers:
-            self.free(buf.bufnum)
-
-    # def setMaxBuffers(self, max_buffers):
-    #     """ Set the max buffers on the SC server """
-    #     if max_buffers < self._max_buffers:
-    #         if any(self._buffers[max_buffers:]):
-    #             raise RuntimeError(
-    #                 "Cannot shrink buffer size. Buffers already allocated."
-    #             )
-    #         self._buffers = self._buffers[:max_buffers]
-    #     elif max_buffers > self._max_buffers:
-    #         while len(self._buffers) < max_buffers:
-    #             self._buffers.append(None)
-    #     self._max_buffers = max_buffers
-    #     self._nextbuf = self._nextbuf % max_buffers
-
-    def getBufferFromSymbol(self, symbol, spack, index=0):
-        """ Get buffer information from a symbol """
+    def getBufferFromSymbol(self, symbol: str, spack: int = 0, index: int = 0) -> Buffer:
+        """Get a buffer by its symbol representation."""
         if symbol.isspace():
             return nil
-        sample_path = sample_pack_library.sample_category_path_from_symbol(symbol)
-        if sample_path is None:
+
+        # Find the sample using SamplePackLibrary
+        found_sample = self._sample_library._find_sample(symbol, index)
+        if found_sample is None:
             return nil
-        sample_path = self._find_sample(sample_path, index)
-        if sample_path is None:
-            return nil
-        return self._allocateAndLoad(sample_path)
 
-    def getBuffer(self, bufnum):
-        """ Get buffer information from the buffer number """
-        return self._buffers[bufnum]
+        return self._allocateAndLoad(found_sample)
 
-    def _allocateAndLoad(self, filename, force=False):
-        """ Allocates and loads a buffer from a filename, with caching """
-        if filename not in self._fn_to_buf:
-            bufnum = self._getNextBufnum()
-            buf = Buffer.fromFile(filename, bufnum)
-            self._server.bufferRead(filename, bufnum)
-            self._fn_to_buf[filename] = buf
-            self._buffers[bufnum] = buf
-        elif force:
-            buf = self._fn_to_buf[filename]
-            self._server.bufferRead(filename, buf.bufnum)
-            # self._fn_to_buf[filename] = bufnum
-            # self._buffers[bufnum] = buf
-        return self._fn_to_buf[filename]
+    def _allocateAndLoad(self, sample_file, force=False) -> Buffer:
+        """Allocate and load a sample file into a buffer."""
+        path_str = str(sample_file.path)
 
-    def reload(self, filename):
-        # symbol = self.getBufferFrom
-        return self.loadBuffer(filename, force=True)
+        # Check if already loaded
+        if path_str in self._path_to_buffer and not force:
+            return self._path_to_buffer[path_str]
 
-    def _getSoundFile(self, filename):
-        """ Look for a file with all possible extensions """
-        base, cur_ext = splitext(filename)
-        if cur_ext:
-            # If the filename already has an extensions, keep it
-            if isfile(filename):
-                return filename
-        else:
-            # Otherwise, look for all possible extensions
-            for ext in self._ext:
-                # Look for .wav and .WAV
-                for tryext in [ext, ext.upper()]:
-                    extpath = filename + '.' + tryext
-                    if isfile(extpath):
-                        return extpath
-        return None
+        # Allocate new buffer if not loaded or forced reload
+        if path_str not in self._path_to_buffer:
+            if not self._available_numbers:
+                raise RuntimeError("No available buffer numbers")
+            buffer_num = heapq.heappop(self._available_numbers)
+            buffer = Buffer.fromFile(sample_file, buffer_num)
+            self._buffers[buffer_num] = buffer
+            self._path_to_buffer[path_str] = buffer
 
-    def _getSoundFileOrDir(self, filename):
-        """ Get a matching sound file or directory """
-        if isdir(filename):
-            return abspath(filename)
-        foundfile = self._getSoundFile(filename)
-        if foundfile:
-            return abspath(foundfile)
-        return None
+        else:  # force reload existing buffer
+            buffer = self._path_to_buffer[path_str]
 
-    def _searchPaths(self, filename):
-        """ Search our search paths for an audio file or directory """
-        if isabs(filename):
-            return self._getSoundFileOrDir(filename)
-        else:
-            for root in self._paths:
-                fullpath = join(root, filename)
-                foundfile = self._getSoundFileOrDir(fullpath)
-                if foundfile:
-                    return foundfile
-        return None
+        # Load the sample into SuperCollider
+        self._server.bufferRead(path_str, buffer.bufnum)
+        return buffer
 
-    def _getFileInDir(self, dirname, index):
-        """ Return nth sample in a directory """
-        candidates = []
-        for filename in sorted(os.listdir(dirname)):
-            name, ext = splitext(filename)
-            if 'Placeholder' in name:
-                continue
-            if ext.lower()[1:] in self._ext:
-                fullpath = join(dirname, filename)
-                if len(candidates) == index:
-                    return fullpath
-                candidates.append(fullpath)
-        if candidates:
-            return candidates[int(index) % len(candidates)]
-        return None
+    def free(self, buffer_num: int) -> bool:
+        """Free a buffer by its number."""
+        if buffer_num == 0 or buffer_num not in self._buffers:
+            return False
 
-    def _patternSearch(self, filename, index):
+        buffer = self._buffers[buffer_num]
+        path_str = str(buffer.sample_file.path) if buffer.sample_file else ""
+
+        # Remove from mappings
+        del self._buffers[buffer_num]
+        if path_str in self._path_to_buffer:
+            del self._path_to_buffer[path_str]
+
+        # Free on server
+        self._server.bufferFree(buffer_num)
+
+        # Make number available again
+        heapq.heappush(self._available_numbers, buffer_num)
+        return True
+
+    def freeAll(self):
+        """Free all allocated buffers."""
+        buffer_nums = list(self._buffers.keys())
+        for num in buffer_nums:
+            self.free(num)
+
+    def reset(self):
+        """Reset buffer manager, reloading all samples."""
+        paths = list(self._path_to_buffer.keys())
+        self.freeAll()
+        for path in paths:
+            sample = self._sample_library._find_sample(path)
+            if sample:
+                self._allocateAndLoad(sample)
+
+    def getBuffer(self, buffer_num: int) -> Optional[Buffer]:
         """
-        Return nth sample that matches a path pattern
+        Get a buffer by its number.
 
-        Path pattern is a relative path that can contain wildcards such as *
-        and ? (see fnmatch for more details). Some example paths:
+        Args:
+            buffer_num: The buffer number to retrieve
 
-            samp*
-            **/voices/*
-            perc*/bass*
-
+        Returns:
+            Buffer if found, None if not allocated
         """
+        return self._buffers.get(buffer_num)
 
-        def _findNextSubpaths(path, pattern):
-            """ For a path pattern, find all subpaths that match """
-            # ** is a special case meaning "all recursive directories"
-            if pattern == '**':
-                for dirpath, _, _ in os.walk(path):
-                    yield dirpath
-            else:
-                children = os.listdir(path)
-                for c in fnmatch.filter(children, pattern):
-                    yield join(path, c)
-
-        candidates = []
-        queue = self._paths[:]
-        subpaths = filename.split(os.sep)
-        filepat = subpaths.pop()
-        while subpaths:
-            subpath = subpaths.pop(0)
-            queue = list(chain.from_iterable(
-                (_findNextSubpaths(p, subpath) for p in queue)
-            ))
-
-        # If the filepat (ex. 'foo*.wav') has an extension, we want to match
-        # the full filename. If not, we just match against the basename.
-        match_base = not hasext(filepat)
-
-        for path in queue:
-            for subpath, _, filenames in os.walk(path):
-                for filename in sorted(filenames):
-                    basename, ext = splitext(filename)
-                    if ext[1:].lower() not in self._ext:
-                        continue
-                    if match_base:
-                        ismatch = fnmatch.fnmatch(basename, filepat)
-                    else:
-                        ismatch = fnmatch.fnmatch(filename, filepat)
-                    if ismatch:
-                        fullpath = join(subpath, filename)
-                        if len(candidates) == index:
-                            return fullpath
-                        candidates.append(fullpath)
-        if candidates:
-            return candidates[index % len(candidates)]
-        return None
-
-    # @Timing('bufferSearch', logargs=True)
-    def _find_sample(self, filename, index=0):
+    def loadBuffer(self, filename: str, index: int = 0, force: bool = False) -> int:
         """
-        Find a sample from a filename or pattern
+        Load a sample file into a buffer by filename or pattern.
 
-        Will first attempt to find an exact match (by abspath or relative to
-        the search paths). Then will attempt to pattern match in search paths.
+        Args:
+            filename: Path or pattern to find the sample
+            index: Which sample to use if multiple matches (default: 0)
+            force: Force reload if already loaded (default: False)
 
+        Returns:
+            Buffer number if successful, 0 if sample not found
         """
-        path = self._searchPaths(filename)
-        if path:
-            # If it's a file, use that sample
-            if isfile(path):
-                return path
-            # If it's a dir, use one of the samples in that dir
-            elif isdir(path):
-                foundfile = self._getFileInDir(path, index)
-                if foundfile:
-                    return foundfile
-                else:
-                    # WarningMsg("No sound files in %r" % path)
-                    return None
-            else:
-                # WarningMsg("File %r is neither a file nor a directory" % path)
-                return None
-        else:
-            # If we couldn't find a dir or file with this name, then we use it
-            # as a pattern and recursively walk our paths
-            foundfile = self._patternSearch(filename, index)
-            if foundfile:
-                return foundfile
-            # WarningMsg("Could not find any sample matching %r" % filename)
-            return None
-
-    def loadBuffer(self, filename, index=0, force=False):
-        """ Load a sample and return the number of a buffer """
-        samplepath = self._find_sample(filename, index)
-        if samplepath is None:
+        # Find the sample using SamplePackLibrary
+        found_sample = self._sample_library._find_sample(filename, index)
+        if found_sample is None:
             return 0
-        else:
-            buf = self._allocateAndLoad(samplepath, force=force)
-            return buf.bufnum
+
+        # Allocate and load the buffer
+        buffer = self._allocateAndLoad(found_sample, force=force)
+        return buffer.bufnum
 
 
 
