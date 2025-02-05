@@ -66,16 +66,13 @@ class BufferManager(object):
             return self.getBufferFromSymbol(*key)
         return self.getBufferFromSymbol(key)
 
-    def _reset_buffers(self):
+    def reset(self):
         """ Clears the cache of loaded buffers """
         files = list(self._fn_to_buf.keys())
         self._fn_to_buf = {}
         for fn in files:
             self.loadBuffer(fn)
         return
-
-    def reset(self):
-        return self._reset_buffers()
 
     def _incr_nextbuf(self):
         self._nextbuf += 1
@@ -113,19 +110,19 @@ class BufferManager(object):
         for buf in buffers:
             self.free(buf.bufnum)
 
-    def setMaxBuffers(self, max_buffers):
-        """ Set the max buffers on the SC server """
-        if max_buffers < self._max_buffers:
-            if any(self._buffers[max_buffers:]):
-                raise RuntimeError(
-                    "Cannot shrink buffer size. Buffers already allocated."
-                )
-            self._buffers = self._buffers[:max_buffers]
-        elif max_buffers > self._max_buffers:
-            while len(self._buffers) < max_buffers:
-                self._buffers.append(None)
-        self._max_buffers = max_buffers
-        self._nextbuf = self._nextbuf % max_buffers
+    # def setMaxBuffers(self, max_buffers):
+    #     """ Set the max buffers on the SC server """
+    #     if max_buffers < self._max_buffers:
+    #         if any(self._buffers[max_buffers:]):
+    #             raise RuntimeError(
+    #                 "Cannot shrink buffer size. Buffers already allocated."
+    #             )
+    #         self._buffers = self._buffers[:max_buffers]
+    #     elif max_buffers > self._max_buffers:
+    #         while len(self._buffers) < max_buffers:
+    #             self._buffers.append(None)
+    #     self._max_buffers = max_buffers
+    #     self._nextbuf = self._nextbuf % max_buffers
 
     def getBufferFromSymbol(self, symbol, spack, index=0):
         """ Get buffer information from a symbol """
@@ -134,7 +131,7 @@ class BufferManager(object):
         sample_path = sample_pack_library.sample_category_path_from_symbol(symbol)
         if sample_path is None:
             return nil
-        sample_path = self._findSample(sample_path, index)
+        sample_path = self._find_sample(sample_path, index)
         if sample_path is None:
             return nil
         return self._allocateAndLoad(sample_path)
@@ -274,7 +271,7 @@ class BufferManager(object):
         return None
 
     # @Timing('bufferSearch', logargs=True)
-    def _findSample(self, filename, index=0):
+    def _find_sample(self, filename, index=0):
         """
         Find a sample from a filename or pattern
 
@@ -309,16 +306,13 @@ class BufferManager(object):
 
     def loadBuffer(self, filename, index=0, force=False):
         """ Load a sample and return the number of a buffer """
-        samplepath = self._findSample(filename, index)
+        samplepath = self._find_sample(filename, index)
         if samplepath is None:
             return 0
         else:
             buf = self._allocateAndLoad(samplepath, force=force)
             return buf.bufnum
 
-
-def hasext(filename):
-    return bool(splitext(filename)[1])
 
 
 DESCRIPTIONS = { 'a' : "Gameboy hihat",      'A' : "Gameboy kick drum",

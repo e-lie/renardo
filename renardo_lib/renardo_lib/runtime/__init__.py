@@ -127,7 +127,7 @@ def _reload_synths():
     from renardo_lib import SynthDefManagement
     reload(SynthDefManagement._SynthDefs)
     reload(Effects)
-    buffer_manager._reset_buffers()
+    buffer_manager.reset()
     return
 
 def foxdot_reload():
