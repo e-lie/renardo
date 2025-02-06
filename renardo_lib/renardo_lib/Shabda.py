@@ -64,19 +64,19 @@ from urllib.parse import urlencode
 from urllib.request import urlopen, urlretrieve
 
 from renardo_gatherer.config_dir import SAMPLES_DIR_PATH
+from renardo_gatherer.collections import DEFAULT_SAMPLES_PACK_NAME, LOOP_SUBDIR
 
-SHABDA_URL = os.getenv('SHABDA_URL', 'https://shabda.ndre.gr')
-SAMPLE_URL = SHABDA_URL + '/{}.json?{}'
-LOOP_PATH = SAMPLES_DIR_PATH / '0_foxdot_default/_loop_'
+SHABDA_URL = os.getenv('SHABDA_URL', 'https://shabda.ndre.gr/')
+SAMPLE_URL = SHABDA_URL + '{}.json?{}'
+LOOP_PATH = SAMPLES_DIR_PATH / DEFAULT_SAMPLES_PACK_NAME / LOOP_SUBDIR
 
 
-def download(base_url: str, sample: str, sounds: list[str]):
+def download(base_url, sample, sounds):
     sample_dir = LOOP_PATH / sample
     if sample_dir.exists():
         shutil.rmtree(sample_dir)
 
     os.makedirs(sample_dir, exist_ok=True)
-
     with ThreadPoolExecutor() as pool:
         for sound in sounds:
             sound_path = sample_dir / Path(sound).name
@@ -84,13 +84,16 @@ def download(base_url: str, sample: str, sounds: list[str]):
     print(f'sample "{sample}" has been downloaded successfully')
 
 
-def generate(definition: str, params: dict | None = None):
-    params = params or {}
-    params['strudel'] = 1
+def get_sample_list(definition, params):
     samples_map = SAMPLE_URL.format(definition, urlencode(params))
     with urlopen(samples_map) as response:
-        data = json.load(response)
+        return json.load(response)
 
+
+def generate(definition, params=None):
+    params = params or {}
+    params['strudel'] = 1
+    data = get_sample_list(definition, params)
     down = partial(download, data.pop('_base', SHABDA_URL))
 
     with ThreadPoolExecutor() as pool:
@@ -98,7 +101,7 @@ def generate(definition: str, params: dict | None = None):
             pool.submit(down, sample, list_sounds)
 
 
-def samples(definition: str):
+def samples(definition):
     """
     Fetch random samples from freesound.org based on given words.
 
@@ -117,7 +120,7 @@ def samples(definition: str):
     generate(definition)
 
 
-def speech(words: str, language: str = 'en-GB', gender: str = 'f'):
+def speech(words, language='en-GB', gender='f'):
     """
     Generate Text-to-Speech samples.
 
@@ -127,7 +130,7 @@ def speech(words: str, language: str = 'en-GB', gender: str = 'f'):
         Words to speech.
     language : str, default='en-GB'
         Language to use.
-    words : str, default='f'
+    gender : str, default='f'
         Voice gender..
 
     Examples
