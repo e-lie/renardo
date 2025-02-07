@@ -7,6 +7,9 @@ import os
 import shutil
 from renardo_sc_backend.osc_proxy import OSCProxy
 from renardo_lib.runtime import Player, blip, Clock
+import socket
+from contextlib import closing
+from typing import Optional
 
 # Configuration
 RECORD_MODE = os.environ.get('RENARDO_TEST_RECORD', 'False').lower() == 'true'
@@ -41,13 +44,70 @@ def test_session():
     """Fixture providing test session management."""
     return TestSession()
 
+def wait_for_port_release(port: int, timeout: float = 5.0, check_interval: float = 0.1):
+    """Wait for a port to be released."""
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        with closing(socket.socket(socket.AF_INET, socket.SOCK_DGRAM)) as sock:
+            try:
+                sock.bind(('127.0.0.1', port))
+                return True
+            except socket.error:
+                time.sleep(check_interval)
+    return False
+
+def find_free_port(start_port: int, max_attempts: int = 10) -> Optional[int]:
+    """Find a free port starting from start_port."""
+    for port in range(start_port, start_port + max_attempts):
+        with closing(socket.socket(socket.AF_INET, socket.SOCK_DGRAM)) as sock:
+            try:
+                sock.bind(('127.0.0.1', port))
+                return port
+            except socket.error:
+                continue
+    return None
+
 @pytest.fixture
-def osc_proxy():
-    """Fixture that provides a configured OSC proxy for testing."""
-    proxy = OSCProxy(listen_port=57120, forward_port=57110)
-    proxy.start()
-    yield proxy
-    proxy.stop()
+def osc_proxy(request):
+    """
+    Fixture that provides a configured OSC proxy for testing.
+    
+    Ensures clean server shutdown and port availability between tests.
+    """
+    # Find available ports
+    listen_port = find_free_port(57120)
+    forward_port = find_free_port(57110)
+    
+    if not listen_port or not forward_port:
+        pytest.skip("Could not find available ports for OSC proxy")
+    
+    # Create and start proxy
+    proxy = None
+    try:
+        proxy = OSCProxy(listen_port=listen_port, forward_port=forward_port)
+        proxy.start()
+        
+        # Add cleanup handler to ensure proxy is stopped even if test fails
+        def cleanup():
+            if proxy:
+                proxy.stop()
+                # Wait for ports to be released
+                wait_for_port_release(listen_port)
+                wait_for_port_release(forward_port)
+        
+        request.addfinalizer(cleanup)
+        
+        yield proxy
+        
+    except Exception as e:
+        if proxy:
+            proxy.stop()
+        pytest.fail(f"Failed to start OSC proxy: {e}")
+
+    # Ensure ports are released after test
+    wait_for_port_release(listen_port)
+    wait_for_port_release(forward_port)
+
 
 def compare_events(actual_events, expected_events, timing_tolerance=TIMING_TOLERANCE):
     """Compare two sequences of OSC events."""
