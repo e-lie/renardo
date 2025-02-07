@@ -21,7 +21,7 @@ class OSCEvent:
 class OSCProxy:
     """Proxy that intercepts and records OSC messages."""
 
-    def __init__(self, listen_port: int = 57110, forward_port: int = 57120,
+    def __init__(self, listen_port: int = 57120, forward_port: int = 57110,
                  ignored_addresses = ["/g_freeall", "/dumpOSC"]):
         """
         Initialize the OSC proxy.
