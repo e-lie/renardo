@@ -1,20 +1,92 @@
 import logging
 
-from renardo_lib.Code import *
+base = set(dir())
+
+from renardo_lib.Settings import (
+    ADDRESS, ALPHA_VALUE, AUTO_COMPLETE_BRACKETS, BOOT_ON_STARTUP, CHECK_FOR_UPDATE,
+    CLOCK_LATENCY, COLOR_THEME, COLOURS, CONSOLE_ON_STARTUP, CPU_USAGE,
+    EFFECTS_DIR, ENVELOPE_DIR, FONT, FORWARD_ADDRESS, FORWARD_PORT,
+    FOXDOT_CONFIG_FILE, FOXDOT_EDITOR_ROOT, FOXDOT_EDITOR_THEMES, FOXDOT_EFFECTS_FILE,
+    FOXDOT_HELLO, FOXDOT_ICON, FOXDOT_ICON_GIF, FOXDOT_LOOP, FOXDOT_ROOT,
+    FOXDOT_SETTINGS, FOXDOT_SND, FOXDOT_STARTUP_PATH,
+    GET_SC_INFO, LINENUMBERS_ON_STARTUP, LINE_NUMBER_MARKER_OFFSET,
+    MAX_CHANNELS, MENU_ON_STARTUP, PORT, PORT2, RECORDING_DIR,
+    RECOVER_WORK, SAMPLES_DIR, SAMPLES_PACK_NUMBER, SC3_PLUGINS, SUPERCOLLIDER,
+    SYNTHDEF_DIR, TEXT_COLORS, TMP_EFFECTS_DIR, TMP_SYNTHDEF_DIR,
+    TRANSPARENT_ON_STARTUP, TREEVIEW_ON_STARTUP, TUTORIAL_DIR, USE_ALPHA,
+    conf,
+    get_samples_dir_path, get_synthdefs_dir_path,
+    get_tutorial_files,
+    reload,
+)
+from renardo_lib.Code import (
+    CodeString,
+    CodeType,
+    FunctionType,
+    LiveObject,
+    TypeType,
+    WarningMsg, classes, clean, debug_stdout, error_stack, execute,
+    foxdot_func_cmp, foxdot_live_function, foxdot_when_statement,
+    get_input, get_now,
+    handle_stdin, instances, livefunction, load_startup_file,
+    main_lib, modi, re_player, when,
+    write_to_file, FoxDotCode, functions, FOXDOT_STARTUP
+)
 
 FoxDotCode.namespace = globals()
 
-
 from renardo_sc_backend import buffer_manager, DefaultSamples, Samples
-# from renardo_sc_backend import *
-from renardo_lib.TempoClock import *
-from renardo_lib.Players import *
-from renardo_lib.TimeVar import *
-from renardo_lib.Constants import *
-from renardo_lib.Midi import *
-from renardo_lib.Settings import *
-from renardo_sc_backend import *
-#from renardo_lib.SynthDefManagement import Effects
+from renardo_lib.runtime import synthdefs_initialisation
+
+from renardo_lib.TempoClock import (
+    Code, History, MIDIDeviceNotFound, MethodCall, MethodType, MidiIn, Player,
+    Queue, QueueBlock, QueueObj, RequestTimeout, ScheduleError, ServerManager,
+    SoloPlayer, TempoClient, TempoClock, TimeVar, Wrapper, asStream, inspect,
+    threading
+)
+
+from renardo_lib.Players import (
+    Add, Bang, CalculateDelaysFromDur, CalculateEuclideanDelay, ClassPatternMethod,
+    Convert, Cycle, DefaultPygenSynthDef, Div, DominantPattern, EmptyItem,
+    EmptyPlayer, EuclidsAlgorithm, FloorDiv, Format, GeneratorPattern, Generators,
+    Get, Group, GroupAttr, LCM, LoopPlayer, MAX_SIZE, Main, Mod, Mul, Nil,
+    NumberKey, Operations, Or, P, P10, PAdd, PAlt, PBeat, PBern, PChain, PDelay,
+    PDelta, PDiv, PDiv2, PDur, PEq, PEuclid, PEuclid2, PFibMod, PFloor, PFloor2,
+    PGet, PGroup, PGroupAnd, PGroupDiv, PGroupMod, PGroupOr, PGroupPlus, PGroupPow,
+    PGroupPrime, PGroupStar, PGroupXor, PGroups, PIndex, PJoin, PMod, PMod2, PMul,
+    PNe, POperand, PPairs, PPow, PPow2, PQuicken, PRand, PRange, PRhythm, PShuf,
+    PSine, PSq, PSquare, PStep, PStretch, PStrum, PStutter, PSub, PSub2, PSum,
+    PTree, PTri, PWalk, PWhite, PZ12, PZip, PZip2, Parse, ParseError,
+    ParsePlayString, Pattern, PatternContainer, PatternFormat, PatternInput,
+    PatternMethod, PatternType, PlayString, PlayerKey, PlayerKeyException, Pow,
+    PulsesToDurations, PwRand, PxRand, RandomGenerator, Repeatable, Root,
+    SamplePlayer, Scale, Sequences, StaticPatternMethod, Sub, SynthDefProxy,
+    SynthDefs, Utils, Xor, amen, arrow_zip, asPattern, bar_type, br_pairs,
+    braces_type, bubble, choice, convert_nested_data, convert_to_int, copy, dots,
+    effect_manager, equal_values, feed, force_pattern_args, fromString, functools,
+    get_avg_if, get_first_item, get_freq_and_midi, group_modi, inf, itertools,
+    linvar, loop_pattern_func, loop_pattern_method, mapvar, math, metaPGroupPrime,
+    metaPattern, offadd, offlayer, offmul, pattern_depth, patternclass, rAdd, rDiv,
+    rFloorDiv, rGet, rMod, rMul, rOr, rPow, rSub, rXor, random, re_arrow,
+    re_chars, re_curly, re_nests, re_square, rest, shuffle, sliceToRange,
+    square_type, sum_delays, var
+)
+
+from renardo_lib.TimeVar import (
+    ChildPvar, ChildTimeVar, PATTERN_METHODS, Pvar, PvarGenerator, PvarGeneratorEx,
+    URLError, expvar, fetch, get_expanded_len, get_inverse_op, get_pypi_version,
+    isiterable, json, max_length, recursive_any, sinvar, socket_timeout, urlopen
+)
+
+from renardo_lib.Constants import NoneConst, const
+from renardo_lib.Midi import MidiInputHandler, MidiOut, midi, rtMidiNotFound
+
+from renardo_sc_backend import (
+    Buffer, BufferManagement, BufferManager, DESCRIPTIONS, Dict, Optional, Path,
+    Server, SynthDefManagement, TempoServer, alpha, closing, custom_osc_lib, heapq,
+    nil, sample_pack_library, settings_manager, supercollider_settings, wave
+)
+
 from renardo_lib.SynthDefManagement.SynthDict import SynthDefs
 
 
