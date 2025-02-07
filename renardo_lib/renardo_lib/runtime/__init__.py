@@ -1,6 +1,11 @@
 import logging
 
-base = set(dir())
+#base = set(dir())
+#from renardo_lib.runtime import *
+#new_symbols = set(dir()) - base
+#symbols_str = f"import {', '.join(sorted(new_symbols))}"
+#print(symbols_str)
+
 
 from renardo_lib.Settings import (
     ADDRESS, ALPHA_VALUE, AUTO_COMPLETE_BRACKETS, BOOT_ON_STARTUP, CHECK_FOR_UPDATE,
