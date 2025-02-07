@@ -14,7 +14,7 @@ except ImportError:
     TypeType = type
     
 from renardo_lib.Utils import modi
-from renardo_lib.Settings import *
+from renardo_lib.Settings import FOXDOT_STARTUP_PATH
 
 """
 Live Object
