@@ -14,7 +14,8 @@ except ImportError:
     TypeType = type
     
 from renardo_lib.Utils import modi
-from renardo_lib.Settings import FOXDOT_STARTUP_PATH
+
+from renardo_lib.Settings import FOXDOT_STARTUP_PATH, PERFORMANCE_EXCEPTIONS_CATCHING
 
 """
 Live Object
@@ -126,39 +127,42 @@ class FoxDotCode:
         """ Takes a string of FoxDot code and executes as Python """
 
         if self.namespace['_Clock'].waiting_for_sync:
-
             time.sleep(0.25)
             return self.__call__(code, verbose, verbose_error)
 
         if verbose_error is None:
-
             verbose_error = verbose
 
         if not code:
-
             return
 
-        try:
+        catching_exceptions_in_performance_code = PERFORMANCE_EXCEPTIONS_CATCHING
 
+        if catching_exceptions_in_performance_code == True: 
+            try:
+                if type(code) != CodeType:
+                    code = clean(code)
+                    response = stdout(code)
+                    if verbose is True:
+                        print(response)
+
+                exec(self._compile(code), self.namespace)
+
+            # catch any exception in the executed code 
+            except Exception as e:
+                response = error_stack()
+                if verbose_error is True:
+                    print(response)
+
+        else: # no exception catching 
             if type(code) != CodeType:
-
                 code = clean(code)
-
                 response = stdout(code)
-
                 if verbose is True:
-
                     print(response)
 
             exec(self._compile(code), self.namespace)
 
-        except Exception as e:
-
-            response = error_stack()
-
-            if verbose_error is True:
-
-                print(response)
 
         return response
 
