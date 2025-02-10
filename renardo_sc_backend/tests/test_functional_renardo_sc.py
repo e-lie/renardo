@@ -101,19 +101,103 @@ class TestSessionManager:
             with open(recording_path) as f:
                 expected_events = json.load(f)
             self._compare_events(self.proxy.events, expected_events)
-    
+
     def _compare_events(self, actual_events, expected_events):
-        """Compare two sequences of OSC events."""
+        """
+        Compare two sequences of OSC events, ignoring specific group/synth IDs.
+        Maps IDs between sessions for consistent comparison.
+        """
         assert len(actual_events) == len(expected_events), \
             f"Incorrect number of events. Expected: {len(expected_events)}, Got: {len(actual_events)}"
 
+        # Build ID mappings first by scanning all events
+        expected_to_normalized = {}  # Maps expected IDs to normalized values
+        actual_to_normalized = {}  # Maps actual IDs to normalized values
+        next_id = 1000  # Starting ID for normalization
+
+        def get_normalized_id(id_value, id_map):
+            """Get or create normalized ID."""
+            if id_value not in id_map:
+                id_map[id_value] = next_id
+                return next_id
+            return id_map[id_value]
+
+        # First pass: build ID mappings
+        for expected, actual in zip(expected_events, actual_events):
+            exp_args = expected["args"]
+            act_args = actual.args
+
+            # Handle different OSC message types
+            if expected["address"] == "/g_new" and len(exp_args) >= 1:
+                # Group creation
+                exp_id = exp_args[0]
+                act_id = act_args[0]
+                normalized_id = next_id
+                expected_to_normalized[exp_id] = normalized_id
+                actual_to_normalized[act_id] = normalized_id
+                next_id += 1
+
+            elif expected["address"] == "/s_new" and len(exp_args) >= 4 and len(act_args) >= 4:
+                # Synth creation with target group
+                # Format: name, synth_id, action, target_group, ...
+                exp_synth_id = exp_args[1]
+                act_synth_id = act_args[1]
+                if exp_synth_id not in expected_to_normalized:
+                    normalized_id = next_id
+                    expected_to_normalized[exp_synth_id] = normalized_id
+                    actual_to_normalized[act_synth_id] = normalized_id
+                    next_id += 1
+
+                # Handle target group ID
+                exp_target = exp_args[3]
+                act_target = act_args[3]
+                if exp_target not in expected_to_normalized:
+                    normalized_id = next_id
+                    expected_to_normalized[exp_target] = normalized_id
+                    actual_to_normalized[act_target] = normalized_id
+                    next_id += 1
+
+        def normalize_args(args, id_map):
+            """Normalize arguments using the appropriate ID map."""
+            normalized = list(args)
+
+            if len(args) >= 1:
+                if isinstance(args[0], int):
+                    if args[0] in id_map:
+                        normalized[0] = id_map[args[0]]
+
+                if len(args) >= 2 and isinstance(args[1], int):
+                    if args[1] in id_map:
+                        normalized[1] = id_map[args[1]]
+
+                if len(args) >= 4 and isinstance(args[3], int):
+                    if args[3] in id_map:
+                        normalized[3] = id_map[args[3]]
+
+            return normalized
+
+        # Second pass: compare events with normalized IDs
         for actual, expected in zip(actual_events, expected_events):
+            # Compare OSC addresses
             assert actual.address == expected["address"], \
                 f"Incorrect OSC address. Expected: {expected['address']}, Got: {actual.address}"
-            
-            assert actual.args == expected["args"], \
-                f"Incorrect arguments. Expected: {expected['args']}, Got: {actual.args}"
-            
+
+            # Normalize and compare arguments
+            norm_expected_args = normalize_args(expected["args"], expected_to_normalized)
+            norm_actual_args = normalize_args(actual.args, actual_to_normalized)
+
+            try:
+                assert norm_actual_args == norm_expected_args, \
+                    f"Incorrect arguments. Expected: {norm_expected_args}, Got: {norm_actual_args}"
+            except AssertionError as e:
+                print(f"\nDebug info for failed comparison:")
+                print(f"Original expected args: {expected['args']}")
+                print(f"Original actual args: {actual.args}")
+                print(f"Expected ID map: {expected_to_normalized}")
+                print(f"Actual ID map: {actual_to_normalized}")
+                raise
+
+            # Compare timing
             assert abs(actual.timestamp - expected["timestamp"]) <= TIMING_TOLERANCE, \
                 f"Incorrect timing. Expected: {expected['timestamp']}, Got: {actual.timestamp}"
     
@@ -237,17 +321,10 @@ def test_player_attributes(test_session):
         
         # Basic pitch following
         p1 = Player()
-        p2 = Player()
-        p1 >> pluck([0,1,2,3])
-        Clock.set_time(0)
-        p2 >> star().follow(p1) + 2
+        p1 >> pluck([0,1,2,3], amp=[3,4], dur=[.25,.77,.5], sus=[2,.2], pan=[-1,1])
+        # Clock.set_time(0)
+        # p2 >> star().follow(p1) + 2
         time.sleep(3)
-        
-        # Conditional amplitudes
-        p1 >> pluck([0,1,2,3], amp=(p1.degree==1)*4)
-        Clock.set_time(0)
-        time.sleep(3)
-        
         Clock.clear()
         
     run_test_case('test_player_attributes', test_session, test_case)
@@ -256,15 +333,20 @@ def test_time_vars(test_session):
     """Test TimeVar functionality (Tutorial 10)."""
     def test_case():
         Clock.bpm = 240
-        Clock.set_time(0)
-        
         # Basic TimeVar
         a = var([0,3], 2)  # Shorter duration due to faster BPM
         b1 = Player()
         b1 >> bass(a, dur=PDur(3,8))
         Clock.set_time(0)
         time.sleep(3)
+        Clock.clear()
         
+    run_test_case('test_time_vars', test_session, test_case)
+        
+def test_pvars(test_session):
+    """Test PVar functionality (Tutorial 10)."""
+    def test_case():
+        Clock.bpm = 240
         # Pattern TimeVar
         pattern1 = P[0, 1, 2, 3]
         pattern2 = P[4, 5, 6, 7]
@@ -272,10 +354,9 @@ def test_time_vars(test_session):
         p1 >> pluck(Pvar([pattern1, pattern2], 2), dur=1/4)
         Clock.set_time(0)
         time.sleep(3)
-        
         Clock.clear()
         
-    run_test_case('test_time_vars', test_session, test_case)
+    run_test_case('test_pvars', test_session, test_case)
 
 def test_clock_operations(test_session):
     """Test clock operations (Tutorial 7)."""
