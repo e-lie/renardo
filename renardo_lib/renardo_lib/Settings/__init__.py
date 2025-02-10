@@ -28,6 +28,8 @@ FOXDOT_LOOP = "_loop_"
 TUTORIAL_DIR = os.path.realpath(FOXDOT_ROOT + "/demo/")
 RECORDING_DIR = os.path.realpath(FOXDOT_ROOT + "/rec/")
 
+PERFORMANCE_EXCEPTIONS_CATCHING = True
+
 
 # TODO move this method to user config and renardo_gatherer when synthdef
 # download implemented
