@@ -42,7 +42,8 @@ class SamplePack:
 
     def get_category(self, category: str) -> Optional[SampleCategory]:
         """Get a category by its letter/symbol."""
-        return self._categories.get(category)
+        category_fullname = nonalpha[category] if category in nonalpha.keys() else category
+        return self._categories.get(category_fullname)
 
     def get_sample(self, category: str, index: int) -> Optional[SampleFile]:
         """Get a sample by its category and index."""
