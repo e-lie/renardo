@@ -1,6 +1,7 @@
 import re
 from collections import OrderedDict
 from pathlib import Path
+from pprint import pformat, PrettyPrinter
 #import os
 #from os.path import isfile, isdir, splitext, join, abspath, isabs
 from typing import Optional, List, Iterator
@@ -211,6 +212,10 @@ class SamplePackLibrary:
             raise KeyError(f"No sample pack with index {index}")
         return self._packs[index]
 
+    def __str__(self):
+        pp = PrettyPrinter(indent=2)
+        packs = [f"{pack.index}: {pack.name} ({pack.sample_count()} samples in {len(pack)} categories)" for pack in self._packs.values()]
+        return f"The sample pack library contains {len(self)} pack(s) :\n{pp.pformat(packs)}\n Display content of a pack with : print(sample_packs[<pack_number>])."
 
 
 def ensure_renardo_samples_directory():
@@ -220,3 +225,4 @@ def ensure_renardo_samples_directory():
 
 SAMPLES_DIR_PATH = get_samples_dir_path()
 sample_pack_library = SamplePackLibrary(SAMPLES_DIR_PATH, [])
+sample_packs = sample_pack_library
