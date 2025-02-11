@@ -19,7 +19,7 @@ elif platform == "win32":
     USER_CONFIG_DIR_PATH = appdata_roaming_path / 'renardo'
 
 def get_samples_dir_path():
-    return USER_CONFIG_DIR_PATH / 'samples'
+    return USER_CONFIG_DIR_PATH / 'sample_packs'
 
 def get_user_config_dir_path():
     return USER_CONFIG_DIR_PATH
