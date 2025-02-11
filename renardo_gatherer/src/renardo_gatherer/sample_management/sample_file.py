@@ -8,7 +8,7 @@ class SampleFile:
         self.name = path.stem
         self.extension = path.suffix
         self.size = path.stat().st_size
-        self.category = category  # The letter/symbol category
+        self.category = category  # The letter/symbol/keyword category
         self.index = index  # The numerical index
 
     @property

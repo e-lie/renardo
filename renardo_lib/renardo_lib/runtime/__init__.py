@@ -89,8 +89,10 @@ from renardo_lib.Midi import MidiInputHandler, MidiOut, midi, rtMidiNotFound
 from renardo_sc_backend import (
     Buffer, BufferManagement, BufferManager, DESCRIPTIONS, Dict, Optional, Path,
     Server, SynthDefManagement, TempoServer, alpha, closing, custom_osc_lib, heapq,
-    nil, sample_pack_library, settings_manager, supercollider_settings, wave
+    nil, settings_manager, supercollider_settings, wave
 )
+
+from renardo_gatherer import sample_pack_library, sample_packs
 
 from renardo_lib.SynthDefManagement.SynthDict import SynthDefs
 

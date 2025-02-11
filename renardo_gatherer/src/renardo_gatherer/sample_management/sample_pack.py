@@ -1,5 +1,6 @@
 import re
 from pathlib import Path
+from pprint import pformat
 from typing import Dict, Optional, List, Iterator
 
 from renardo_gatherer.sample_management.sample_category import SampleCategory, nonalpha, alpha
@@ -66,11 +67,18 @@ class SamplePack:
         """List all category letters/symbols."""
         return list(self._categories.keys())
 
+    def sample_count(self) -> int:
+        """Returns total number of samples across all categories."""
+        return sum(len(category) for category in self._categories.values())
+
     def __len__(self) -> int:
         return len(self._categories)
 
     def __iter__(self) -> Iterator[SampleCategory]:
         return iter(self._categories.values())
 
+    def __repr__(self) -> str:
+        return f"<SamplePack {self.name}>"
+
     def __str__(self) -> str:
-        return f"SamplePack({self.index}: {self.name}, {len(self)} categories, complete: {self.complete})"
+        return f"Sample pack {self.index}: {self.name}, contains {self.sample_count()} samples in {len(self)} categories:\n{pformat([str(category) for category in self._categories.values()], indent=2)}"
