@@ -30,7 +30,8 @@ class SamplePackLibrary:
     def _load_packs(self):
         """Load all sample packs from the root directory."""
         if not self.root_directory.exists():
-            raise FileNotFoundError(f"Root directory not found: {self.root_directory}")
+            self.root_directory.mkdir()
+            # raise FileNotFoundError(f"Root directory not found: {self.root_directory}")
 
         # Find all directories matching the pattern: digit_name
         pack_dirs = sorted(
@@ -192,7 +193,7 @@ class SamplePackLibrary:
     @staticmethod
     def _get_audio_extensions() -> List[str]:
         """Get list of supported audio file extensions."""
-        extentions =  ['wav', 'wave', 'aif', 'aiff', 'flac']
+        extentions =  ['wav', 'wave', 'aif', 'aiff', 'flac', 'ogg']
         return extentions + [extention.upper() for extention in extentions]
 
     @staticmethod
