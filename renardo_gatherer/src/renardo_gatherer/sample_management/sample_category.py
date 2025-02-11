@@ -1,4 +1,5 @@
 from pathlib import Path
+from pprint import pformat
 from typing import Dict, Optional, List, Tuple, Iterator
 
 from renardo_gatherer.sample_management.sample_file import SampleFile
@@ -37,7 +38,10 @@ nonalpha = {"&": "_ampersand",
             "9": "9"}
 
 class SampleCategory:
-    """Represents a collection of indexed samples under a letter/symbol category."""
+    """
+    Represents a collection of indexed samples under a letter/symbol/keyword category.
+    examples: a, Z, _hyphen, _at, mykicks,
+    """
     def __init__(self, directory: Path, category: str):
         self.directory = directory
         self.category = category
@@ -73,6 +77,12 @@ class SampleCategory:
     def __iter__(self) -> Iterator[SampleFile]:
         return iter(self._samples.values())
 
+    def __repr__(self) -> str:
+        return f"<SampleCategory {self.category}>"
+
     def __str__(self) -> str:
-        return f"SampleCategory({self.category}, {len(self)} samples)"
+        result = f"Category {self.category} :\b{str([f"{sample.name}{sample.extension}" for sample in self._samples.values()])}"
+        # remove string limiters and backspace from resulting string
+        result = result.replace("\"", "").replace("\'", "").replace('\x08', '')
+        return result
 
