@@ -48,9 +48,8 @@ class workspace:
         # Configure Renardo's namespace to include the editor
         CodeClass.namespace['GUI'] = self
         CodeClass.namespace['Player'].widget = self
-        self.version = this_version = '0.9.14'
+        self.version = this_version = '0.9.12'
         pypi_version = get_pypi_version()
-        self.theme = COLOR_THEME
 
         def check_versions():
             # if pypi_version is not None and VersionNumber(pypi_version)
@@ -62,13 +61,19 @@ class workspace:
             return
         # Used for docstring prompt
         self.namespace = CodeClass.namespace
+        # Load theme
+        self.themes = os.path.join(FOXDOT_EDITOR_THEMES,
+                                   'themes.json')
+        #self.style = Style(theme=COLOR_THEME, themes_file=self.themes)
+        #self.style.theme_use
         # Set up master widget
-        self.root = tb.Window(themename=self.theme)
+        self.root = tb.Window()
         self.root.title("FoxDot >> Renardo")
         self.root.minsize(800, 600)
-        self.width = 1024
-        self.height = 576
-        self.root.geometry(f"{self.width}x{self.height}")
+        width = 1280
+        height = 720
+        self.root.geometry(f"{width}x{height}")
+        self.root.eval('tk::PlaceWindow . center')
         self.root.rowconfigure(0, weight=1)  # Text box
         self.root.rowconfigure(1, weight=0)  # Search box
         self.root.rowconfigure(2, weight=0)  # Separator
@@ -78,8 +83,8 @@ class workspace:
         self.root.grid_columnconfigure(1, weight=0)  # line numbers
         self.root.grid_columnconfigure(2, weight=1)  # Scrollbars
         self.root.protocol("WM_DELETE_WINDOW", self.kill)
-        self.style = tb.Style()
-        self.root.style.master
+        self.root.style.load_user_themes(FOXDOT_EDITOR_THEMES)
+        self.root.style.theme_use(COLOR_THEME)
         # Track whether user wants transparent background
         self.using_alpha = USE_ALPHA
         self.transparent = BooleanVar()
@@ -105,7 +110,7 @@ class workspace:
         # Boolean for beat counter
         self.show_counter = BooleanVar()
         self.show_counter.set(False)
-        # Boolean for beat counter
+        # Boolean for show midi val
         self.show_midival = BooleanVar()
         self.show_midival.set(False)
         # Boolean for showing auto-complete prompt
@@ -184,7 +189,6 @@ class workspace:
         self.text.bind("<Delete>", self.delete)
         self.text.bind("<Tab>", self.tab)
         self.text.bind("<Escape>", self.toggle_fullscreen)
-        # self.text.bind("<F11>", self.toggle_true_fullscreen)
         self.text.bind("<Key>", self.keypress)
         self.text.bind("<Button-{}>".format(2 if SYSTEM == MAC_OS else 3),
                        self.show_popup)
@@ -1463,7 +1467,9 @@ class workspace:
         return
 
     def show_popup(self, *args):
-        """ Shows the context menu when pressing right click """
+        """
+        Shows the context menu when pressing right click
+        """
         # Show text popup
         self.popup.show(*args)
         # Hide console popup

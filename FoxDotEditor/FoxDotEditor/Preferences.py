@@ -29,10 +29,42 @@ class Preferences:
                               'iconphoto',
                               self.stop._w,
                               PhotoImage(file=FOXDOT_ICON_GIF))
-        self.text_themes = ()
-        for file_name in [file for file in os.listdir(FOXDOT_EDITOR_THEMES) if file.endswith('.json')]:
-            theme = os.path.splitext(file_name)[0]
-            self.text_themes = self.text_themes + (theme,)
+        self.themes = ()
+        self.theme_colors = {}
+        # Opening JSON file
+        with open(FOXDOT_EDITOR_THEMES, 'r') as openfile:
+            # Reading from json file
+            json_object = json.load(openfile)
+            # Text area colours
+            # ------------------
+            theme_list = json_object["themes"]
+            for item in theme_list:
+                theme = list(item.keys())[0]
+                self.themes = self.themes + (theme,)
+                if theme == COLOR_THEME:
+                    # Colors
+                    # ------------------
+                    self.theme_colors['primary'] = item[COLOR_THEME]["colors"]['primary']
+                    self.theme_colors['secondary'] = item[COLOR_THEME]["colors"]['secondary']
+                    self.theme_colors['success'] = item[COLOR_THEME]["colors"]['success']
+                    self.theme_colors['info'] = item[COLOR_THEME]["colors"]['info']
+                    self.theme_colors['warning'] = item[COLOR_THEME]["colors"]['warning']
+                    self.theme_colors['danger'] = item[COLOR_THEME]["colors"]['danger']
+                    self.theme_colors['light'] = item[COLOR_THEME]["colors"]['light']
+                    self.theme_colors['dark'] = item[COLOR_THEME]["colors"]['dark']
+                    self.theme_colors['bg'] = item[COLOR_THEME]["colors"]['bg']
+                    self.theme_colors['fg'] = item[COLOR_THEME]["colors"]['fg']
+                    self.theme_colors['border'] = item[COLOR_THEME]["colors"]['border']
+                    self.theme_colors['active'] = item[COLOR_THEME]["colors"]['active']
+                    # Prompt colours
+                    # ------------------
+                    self.theme_colors['selectfg'] = item[COLOR_THEME]["colors"]['selectfg']
+                    self.theme_colors['selectbg'] = item[COLOR_THEME]["colors"]['selectbg']
+                    # Console area colours
+                    # ------------------
+                    self.theme_colors['inputfg'] = item[COLOR_THEME]["colors"]['inputfg']
+                    self.theme_colors['inputbg'] = item[COLOR_THEME]["colors"]['inputbg']
+                    self.theme_colors['type'] = item[COLOR_THEME]["type"]
         self.settings = {}
         self.conf_json = FOXDOT_CONFIG_FILE
         self.tabview = tb.Notebook(self.stop)
@@ -132,7 +164,7 @@ class Preferences:
         self.theme = StringVar()
         self.theme.set(COLOR_THEME)
         self.text_theme = StringVar()
-        self.text_theme.set(TEXT_COLORS)
+        self.text_theme.set(COLOR_THEME)
         self.font = StringVar()
         self.font.set(FONT)
         self.use_alpha = BooleanVar()
@@ -141,29 +173,8 @@ class Preferences:
         self.alpha_val.set(ALPHA_VALUE)
         self.alpha_start = BooleanVar()
         self.alpha_start.set(TRANSPARENT_ON_STARTUP)
-        # Colors
-        # ------------------
-        self.plaintext = colour_map['plaintext']
-        self.background = colour_map['background']
-        self.functions = colour_map['functions']
-        self.key_types = colour_map['key_types']
-        self.user_defn = colour_map['user_defn']
-        self.other_kws = colour_map['other_kws']
-        self.comments = colour_map['comments']
-        self.numbers = colour_map['numbers']
-        self.strings = colour_map['strings']
-        self.dollar = colour_map['dollar']
-        self.arrow = colour_map['arrow']
-        self.players = colour_map['players']
-        # Prompt colours
-        # ------------------
-        self.prompt_fg = colour_map['prompt_fg']
-        self.prompt_bg = colour_map['prompt_bg']
-        # Console area colours
-        # ------------------
-        self.console_text = colour_map['console_text']
-        self.console_bg = colour_map['console_bg']
         # x distance for widgets
+        # ------------------
         self.padx = 10
         # Widgets in section General
         # ON START
@@ -357,50 +368,59 @@ class Preferences:
         self.a5.grid(row=1, column=1, pady=self.padx, sticky="nw")
         self.lbl_themes = tb.Label(
             self.a1, text="Theme")
-        self.lbl_themes.grid(column=0, row=0, padx=self.padx, pady=self.padx/2,
+        self.lbl_themes.grid(row=0, column=0, padx=self.padx, pady=self.padx/2,
                              sticky="nw")
         self.themes_opt = tb.Combobox(
             self.a1, textvariable=self.theme)
-        self.themes_opt["values"] = ("cosmo", "flatly",
-                                     "journal", "litera", "lumen", "minty",
-                                     "pulse", "sandstone", "united", "yeti",
-                                     "morph", "simplex", "cerulean", "solar",
-                                     "superhero", "darkly", "cyborg", "vapor")
-        self.themes_opt.grid(column=0, row=1, padx=self.padx, pady=self.padx/2,
+        self.themes_opt["values"] = self.themes
+        self.themes_opt.grid(row=1, column=0, padx=self.padx, pady=self.padx/2,
                              sticky="nw")
-        self.lbl_text_colors = tb.Label(
-            self.a1, text="Text Color Theme")
-        self.lbl_text_colors.grid(column=0, row=2, padx=self.padx,
-                                  pady=self.padx, sticky="sw")
-        self.text_colors_opt = tb.Combobox(
-            self.a1, textvariable=self.text_theme)
-        self.text_colors_opt["values"] = self.text_themes
-        self.text_colors_opt.grid(column=0, row=3, padx=self.padx,
-                                  pady=self.padx/2, sticky="nw")
         self.btn_load = tb.Button(self.a1, text="Load",
                                   command=self.load_tt)
-        self.btn_load.grid(column=0, row=4, padx=self.padx*3,
+        self.btn_load.grid(row=2, column=0, padx=self.padx,
                            pady=self.padx/2, sticky="sw")
+        self.theme_name_lbl = tb.Label(
+            self.a1, text="Save theme as")
+        self.theme_name_lbl.grid(row=3, column=0, padx=self.padx,
+                                 pady=self.padx/2, sticky="nw")
+        self.theme_entry = tb.Entry(self.a1,
+                                    textvariable=self.theme_name)
+        self.theme_entry.grid(row=4, column=0, padx=self.padx,
+                              pady=self.padx/2, sticky="nw")
+        self.theme_types = ["light", "dark"]
+        self.ttype = StringVar()
+        if self.theme_colors['type'] == "light":
+            self.ttype.set(self.theme_types[0])
+        elif self.theme_colors['type'] == "dark":
+            self.ttype.set(self.theme_types[1])
+        self.type_l = tb.Radiobutton(self.a1,
+                                     bootstyle="danger",
+                                     variable=self.ttype,
+                                     text="light",
+                                     value=self.theme_types[0],
+                                     command=self.ttype.set(self.theme_types[0]))
+        self.type_l.grid(column=0, padx=self.padx, pady=self.padx, sticky="nw")
+        self.type_d = tb.Radiobutton(self.a1,
+                                     bootstyle="danger",
+                                     variable=self.ttype,
+                                     text="dark",
+                                     value=self.theme_types[1],
+                                     command=self.ttype.set(self.theme_types[1]))
+        self.type_d.grid(column=0, padx=self.padx, pady=self.padx, sticky="nw")
         self.btn_save = tb.Button(self.a1, text="Save", command=self.save_tt)
-        self.btn_save.grid(column=0, row=4, padx=self.padx*12,
+        self.btn_save.grid(row=7, column=0, padx=self.padx,
                            pady=self.padx/2, sticky="sw")
-        self.lbl_font = tb.Label(
-            self.a1, text="Font")
-        self.lbl_font.grid(column=0, row=5, padx=self.padx,
+        self.lbl_font = tb.Label(self.a1, text="Font")
+        self.lbl_font.grid(row=8, column=0, padx=self.padx,
                            pady=self.padx/2, sticky="sw")
         self.entry_font = tb.Entry(
             self.a1, textvariable=self.font)
-        self.entry_font.grid(column=0, row=6, padx=self.padx, pady=self.padx/2,
+        self.entry_font.grid(row=9, column=0, padx=self.padx, pady=self.padx/2,
                              sticky="nw")
-        # self.tgl_use_alpha = tb.Checkbutton(
-        #     self.a1, text="Use Alpha", variable=self.use_alpha,
-        #     style='Roundtoggle.Toolbutton')
-        # self.tgl_use_alpha.grid(column=0, row=7, padx=self.padx,
-        #                         pady=self.padx, sticky="nw")
         self.tgl_alpha_start = tb.Checkbutton(
             self.a1, text="Transparent on Start", variable=self.alpha_start,
             style='Roundtoggle.Toolbutton')
-        self.tgl_alpha_start.grid(column=0, row=7, padx=self.padx,
+        self.tgl_alpha_start.grid(row=10, column=0, padx=self.padx,
                                   pady=self.padx, sticky="nw")
         # COLOR CHOICE
         self.lbl_colorlist = tb.Label(self.a3, text="Text Colors Editor")
@@ -408,233 +428,272 @@ class Preferences:
                                 padx=self.padx,
                                 pady=self.padx,
                                 sticky="nw")
-        # plaintext
-        self.lbl_plaintext = tb.Label(
-            self.a4, text="plaintext")
-        self.lbl_plaintext.grid(column=0, row=0, padx=self.padx, sticky="nw")
-        self.btn_plaintext = Button(
-            self.a4, width=5,
-            command=lambda: self.cc(self.btn_plaintext, self.plaintext))
-        self.btn_plaintext.config(bg=self.plaintext)
-        self.btn_plaintext.grid(column=1, row=0, sticky="nw")
         # background
-        self.lbl_background = tb.Label(
-            self.a4, text="background")
-        self.lbl_background.grid(column=0, row=2, padx=self.padx, sticky="nw")
-        self.btn_background = Button(
-            self.a4, width=5,
-            command=lambda: self.cc(self.btn_background, self.background))
-        self.btn_background.config(bg=self.background)
-        self.btn_background.grid(column=1, row=2, sticky="nw")
+        self.lbl_primary = tb.Label(
+            self.a4, text="primary")
+        self.lbl_primary.grid(column=0, row=0, padx=self.padx, sticky="nw")
+        self.btn_primary = Button(self.a4, width=5,
+                                  command=lambda: self.cc(self.btn_primary,
+                                                          "primary"))
+        self.btn_primary.config(bg=self.theme_colors["primary"])
+        self.btn_primary.grid(column=1, row=0, pady=10, sticky="nw")
         # functions
-        self.lbl_functions = tb.Label(
-            self.a4, text="functions")
-        self.lbl_functions.grid(column=0, row=3, padx=self.padx, sticky="nw")
-        self.btn_functions = Button(
+        self.lbl_secondary = tb.Label(
+            self.a4, text="secondary\nfunctions/numbers")
+        self.lbl_secondary.grid(column=0, row=1, padx=self.padx, sticky="nw")
+        self.btn_secondary = Button(
             self.a4, width=5,
-            command=lambda: self.cc(self.btn_functions, self.functions))
-        self.btn_functions.config(bg=self.functions)
-        self.btn_functions.grid(column=1, row=3, sticky="nw")
-        # key_types
-        self.lbl_key_types = tb.Label(
-            self.a4, text="key_types")
-        self.lbl_key_types.grid(column=0, row=4, padx=self.padx, sticky="nw")
-        self.btn_key_types = Button(
-            self.a4, width=5,
-            command=lambda: self.cc(self.btn_key_types, self.key_types))
-        self.btn_key_types.config(bg=self.key_types)
-        self.btn_key_types.grid(column=1, row=4, sticky="nw")
+            command=lambda: self.cc(self.btn_secondary, "secondary"))
+        self.btn_secondary.config(bg=self.theme_colors["secondary"])
+        self.btn_secondary.grid(column=1, row=1, pady=10, sticky="nw")
         # user_defn
-        self.lbl_user_defn = tb.Label(
-            self.a4, text="user_defn")
-        self.lbl_user_defn.grid(column=0, row=5, padx=self.padx, sticky="nw")
-        self.btn_user_defn = Button(
+        self.lbl_success = tb.Label(
+            self.a4, text="success\nuser_defn/other_kws")
+        self.lbl_success.grid(column=0, row=2, padx=self.padx, sticky="nw")
+        self.btn_success = Button(
             self.a4, width=5,
-            command=lambda: self.cc(self.btn_user_defn, self.user_defn))
-        self.btn_user_defn.config(bg=self.user_defn)
-        self.btn_user_defn.grid(column=1, row=5, sticky="nw")
-        # other_kws
-        self.lbl_other_kws = tb.Label(
-            self.a4, text="other_kws")
-        self.lbl_other_kws.grid(column=0, row=6, padx=self.padx, sticky="nw")
-        self.btn_other_kws = Button(
+            command=lambda: self.cc(self.btn_success, "success"))
+        self.btn_success.config(bg=self.theme_colors["success"])
+        self.btn_success.grid(column=1, row=2, pady=10, sticky="nw")
+        # key_types
+        self.lbl_info = tb.Label(
+            self.a4, text="info\nkey_types")
+        self.lbl_info.grid(column=0, row=3, padx=self.padx, sticky="nw")
+        self.btn_info = Button(
             self.a4, width=5,
-            command=lambda: self.cc(self.btn_other_kws, self.other_kws))
-        self.btn_other_kws.config(bg=self.other_kws)
-        self.btn_other_kws.grid(column=1, row=6, sticky="nw")
-        # comments
-        self.lbl_comments = tb.Label(
-            self.a4, text="comments")
-        self.lbl_comments.grid(column=0, row=7, padx=self.padx, sticky="nw")
-        self.btn_comments = Button(
-            self.a4, width=5,
-            command=lambda: self.cc(self.btn_comments, self.comments))
-        self.btn_comments.config(bg=self.comments)
-        self.btn_comments.grid(column=1, row=7, sticky="nw")
-        # numbers
-        self.lbl_numbers = tb.Label(
-            self.a4, text="numbers")
-        self.lbl_numbers.grid(column=0, row=8, padx=self.padx, sticky="nw")
-        self.btn_numbers = Button(
-            self.a4, width=5,
-            command=lambda: self.cc(self.btn_numbers, self.numbers))
-        self.btn_numbers.config(bg=self.numbers)
-        self.btn_numbers.grid(column=1, row=8, sticky="nw")
-        # strings
-        self.lbl_strings = tb.Label(
-            self.a4, text="strings")
-        self.lbl_strings.grid(column=0, row=9, padx=self.padx, sticky="nw")
-        self.btn_strings = Button(
-            self.a4, width=5,
-            command=lambda: self.cc(self.btn_strings, self.strings))
-        self.btn_strings.config(bg=self.strings)
-        self.btn_strings.grid(column=1, row=9, sticky="nw")
-        # dollar
-        self.lbl_dollar = tb.Label(
-            self.a4, text="dollar")
-        self.lbl_dollar.grid(column=0, row=10, padx=self.padx, sticky="nw")
-        self.btn_dollar = Button(
-            self.a4, width=5,
-            command=lambda: self.cc(self.btn_dollar, self.dollar))
-        self.btn_dollar.config(bg=self.dollar)
-        self.btn_dollar.grid(column=1, row=10, sticky="nw")
-        # arrow
-        self.lbl_arrow = tb.Label(
-            self.a4, text="arrow")
-        self.lbl_arrow.grid(column=0, row=11, padx=self.padx, sticky="nw")
-        self.btn_arrow = Button(
-            self.a4, width=5,
-            command=lambda: self.cc(self.btn_arrow, self.arrow))
-        self.btn_arrow.config(bg=self.arrow)
-        self.btn_arrow.grid(column=1, row=11, sticky="nw")
+            command=lambda: self.cc(self.btn_info, "info"))
+        self.btn_info.config(bg=self.theme_colors["info"])
+        self.btn_info.grid(column=1, row=3, pady=10, sticky="nw")
         # players
-        self.lbl_players = tb.Label(
-            self.a4, text="players")
-        self.lbl_players.grid(column=0, row=12, padx=self.padx, sticky="nw")
-        self.btn_players = Button(
+        self.lbl_danger = tb.Label(
+            self.a4, text="danger\nplayers")
+        self.lbl_danger.grid(column=0, row=4, padx=self.padx, sticky="nw")
+        self.btn_danger = Button(
             self.a4, width=5,
-            command=lambda: self.cc(self.btn_players, self.players))
-        self.btn_players.config(bg=self.players)
-        self.btn_players.grid(column=1, row=12, sticky="nw")
+            command=lambda: self.cc(self.btn_danger, "danger"))
+        self.btn_danger.config(bg=self.theme_colors["danger"])
+        self.btn_danger.grid(column=1, row=4, pady=10, sticky="nw")
+        # players
+        self.lbl_warning = tb.Label(
+            self.a4, text="warning\nstrings/arrow")
+        self.lbl_warning.grid(column=0, row=5, padx=self.padx, sticky="nw")
+        self.btn_warning = Button(self.a4, width=5,
+                                  command=lambda: self.cc(self.btn_warning,
+                                                          "warning"))
+        self.btn_warning.config(bg=self.theme_colors["warning"])
+        self.btn_warning.grid(column=1, row=5, pady=10, sticky="nw")
+        # dollar
+        self.lbl_light = tb.Label(
+            self.a4, text="light\ncomments")
+        self.lbl_light.grid(column=0, row=6, padx=self.padx, sticky="nw")
+        self.btn_light = Button(
+            self.a4, width=5,
+            command=lambda: self.cc(self.btn_light, "light"))
+        self.btn_light.config(bg=self.theme_colors["light"])
+        self.btn_light.grid(column=1, row=6, pady=10, sticky="nw")
+        # dark
+        self.lbl_dark = tb.Label(self.a4, text="dark")
+        self.lbl_dark.grid(column=0, row=7, padx=self.padx, sticky="nw")
+        self.btn_dark = Button(self.a4, width=5,
+                               command=lambda: self.cc(self.btn_dark,
+                                                       "dark"))
+        self.btn_dark.config(bg=self.theme_colors["dark"])
+        self.btn_dark.grid(column=1, row=7, pady=10, sticky="nw")
+        # bg
+        self.lbl_bg = tb.Label(self.a5, text="bg\nbackground")
+        self.lbl_bg.grid(column=0, row=0, padx=self.padx, sticky="nw")
+        self.btn_bg = Button(self.a5, width=5,
+                             command=lambda: self.cc(self.btn_bg, "bg"))
+        self.btn_bg.config(bg=self.theme_colors["bg"])
+        self.btn_bg.grid(column=1, row=0, pady=10, sticky="nw")
+        # plaintext
+        self.lbl_fg = tb.Label(
+            self.a5, text="fg\nplaintext")
+        self.lbl_fg.grid(column=0,
+                         row=1,
+                         padx=self.padx,
+                         sticky="nw")
+        self.btn_fg = Button(self.a5, width=5,
+                             command=lambda: self.cc(self.btn_fg, "fg"))
+        self.btn_fg.config(bg=self.theme_colors["fg"])
+        self.btn_fg.grid(column=1, row=1, pady=10, sticky="nw")
         # prompt_fg
-        self.lbl_prompt_fg = tb.Label(
-            self.a5, text="prompt_fg")
-        self.lbl_prompt_fg.grid(column=0, row=0, padx=self.padx, sticky="nw")
-        self.btn_prompt_fg = Button(
-            self.a5, width=5,
-            command=lambda: self.cc(self.btn_prompt_fg, self.prompt_fg))
-        self.btn_prompt_fg.config(bg=self.prompt_fg)
-        self.btn_prompt_fg.grid(column=1, row=0, sticky="nw")
+        self.lbl_selectfg = tb.Label(self.a5, text="selectfg\nprompt_fg")
+        self.lbl_selectfg.grid(column=0,
+                               row=2,
+                               padx=self.padx,
+                               sticky="nw")
+        self.btn_selectfg = Button(self.a5, width=5,
+                                   command=lambda: self.cc(self.btn_selectfg,
+                                                           "selectfg"))
+        self.btn_selectfg.config(bg=self.theme_colors["selectfg"])
+        self.btn_selectfg.grid(column=1, row=2, pady=10, sticky="nw")
         # prompt_bg
-        self.lbl_prompt_bg = tb.Label(
-            self.a5, text="prompt_bg")
-        self.lbl_prompt_bg.grid(column=0, row=1, padx=self.padx, sticky="nw")
-        self.btn_prompt_bg = Button(
-            self.a5, width=5,
-            command=lambda: self.cc(self.btn_prompt_bg, self.prompt_bg))
-        self.btn_prompt_bg.config(bg=self.prompt_bg)
-        self.btn_prompt_bg.grid(column=1, row=1, sticky="nw")
+        self.lbl_selectbg = tb.Label(
+            self.a5, text="selectbg\nprompt_bg")
+        self.lbl_selectbg.grid(column=0, row=3, padx=self.padx, sticky="nw")
+        self.btn_selectbg = Button(self.a5, width=5,
+                                   command=lambda: self.cc(self.btn_selectbg,
+                                                           "selectbg"))
+        self.btn_selectbg.config(bg=self.theme_colors["selectbg"])
+        self.btn_selectbg.grid(column=1, row=3, pady=10, sticky="nw")
         # console_text
-        self.lbl_console_text = tb.Label(
-            self.a5, text="console_text")
-        self.lbl_console_text.grid(column=0, row=2, padx=self.padx, sticky="nw")
-        self.btn_console_text = Button(
-            self.a5, width=5,
-            command=lambda: self.cc(self.btn_console_text, self.console_text))
-        self.btn_console_text.config(bg=self.console_text)
-        self.btn_console_text.grid(column=1, row=2, sticky="nw")
+        self.lbl_inputfg = tb.Label(
+            self.a5, text="inputfg\nconsole_text")
+        self.lbl_inputfg.grid(column=0, row=4, padx=self.padx, sticky="nw")
+        self.btn_inputfg = Button(self.a5, width=5,
+                                  command=lambda: self.cc(self.btn_inputfg,
+                                                          "inputfg"))
+        self.btn_inputfg.config(bg=self.theme_colors["inputfg"])
+        self.btn_inputfg.grid(column=1, row=4, pady=10, sticky="nw")
         # console_bg
-        self.lbl_console_bg = tb.Label(
-            self.a5, text="console_bg")
-        self.lbl_console_bg.grid(column=0, row=3, padx=self.padx, sticky="nw")
-        self.btn_console_bg = Button(
-            self.a5, width=5,
-            command=lambda: self.cc(self.btn_console_bg, self.console_bg))
-        self.btn_console_bg.config(bg=self.console_bg)
-        self.btn_console_bg.grid(column=1, row=3, sticky="nw")
+        self.lbl_inputbg = tb.Label(self.a5, text="inputbg\nconsole_bg")
+        self.lbl_inputbg.grid(column=0, row=5, padx=self.padx, sticky="nw")
+        self.btn_inputbg = Button(self.a5, width=5,
+                                  command=lambda: self.cc(self.btn_inputbg,
+                                                          "inputbg"))
+        self.btn_inputbg.config(bg=self.theme_colors["inputbg"])
+        self.btn_inputbg.grid(column=1, row=5, pady=10, sticky="nw")
+        # border
+        self.lbl_border = tb.Label(self.a5, text="border")
+        self.lbl_border.grid(column=0, row=6, padx=self.padx, sticky="nw")
+        self.btn_border = Button(self.a5, width=5,
+                                 command=lambda: self.cc(self.btn_border,
+                                                         "border"))
+        self.btn_border.config(bg=self.theme_colors["border"])
+        self.btn_border.grid(column=1, row=6, pady=10, sticky="nw")
+        # active
+        self.lbl_active = tb.Label(self.a5, text="active")
+        self.lbl_active.grid(column=0, row=7, padx=self.padx, sticky="nw")
+        self.btn_active = Button(self.a5, width=5,
+                                 command=lambda: self.cc(self.btn_active,
+                                                         "active"))
+        self.btn_active.config(bg=self.theme_colors["active"])
+        self.btn_active.grid(column=1, row=7, pady=10, sticky="nw")
 
     def load_tt(self):
-        self.theme_name = self.text_colors_opt.get()
-        try:
-            file = FOXDOT_EDITOR_THEMES + '/' + self.theme_name + '.json'
-            # Opening JSON file
-            with open(file, 'r') as openfile:
-                # Reading from json file
-                json_object = json.load(openfile)
-                self.btn_plaintext.config(
-                    bg=json_object[self.theme_name]['plaintext'])
-                self.btn_background.config(
-                    bg=json_object[self.theme_name]['background'])
-                self.btn_functions.config(
-                    bg=json_object[self.theme_name]['functions'])
-                self.btn_key_types.config(
-                    bg=json_object[self.theme_name]['key_types'])
-                self.btn_user_defn.config(
-                    bg=json_object[self.theme_name]['user_defn'])
-                self.btn_other_kws.config(
-                    bg=json_object[self.theme_name]['other_kws'])
-                self.btn_comments.config(
-                    bg=json_object[self.theme_name]['comments'])
-                self.btn_numbers.config(
-                    bg=json_object[self.theme_name]['numbers'])
-                self.btn_strings.config(
-                    bg=json_object[self.theme_name]['strings'])
-                self.btn_dollar.config(
-                    bg=json_object[self.theme_name]['dollar'])
-                self.btn_arrow.config(
-                    bg=json_object[self.theme_name]['arrow'])
-                self.btn_players.config(
-                    bg=json_object[self.theme_name]['players'])
-                self.btn_prompt_fg.config(
-                    bg=json_object[self.theme_name]['prompt_fg'])
-                self.btn_prompt_bg.config(
-                    bg=json_object[self.theme_name]['prompt_bg'])
-                self.btn_console_text.config(
-                    bg=json_object[self.theme_name]['console_text'])
-                self.btn_console_bg.config(
-                    bg=json_object[self.theme_name]['console_bg'])
-        except FileNotFoundError:
-            pass
+        self.theme_name = self.themes_opt.get()
+        self.theme_entry.delete(0, END)
+        self.theme_entry.insert(0, self.theme_name)
+        with open(FOXDOT_EDITOR_THEMES, 'r') as openfile:
+            # Reading from json file
+            json_object = json.load(openfile)
+            # Text area colours
+            # ------------------
+            for item in json_object["themes"]:
+                if self.theme_name in item:
+                    self.btn_primary.config(
+                        bg=item[self.theme_name]["colors"]["primary"])
+                    self.theme_colors["primary"] = item[self.theme_name]["colors"]["primary"]
+                    self.btn_secondary.config(
+                        bg=item[self.theme_name]["colors"]["secondary"])
+                    self.theme_colors["secondary"] = item[self.theme_name]["colors"]["secondary"]
+                    self.btn_success.config(
+                        bg=item[self.theme_name]["colors"]["success"])
+                    self.theme_colors["success"] = item[self.theme_name]["colors"]["success"]
+                    self.btn_info.config(
+                        bg=item[self.theme_name]["colors"]["info"])
+                    self.theme_colors["info"] = item[self.theme_name]["colors"]["info"]
+                    self.btn_warning.config(
+                        bg=item[self.theme_name]["colors"]["warning"])
+                    self.theme_colors["warning"] = item[self.theme_name]["colors"]["warning"]
+                    self.btn_success.config(
+                        bg=item[self.theme_name]["colors"]["success"])
+                    self.theme_colors["success"] = item[self.theme_name]["colors"]["success"]
+                    self.btn_dark.config(
+                        bg=item[self.theme_name]["colors"]["dark"])
+                    self.theme_colors["dark"] = item[self.theme_name]["colors"]["dark"]
+                    self.btn_bg.config(
+                        bg=item[self.theme_name]["colors"]["bg"])
+                    self.theme_colors["bg"] = item[self.theme_name]["colors"]["bg"]
+                    self.btn_fg.config(
+                        bg=item[self.theme_name]["colors"]["fg"])
+                    self.theme_colors["fg"] = item[self.theme_name]["colors"]["fg"]
+                    # Prompt colours
+                    # ------------------
+                    self.btn_selectfg.config(
+                        bg=item[self.theme_name]["colors"]["selectfg"])
+                    self.theme_colors["selectfg"] = item[self.theme_name]["colors"]["selectfg"]
+                    self.btn_selectbg.config(
+                        bg=item[self.theme_name]["colors"]["selectbg"])
+                    self.theme_colors["selectbg"] = item[self.theme_name]["colors"]["selectbg"]
+                    # Console area colours
+                    # ------------------
+                    self.btn_inputfg.config(
+                        bg=item[self.theme_name]["colors"]["inputfg"])
+                    self.theme_colors["inputfg"] = item[self.theme_name]["colors"]["inputfg"]
+                    self.btn_inputbg.config(
+                        bg=item[self.theme_name]["colors"]["inputbg"])
+                    self.theme_colors["inputbg"] = item[self.theme_name]["colors"]["inputbg"]
+                    # ------------------
+                    self.btn_border.config(
+                        bg=item[self.theme_name]["colors"]["border"])
+                    self.theme_colors["border"] = item[self.theme_name]["colors"]["border"]
+                    self.btn_active.config(
+                        bg=item[self.theme_name]["colors"]["active"])
+                    self.theme_colors["active"] = item[self.theme_name]["colors"]["active"]
+                    self.theme_type = item[self.theme_name]["type"]
+        if self.theme_type == "light":
+            self.ttype.set(self.theme_types[0])
+        elif self.theme_type == "dark":
+            self.ttype.set(self.theme_types[1])
 
     def save_tt(self):
         # Colors
         # ------------------
-        new_theme = {self.theme_name: {}}
-        new_theme[self.theme_name]['plaintext'] = self.plaintext
-        new_theme[self.theme_name]['background'] = self.background
-        new_theme[self.theme_name]['functions'] = self.functions
-        new_theme[self.theme_name]['key_types'] = self.key_types
-        new_theme[self.theme_name]['user_defn'] = self.user_defn
-        new_theme[self.theme_name]['other_kws'] = self.other_kws
-        new_theme[self.theme_name]['comments'] = self.comments
-        new_theme[self.theme_name]['numbers'] = self.numbers
-        new_theme[self.theme_name]['strings'] = self.strings
-        new_theme[self.theme_name]['dollar'] = self.dollar
-        new_theme[self.theme_name]['arrow'] = self.arrow
-        new_theme[self.theme_name]['players'] = self.players
-        # Prompt colours
-        # ------------------
-        new_theme[self.theme_name]['prompt_fg'] = self.prompt_fg
-        new_theme[self.theme_name]['prompt_bg'] = self.prompt_bg
-        # Console area colours
-        # ------------------
-        new_theme[self.theme_name]['console_text'] = self.console_text
-        new_theme[self.theme_name]['console_bg'] = self.console_bg
-        self.stop.iconify()
-        self.filename = tkFileDialog.asksaveasfilename(
-            filetypes=[("JSON files", ".json")],
-            initialdir=FOXDOT_EDITOR_THEMES + '/',
-            defaultextension=".json")
-        if self.filename:
-            new_file = open(self.filename, "w")
-            json.dump(new_theme, new_file, indent=6)
-            new_file.close()
+        self.theme_name = self.theme_entry.get()
+        with open(FOXDOT_EDITOR_THEMES, 'r') as openfile:
+            # Reading from json file
+            json_object = json.load(openfile)
+            # Text area colours
+            # ------------------
+            for item in json_object["themes"]:
+                if self.theme_name in item:
+                    item[self.theme_name]["colors"]["primary"] = self.theme_colors.get("primary")
+                    item[self.theme_name]["colors"]["secondary"] = self.theme_colors.get("secondary")
+                    item[self.theme_name]["colors"]["success"] = self.theme_colors.get("success")
+                    item[self.theme_name]["colors"]["info"] = self.theme_colors.get("info")
+                    item[self.theme_name]["colors"]["warning"] = self.theme_colors.get("warning")
+                    item[self.theme_name]["colors"]["danger"] = self.theme_colors.get("danger")
+                    item[self.theme_name]["colors"]["light"] = self.theme_colors.get("light")
+                    item[self.theme_name]["colors"]["dark"] = self.theme_colors.get("dark")
+                    item[self.theme_name]["colors"]["bg"] = self.theme_colors.get("bg")
+                    item[self.theme_name]["colors"]["fg"] = self.theme_colors.get("fg")
+                    item[self.theme_name]["colors"]["selectbg"] = self.theme_colors.get("selectbg")
+                    item[self.theme_name]["colors"]["selectfg"] = self.theme_colors.get("selectfg")
+                    item[self.theme_name]["colors"]["border"] = self.theme_colors.get("border")
+                    item[self.theme_name]["colors"]["inputfg"] = self.theme_colors.get("inputfg")
+                    item[self.theme_name]["colors"]["inputbg"] = self.theme_colors.get("inputbg")
+                    item[self.theme_name]["colors"]["active"] = self.theme_colors.get("active")
+                    item[self.theme_name]["type"] = self.ttype.get()
+            if self.theme_name not in self.themes:
+                new_id = len(json_object["themes"])
+                json_object["themes"].append({self.theme_name: {"type": "", "colors": {}}})
+                json_object["themes"][new_id][self.theme_name]["colors"]["primary"] = self.theme_colors.get("primary")
+                json_object["themes"][new_id][self.theme_name]["colors"]["secondary"] = self.theme_colors.get("secondary")
+                json_object["themes"][new_id][self.theme_name]["colors"]["success"] = self.theme_colors.get("success")
+                json_object["themes"][new_id][self.theme_name]["colors"]["info"] = self.theme_colors.get("info")
+                json_object["themes"][new_id][self.theme_name]["colors"]["warning"] = self.theme_colors.get("warning")
+                json_object["themes"][new_id][self.theme_name]["colors"]["danger"] = self.theme_colors.get("danger")
+                json_object["themes"][new_id][self.theme_name]["colors"]["light"] = self.theme_colors.get("light")
+                json_object["themes"][new_id][self.theme_name]["colors"]["dark"] = self.theme_colors.get("dark")
+                json_object["themes"][new_id][self.theme_name]["colors"]["bg"] = self.theme_colors.get("bg")
+                json_object["themes"][new_id][self.theme_name]["colors"]["fg"] = self.theme_colors.get("fg")
+                json_object["themes"][new_id][self.theme_name]["colors"]["selectfg"] = self.theme_colors.get("selectfg")
+                json_object["themes"][new_id][self.theme_name]["colors"]["selectbg"] = self.theme_colors.get("selectbg")
+                json_object["themes"][new_id][self.theme_name]["colors"]["border"] = self.theme_colors.get("border")
+                json_object["themes"][new_id][self.theme_name]["colors"]["inputfg"] = self.theme_colors.get("inputfg")
+                json_object["themes"][new_id][self.theme_name]["colors"]["inputbg"] = self.theme_colors.get("inputbg")
+                json_object["themes"][new_id][self.theme_name]["colors"]["active"] = self.theme_colors.get("active")
+                json_object["themes"][new_id][self.theme_name]["type"] = self.ttype.get()
+        openfile.close()
+        with open(FOXDOT_EDITOR_THEMES, 'w') as newfile:
+            json.dump(json_object, newfile, indent=6)
             print("Theme saved.")
-        else:
-            pass
-        self.stop.deiconify()
+            newfile.close()
 
-    def cc(self, button, color):
+    def cc(self, button, key):
+        color = self.theme_colors.get(key)
         self.cchooser = ColorChooserDialog(initialcolor=color)
         self.stop.iconify()
         self.cchooser.show()
@@ -644,6 +703,7 @@ class Preferences:
         else:
             colors = self.cchooser.result
             color = colors.hex
+            self.theme_colors[key] = color
             button.config(bg=color)
 
     def convert2number(self, selection, option):
@@ -681,11 +741,10 @@ class Preferences:
                                        parent=self.stop)
         self.stop.lift(aboveThis=None)
         if answer:
-            return self.save_changes()
+            self.save_changes()
         else:
             pass
-        return self.stop.destroy()
-        pass
+        self.stop.destroy()
 
     def save_changes(self):
         self.text_settings = self.textbox.get("1.0", "end-1c")
@@ -727,7 +786,6 @@ class Preferences:
             self.settings['FORWARD_ADDRESS'] = self.fwd_address.get()
             self.settings['FORWARD_PORT'] = int(self.fwd_port.get())
             self.settings['COLOR_THEME'] = self.theme.get()
-            self.settings['TEXT_COLORS'] = self.text_theme.get()
         settings_file = open(self.conf_json, "w")
         json.dump(self.settings, settings_file, indent=6)
         settings_file.close()
