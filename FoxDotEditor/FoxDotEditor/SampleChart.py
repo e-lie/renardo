@@ -130,10 +130,10 @@ class SampleChart:
 
         # Fill dictionary with specials as key and file names of
         # audio as values
-        self.sp_path_s = self.sp_path_s = os.path.join(SAMPLES_DIR_PATH,
-                                                       str(spack_id),
-                                                       "_",
-                                                       "")
+        self.sp_path_s = os.path.join(SAMPLES_DIR_PATH,
+                                      str(spack_id),
+                                      "_",
+                                      "")
         self.dir_list_s = []
         for filename in os.listdir(self.sp_path_s):
             if os.path.isdir(os.path.join(self.sp_path_s, filename)):
@@ -151,9 +151,10 @@ class SampleChart:
                     self.smpl_list.remove(n)
             self.dict_specials[j] = self.smpl_list
         # Fill dictionary with loops as value
-        self.sp_path_loops = os.path.join(str(SAMPLES_DIR_PATH),
+        self.sp_path_loops = os.path.join(SAMPLES_DIR_PATH,
                                           spack_id,
-                                          FOXDOT_LOOP)
+                                          FOXDOT_LOOP,
+                                          "")
         self.smpl_list = [
             f for f in os.listdir(self.sp_path_loops)
             if os.path.isfile(os.path.join(self.sp_path_loops, f))
@@ -358,12 +359,23 @@ class SampleChart:
 
         if len(self.char) == 1 and self.char.isalpha():
             if self.char.isupper():
-                self.path = self.sp_path_l + self.char.lower() + "/upper/" + path
+                self.path = os.path.join(self.sp_path_l,
+                                         self.char.lower(),
+                                         "upper",
+                                         path,
+                                         "")
             elif self.char.islower():
-                self.path = self.sp_path_l + self.char + "/lower/" + path
+                self.path = os.path.join(self.sp_path_l,
+                                         self.char,
+                                         "lower",
+                                         path,
+                                         "")
             self.cmd = "play"
         elif self.char == "loops":
-            self.path = self.sp_path_l + FOXDOT_LOOP + "/" + path
+            self.path = os.path.join(self.sp_path_l,
+                                     FOXDOT_LOOP,
+                                     path,
+                                     "")
             self.cmd = "loop"
             self.char = os.path.splitext(path)[0]
         else:

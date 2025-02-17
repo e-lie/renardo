@@ -37,7 +37,7 @@ FOXDOT_ICON = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/icon.ico")
 FOXDOT_ICON_GIF = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/icon.gif")
 FOXDOT_HELLO = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/hello.txt")
 FOXDOT_STARTUP_PATH = os.path.realpath(FOXDOT_ROOT + "/Custom/startup.py")
-FOXDOT_EDITOR_THEMES = os.path.realpath(FOXDOT_EDITOR_ROOT + "/themes")
+FOXDOT_EDITOR_THEMES = os.path.realpath(FOXDOT_EDITOR_ROOT + "/themes/themes.json")
 FOXDOT_MIDI_MAPS = os.path.realpath(FOXDOT_ROOT + "/MidiMaps")
 # FOXDOT_SND = SAMPLES_FOLDER_PATH / 'foxdot_default'
 FOXDOT_SND = get_samples_dir_path()
@@ -128,7 +128,6 @@ FORWARD_PORT = conf.FORWARD_PORT
 SAMPLES_DIR = conf.SAMPLES_DIR
 SAMPLES_PACK_NUMBER = conf.SAMPLES_PACK_NUMBER
 COLOR_THEME = conf.COLOR_THEME
-TEXT_COLORS = conf.TEXT_COLORS
 
 if conf.SAMPLES_DIR is not None and conf.SAMPLES_DIR != "":
     FOXDOT_SND = os.path.realpath(conf.SAMPLES_DIR)

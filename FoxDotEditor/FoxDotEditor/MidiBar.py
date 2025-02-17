@@ -24,10 +24,10 @@ class MidiBar:
         self.lbl_list = []
         self.data_list = []
         self.in_list = False
-        self.txt_active = colour_map['numbers']
-        self.txt_inactive = colour_map['plaintext']
+        self.txt_active = colour_map['strings']
+        self.txt_inactive = colour_map['key_types']
         self.bg = colour_map['background']
-        self.bg_active = colour_map['dollar']
+        self.bg_active = colour_map['numbers']
         # Create label list, strings var list, and data buffer list
         for i in range(self.slots):
             self.data_list.append("")
