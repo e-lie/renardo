@@ -5,7 +5,7 @@ Original FoxDot editor extract from original project for use with separated FoxD
 
 #### Startup
 
-1. Open SuperCollider and type in `FoxDot.start` and evaluate this line. SuperCollider is now listening for messages from renardo_lib. 
+1. Open SuperCollider and type in `FoxDot.start` and evaluate this line. SuperCollider is now listening for messages from renardo_lib.
 2. Start FoxDot by entering `FoxDot` at the command line. If that doesn't work, try `python -m FoxDot`.
 3. If you have installed the SC3 Plugins, use the "Code" drop-down menu to select "Use SC3 Plugins". Restart FoxDot and you'll have access to classes found in the SC3 Plugins.
 4. Keep up to date with the latest verion of FoxDot by running `pip install FoxDot --upgrade` every few weeks.
@@ -47,7 +47,7 @@ The empty player object, `p1` is now assigned a the 'pads' synth and some playba
 p1 >> pads([0,1,2,3], dur=[1/4,3/4], sus=1, vib=4, scale=Scale.minor)
 ```
 
-The keyword arguments `dur`, `oct`, and `scale` apply to all player objects - any others, such as `vib` in the above example, refer to keyword arguments in the corresponding `SynthDef`. The first argument, `degree`, does not have to be stated explicitly. Notes can be grouped together so that they are played simultaneously using round brackets, `()`. The sequence `[(0,2,4),1,2,3]` will play the the the first harmonic triad of the default scale followed by the next three notes. 
+The keyword arguments `dur`, `oct`, and `scale` apply to all player objects - any others, such as `vib` in the above example, refer to keyword arguments in the corresponding `SynthDef`. The first argument, `degree`, does not have to be stated explicitly. Notes can be grouped together so that they are played simultaneously using round brackets, `()`. The sequence `[(0,2,4),1,2,3]` will play the the the first harmonic triad of the default scale followed by the next three notes.
 
 ### 'Sample Player' Objects
 
@@ -76,7 +76,7 @@ Or you can use `PZip`, the `zip` method, or the `&` sign to create one pattern t
 ``` python
 d1 >> play(P["x( x)  "].palindrome().zip("---[--]").zip(P["  o "].amen()))  
 
-# The first item must be a P[] pattern, not a string. 
+# The first item must be a P[] pattern, not a string.
 
 d1 >> play(P["x( x)  "].palindrome() & "---[--]" & P["  o "].amen())
 ```
@@ -114,7 +114,7 @@ bd >> play("x o  xo ")
 bd.shuffle()
 ```
 
-You can schedule these methods by calling the `every` method, which takes a list of durations (in beats), the name of the method as a string, and any other arguments. The following syntax mirrors the string of sample characters after 6 beats, then again 2 beats  later and also shuffles it every 8 beats. 
+You can schedule these methods by calling the `every` method, which takes a list of durations (in beats), the name of the method as a string, and any other arguments. The following syntax mirrors the string of sample characters after 6 beats, then again 2 beats  later and also shuffles it every 8 beats.
 
 ```python
 bd >> play("x-o-[xx]-o(-[oo])").every([6,2], 'mirror').every(8, 'shuffle')

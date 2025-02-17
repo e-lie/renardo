@@ -24,7 +24,9 @@ from .LineNumbers import LineNumbers
 from .MenuBar import MenuBar, PopupMenu
 from .Treeview import TreeView
 from .SampleChart import SampleChart
+from .MidiMapper import MidiMapper
 from .SearchBar import SearchBar
+from .MidiBar import MidiBar
 from functools import partial
 # from distutils.version import LooseVersion as VersionNumber
 import webbrowser
@@ -46,9 +48,8 @@ class workspace:
         # Configure Renardo's namespace to include the editor
         CodeClass.namespace['GUI'] = self
         CodeClass.namespace['Player'].widget = self
-        self.version = this_version = '0.9.13'
+        self.version = this_version = '0.9.12'
         pypi_version = get_pypi_version()
-        self.theme = COLOR_THEME
 
         def check_versions():
             # if pypi_version is not None and VersionNumber(pypi_version)
@@ -60,13 +61,19 @@ class workspace:
             return
         # Used for docstring prompt
         self.namespace = CodeClass.namespace
+        # Load theme
+        self.themes = os.path.join(FOXDOT_EDITOR_THEMES,
+                                   'themes.json')
+        #self.style = Style(theme=COLOR_THEME, themes_file=self.themes)
+        #self.style.theme_use
         # Set up master widget
-        self.root = tb.Window(themename=self.theme)
+        self.root = tb.Window()
         self.root.title("FoxDot >> Renardo")
         self.root.minsize(800, 600)
-        self.width = 1024
-        self.height = 576
-        self.root.geometry(f"{self.width}x{self.height}")
+        width = 1280
+        height = 720
+        self.root.geometry(f"{width}x{height}")
+        self.root.eval('tk::PlaceWindow . center')
         self.root.rowconfigure(0, weight=1)  # Text box
         self.root.rowconfigure(1, weight=0)  # Search box
         self.root.rowconfigure(2, weight=0)  # Separator
@@ -76,10 +83,12 @@ class workspace:
         self.root.grid_columnconfigure(1, weight=0)  # line numbers
         self.root.grid_columnconfigure(2, weight=1)  # Scrollbars
         self.root.protocol("WM_DELETE_WINDOW", self.kill)
+        self.root.style.load_user_themes(FOXDOT_EDITOR_THEMES)
+        self.root.style.theme_use(COLOR_THEME)
         # Track whether user wants transparent background
-        self.transparent = BooleanVar()
-        self.transparent.set(False)
         self.using_alpha = USE_ALPHA
+        self.transparent = BooleanVar()
+        self.transparent.set(self.using_alpha)
         # Boolean for connection
         self.listening_for_connections = BooleanVar()
         self.listening_for_connections.set(False)
@@ -92,6 +101,8 @@ class workspace:
         self.treeview_toggled.set(TREEVIEW_ON_STARTUP)
         self.linenumbers_toggled = BooleanVar()
         self.linenumbers_toggled.set(LINENUMBERS_ON_STARTUP)
+        self.midibar_toggled = BooleanVar()
+        self.midibar_toggled.set(MIDIBAR_ON_STARTUP)
         self.searchbar_toggled = BooleanVar()
         self.searchbar_toggled.set(False)
         self.console_toggled = BooleanVar()
@@ -99,9 +110,12 @@ class workspace:
         # Boolean for beat counter
         self.show_counter = BooleanVar()
         self.show_counter.set(False)
+        # Boolean for show midi val
+        self.show_midival = BooleanVar()
+        self.show_midival.set(False)
         # Boolean for showing auto-complete prompt
         self.show_prompt = BooleanVar()
-        self.show_prompt.set(True)
+        self.show_prompt.set(False)
         # --- Set icon
         try:
             # Use .ico file by default
@@ -138,6 +152,7 @@ class workspace:
         # Create y-axis scrollbar
         self.y_scroll = tb.Scrollbar(self.root)
         self.y_scroll.grid(row=0, column=3, sticky='ns')
+        # Add OpenGl frame
         # Create text box for code
         self.text = ThreadedText(self.root,
                                  padx=5,
@@ -174,7 +189,6 @@ class workspace:
         self.text.bind("<Delete>", self.delete)
         self.text.bind("<Tab>", self.tab)
         self.text.bind("<Escape>", self.toggle_fullscreen)
-        # self.text.bind("<F11>", self.toggle_true_fullscreen)
         self.text.bind("<Key>", self.keypress)
         self.text.bind("<Button-{}>".format(2 if SYSTEM == MAC_OS else 3),
                        self.show_popup)
@@ -258,6 +272,12 @@ class workspace:
         for tier in tag_weights:
             for tag_name in tier:
                 self.text.tag_config(tag_name, foreground=colour_map[tag_name])
+        # Show midibar
+        self.midibar = MidiBar(self)
+        if self.midibar_toggled.get() is True:
+            self.midibar.show()
+        else:
+            self.midibar.hide()
         # Create searchbar
         self.searchbar = SearchBar(self)
         if self.searchbar_toggled.get() is True:
@@ -282,6 +302,7 @@ class workspace:
         sys.stdout = self.console
         # Ask after widget loaded
         self.linenumbers.redraw()  # ToDo: move to generic redraw functions
+
         # Check temporary file
         def recover_work():
             with open(FOXDOT_TEMP_FILE) as f:
@@ -322,6 +343,7 @@ class workspace:
             except (KeyboardInterrupt, SystemExit):
                 # Clean exit
                 self.terminate()
+                self.root.destroy()
                 break
         # If the work has not been saved, store in a temporary file
         if not self.saved:
@@ -601,7 +623,16 @@ class workspace:
             sample_chart = SampleChart()
         except OSError as e:
             print(e)
-            print("Hmm... Looks like we couldn't open the chart app.")
+            print("Hmm... Looks like we couldn't open the sample chart app.")
+        return
+
+    def open_midi_mapper_app(self):
+        try:
+            midi_mapper = MidiMapper()
+            pass
+        except OSError as e:
+            print(e)
+            print("Hmm... Looks like we couldn't open the midi mapper app.")
         return
 
     # Toggle linenumbers: ctrl+0
@@ -625,12 +656,12 @@ class workspace:
     def toggle_console(self, event=None):
         console_toggle = self.console_toggled.get()
         if console_toggle:
-            self.menu.viewmenu.entryconfigure(5, label="Show Console")
+            self.menu.viewmenu.entryconfigure(6, label="Show Console")
             self.console.hide()
             self.text.config(height=self.text.cget('height')+self.console.height)
             self.console_toggled.set(False)
         elif not console_toggle:
-            self.menu.viewmenu.entryconfigure(5, label="Hide Console")
+            self.menu.viewmenu.entryconfigure(6, label="Hide Console")
             self.console.show()
             self.text.config(height=self.text.cget('height')-self.console.height)
             self.console_toggled.set(True)
@@ -659,13 +690,26 @@ class workspace:
         if searchbar_toggle:
             self.menu.viewmenu.entryconfigure(3, label="Show Searchbar")
             self.searchbar.hide()
-            # self.text.config(height=self.text.cget('height')+self.searchbar.height)
             self.searchbar_toggled.set(False)
         elif not searchbar_toggle:
             self.menu.viewmenu.entryconfigure(3, label="Hide Searchbar")
             self.searchbar.show()
             # self.text.config(height=self.text.cget('height')-self.searchbar.height)
             self.searchbar_toggled.set(True)
+        return
+
+    # Toggle midibar
+    # -----------------------------
+    def toggle_midibar(self, event=None):
+        midibar_toggle = self.midibar_toggled.get()
+        if midibar_toggle:
+            self.menu.viewmenu.entryconfigure(4, label="Show Midibar")
+            self.midibar.hide()
+            self.midibar_toggled.set(False)
+        elif not midibar_toggle:
+            self.menu.viewmenu.entryconfigure(4, label="Hide Midibar")
+            self.midibar.show()
+            self.midibar_toggled.set(True)
         return
 
     def toggle_menu(self, event=None):
@@ -741,6 +785,10 @@ class workspace:
 
     def toggle_counter(self, event=None):
         self.console.counter.toggle()
+        return "break"
+
+    def toggle_midival(self, event=None):
+        self.console.midival.toggle()
         return "break"
 
     # Copy/paste etc
@@ -1304,6 +1352,7 @@ class workspace:
     """
     def kill(self):
         """ Proper exit function """
+        self.midibar.close()
         self.terminate()
         self.root.destroy()
         return
@@ -1419,7 +1468,9 @@ class workspace:
         return
 
     def show_popup(self, *args):
-        """ Shows the context menu when pressing right click """
+        """
+        Shows the context menu when pressing right click
+        """
         # Show text popup
         self.popup.show(*args)
         # Hide console popup

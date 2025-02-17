@@ -2,7 +2,7 @@ psutil
 requests
 bs4
 indexed
-playsound
+soundplay
 midiutil
 python-rtmidi
 ttkbootstrap

@@ -36,8 +36,8 @@ class ThreadedText(Text):
         return self.lines
 
     def update(self):
-        """ Recursively called method that monitors as
-            queue of Tkinter tasks.
+        """
+        Recursively called method that monitors as queue of Tkinter tasks.
         """
         try:
             while True:

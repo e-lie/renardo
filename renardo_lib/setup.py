@@ -24,6 +24,7 @@ setup(
         'renardo_lib.SynthDefManagement',
         'renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings',
         'renardo_lib.Settings',
+        'renardo_lib.MidiMaps',
         'renardo_lib.Utils',
         'renardo_lib.ServerManager',
         'renardo_lib.runtime',
