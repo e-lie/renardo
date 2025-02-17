@@ -343,6 +343,7 @@ class workspace:
             except (KeyboardInterrupt, SystemExit):
                 # Clean exit
                 self.terminate()
+                self.root.destroy()
                 break
         # If the work has not been saved, store in a temporary file
         if not self.saved:
