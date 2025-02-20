@@ -4,7 +4,7 @@ var osc, env;
 sus = sus * blur;
 freq = In.kr(bus, 1);
 freq = [freq, freq+fmod];
-osc=AudioIn.ar(channel);
+osc=SoundIn.ar(channel);
 env=EnvGen.ar(Env(times: [0.01, (sus - 0.01), 0.01],levels: [0, 1, 1, 0],curve: 'lin'), doneAction: 0);
 osc=(osc * env);
 osc = Mix(osc) * 0.5;
