@@ -24,5 +24,5 @@ granular = GranularPygenSynthDef()
 
 with DefaultPygenSynthDef("audioin") as audioin:
     audioin.defaults.update(channel=1)
-    audioin.osc = AudioIn.ar(audioin.channel)
+    audioin.osc = SoundIn.ar(audioin.channel)
     audioin.env = Env.mask()
