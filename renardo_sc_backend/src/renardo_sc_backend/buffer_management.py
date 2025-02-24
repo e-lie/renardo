@@ -36,7 +36,7 @@ class Buffer:
         return self.bufnum
 
     @classmethod
-    def fromFile(cls, sample_file, number):
+    def from_file(cls, sample_file, number):
         """Create Buffer from a sample file, detecting number of channels."""
         try:
             with closing(wave.open(str(sample_file.path))) as snd:
@@ -72,10 +72,10 @@ class BufferManager:
     def __getitem__(self, key):
         """Get buffer from symbol (e.g., buffer_manager['x'])"""
         if isinstance(key, tuple):
-            return self.getBufferFromSymbol(*key)
-        return self.getBufferFromSymbol(key)
+            return self.get_buffer_from_symbol(*key)
+        return self.get_buffer_from_symbol(key)
 
-    def getBufferFromSymbol(self, symbol: str, spack: int = 0, index: int = 0) -> Buffer:
+    def get_buffer_from_symbol(self, symbol: str, spack: int = 0, index: int = 0) -> Buffer:
         """Get a buffer by its symbol representation."""
         if symbol.isspace():
             return nil
@@ -85,9 +85,9 @@ class BufferManager:
         if found_sample is None:
             return nil
 
-        return self._allocateAndLoad(found_sample)
+        return self._allocate_and_load(found_sample)
 
-    def _allocateAndLoad(self, sample_file, force=False) -> Buffer:
+    def _allocate_and_load(self, sample_file, force=False) -> Buffer:
         """Allocate and load a sample file into a buffer."""
         path_str = str(sample_file.path)
 
@@ -100,7 +100,7 @@ class BufferManager:
             if not self._available_numbers:
                 raise RuntimeError("No available buffer numbers")
             buffer_num = heapq.heappop(self._available_numbers)
-            buffer = Buffer.fromFile(sample_file, buffer_num)
+            buffer = Buffer.from_file(sample_file, buffer_num)
             self._buffers[buffer_num] = buffer
             self._path_to_buffer[path_str] = buffer
 
@@ -131,7 +131,7 @@ class BufferManager:
         heapq.heappush(self._available_numbers, buffer_num)
         return True
 
-    def freeAll(self):
+    def free_all(self):
         """Free all allocated buffers."""
         buffer_nums = list(self._buffers.keys())
         for num in buffer_nums:
@@ -140,13 +140,13 @@ class BufferManager:
     def reset(self):
         """Reset buffer manager, reloading all samples."""
         paths = list(self._path_to_buffer.keys())
-        self.freeAll()
+        self.free_all()
         for path in paths:
             sample = self._sample_library._find_sample(path)
             if sample:
-                self._allocateAndLoad(sample)
+                self._allocate_and_load(sample)
 
-    def getBuffer(self, buffer_num: int) -> Optional[Buffer]:
+    def get_buffer(self, buffer_num: int) -> Optional[Buffer]:
         """
         Get a buffer by its number.
 
@@ -158,7 +158,7 @@ class BufferManager:
         """
         return self._buffers.get(buffer_num)
 
-    def loadBuffer(self, filename: str, index: int = 0, force: bool = False) -> int:
+    def load_buffer(self, filename: str, index: int = 0, force: bool = False) -> int:
         """
         Load a sample file into a buffer by filename or pattern.
 
@@ -176,7 +176,7 @@ class BufferManager:
             return 0
 
         # Allocate and load the buffer
-        buffer = self._allocateAndLoad(found_sample, force=force)
+        buffer = self._allocate_and_load(found_sample, force=force)
         return buffer.bufnum
 
 
