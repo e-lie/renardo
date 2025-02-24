@@ -13,11 +13,6 @@ from renardo_gatherer.sample_management.sample_file import SampleFile
 #from renardo_gatherer.sample_management.default_samples import DEFAULT_SAMPLES_PACK_NAME
 from renardo_gatherer.config_dir import get_samples_dir_path
 
-#def hasext(filename):
-#    return bool(splitext(filename)[1])
-
-#supported_sound_file_extensions = ['wav', 'wave', 'aif', 'aiff', 'flac']
-
 class SamplePackLibrary:
     """Manages multiple sample packs in an ordered dictionary."""
     def __init__(self, root_directory: Path, extra_paths: List[Path]=[]):
