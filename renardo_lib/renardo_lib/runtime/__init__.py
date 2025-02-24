@@ -206,14 +206,14 @@ def _reload_synths():
     from renardo_lib import SynthDefManagement
     reload(SynthDefManagement._SynthDefs)
     reload(Effects)
-    buffer_manager.reset()
+    buffer_manager.reallocate_buffers()
     return
 
 def foxdot_reload():
     Server.init_connection()
     SynthDefs.reload()
     effect_manager.reload()
-    buffer_manager.reset()
+    buffer_manager.reallocate_buffers()
     return
 
 def _convert_json_bpm(clock, data):
@@ -294,7 +294,7 @@ class _util:
         Server.init_connection()
         SynthDefs.reload()
         effect_manager.reload()
-        buffer_manager.reset()
+        buffer_manager.reallocate_buffers()
         return
     def reassign_clock(self):
         FoxDotCode.namespace['Clock'] = _Clock
