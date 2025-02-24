@@ -1,7 +1,11 @@
-d1 >> play("X-o", room2=1)
+d1 >> play("<[--]-><-.[--]>", room2=1, rate=[1,1.2], dur=[.45,.55])
+k1 >> play("(x{x..}).x{x.}", dur=[.22,.28], sample=[3], rate=[1,1.5,.5], amp=2)
+d2 >> play("..O.", dur=var([.25,.5,.75], 8), sample=var([3,4]), amp=.3, rate=.75)
 
-s1 >> loop('foxdot', dur=4, room2=.5)
+s1 >> loop('foxdot', dur=4, room2=.5).stop()
 
 
 
 print(DefaultSamples)
+
+print(sample_packs[0])

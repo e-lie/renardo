@@ -32,7 +32,7 @@ class LoopPygenSynthDef(SamplePygenSynthDef):
         self.osc = self.osc * self.amp
         self.add()
     def __call__(self, filename, pos=0, sample=0, **kwargs):
-        kwargs["buf"] = buffer_manager.loadBuffer(filename, sample)
+        kwargs["buf"] = buffer_manager.load_buffer(filename, sample)
         proxy = SamplePygenSynthDef.__call__(self, pos, **kwargs)
         proxy.kwargs["filename"] = filename
         return proxy
@@ -46,7 +46,7 @@ class StretchPygenSynthDef(SamplePygenSynthDef):
         self.osc = self.osc * self.amp
         self.add()
     def __call__(self, filename, pos=0, sample=0, **kwargs):
-        kwargs["buf"] = buffer_manager.loadBuffer(filename, sample)
+        kwargs["buf"] = buffer_manager.load_buffer(filename, sample)
         proxy = SamplePygenSynthDef.__call__(self, pos, **kwargs)
         proxy.kwargs["filename"] = filename
         return proxy
@@ -65,6 +65,6 @@ class GranularPygenSynthDef(SamplePygenSynthDef):
         self.osc = self.osc * self.amp
         self.add()
     def __call__(self, filename, pos=0, sample=0, **kwargs):
-        kwargs["buf"] = buffer_manager.loadBuffer(filename, sample)
+        kwargs["buf"] = buffer_manager.load_buffer(filename, sample)
         return SamplePygenSynthDef.__call__(self, pos, **kwargs)
 
