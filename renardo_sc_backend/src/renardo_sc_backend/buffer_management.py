@@ -85,10 +85,10 @@ class BufferManager:
         if found_sample is None:
             return nil
 
-        return self._allocate_and_load(found_sample)
+        return self._allocate(found_sample)
 
-    def _allocate_and_load(self, sample_file, force=False) -> Buffer:
-        """Allocate and load a sample file into a buffer."""
+    def _allocate(self, sample_file, force=False) -> Buffer:
+        """Allocate and load a sample file into a SuperCollider buffer."""
         path_str = str(sample_file.path)
 
         # Check if already loaded
@@ -111,7 +111,7 @@ class BufferManager:
         self._server.bufferRead(path_str, buffer.bufnum)
         return buffer
 
-    def free(self, buffer_num: int) -> bool:
+    def free_buffer(self, buffer_num: int) -> bool:
         """Free a buffer by its number."""
         if buffer_num == 0 or buffer_num not in self._buffers:
             return False
@@ -131,20 +131,19 @@ class BufferManager:
         heapq.heappush(self._available_numbers, buffer_num)
         return True
 
-    def free_all(self):
-        """Free all allocated buffers."""
-        buffer_nums = list(self._buffers.keys())
-        for num in buffer_nums:
-            self.free(num)
-
-    def reset(self):
+    def reallocate_buffers(self):
         """Reset buffer manager, reloading all samples."""
         paths = list(self._path_to_buffer.keys())
-        self.free_all()
+
+        # Free all allocated buffers
+        buffer_nums = list(self._buffers.keys())
+        for num in buffer_nums:
+            self.free_buffer(num)
+
         for path in paths:
             sample = self._sample_library._find_sample(path)
             if sample:
-                self._allocate_and_load(sample)
+                self._allocate(sample)
 
     def get_buffer(self, buffer_num: int) -> Optional[Buffer]:
         """
@@ -176,7 +175,7 @@ class BufferManager:
             return 0
 
         # Allocate and load the buffer
-        buffer = self._allocate_and_load(found_sample, force=force)
+        buffer = self._allocate(found_sample, force=force)
         return buffer.bufnum
 
 
