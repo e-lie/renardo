@@ -1424,7 +1424,7 @@ class Player(Repeatable):
 
                 pos = 0
 
-            buf = self.samples.getBufferFromSymbol(
+            buf = self.samples.get_buffer_from_symbol(
                 str(degree), spack, sample).bufnum
 
             message.update({'buf': buf, 'pos': pos})
@@ -1522,7 +1522,7 @@ class Player(Repeatable):
             as there is a play1 and play2 SynthDef for playing audio files with
             one or two channels respectively. """
         if self.synthdef == SamplePlayer:
-            numChannels = self.samples.getBuffer(buf).channels
+            numChannels = self.samples.get_buffer(buf).channels
             if numChannels == 1:
                 synthdef = "play1"
             else:
