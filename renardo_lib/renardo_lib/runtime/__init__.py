@@ -87,7 +87,7 @@ from renardo_lib.Constants import NoneConst, const
 from renardo_lib.Midi import MidiInputHandler, MidiOut, midi, rtMidiNotFound
 
 from renardo_sc_backend import (
-    Buffer, BufferManagement, BufferManager, DESCRIPTIONS, Dict, Optional, Path,
+    Buffer, buffer_management, BufferManager, DESCRIPTIONS, Dict, Optional, Path,
     Server, SynthDefManagement, TempoServer, alpha, closing, custom_osc_lib, heapq,
     nil, settings_manager, supercollider_settings, wave
 )

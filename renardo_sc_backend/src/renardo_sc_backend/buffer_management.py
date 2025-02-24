@@ -21,7 +21,6 @@ from renardo_sc_backend.ServerManager.default_server import Server
 
 alpha    = "abcdefghijklmnopqrstuvwxyz"
 
-
 class Buffer:
     def __init__(self, sample_file, buffer_num: int, channels: int = 1):
         self.sample_file = sample_file
@@ -49,7 +48,6 @@ class Buffer:
 
 # Create empty buffer (buffer 0)
 nil = Buffer(None, 0)
-
 
 class BufferManager:
     def __init__(self, server=Server, paths=None):
