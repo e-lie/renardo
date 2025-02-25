@@ -1,4 +1,4 @@
-from renardo_lib.Utils   import modi
+from renardo_lib.Utils   import modulo_index
 from renardo_lib.TimeVar import TimeVar
 
 CHROMATIC_NOTES = ["C"," ","D"," ","E","F"," ","G"," ","A"," ","B"]
@@ -45,7 +45,7 @@ class Note:
         if type(index) is int:
 
             self.num  = index
-            self.char = modi(CHROMATIC_NOTES, index)
+            self.char = modulo_index(CHROMATIC_NOTES, index)
 
         if type(index) is float:
 

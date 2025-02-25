@@ -89,7 +89,7 @@ class TimeVar(object):
 
     @staticmethod
     def stream(values):
-        return asStream(values)
+        return as_pattern(values)
 
     @staticmethod
     def CreatePvarGenerator(func, *args, **kwargs):
@@ -136,7 +136,7 @@ class TimeVar(object):
 
         if dur is not None:
 
-            self.dur = asStream(dur)
+            self.dur = as_pattern(dur)
 
         self.values = self.stream(values)
 
@@ -275,7 +275,7 @@ class TimeVar(object):
 
     def extend(self, values, dur=None):
         data = list(self.values) + list(values)
-        durs = self.dur if not dur else list(self.dur) + list(asStream(dur))
+        durs = self.dur if not dur else list(self.dur) + list(as_pattern(dur))
         return self.__class__(data, durs)
 
     def shuf(self):
@@ -527,7 +527,7 @@ class Pvar(TimeVar):
 
         try:
 
-            data = [asStream(val) for val in values]
+            data = [as_pattern(val) for val in values]
 
         except:
 
@@ -822,8 +822,8 @@ class mapvar(Pvar):
     def __init__(self, key, mapping, default=0):
         TimeVar.__init__(self, [])
         self.key     = key
-        self.values  = {key: asStream(value) for key, value in mapping.items()}
-        self.default = asStream(default)
+        self.values  = {key: as_pattern(value) for key, value in mapping.items()}
+        self.default = as_pattern(default)
 
     def get_current_index(self, time=None):
         self.current_index = self.key.now()
