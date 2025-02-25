@@ -56,7 +56,7 @@ import threading
 import inspect
 
 from .SchedulingQueue import Queue, SoloPlayer, History, ScheduleError, Wrapper
-from renardo_lib.Players import Player
+from renardo_lib.Player import Player
 from renardo_lib.Repeat import MethodCall
 from renardo_lib.Patterns import asStream
 from renardo_lib.TimeVar import TimeVar

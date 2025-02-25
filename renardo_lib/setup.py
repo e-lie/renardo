@@ -27,6 +27,7 @@ setup(
         'renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings',
         'renardo_lib.Settings',
         'renardo_lib.Utils',
+        'renardo_lib.Player',
         'renardo_lib.ServerManager',
         'renardo_lib.TempoClock',
         'renardo_lib.preset',
