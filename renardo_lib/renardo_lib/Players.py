@@ -1,127 +1,3 @@
-"""    
-    Players are what make FoxDot make music. They are similar in design to
-    SuperCollider's `PDef` and `PBind` combo but with slicker syntax. FoxDot
-    uses SuperCollider to *actually* make the sound and does so by triggering
-    predefined `SynthDefs` - sort of like definitions of a digital instruments.
-    To have a look at the list of `SynthDefs`, you can just `print` them to
-    the console: ::
-
-        print(SynthDefs)
-
-    Each one of these represents a `SynthDef` *object*. These objects are then
-    given to Players to play - like giving an instrument to someone in your
-    orchestra. To give someone the instrument, `pads`, you use a double arrow
-    some code syntax like this: ::
-
-        p1 >> pads()
-
-    To stop a Player, use the `stop` method e.g. `p1.stop()`. If you want to
-    stop all players, you can use the command `Clock.clear()` or the keyboard
-    shortcut `Ctrl+.`, which executes this command.
-
-    `p1` is the name of a predefined player object. At startup, FoxDot reserves
-    all one- and two-character variable names, such as `x`, `p1`, or `bd` for
-    player objects but these can be repurposed if you like. If you want to use
-    a variable name for a player object with more than two characters, you just
-    instantiate a new `Player` object: ::
-
-        foo = Player()
-
-        foo >> pads()
-
-    Changing parameters
-    -------------------
-
-    By default, player objects play the first note of their default scale (more
-    below) with a duration of 1 beat per note. To change the pitch just give the
-    `SynthDef` a list of numbers. ::
-
-        p1 >> pads([0,7,6,4])
-
-    Play multiple pitches together by putting them in round brackets: ::
-
-        p1 >> pads([0,2,4,(0,2,4)])
-    
-    When you start FoxDot up, your clock is ticking at 120bpm and your player
-    objects are all playing in the major scale. With 8 pitches in the major scale,
-    the 0 refers to the first pitch and the 7 refers to the pitch one octave
-    higher because Python, like most programming languages, uses zero-indexing.
-    To change your scale you can specify a new scale as a keyword argument (see
-    the documentation on `Scales` for more information on scales) or change the
-    default scale for all player objects. ::
-
-        # Changing scale as a keyword argument
-        p1 >> pads([0,7,6,4], scale=Scale.minor)
-
-        # Changing the default scalew (the following are equivalent)
-        Scale.default.set("minor")
-        Scale.default.set(Scale.minor)
-        Scale.default.set([0,2,3,5,7,8,10])
-
-        # See a list of scales
-        print Scale.names()
-
-        # Change the tempo (this takes effect at the next bar)
-        Clock.bpm = 144
-
-    To change the rhythm of your player object, specify the durations using
-    the `dur` keyword. Other keywords can be specified, such as `oct` for the
-    octave and `sus` for the sustain, which is the same as the duration by
-    default. ::
-
-        p1 >> pads([0,7,6,4], dur=[1,1/2,1/4,1/4], oct=6, sus=1)
-
-        # See a list of possible keyword arguments
-        print(Player.get_attributes())
-
-    Using the `play` SynthDef
-    -------------------------
-
-    There is a special case SynthDef object called `play` which allows you
-    to play short audio files rather than specify pitches. In this case
-    you use a string of characters as the first argument where each character
-    refers to a different folder of audio files. You can see more information
-    by evaluating `print(DefaultSamples)`. The following line of code creates
-    a basic drum beat: ::
-
-        d1 >> play("x-o-")
-
-    To play multiple patterns simultaneously, you can create a new `play` object. This
-    is useful if you want to have different attributes for each player. ::
-        
-        bd >> play("x( x)  ", dur=1)
-        hh >> play("---[--]", dur=[1/2,1/2,1/4], rate=4)
-        sn >> play("  o ", rate=(.9,1), pan=(-1,1))
-
-    Grouping characters in round brackets laces the pattern so that on each
-    play through of the sequence of samples, the next character in the group's
-    sample is played. The sequence `(xo)---` would be played back as if it
-    were entered `x---o---`. Using square brackets will force the enclosed samples
-    to played in the same time span as a single character e.g. `--[--]` will play
-    two hi-hat hits at a half beat then two at a quarter beat. You can play a
-    random sample from a selection by using curly braces in your Play String
-    like so: ::
-
-        d1 >> play("x-o{-[--]o[-o]}")
-
-    FoxDot Player Object Keywords
-    -----------------------------
-
-    dur - Durations (defaults to 1 and 1/2 for the Sample Player)
-
-    sus - Sustain (defaults to `dur`)
-
-    amp - Amplitude (defaults to 1)
-
-    rate - Variable keyword used for misc. changes to a signal. E.g. Playback rate of the Sample Player (defaults to 1)
-
-    delay - A duration of time to wait before sending the information to SuperCollider (defaults to 0)
-
-    sample - Special keyword for Sample Players; selects another audio file from the bank of samples for a sample character.
-    
-
-"""
-
 from copy import copy
 
 from renardo_sc_backend import SamplePlayer, LoopPlayer
@@ -145,8 +21,10 @@ from renardo_reaper.ReaperIntegrationLib.ReaTrack import ReaTrack
 
 
 class EmptyPlayer(object):
-    """ Place holder for Player objects created at run-time to reduce load time.
     """
+    Placeholder for Player objects created at run-time to reduce load time.
+    """
+
     def __init__(self, name):
         self.name = name
 
@@ -161,19 +39,24 @@ class EmptyPlayer(object):
         return self
 
     def __invert__(self):
+        """ Using the ~ syntax resets the player """
         return self.reset()
 
     def __getattribute__(self, name):
         """ Tries to return the correct attr; if not init the Player and try again """
         try:
+            # Try to return the attribute
             return object.__getattribute__(self, name)
         except AttributeError:
+            # If the attribute doesn't exist, initialize the Player and try again
             self.__class__ = Player
             self.__init__(self.name)
             try:
+                # Try to return the attribute again
                 return self.__getattribute__(name)
             except AttributeError:
-                return self.__getattr__(name) # use getattr to make sure we return player key
+                # If the attribute still doesn't exist, use getattr to make sure we return player key
+                return self.__getattr__(name)
 
 
 class Player(Repeatable):
@@ -205,24 +88,15 @@ class Player(Repeatable):
         p1 >> proxy_2 # This replaces the instructions being followed by p1
     """
 
-    # Set private values
-
     debug = 0
-
     __vars = []
     __init = False
-
-    # Really need to tidy this up
 
     keywords = ('degree', 'oct', 'freq', 'dur', 'delay', 'buf',
                 'blur', 'amplify', 'scale', 'bpm', 'sample', 'spack', "env")
 
     envelope_keywords = ("atk", "decay", "rel", "legato", "curve", "gain")
-
-    # Base attributes
-    
-    base_attributes = ('sus', 'fmod', 'pan', 'rate', 'amp', 'midinote', 'channel') 
-
+    base_attributes = ('sus', 'fmod', 'pan', 'rate', 'amp', 'midinote', 'channel')
     required_keys = ("amp", "sus")
     
     internal_keywords = tuple(value for value in keywords if value != "degree")
@@ -231,7 +105,6 @@ class Player(Repeatable):
     update_delay = 0
 
     # Aliases
-
     alias = { "pitch" : "degree",
               "char"  : "degree" }
 
@@ -256,7 +129,6 @@ class Player(Repeatable):
     def __init__(self, name=None):
 
         # Inherit from repeatable i.e. x.every
-
         Repeatable.__init__(self)
 
         self.method_synonyms["->"] = "rshift"
@@ -292,7 +164,6 @@ class Player(Repeatable):
         # self.sent_messages = []
 
         # Visual feedback information
-
         self.envelope    = None
         self.line_number = None
         self.whitespace  = None
@@ -300,7 +171,6 @@ class Player(Repeatable):
         self.bang_kwargs = {}
 
         # Keeps track of which note to play etc
-
         self.event_index = 0
         self.event_n = 0
         self.notes_played = 0
@@ -308,7 +178,6 @@ class Player(Repeatable):
         self.accessed_keys = []
 
         # Used for checking clock updates
-
         self.current_dur = None
         self.old_pattern_dur = None
         self.old_dur = None
@@ -320,39 +189,37 @@ class Player(Repeatable):
 
         self.attr = {}
 
-        # These dict contains extra attributes of a SynthDef
-        self.extra_attr = {}
+        # # These dict contains extra attributes of a SynthDef
+        # self.extra_attr = {}
 
-        self.default_args = ('sus',
-                             'fmod',
-                             'pan',
-                             'rate',
-                             'amp',
-                             'midinote',
-                             'channel',
-                             'freq',
-                             'vib',
-                             'bus',
-                             'blur',
-                             'beat_dur',
-                             'atk',
-                             'decay',
-                             'rel',
-                             'peak',
-                             'level')
+        # self.default_args = ('sus',
+        #                      'fmod',
+        #                      'pan',
+        #                      'rate',
+        #                      'amp',
+        #                      'midinote',
+        #                      'channel',
+        #                      'freq',
+        #                      'vib',
+        #                      'bus',
+        #                      'blur',
+        #                      'beat_dur',
+        #                      'atk',
+        #                      'decay',
+        #                      'rel',
+        #                      'peak',
+        #                      'level')
 
         self.modifier = Pattern()
         self.mod_data = 0
         self.filename = None
 
         # Keyword arguments that are used internally
-
         self.scale = None
         self.offset  = 0
         self.following = None
         
         # List the internal variables we don't want to send to SuperCollider
-
         self.__vars = list(self.__dict__.keys())
         self.__init = True
 
@@ -492,16 +359,62 @@ class Player(Repeatable):
         except KeyError:
             err = "Player Object has no attribute '{}'".format(name)
             raise AttributeError(err)
+    # Player Object Manipulation
+    
+    def __rshift__(self, other):
+        """
+        Handles the allocation of SynthDef objects using >> syntax, other must be
+        an instance of `SynthDefProxy`, which is usually created when calling a
+        `SynthDef`
+        """
+        if isinstance(other, SynthDefProxy):
+            # Call the update method
+            self.update(other.name, other.degree, **other.kwargs)
+
+            # self.update_pattern_root('sample' if self.synthdef == SamplePlayer else 'degree')
+            for method, arguments in other.methods:
+                args, kwargs = arguments
+                getattr(self, method).__call__(*args, **kwargs)
+            # Add the modifier (check if not 0 to stop adding 0 to values)
+            if (not isinstance(other.mod, (int, float))) or (other.mod != 0):
+                self + other.mod
+            return self
+        raise TypeError("{} is an innapropriate argument type for PlayerObject".format(other))
+
+
+    def test_for_circular_reference(self, value, attr, last_player=None, last_attr=None):
+        """ Used to raise an exception if a player's attribute refers to itself e.g. `p1 >> pads(dur=p1.dur)` """
+        # We are setting self.attr to value, check if value depends on self.attr
+
+        if isinstance(value, PGroup):
+            for item in value:
+                self.test_for_circular_reference(item, attr, last_player, last_attr)
+
+        elif isinstance(value, PlayerKey):
+            # If the Player key relies on this player.attr, raise error
+            if value.cmp(self, attr):
+                ident_self = value.name()
+                if last_player is not None:
+                    ident_other = "{}.{}".format(last_player.id, last_attr)
+                else:
+                    ident_other = ident_self
+                err = "Circular reference found: {} to itself via {}".format(ident_self, ident_other)
+
+                raise ValueError(err)
+
+            elif last_player == value.player and last_attr == value.attr:
+                return
+            else:
+                # Go through the player key's
+                for item in value.get_player_attribute():
+                    self.test_for_circular_reference(item, attr, value.player, value.attr)
         return
 
+
     def __setattr__(self, name, value):
-
         # Possibly replace with slots?
-
         if self.__init:
-
             # Force the data into a Pattern if the attribute is used with SuperCollider
-            
             if name not in self.__vars:
                 # Apply the parameter in reaper if it exists
                 if "reatrack" in self.attr.keys():
@@ -512,72 +425,77 @@ class Player(Repeatable):
                             set_reaper_param(reatrack, name, value)
                             return
                 # Get any alias
-
                 name = self.alias.get(name, name)
-
                 value = asStream(value)
-
                 for item in value:
-
-                    self._test_for_circular_reference(item, name)
+                    self.test_for_circular_reference(item, name)
 
                 # Update the attribute dict if no error
-                
                 self.attr[name] = value
 
                 # Remove from the stored pattern dict / call those
-
                 self.update_pattern_root(name)
 
                 # keep track of what values we change with +-
-                if (self.synthdef == SamplePlayer and name == "sample")\
-                or (self.synthdef != SamplePlayer and name == "degree")\
-                or (self.synthdef == SamplePlayer and name == "sdb"):
+                if (self.synthdef == SamplePlayer and name == "sample") or (self.synthdef == SamplePlayer and name == "spack") or (self.synthdef != SamplePlayer and name == "degree"):
                     self.modifier = value
 
                 # Update any playerkey
-
                 if name in self.__dict__:
-
                     if isinstance(self.__dict__[name], PlayerKey):
-
                         self.__dict__[name].update_pattern()
-
                 # self.update_player_key(name, 0, 0)
-
                 return
             
         self.__dict__[name] = value
-
         return
 
-    def _test_for_circular_reference(self, value, attr, last_player=None, last_attr=None):
-        """ Used to raise an exception if a player's attribute refers to itself e.g. `p1 >> pads(dur=p1.dur)` """
-        # We are setting self.attr to value, check if value depends on self.attr
-        if isinstance(value, PGroup):
-            for item in value:
-                self._test_for_circular_reference(item, attr, last_player, last_attr)
-        elif isinstance(value, PlayerKey):
-            # If the Player key relies on this player.attr, raise error
-            if value.cmp(self, attr):
-                ident_self = value.name()
-                if last_player is not None:
-                    ident_other = "{}.{}".format(last_player.id, last_attr)
-                else:
-                    ident_other = ident_self
-                raise ValueError(f"Circular reference found: {ident_self} to itself via {ident_other}")
-            elif last_player == value.player and last_attr == value.attr:
-                return
-            else:
-                # Go through the player key's
-                for item in value.get_player_attribute():
-                    self._test_for_circular_reference(item, attr, value.player, value.attr)
+
+    def __getattr__(self, name):
+        try:
+            # This checks for aliases, not the actual keys
+            name = self.alias.get(name, name)
+            if name in self.attr and name not in self.__dict__:
+                # Return a Player key
+                self.update_player_key(name, self.now(name), 0)
+
+            item = self.__dict__[name]
+            # If returning a player key, keep track of which are being accessed
+            if isinstance(item, PlayerKey) and name not in self.accessed_keys:
+                self.accessed_keys.append(name)
+            return item
+        
+        except KeyError:
+            err = "Player Object has no attribute '{}'".format(name)
+            raise AttributeError(err)
         return
 
-    ##################################
-    #######   Startup methods   ######
-    ##################################
 
+    def __getattribute__(self, name):
+        # This checks for aliases, not the actual keys
+        name = Player.alias.get(name, name)
+        item = object.__getattribute__(self, name)
+        if isinstance(item, PlayerKey):
+            if name not in self.accessed_keys:
+                self.accessed_keys.append(name)
+        return item
+
+    def __getitem__(self, name):
+        if self.__init:
+            if name not in self.__vars:
+                return self.attr[name]
+            pass
+        return self.__dict__[name]
+
+    def __eq__(self, other):
+        "equal operator"
+        return self is other
+
+    def __ne__(self, other):
+        "not equal"
+        return not self is other
+
+    # --- Startup methods
     def reset(self):
         """ Sets all Player attributes to 0 unless their default is specified by an effect. Also
             can be called by using a tilde before the player variable. E.g. ~p1 """
@@ -587,18 +505,15 @@ class Player(Repeatable):
         reset = []
 
         for key in Player.Attributes():
-
             if key not in ("scale", "dur", "sus", "blur", "amp",
                             "amplify", "degree", "oct", "bpm", "vol"): # fix volume bug
 
                 setattr(self, key, 0)
-
             reset.append(key)
 
         # Set any non zero defaults for effects, e.g. verb=0.25
 
         for key in Player.fx_attributes:
-
             value = effect_manager.defaults[key]
 
             if key not in ("vol"): # fix volume bug
@@ -607,23 +522,16 @@ class Player(Repeatable):
             reset.append(key)
 
         # Set SynthDef defaults
-
         if self.synthdef in SynthDefs:
-
             synth = SynthDefs[self.synthdef]
-            
             for key in ("atk", "decay", "rel"):
-
                 setattr(self, key, synth.defaults[key])
-
                 reset.append(key)
 
         # Any other attribute that might have been used - set to 0
 
         for key in self.attr:
-
             if key not in reset:
-
                 setattr(self, key, 0)
 
         # Set any non-zero values for FoxDot
@@ -631,16 +539,21 @@ class Player(Repeatable):
         # Sustain & Legato
         self.sus     = 0.5 if self.synthdef == SamplePlayer else 1
         self.blur    = 1
-
         # Amplitude
         self.amp     = 1
         self.amplify = 1
-        self.dur = 0.5 if self.synthdef == SamplePlayer else 1  # Duration of notes
-        self.degree = " " if self.synthdef is SamplePlayer else 0  # Degree of scale / Characters of samples
-        self.oct = 5  # Octave of the note
-        self.bpm = None  # Tempo
-        self.output = 2  # Output (Elie's hexaphonic setup)
-        self.stop_calling_all()  # Stop calling any repeating methods
+        # Duration of notes
+        self.dur     = 0.5 if self.synthdef == SamplePlayer else 1
+        # Degree of scale / Characters of samples
+        self.degree  = " " if self.synthdef is SamplePlayer else 0
+        # Octave of the note
+        self.oct     = 5
+        # Tempo
+        self.bpm     = None
+         # Output (Elie's multiphonic setup WIP)
+        self.output = 2
+        # Stop calling any repeating methods
+        self.stop_calling_all()
         return self
 
     def __invert__(self):
@@ -648,37 +561,26 @@ class Player(Repeatable):
         return self.reset()
 
     # --- Update methods
-
     def __call__(self, **kwargs):
-        """ Sends the next osc message event to SuperCollider and schedules this
-            Player in the clock based on the current clock time and this player's
-            current duration value. """
+        """Sends the next osc message event to SuperCollider and schedules this
+        Player in the clock based on the current clock time and this player's
+        current duration value."""
 
         # If stopping, kill the event
-
         if self.stopping and self.metro.now() >= self.stop_point:
-            
             self.kill()
-            
             return
 
         # If the duration has changed, work out where the internal markers should be
-
         # -- This could be in its own private function
-
         force_count = kwargs.get("count", False)
         dur_updated = self.dur_updated() 
 
         if dur_updated or force_count is True:
-
             try:
-
                 self.event_n, self.event_index = self.count(self.event_index if not force_count else None)
-
             except TypeError as e:
-
                 print(e)
-
                 print("TypeError: Innappropriate argument type for 'dur'")
 
         # Get the current state 
@@ -686,115 +588,77 @@ class Player(Repeatable):
         self._get_event()
 
         # Play the note
-        
         if not isinstance(self.event["dur"], Rest):
-
             try:
                 self._send_osc_messages_to_server(verbose=(self.metro.solo == self and kwargs.get('verbose', True)))
-
             except Exception as err:
-
                 print("Error in Player {}: {}".format(self.id, err))
         
         # If using custom bpm
-
         dur = self.event["dur"]
 
         if self.event['bpm'] is not None:
-
             try:
-
                 tempo_shift = float(self.metro.bpm) / float(self.event['bpm'])
-
             except (AttributeError, TypeError, ZeroDivisionError):
-
                 tempo_shift = 1
-
             dur *= tempo_shift
 
         # Schedule the next event (could move before get_event and use the index for get_event)
-
         self.event_index = self.event_index + dur
-
         self.metro.schedule(self, self.event_index, kwargs={})
 
         # Change internal marker
-
-        self.event_n += 1 
+        self.event_n += 1
         self.notes_played += 1
-
         return
+
 
     def count(self, time=None, event_after=False):
         """ Counts the number of events that will have taken place between 0 and `time`. If
             `time` is not specified the function uses self.metro.now(). Setting `event_after`
             to `True` will find the next event *after* `time`"""
-
         n = 0
         acc = 0
         dur = 0
         now = (time if time is not None else self.metro.now())
 
         if self.current_dur is None:
-
             self.current_dur = self.rhythm()
-
         durations = list(map(get_first_item, self.current_dur)) # careful here
-        
         total_dur = float(sum(durations))
-
         if total_dur == 0:
-
             WarningMsg("Player object has a total duration of 0. Set to 1")
-
             durations = [1]
             total_dur =  1 
             self.dur  =  1
-    
         acc = now - (now % total_dur)
 
         try:
-
             n = int(len(durations) * (acc / total_dur))
-
         except TypeError as e:
-
             WarningMsg(e)
-
             self.stop()
-
             return 0, 0
 
         if acc != now:
-
             while True:
-
                 dur = float(modi(durations, n))
-
                 if acc + dur == now:
-
                     acc += dur
-
                     n += 1
-
                     break
 
                 elif acc + dur > now:
-
                     if event_after:
-
                         acc += dur
                         n += 1
-
                     break
-
                 else:
-                    
                     acc += dur
                     n += 1
 
         # Returns value for self.event_n and self.event_index
-
         return n, acc
 
     def dur_updated(self):
@@ -833,17 +697,11 @@ class Player(Repeatable):
         return self
 
     def update(self, synthdef, degree, **kwargs):
-        """ Updates the attributes of the player. Called using the >> syntax.
-        """
-
+        """ Updates the attributes of the player. Called using the >> syntax."""
         # SynthDef name
-        
         self.synthdef = synthdef
-
         # Make sure all values are reset to start
-
         if "filename" in kwargs:
-
             self.filename = kwargs["filename"]
             del kwargs["filename"]
 
@@ -852,102 +710,63 @@ class Player(Repeatable):
             del kwargs["midi_map"]
 
         if self.isplaying is False:
-
-            self.reset() 
+            self.reset()
 
         # If there is a designated solo player when updating, add this at next bar
-        
         if self.metro.solo.active() and self.metro.solo != self:
-
             self.metro.schedule(lambda *args, **kwargs: self.metro.solo.add(self), self.metro.next_bar())
 
         # Update the attribute values
-
         special_cases = ["scale", "root", "dur"]
 
         # Set the degree
-
         if synthdef == SamplePlayer:
-
             if type(degree) == str:
-
                 self.playstring = degree
-
             else:
-
                 self.playstring = None
-
             if degree is not None:
-
                 setattr(self, "degree", degree if degree != "" else " ")
-
         elif degree is not None:
-
             self.playstring = str(degree) # this doesn't work for var!
-
             setattr(self, "degree", degree)
-
         else:
-
-            setattr(self, "degree", 0)            
-
+            setattr(self, "degree", 0)
 
         # Set special case attributes
-
         self.scale = kwargs.get("scale", self.__class__.default_scale )
         self.root  = kwargs.get("root",  self.__class__.default_root )
 
         # If only duration is specified, set sustain to that value also
-
         if "dur" in kwargs:
-
             # If we use tuples / PGroups in setting duration, use it to modify delay using the PDur algorithm
-
             setattr(self, "dur", kwargs["dur"])
-
             if "sus" not in kwargs:
-
                 self.sus = self.attr['dur']
 
         # Set any other attributes
-
         for name, value in kwargs.items():
-
             if name not in special_cases:
-
                 setattr(self, name, value)
 
         # Calculate new position if not already playing
-
         if self.isplaying is False:
-
             # Add to clock
-            
             self.isplaying = True
             self.stopping = False
 
             # If we want to update now, set the start point to now
-
             after = True
-
             if self.metro.now_flag:
-
                 start_point = self.metro.now()
-
                 after = False
-
             elif kwargs.get("quantise", True) == False:
-
                 start_point = self.metro.now()
-
             else:
-            
                 start_point = self.metro.next_bar()
 
             self.event_n = 0
-
             self.event_n, self.event_index = self.count(start_point, event_after=after)
-
             self.metro.schedule(self, self.event_index)
 
         return self
