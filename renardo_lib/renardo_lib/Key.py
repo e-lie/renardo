@@ -381,7 +381,7 @@ class PlayerKey(NumberKey):
             self.attr    = attr
             self.player = player
 
-        # self.pattern = asStream(self.parent.attr[self.key]) if self.parent is not None else asStream([]) #
+        # self.pattern = as_pattern(self.parent.attr[self.key]) if self.parent is not None else as_pattern([]) #
         # self.pattern = NumberKey().transform(lambda x: self.player.attr[self.attr])
 
         self.last_updated = 0
@@ -418,9 +418,9 @@ class PlayerKey(NumberKey):
     # Could be removed
     def update_pattern(self):
         # try:
-        #     self.pattern[:] = asStream(self.parent.attr[self.key])
+        #     self.pattern[:] = as_pattern(self.parent.attr[self.key])
         # except TypeError:
-        #     self.pattern = asStream(self.parent.attr[self.key])
+        #     self.pattern = as_pattern(self.parent.attr[self.key])
         return
 
 

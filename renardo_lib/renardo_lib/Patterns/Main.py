@@ -8,7 +8,7 @@ from renardo_lib.Patterns.Operations import (
     PPow, PMod2, PPow2, PEq, Div, rDiv, Add, Sub, rSub, Mul, Mod,
     rMod, Nil, PNe
 )
-from renardo_lib.Utils import LCM, dots, modi
+from renardo_lib.Utils import LCM, dots, modulo_index
 
 import functools
 import inspect
@@ -55,7 +55,7 @@ def loop_pattern_method(f):
         # Force pattern types if using lists/tuples
         args = [PatternFormat(arg) for arg in args]
         for i in range(LCM(*[len(arg) for arg in args if (hasattr(arg, '__len__') and not isinstance(arg, PGroup))])):
-            pat |= f(self, *[(modi(arg, i) if not isinstance(arg, PGroup) else arg) for arg in args])
+            pat |= f(self, *[(modulo_index(arg, i) if not isinstance(arg, PGroup) else arg) for arg in args])
         return pat
 
     new_function.argspec = inspect.getfullargspec(f)
@@ -75,8 +75,6 @@ def ClassPatternMethod(f):
     ''' Decorator that makes a function into a metaPattern class method'''
     setattr(metaPattern, f.__name__, classmethod(f))
     return
-
-# Begin Pattern Abstratct Base Class
 
 class metaPattern(object):
     """ Abstract base class for Patterns """
@@ -421,7 +419,7 @@ class metaPattern(object):
 
     def __ror__(self, other):
         """ Use the '|' symbol to 'pipe' Patterns into on another """
-        return asStream(other).concat(self)
+        return as_pattern(other).concat(self)
 
     # Zipping patterns together using the '&' operator
 
@@ -429,7 +427,7 @@ class metaPattern(object):
         return self.zip(other)
 
     def __rand__(self, other):
-        return asStream(other).zip(self)
+        return as_pattern(other).zip(self)
     
     #  Comparisons --> this might be a tricky one
     def __eq__(self, other):
@@ -437,21 +435,21 @@ class metaPattern(object):
     def __ne__(self, other):
         return PNe(self, other)
     def eq(self, other):
-        return self.new([int(value == modi(asStream(other), i)) for i, value in enumerate(self)])
+        return self.new([int(value == modulo_index(as_pattern(other), i)) for i, value in enumerate(self)])
     def ne(self, other):
-        return self.new([int(value != modi(asStream(other), i)) for i, value in enumerate(self)])
+        return self.new([int(value != modulo_index(as_pattern(other), i)) for i, value in enumerate(self)])
     # def gt(self, other):
-    #     return self.__class__([int(value > modi(asStream(other), i)) for i, value in enumerate(self)])
+    #     return self.__class__([int(value > modi(as_pattern(other), i)) for i, value in enumerate(self)])
     # def lt(self, other):
-    #     return self.__class__([int(value < modi(asStream(other), i)) for i, value in enumerate(self)])
+    #     return self.__class__([int(value < modi(as_pattern(other), i)) for i, value in enumerate(self)])
     # def ge(self, other):
-    #     return self.__class__([int(value >= modi(asStream(other), i)) for i, value in enumerate(self)])
+    #     return self.__class__([int(value >= modi(as_pattern(other), i)) for i, value in enumerate(self)])
     # def le(self, other):
-    #     return self.__class__([int(value <= modi(asStream(other), i)) for i, value in enumerate(self)])
+    #     return self.__class__([int(value <= modi(as_pattern(other), i)) for i, value in enumerate(self)])
     def __gt__(self, other):
-        #return self.__class__([int(value > modi(asStream(other), i)) for i, value in enumerate(self)])
+        #return self.__class__([int(value > modi(as_pattern(other), i)) for i, value in enumerate(self)])
         values = []
-        other = asStream(other)
+        other = as_pattern(other)
         for i, value in enumerate(self): # possibly LCM in future
             value = value > other[i]
             if not isinstance(value, PGroup):
@@ -460,9 +458,9 @@ class metaPattern(object):
         return self.new(values)
 
     def __ge__(self, other):
-        #return self.__class__([int(value >= modi(asStream(other), i)) for i, value in enumerate(self)])
+        #return self.__class__([int(value >= modi(as_pattern(other), i)) for i, value in enumerate(self)])
         values = []
-        other = asStream(other)
+        other = as_pattern(other)
         for i, value in enumerate(self): # possibly LCM in future
             value = value >= other[i]
             if not isinstance(value, PGroup):
@@ -471,9 +469,9 @@ class metaPattern(object):
         return self.new(values)
 
     def __lt__(self, other):
-        #return self.__class__([int(value < modi(asStream(other), i)) for i, value in enumerate(self)])
+        #return self.__class__([int(value < modi(as_pattern(other), i)) for i, value in enumerate(self)])
         values = []
-        other = asStream(other)
+        other = as_pattern(other)
         for i, value in enumerate(self): # possibly LCM in future
             value = value < other[i]
             if not isinstance(value, PGroup):
@@ -482,9 +480,9 @@ class metaPattern(object):
         return self.new(values)
 
     def __le__(self, other):
-        #return self.__class__([int(value <= modi(asStream(other), i)) for i, value in enumerate(self)])
+        #return self.__class__([int(value <= modi(as_pattern(other), i)) for i, value in enumerate(self)])
         values = []
-        other = asStream(other)
+        other = as_pattern(other)
         for i, value in enumerate(self): # possibly LCM in future
             value = value <= other[i]
             if not isinstance(value, PGroup):
@@ -571,12 +569,12 @@ class metaPattern(object):
         Use strict=True to force generator patterns to return the
         same value `n` times in a row.
         """
-        n = asStream(n)
+        n = as_pattern(n)
         lrg = max(len(self.data), len(n))
         new = []
         for i in range(lrg):
-            for j in range(modi(n,i)):
-                item = modi(self.data,i)
+            for j in range(modulo_index(n, i)):
+                item = modulo_index(self.data, i)
                 if strict and isinstance(item, GeneratorPattern):
                     item = item.copy()
                 new.append(item)
@@ -601,12 +599,12 @@ class metaPattern(object):
             P[0,4,8,1,5,9,2,6,8,3,7,9]
             ```
         """
-        sequences = (self, asStream(seq)) + tuple(asStream(s) for s in seqs)
+        sequences = (self, as_pattern(seq)) + tuple(as_pattern(s) for s in seqs)
         size = LCM(*[len(s) for s in sequences])
         new = []
         for i in range(size):
             for seq in sequences:
-                new.append(modi(seq, i))
+                new.append(modulo_index(seq, i))
         return self.new(new)
 
     def invert(self):
@@ -660,7 +658,7 @@ class metaPattern(object):
         """ Stretches (repeats) the contents until len(Pattern) == size """
         new = []
         for n in range(size):
-            new.append( modi(self.data, n) )
+            new.append(modulo_index(self.data, n))
         new = self.new(new)
         return new
 
@@ -669,7 +667,7 @@ class metaPattern(object):
         """ Shortens a pattern until it's length is equal to size - cannot be greater than the length of the current pattern  """
         new = []
         for n in range(min(len(self), size)):
-            new.append( modi(self.data, n) )
+            new.append(modulo_index(self.data, n))
         new = self.new(new)
         return new
 
@@ -679,7 +677,7 @@ class metaPattern(object):
         new = []
         data = self.mirror().data
         for n in range(min(len(self), size)):
-            new.append( modi(data, n) )
+            new.append(modulo_index(data, n))
         new = self.new(new).mirror()
         return new
 
@@ -824,12 +822,12 @@ class metaPattern(object):
         """ Removes values from the pattern if the same index in selector is 0. 
             Similar to .select() but maximum length of the new Pattern is the 
             length of the initial Pattern.  """
-        s = asStream(selector)
+        s = as_pattern(selector)
         return self.new([self[i] for i in range(len(self)) if s[i]])
 
     def select(self, selector):
         """ Removes values from the pattern if the same index in selector is 0  """
-        s = asStream(selector)
+        s = as_pattern(selector)
         # Don't do anything if all values are 1
         if all([value == 1 for value in s]):
             return self
@@ -886,7 +884,7 @@ class metaPattern(object):
         return self
 
     def set(self, index, value):
-        self.data[index] = asStream(value)
+        self.data[index] = as_pattern(value)
         return self
 
     # Boolean tests
@@ -925,7 +923,7 @@ class metaPattern(object):
             element from each of the argument sequences. The length of the pattern
             is the lowest common multiple of the lengths of the two joining patterns. """
         new = []
-        other = asStream(other)
+        other = as_pattern(other)
         for i in range(LCM(len(self.data), len(other.data))):
             item1 = self.data[i % len(self.data)]
             item2 = other.data[i % len(other.data)]
@@ -939,7 +937,7 @@ class metaPattern(object):
 
         output = Pattern()
 
-        other  = asStream(other)
+        other  = as_pattern(other)
 
         dtype = PGroup if dtype is None else dtype
 
@@ -970,7 +968,7 @@ class metaPattern(object):
     
     def deepzip(self, other):
         new = []
-        other = asStream(other)
+        other = as_pattern(other)
         for i in range(LCM(len(self.data), len(other.data))):
             p1 = self.data[i % len(self.data)]
             p2 = other.data[i % len(other.data)]
@@ -985,7 +983,7 @@ class metaPattern(object):
 
     def deeprzip(self, other):
         new = []
-        other = asStream(other)
+        other = as_pattern(other)
         for i in range(LCM(len(self.data), len(other.data))):
             p1 = self.data[i % len(self.data)]
             p2 = other.data[i % len(other.data)]
@@ -1222,7 +1220,7 @@ class PGroup(metaPattern):
         if isinstance(other, Pattern):
             return other.ne(self)
         for i, item in enumerate(self.data): # possibly LCM?
-            item = item != modi(other,i)
+            item = item != modulo_index(other, i)
             if not isinstance(item, metaPattern):
                 item = int(item)
             values.append(item)
@@ -1239,7 +1237,7 @@ class PGroup(metaPattern):
         if isinstance(other, Pattern):
             return other.eq(self)
         for i, item in enumerate(self.data): # possibly LCM?
-            item = item == modi(other,i)
+            item = item == modulo_index(other, i)
             if not isinstance(item, metaPattern):
                 item = int(item)
             values.append(item)
@@ -1262,7 +1260,7 @@ class PGroup(metaPattern):
         if isinstance(other, Pattern):
             return other < self
         for i, item in enumerate(self): # possibly LCM
-            item = item > modi(other,i)
+            item = item > modulo_index(other, i)
             if not isinstance(item, metaPattern):
                 item = int(item)
             values.append(item)
@@ -1274,7 +1272,7 @@ class PGroup(metaPattern):
         if isinstance(other, Pattern):
             return other > self
         for i, item in enumerate(self): # possibly LCM
-            item = item < modi(other,i)
+            item = item < modulo_index(other, i)
             if not isinstance(item, metaPattern):
                 item = int(item)
             values.append(item)
@@ -1286,7 +1284,7 @@ class PGroup(metaPattern):
         if isinstance(other, Pattern):
             return other <= self
         for i, item in enumerate(self): # possibly LCM
-            item = item >= modi(other,i)
+            item = item >= modulo_index(other, i)
             if not isinstance(item, metaPattern):
                 item = int(item)
             values.append(item)
@@ -1298,7 +1296,7 @@ class PGroup(metaPattern):
         if isinstance(other, Pattern):
             return other >= self
         for i, item in enumerate(self): # possibly LCM
-            item = item <= modi(other,i)
+            item = item <= modulo_index(other, i)
             if not isinstance(item, metaPattern):
                 item = int(item)
             values.append(item)
@@ -1365,7 +1363,7 @@ class GeneratorPattern:
         new = GeneratorPattern()
         new.parent = self
         new.name   = new.parent.name
-        new.other  = asStream(other) # We want to store the pattern I think?
+        new.other  = as_pattern(other) # We want to store the pattern I think?
         new.data   = "{} {}".format(func.__name__, other)
         new.func   = lambda index: func(new.parent.getitem(index), new.other[index])
         return new
@@ -1517,7 +1515,7 @@ class EmptyItem(object):
 
 PatternType = (Pattern, list)
 
-def asStream(data):
+def as_pattern(data):
     """ Forces any data into a [pattern] form """
     return data if isinstance(data, Pattern) else Pattern(data)
 
@@ -1533,7 +1531,7 @@ def PatternFormat(data):
 def PatternInput(data):
     if isinstance(data, GeneratorPattern):
         return data
-    return asStream(data)
+    return as_pattern(data)
 
 Format = PatternFormat ## TODO - Remove this
 
@@ -1603,7 +1601,7 @@ def equal_values(this, that):
     else:
         return comp
 
-def group_modi(pgroup, index):
+def group_modulo_index(pgroup, index):
     """ Returns value from pgroup that modular indexes nested groups """
     std_type = (int, float, str, bool)
     if isinstance(pgroup, Pattern.TimeVar) and isinstance(pgroup.now(), std_type):
@@ -1611,7 +1609,7 @@ def group_modi(pgroup, index):
     elif isinstance(pgroup, std_type):
         return pgroup
     try:
-        return group_modi(pgroup[index % len(pgroup)], index // len(pgroup))
+        return group_modulo_index(pgroup[index % len(pgroup)], index // len(pgroup))
     except(TypeError, AttributeError, ZeroDivisionError):
         return pgroup
 

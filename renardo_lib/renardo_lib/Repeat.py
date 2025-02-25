@@ -1,8 +1,8 @@
 import inspect
 
 from renardo_lib.Code import WarningMsg
-from renardo_lib.Patterns import Pattern, Cycle, asStream
-from renardo_lib.Utils import modi
+from renardo_lib.Patterns import Pattern, Cycle, as_pattern
+from renardo_lib.Utils import modulo_index
 from renardo_lib.TimeVar import var
 
 class MethodList:
@@ -409,12 +409,12 @@ class MethodCall:
 
         if cycle is not None:
 
-            self.when   = asStream(cycle)
-            self.cycle  = asStream(n)
+            self.when   = as_pattern(cycle)
+            self.cycle  = as_pattern(n)
 
         else:
 
-            self.when   = asStream(n)
+            self.when   = as_pattern(n)
             self.cycle  = None
 
         self.args = args
@@ -428,7 +428,7 @@ class MethodCall:
 
         self.i, self.next = self.count()
 
-        self.offset = float(modi(self.cycle, self.i)) if self.cycle is not None else 0
+        self.offset = float(modulo_index(self.cycle, self.i)) if self.cycle is not None else 0
         
         return self
 
@@ -440,7 +440,7 @@ class MethodCall:
 
         # Get durations
 
-        durations = self.when # if self.cycle is None else asStream(self.cycle)
+        durations = self.when # if self.cycle is None else as_pattern(self.cycle)
         total_dur = float(sum(durations))
 
         # How much time left to fit remainder in
@@ -501,7 +501,7 @@ class MethodCall:
 
         if self.cycle is not None:
             
-            self.offset = float(modi(self.cycle, self.i))
+            self.offset = float(modulo_index(self.cycle, self.i))
 
         # Re-schedule the method call
 

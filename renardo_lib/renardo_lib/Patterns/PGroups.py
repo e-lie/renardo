@@ -1,5 +1,5 @@
 from renardo_lib.Patterns.Main import PGroup, PatternMethod, GeneratorPattern, sum_delays
-from renardo_lib.Utils import modi, LCM
+from renardo_lib.Utils import modulo_index, LCM
 
 class PGroupPrime(PGroup):
     WEIGHT  = 1
@@ -215,7 +215,7 @@ def amen(self, size=2):
     new = []
     for n in range( LCM(len(self), 4) ):
         if  n % 4 == 0:
-            new.append([self[n], PGroupPlus(self[n], modi(self, n + size))])
+            new.append([self[n], PGroupPlus(self[n], modulo_index(self, n + size))])
         elif n % 4 == size:
             new.append( [self[n]]*3+[self[n-1]] )
         elif n % 4 == size + 1:
@@ -231,7 +231,7 @@ def bubble(self, size=2):
     new = []
     for n in range(len(self.data)):
         if  n % 4 == 0:
-            new.append([self.data[n], PGroupPlus(self.data[n], modi(self.data, n + size))])
+            new.append([self.data[n], PGroupPlus(self.data[n], modulo_index(self.data, n + size))])
         elif n % 4 == 2:
             new.append( [self.data[n]]*3+[self.data[n-1]] )
         elif n % 4 == 3:
