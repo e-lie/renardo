@@ -97,15 +97,17 @@ def solo(self: Player, action=1):
 
 ###########################
 
-
+@player_method
 def often(self: Player, *args, **kwargs):
     """Calls a method every 1/2 to 4 beats using `every`"""
     return self.every(PRand(1, 8) / 2, *args, **kwargs)
 
+@player_method
 def sometimes(self: Player, *args, **kwargs):
     """Calls a method every 4 to 16 beats using `every`"""
     return self.every(PRand(8, 32) / 2, *args, **kwargs)
 
+@player_method
 def rarely(self: Player, *args, **kwargs):
     """Calls a method every 16 to 32 beats using `every`"""
     return self.every(PRand(32, 64) / 2, *args, **kwargs)
@@ -174,7 +176,6 @@ def jump(self: Player, ahead=1, _beat_=None, **kwargs):
         self.send(timestamp=timestamp, **new_event)
     return self
 
-
 @player_method
 def degrade(self: Player, amount=0.5):
     """ Sets the amp modifier to a random array of 0s and 1s
@@ -184,21 +185,6 @@ def degrade(self: Player, amount=0.5):
     else:
         self.amplify = PwRand([0, self.attr["amplify"]], [int(amount * 10), max(10 - int(amount), 0)])
     return self
-
-@player_method
-def often(self: Player, *args, **kwargs):
-    """ Calls a method every 1/2 to 4 beats using `every` """
-    return self.every(PRand(1, 8) / 2, *args, **kwargs)
-
-@player_method
-def sometimes(self: Player, *args, **kwargs):
-    """ Calls a method every 4 to 16 beats using `every` """
-    return self.every(PRand(8, 32) / 2, *args, **kwargs)
-
-@player_method
-def rarely(self: Player, *args, **kwargs):
-    """ Calls a method every 16 to 32 beats using `every` """
-    return self.every(PRand(32, 64) / 2, *args, **kwargs)
 
 @player_method
 def lshift(self: Player, n=1):
