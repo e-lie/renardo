@@ -12,8 +12,8 @@ from renardo_lib.runtime.synthdefs_initialisation import effect_manager
 from renardo_lib.Key import PlayerKey, NumberKey
 from renardo_lib.Repeat import Repeatable
 from renardo_lib.Patterns import (
-    Pattern, PGroup, asStream, PRand, PGroupPrime, pattern_depth,
-    GeneratorPattern, modi, group_modi, PwRand, choice
+    Pattern, PGroup, as_pattern, PRand, PGroupPrime, pattern_depth,
+    GeneratorPattern, modulo_index, group_modulo_index, PwRand, choice
 )
 from renardo_lib.Root import Root
 from renardo_lib.Scale import Scale, get_freq_and_midi
@@ -274,7 +274,7 @@ class Player(Repeatable):
             if name not in self.__vars:
                 # Get any alias
                 name = self.alias.get(name, name)
-                value = asStream(value)
+                value = as_pattern(value)
                 for item in value:
                     self.test_for_circular_reference(item, name)
 
@@ -499,7 +499,7 @@ class Player(Repeatable):
 
         if acc != now:
             while True:
-                dur = float(modi(durations, n))
+                dur = float(modulo_index(durations, n))
                 if acc + dur == now:
                     acc += dur
                     n += 1
@@ -1082,7 +1082,7 @@ class Player(Repeatable):
         return item
 
     def get_key(self, key, i, **kwargs):
-        return group_modi(kwargs.get(key, self.event[key]), i)
+        return group_modulo_index(kwargs.get(key, self.event[key]), i)
 
     # Private method
 
@@ -1651,9 +1651,9 @@ class Player(Repeatable):
         """Adds a delay to a Synth Envelope"""
         x = self.largest_attribute()
         if x > 1:
-            self.delay = asStream([tuple(a * dur for a in range(x))])
+            self.delay = as_pattern([tuple(a * dur for a in range(x))])
         else:
-            self.delay = asStream(dur)
+            self.delay = as_pattern(dur)
         return self
 
     def __repr__(self):

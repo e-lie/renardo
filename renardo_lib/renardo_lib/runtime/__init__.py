@@ -34,7 +34,7 @@ from renardo_lib.Code import (
     foxdot_func_cmp, foxdot_live_function, foxdot_when_statement,
     get_input, get_now,
     handle_stdin, instances, livefunction, load_startup_file,
-    main_lib, modi, re_player, when,
+    main_lib, modulo_index, re_player, when,
     write_to_file, FoxDotCode, functions, FOXDOT_STARTUP
 )
 
@@ -46,7 +46,7 @@ from renardo_lib.runtime import synthdefs_initialisation
 from renardo_lib.TempoClock import (
     Code, History, MIDIDeviceNotFound, MethodCall, MethodType, MidiIn, Player,
     Queue, QueueBlock, QueueObj, RequestTimeout, ScheduleError, ServerManager,
-    SoloPlayer, TempoClient, TempoClock, TimeVar, Wrapper, asStream, inspect,
+    SoloPlayer, TempoClient, TempoClock, TimeVar, Wrapper, as_pattern, inspect,
     threading
 )
 
@@ -69,7 +69,7 @@ from renardo_lib.Patterns import (
     Utils, Xor, amen, arrow_zip, asPattern, bar_type, br_pairs,
     braces_type, bubble, choice, convert_nested_data, convert_to_int, dots,
     equal_values, feed, force_pattern_args, fromString, functools,
-    get_avg_if, group_modi, itertools,
+    get_avg_if, group_modulo_index, itertools,
     loop_pattern_func, loop_pattern_method, math, metaPGroupPrime,
     metaPattern, offadd, offlayer, offmul, pattern_depth, patternclass, rAdd, rDiv,
     rFloorDiv, rGet, rMod, rMul, rOr, rPow, rSub, rXor, random, re_arrow,

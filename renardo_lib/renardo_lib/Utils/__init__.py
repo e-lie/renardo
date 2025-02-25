@@ -108,7 +108,7 @@ def get_first_item(array):
     except (TypeError, IndexError):
         return array
 
-def modi(array, i, debug=0):
+def modulo_index(array, i, debug=0):
     """ Returns the modulo index i.e. modi([0,1,2],4) will return 1 """
     try:
         return array[i % len(array)]
