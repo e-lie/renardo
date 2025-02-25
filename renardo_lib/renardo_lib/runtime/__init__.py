@@ -50,12 +50,12 @@ from renardo_lib.TempoClock import (
     threading
 )
 
-from renardo_lib.Players import (
-    Add, Bang, CalculateDelaysFromDur, CalculateEuclideanDelay, ClassPatternMethod,
-    Convert, Cycle, DefaultPygenSynthDef, Div, DominantPattern, EmptyItem,
-    EmptyPlayer, EuclidsAlgorithm, FloorDiv, Format, GeneratorPattern, Generators,
-    Get, Group, GroupAttr, LCM, LoopPlayer, MAX_SIZE, Main, Mod, Mul, Nil,
-    NumberKey, Operations, Or, P, P10, PAdd, PAlt, PBeat, PBern, PChain, PDelay,
+from renardo_lib.Patterns import (
+    Add, CalculateDelaysFromDur, CalculateEuclideanDelay, ClassPatternMethod,
+    Convert, Cycle, Div, DominantPattern, EmptyItem,
+    EuclidsAlgorithm, FloorDiv, Format, GeneratorPattern, Generators,
+    LCM, MAX_SIZE, Main, Mod, Mul, Nil,
+    Operations, Or, P, P10, PAdd, PAlt, PBeat, PBern, PChain, PDelay,
     PDelta, PDiv, PDiv2, PDur, PEq, PEuclid, PEuclid2, PFibMod, PFloor, PFloor2,
     PGet, PGroup, PGroupAnd, PGroupDiv, PGroupMod, PGroupOr, PGroupPlus, PGroupPow,
     PGroupPrime, PGroupStar, PGroupXor, PGroups, PIndex, PJoin, PMod, PMod2, PMul,
@@ -63,18 +63,38 @@ from renardo_lib.Players import (
     PSine, PSq, PSquare, PStep, PStretch, PStrum, PStutter, PSub, PSub2, PSum,
     PTree, PTri, PWalk, PWhite, PZ12, PZip, PZip2, Parse, ParseError,
     ParsePlayString, Pattern, PatternContainer, PatternFormat, PatternInput,
-    PatternMethod, PatternType, PlayString, PlayerKey, PlayerKeyException, Pow,
-    PulsesToDurations, PwRand, PxRand, RandomGenerator, Repeatable, Root,
-    SamplePlayer, Scale, Sequences, StaticPatternMethod, Sub, SynthDefProxy,
-    SynthDefs, Utils, Xor, amen, arrow_zip, asPattern, bar_type, br_pairs,
-    braces_type, bubble, choice, convert_nested_data, convert_to_int, copy, dots,
-    effect_manager, equal_values, feed, force_pattern_args, fromString, functools,
-    get_avg_if, get_first_item, get_freq_and_midi, group_modi, inf, itertools,
-    linvar, loop_pattern_func, loop_pattern_method, mapvar, math, metaPGroupPrime,
+    PatternMethod, PatternType, PlayString, Pow,
+    PulsesToDurations, PwRand, PxRand, RandomGenerator,
+    Sequences, StaticPatternMethod, Sub,
+    Utils, Xor, amen, arrow_zip, asPattern, bar_type, br_pairs,
+    braces_type, bubble, choice, convert_nested_data, convert_to_int, dots,
+    equal_values, feed, force_pattern_args, fromString, functools,
+    get_avg_if, group_modi, itertools,
+    loop_pattern_func, loop_pattern_method, math, metaPGroupPrime,
     metaPattern, offadd, offlayer, offmul, pattern_depth, patternclass, rAdd, rDiv,
     rFloorDiv, rGet, rMod, rMul, rOr, rPow, rSub, rXor, random, re_arrow,
-    re_chars, re_curly, re_nests, re_square, rest, shuffle, sliceToRange,
-    square_type, sum_delays, var
+    re_chars, re_curly, re_nests, re_square, shuffle, sliceToRange,
+    square_type, sum_delays,
+)
+
+from renardo_lib.Player import (
+    Bang,
+    DefaultPygenSynthDef,
+    EmptyPlayer,
+    Group, GroupAttr, LoopPlayer,
+    NumberKey,
+    PGroup,
+    Pattern,
+    PlayerKey, PlayerKeyException,
+    Repeatable, Root,
+    SamplePlayer, Scale, SynthDefProxy,
+    SynthDefs,
+    copy,
+    effect_manager,
+    get_first_item, get_freq_and_midi, inf,
+    linvar, mapvar,
+    rest,
+    var
 )
 
 from renardo_lib.TimeVar import (
