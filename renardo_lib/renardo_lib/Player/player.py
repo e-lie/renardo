@@ -3,22 +3,18 @@ from .rest import rest
 
 from renardo_sc_backend import SamplePlayer, LoopPlayer
 from renardo_sc_backend import buffer_manager
-from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings.PygenSynthDef import (
-    DefaultPygenSynthDef,
-)
 from renardo_lib.SynthDefManagement import SynthDefProxy
 from renardo_lib.SynthDefManagement.SynthDict import SynthDefs
 from renardo_lib.runtime.synthdefs_initialisation import effect_manager
 from renardo_lib.Key import PlayerKey, NumberKey
 from renardo_lib.Repeat import Repeatable
 from renardo_lib.Patterns import (
-    Pattern, PGroup, as_pattern, PRand, PGroupPrime, pattern_depth,
-    GeneratorPattern, modulo_index, group_modulo_index, PwRand, choice
+    Pattern, PGroup, as_pattern, pattern_depth,
+    GeneratorPattern, modulo_index, group_modulo_index,
 )
 from renardo_lib.Root import Root
 from renardo_lib.Scale import Scale, get_freq_and_midi
-from renardo_lib.Bang import Bang
-from renardo_lib.TimeVar import TimeVar, mapvar, linvar, inf, var
+from renardo_lib.TimeVar import TimeVar
 from renardo_lib.Code import WarningMsg
 from renardo_lib.Utils import get_first_item, get_expanded_len
 
@@ -783,18 +779,47 @@ class Player(Repeatable):
             timestamp = self.metro.osc_message_time()
         return timestamp
 
-    def lshift(self, n=1):
-        """Plays the event behind"""
-        self.event_n -= n + 1
+
+    def __int__(self):
+        return int(self.now("degree"))
+
+    def __float__(self):
+        return float(self.now("degree"))
+
+    def __add__(self, data):
+        """Change the degree modifier stream"""
+        self.mod_data = data
+        if self.synthdef == SamplePlayer:
+            # self.attr['sample'] = self.modifier + self.mod_data
+            self.sample = self.modifier + self.mod_data
+        else:
+            # self.attr['degree'] = self.modifier + self.mod_data
+            self.degree = self.modifier + self.mod_data
         return self
 
-    def rshift(self, n=1):
-        """Plays the event in front"""
-        self.event_n += n
+    def __sub__(self, data):
+        """Change the degree modifier stream"""
+        self.mod_data = 0 - data
+        if self.synthdef == SamplePlayer:
+            self.attr["sample"] = self.modifier + self.mod_data
+        else:
+            self.attr["degree"] = self.modifier + self.mod_data
         return self
 
-    def _number_of_layers(self, **kwargs):
-        """ Returns the deepest nested item in the event """
+    def __mul__(self, data):
+        return self
+
+    def __div__(self, data):
+        return self
+
+    # --- Data methods
+
+    def __iter__(self):
+        for _, value in self.event.items():
+            yield value
+
+    def number_of_layers(self, **kwargs):
+        """Returns the deepest nested item in the event"""
         num = 1
         for attr, value in self.event.items():
             value = kwargs.get(attr, value)
@@ -1291,60 +1316,6 @@ class Player(Repeatable):
             synthdef = str(self.synthdef)
         return synthdef
 
-    def addfx(self, **kwargs):
-        """Not implemented - add an effect to the SynthDef bus on SuperCollider
-        after it has been triggered."""
-        return self
-
-    #: Methods for stop/starting players
-
-    def kill(self):
-        """Removes this object from the Clock and resets itself"""
-
-        self.isplaying = False
-        self.stopping = True
-
-        self.reset()
-
-        if self in self.metro.playing:
-            self.metro.playing.remove(self)
-
-        return
-
-    def stop(self, N=0):
-        """Removes the player from the Tempo clock and changes its internal
-        playing state to False in N bars time
-        - When N is 0 it stops immediately"""
-
-        self.stopping = True
-        self.stop_point = self.metro.now()
-
-        if N > 0:
-            self.stop_point = self.metro.next_bar() + (
-                (N - 1) * self.metro.bar_length()
-            )
-
-        else:
-            self.kill()
-
-        return self
-
-    def pause(self):
-        self.isplaying = False
-
-        return self
-
-    def play(self):
-        self.isplaying = True
-        self.stopping = False
-        self.isAlive = True
-
-        self.__call__()
-        return self
-
-    #####################
-    #####   Utils   #####
-    #####################
 
     def num_key_references(self):
         """Returns the number of 'references' for the
@@ -1372,53 +1343,6 @@ class Player(Repeatable):
         setattr(self, "degree", new_degree)
         return
 
-    def multiply(self, n=2):
-        self.attr["degree"] = self.attr["degree"] * n
-        return self
-
-    def degrade(self, amount=0.5):
-        """Sets the amp modifier to a random array of 0s and 1s
-        amount=0.5 weights the array to equal numbers"""
-        if float(amount) <= 0:
-            self.amplify = 1
-        else:
-            self.amplify = PwRand(
-                [0, self.attr["amplify"]], [int(amount * 10), max(10 - int(amount), 0)]
-            )
-        return self
-
-    def changeSynth(self, list_of_synthdefs):
-        new_synth = choice(list_of_synthdefs)
-        if isinstance(new_synth, DefaultPygenSynthDef):
-            new_synth = str(new_synth.name)
-        self.synthdef = new_synth
-        return self
-
-    """
-
-        Modifier Methods
-        ----------------
-
-        Other modifiers for affecting the playback of Players
-
-    """
-
-    def offbeat(self, dur=1):
-        """Off sets the next event occurence"""
-
-        self.dur = abs(dur)
-        self.delay = abs(dur) / 2
-
-        return self
-
-    def strum(self, dur=0.025):
-        """Adds a delay to a Synth Envelope"""
-        x = self.largest_attribute()
-        if x > 1:
-            self.delay = as_pattern([tuple(a * dur for a in range(x))])
-        else:
-            self.delay = as_pattern(dur)
-        return self
 
     def __repr__(self):
         if self.id is not None:
@@ -1468,16 +1392,8 @@ class Player(Repeatable):
     #        s += "\t{}\t:{}\n".format(attr, val)
     #    return s
 
-    def bang(self, **kwargs):
-        """
-        Triggered when sendNote is called. Responsible for any
-        action to be triggered by a note being played. Default action
-        is underline the player
-        """
-        if kwargs:
-            self.bang_kwargs = kwargs
+# TODO: use a volume sc effect / 3rd parameter for fades (to make it work with loop synthdef)
+# TODO: parametrise duration with bar length automatically
+# TODO: debug eclipse smooth feature
 
-        elif self.bang_kwargs:
-            bang = Bang(self, self.bang_kwargs)
-        return self
 
