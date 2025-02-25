@@ -1,4 +1,5 @@
-from copy import copy
+import itertools
+from .rest import rest
 
 from renardo_sc_backend import SamplePlayer, LoopPlayer
 from renardo_sc_backend import buffer_manager
@@ -10,55 +11,19 @@ from renardo_lib.SynthDefManagement.SynthDict import SynthDefs
 from renardo_lib.runtime.synthdefs_initialisation import effect_manager
 from renardo_lib.Key import PlayerKey, NumberKey
 from renardo_lib.Repeat import Repeatable
-from renardo_lib.Patterns import *
+from renardo_lib.Patterns import (
+    Pattern, PGroup, asStream, PRand, PGroupPrime, pattern_depth,
+    GeneratorPattern, modi, group_modi, PwRand, choice
+)
 from renardo_lib.Root import Root
 from renardo_lib.Scale import Scale, get_freq_and_midi
 from renardo_lib.Bang import Bang
 from renardo_lib.TimeVar import TimeVar, mapvar, linvar, inf, var
 from renardo_lib.Code import WarningMsg
-from renardo_lib.Utils import get_first_item
+from renardo_lib.Utils import get_first_item, get_expanded_len
 
 from renardo_reaper.ReaperIntegrationLib.ReaProject import get_reaper_object_and_param_name, set_reaper_param, get_reaper_param
 from renardo_reaper.ReaperIntegrationLib.ReaTrack import ReaTrack
-
-
-class EmptyPlayer(object):
-    """
-    Placeholder for Player objects created at run-time to reduce load time.
-    """
-
-    def __init__(self, name):
-        self.name = name
-
-    def __repr__(self):
-        return "<{} - Unassigned>".format(self.name)
-
-    def __rshift__(self, *args, **kwargs):
-        """Converts an EmptyPlayer to a Player."""
-        self.__class__ = Player
-        self.__init__(self.name)
-        self.__rshift__(*args, **kwargs)
-        return self
-
-    def __invert__(self):
-        """Using the ~ syntax resets the player"""
-        return self.reset()
-
-    def __getattribute__(self, name):
-        """Tries to return the correct attr; if not init the Player and try again"""
-        try:
-            # Try to return the attribute
-            return object.__getattribute__(self, name)
-        except AttributeError:
-            # If the attribute doesn't exist, initialize the Player and try again
-            self.__class__ = Player
-            self.__init__(self.name)
-            try:
-                # Try to return the attribute again
-                return self.__getattribute__(name)
-            except AttributeError:
-                # If the attribute still doesn't exist, use getattr to make sure we return player key
-                return self.__getattr__(name)
 
 
 class Player(Repeatable):
@@ -618,7 +583,7 @@ class Player(Repeatable):
         self._get_event()
 
         # Play the note
-        if not isinstance(self.event["dur"], Rest):
+        if not isinstance(self.event["dur"], rest):
             try:
                 self._send_osc_messages_to_server(
                     verbose=(self.metro.solo == self and kwargs.get('verbose', True))

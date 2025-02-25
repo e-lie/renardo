@@ -75,4 +75,3 @@ from renardo_lib.Patterns.Generators import *
 from renardo_lib.Patterns.PlayString import *
 from renardo_lib.Patterns.Parse      import *
 from renardo_lib.Patterns.Utils      import *
-from renardo_lib.Patterns.Rest import *
