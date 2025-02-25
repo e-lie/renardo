@@ -1,4 +1,4 @@
-from renardo_lib.Patterns import Pattern, PGroup, asStream
+from renardo_lib.Patterns import Pattern, PGroup, as_pattern
 from renardo_lib.TimeVar import TimeVar
 
 from random import choice
@@ -22,7 +22,7 @@ def midi(scale, octave, degree, root=0, stepsPerOctave=12):
 
     if isinstance(scale, ScalePattern) and isinstance(scale.data, TimeVar):
 
-        scale = asStream(scale.data.now())
+        scale = as_pattern(scale.data.now())
 
     # Force float
     octave = float(octave)
@@ -126,7 +126,7 @@ class ScalePattern(ScaleType, Pattern):
     def semitones(self, pitches):
         """ Returns the semitone values for a series of pitches in this scale """
         tones = []
-        for pitch in asStream(pitches):
+        for pitch in as_pattern(pitches):
             tones.append( self.note_to_semitone(pitch) )
         return Pattern(tones)
 
@@ -144,7 +144,7 @@ class ScalePattern(ScaleType, Pattern):
 
         if isinstance(self.data, TimeVar):
 
-            scale = asStream(self.data.now())
+            scale = as_pattern(self.data.now())
 
         # Force float
         octave = float(octave)
@@ -192,7 +192,7 @@ class ScalePattern(ScaleType, Pattern):
         else:
             i = pitch % len(self.data)
             n = (pitch // len(self.data)) * self.steps 
-        return asStream(self.data)[i] + n
+        return as_pattern(self.data)[i] + n
 
     def getslice(self, start, stop, step=1):
         """ Called when using __getitem__ with slice notation. Numbers 

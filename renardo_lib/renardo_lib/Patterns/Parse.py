@@ -12,7 +12,7 @@ from renardo_lib.Patterns.Generators import PRand
 from renardo_lib.Patterns.PGroups    import PGroupOr, PGroupPlus
 from renardo_lib.Patterns.Main       import Pattern, metaPattern, PatternMethod, PGroup, GeneratorPattern
 
-from renardo_lib.Utils import modi, LCM
+from renardo_lib.Utils import modulo_index, LCM
 
 re_nests  = r"\((.*?)\)"
 re_square = r"\[.*?\]"
@@ -224,7 +224,7 @@ def feed(string):
 
                 for num in range(largest_item):
 
-                    new_chars.append(square_type([modi(ch, num) for ch in chars]))
+                    new_chars.append(square_type([modulo_index(ch, num) for ch in chars]))
 
                 items.append( new_chars )
 

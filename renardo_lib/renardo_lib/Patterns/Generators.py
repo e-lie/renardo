@@ -27,7 +27,7 @@
 """
 
 
-from renardo_lib.Patterns.Main  import GeneratorPattern, Pattern, asStream, PatternInput
+from renardo_lib.Patterns.Main  import GeneratorPattern, Pattern, as_pattern, PatternInput
 
 import random
 
@@ -289,7 +289,7 @@ class PWalk(RandomGenerator):
 class PDelta(GeneratorPattern):
     def __init__(self, deltas, start=0):
         GeneratorPattern.__init__(self)
-        self.deltas = asStream(deltas)
+        self.deltas = as_pattern(deltas)
         self.start  = start
         self.value  = start
     def func(self, index):  
