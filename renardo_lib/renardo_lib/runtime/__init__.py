@@ -79,7 +79,6 @@ from renardo_lib.Patterns import (
 
 from renardo_lib.Player import (
     Bang,
-    DefaultPygenSynthDef,
     EmptyPlayer,
     Group, GroupAttr, LoopPlayer,
     NumberKey,

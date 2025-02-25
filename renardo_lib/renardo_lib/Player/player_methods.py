@@ -1,12 +1,15 @@
 from __future__ import division, absolute_import, print_function
 
 from copy import copy
+from random import choice
 
 from .player import Player
 from renardo_lib.Patterns import PwRand, PRand, PGroup, PGroupPrime, as_pattern
 from renardo_lib.TimeVar import mapvar, var, linvar, inf
-from renardo_sc_backend import Samples
+from renardo_sc_backend import buffer_manager
 from renardo_sc_backend import LoopPlayer
+from renardo_lib.Bang import Bang
+
 
 def player_method(f):
     """ Decorator for assigning functions as Player methods.
@@ -22,20 +25,111 @@ def player_method(f):
 
 PlayerMethod = player_method # Temporary alias
 
+@player_method
+def pause(self: Player):
+    self.isplaying = False
+
+    return self
 
 @player_method
-def stutter(self, amount=None, _beat_=None, **kwargs):
-    """ Plays the current note n-1 times. You can specify keywords. """
+def play(self: Player):
+    self.isplaying = True
+    self.stopping = False
+    self.isAlive = True
+
+    self.__call__()
+
+    return self
+
+@player_method
+def stop(self: Player, N=0):
+    """Removes the player from the Tempo clock and changes its internal
+    playing state to False in N bars time
+    - When N is 0 it stops immediately"""
+    self.stopping = True
+    self.stop_point = self.metro.now()
+    if N > 0:
+        self.stop_point = self.metro.next_bar() + (
+            (N - 1) * self.metro.bar_length()
+        )
+    else:
+        self.kill()
+    return self
+
+@player_method
+def kill(self: Player):
+    """Removes this object from the Clock and resets itself"""
+    self.isplaying = False
+    self.stopping = True
+    self.reset()
+    if self in self.metro.playing:
+        self.metro.playing.remove(self)
+    return
+
+@player_method
+def reload(self: Player):
+    """ If this is a 'play' or 'loop' SynthDef, reload the filename used"""
+    if self.synthdef == LoopPlayer:
+        buffer_manager.load_buffer(self.filename, force=True)
+    return self
+
+@player_method
+def only(self: Player):
+    """ Stops all players except this one """
+    for player in list(self.metro.playing):
+        if player is not self:
+            player.stop()
+    return self
+
+@player_method
+def solo(self: Player, action=1):
+    """ Silences all players except this player. Undo the solo
+        by using `Player.solo(0)` """
+    action = int(action)
+    if action == 0:
+        self.metro.solo.reset()
+    elif action == 1:
+        self.metro.solo.set(self)
+    elif action == 2:
+        pass
+    return self
+
+
+###########################
+
+
+def often(self: Player, *args, **kwargs):
+    """Calls a method every 1/2 to 4 beats using `every`"""
+    return self.every(PRand(1, 8) / 2, *args, **kwargs)
+
+def sometimes(self: Player, *args, **kwargs):
+    """Calls a method every 4 to 16 beats using `every`"""
+    return self.every(PRand(8, 32) / 2, *args, **kwargs)
+
+def rarely(self: Player, *args, **kwargs):
+    """Calls a method every 16 to 32 beats using `every`"""
+    return self.every(PRand(32, 64) / 2, *args, **kwargs)
+
+
+###########################
+
+@player_method
+def stutter(self: Player, amount=None, _beat_=None, **kwargs):
+    """Plays the current note n-1 times. You can specify keywords."""
+
     timestamp = self.get_timestamp(_beat_)
 
     # Get the current values (this might be called between events)
+
     n = int(kwargs.get("n", amount if amount is not None else 2))
     ahead = int(kwargs.get("ahead", 0))
+
     for key in ("ahead", "n"):
         if key in kwargs:
             del kwargs[key]
 
     # Only send if n > 1 and the player is playing
+
     if self.metro.solo == self and n > 1:
         new_event = {}
         attributes = self.attr.copy()
@@ -51,19 +145,20 @@ def stutter(self, amount=None, _beat_=None, **kwargs):
                     new_event[key] = self.unpack(PGroup(item))
             elif len(attributes[key]) > 0:
                 new_event[key] = self.now(key, ahead)
-        new_event = self._unduplicate_durs(new_event)
+        new_event = self.unduplicate_durs(new_event)
         dur = float(kwargs.get("dur", new_event["dur"])) / n
         new_event["dur"] = dur
-
         # Get PGroup delays
-        new_event["delay"] = PGroup([dur * (i + 1) for i in range(max(n, self._get_event_length(new_event)))])
-
+        new_event["delay"] = PGroup(
+            [dur * (i + 1) for i in range(max(n, self.get_event_length(new_event)))]
+        )
         new_event = self.get_prime_funcs(new_event)
-        self._send_osc_messages_to_server(timestamp=timestamp, **new_event)
+        self.send(timestamp=timestamp, **new_event)
+
     return self
 
 @player_method
-def jump(self, ahead=1, _beat_=None, **kwargs):
+def jump(self: Player, ahead=1, _beat_=None, **kwargs):
     """ Plays an event ahead of time. """
     timestamp = self.get_timestamp(_beat_)
     if self.metro.solo == self:
@@ -74,14 +169,14 @@ def jump(self, ahead=1, _beat_=None, **kwargs):
                 new_event[key] = self.unpack(PGroup(kwargs[key]))
             elif len(attributes[key]) > 0:
                 new_event[key] = self.now(key, ahead)
-        new_event = self._unduplicate_durs(new_event)
+        new_event = self.unduplicate_durs(new_event)
         new_event = self.get_prime_funcs(new_event)
         self.send(timestamp=timestamp, **new_event)
     return self
 
 
 @player_method
-def degrade(self, amount=0.5):
+def degrade(self: Player, amount=0.5):
     """ Sets the amp modifier to a random array of 0s and 1s
         amount=0.5 weights the array to equal numbers """
     if float(amount) <= 0:
@@ -91,22 +186,35 @@ def degrade(self, amount=0.5):
     return self
 
 @player_method
-def often(self, *args, **kwargs):
+def often(self: Player, *args, **kwargs):
     """ Calls a method every 1/2 to 4 beats using `every` """
     return self.every(PRand(1, 8) / 2, *args, **kwargs)
 
 @player_method
-def sometimes(self, *args, **kwargs):
+def sometimes(self: Player, *args, **kwargs):
     """ Calls a method every 4 to 16 beats using `every` """
     return self.every(PRand(8, 32) / 2, *args, **kwargs)
 
 @player_method
-def rarely(self, *args, **kwargs):
+def rarely(self: Player, *args, **kwargs):
     """ Calls a method every 16 to 32 beats using `every` """
     return self.every(PRand(32, 64) / 2, *args, **kwargs)
 
 @player_method
-def spread(self, on=0.125):
+def lshift(self: Player, n=1):
+    """Plays the event behind"""
+    self.event_n -= n + 1
+    return self
+
+@player_method
+def rshift(self: Player, n=1):
+    """Plays the event in front"""
+    self.event_n += n
+    return self
+
+
+@player_method
+def spread(self: Player, on=0.125):
     """ Sets pan to (-1, 1) and pshift to (0, 0.125)"""
     if on != 0:
         self.pan = (-1, 1)
@@ -117,7 +225,7 @@ def spread(self, on=0.125):
     return self
 
 @player_method
-def unison(self, unison=2, detune=0.125):
+def unison(self: Player, unison=2, detune=0.125):
     """ Like spread(), but can specify number of voices(unison)
     Sets pan to (-1,-0.5,..,0.5,1) and pshift to (-0.125,-0.0625,...,0.0625,0.125)
     If unison is odd, an unchanged voice is added in the center
@@ -145,13 +253,13 @@ def unison(self, unison=2, detune=0.125):
     return self
 
 @player_method
-def seconds(self):
+def seconds(self: Player):
     """ Sets the player bpm to 60 so duration will be measured in seconds """
     self.bpm = 60
     return self
 
 @player_method
-def slider(self, start=0, on=1):
+def slider(self: Player, start=0, on=1):
     """ Creates a glissando effect between notes """
     if on:
         if start:
@@ -168,7 +276,7 @@ def slider(self, start=0, on=1):
     return self
 
 @player_method
-def penta(self, switch=1):
+def penta(self: Player, switch=1):
     """ Shorthand for setting the scale to the pentatonic mode of the default scale """
     if switch:
         self.scale = self.__class__.default_scale.pentatonic
@@ -177,7 +285,7 @@ def penta(self, switch=1):
     return self
 
 @player_method
-def alt_dur(self, dur):
+def alt_dur(self: Player, dur):
     """ Used to set a duration that changes linearly over time. You should use a `linvar` but
         any value can be used. This sets the `dur` to 1 and uses the `bpm` attribute to
         seemingly alter the durations """
@@ -187,7 +295,7 @@ def alt_dur(self, dur):
     return self
 
 @player_method
-def reverse(self):
+def reverse(self: Player):
     """ Reverses every attribute stream """
     for attr in self.attr:
         try:
@@ -197,7 +305,7 @@ def reverse(self):
     return self
 
 @player_method
-def shuffle(self):
+def shuffle(self: Player):
     """ Shuffles the degree of a player. """
     # If using a play string for the degree
     #if self.synthdef == SamplePlayer and self.playstring is not None:
@@ -211,7 +319,7 @@ def shuffle(self):
     return self
 
 @player_method
-def rotate(self, n=1):
+def rotate(self: Player, n=1):
     """ Rotates the values in the degree by 'n' """
     #self._replace_degree(self.attr['degree'].rotate(n))
     new_degree = self.previous_patterns["degree"].root.rotate(n)
@@ -219,7 +327,7 @@ def rotate(self, n=1):
     return self
 
 @player_method
-def attrmap(self, key1, key2, mapping):
+def attrmap(self: Player, key1, key2, mapping):
     """ Sets the attribute for self.key2 to self.key1
         altered with a mapping dictionary.
     """
@@ -227,14 +335,14 @@ def attrmap(self, key1, key2, mapping):
     return self
 
 @player_method
-def smap(self, kwargs):
+def smap(self: Player, kwargs):
     """ Like map but maps the degree to the sample attribute
     """
     self.attrmap("degree", "sample", kwargs)
     return self
 
 @player_method
-def map(self, other, mapping, otherattr="degree"):
+def map(self: Player, other, mapping, otherattr="degree"):
     """ p1 >> pads().map(b1, {0: {oct=[4,5], dur=PDur(3,8), 2: oct})     """
     # Convert dict to {"oct": {4}}
     # key is the value of player key, attr is
@@ -245,7 +353,7 @@ def map(self, other, mapping, otherattr="degree"):
 
 
 @player_method
-def offbeat(self, dur=1):
+def offbeat(self: Player, dur=1):
     """ Off sets the next event occurence """
     self.dur = abs(dur)
     self.delay = abs(dur) / 2
@@ -253,9 +361,9 @@ def offbeat(self, dur=1):
     return self
 
 @player_method
-def strum(self, dur=0.025):
+def strum(self: Player, dur=0.025):
     """ Adds a delay to a Synth Envelope """
-    x = self._largest_attribute()
+    x = self.largest_attribute()
     if x > 1:
         self.delay = as_pattern([tuple(a * dur for a in range(x))])
     else:
@@ -263,38 +371,39 @@ def strum(self, dur=0.025):
     return self
 
 @player_method
-def multiply(self, n=2):
+def multiply(self: Player, n=2):
     self.attr['degree'] = self.attr['degree'] * n
     return self
 
-# @player_method
-# def changeSynth(self, list_of_synthdefs):
-#     new_synth = choice(list_of_synthdefs)
-#     if isinstance(new_synth, SynthDef):
-#         new_synth = str(new_synth.name)
-#     self.synthdef = new_synth
-#     return self
+@player_method
+def changeSynth(self: Player, list_of_synthdefs):
+    new_synth = choice(list_of_synthdefs)
+    # TODO write a better check for the synthdef type/name
+    # if isinstance(new_synth, SynthDef):
+    #    new_synth = str(new_synth.name)
+    self.synthdef = new_synth
+    return self
 
 #####################################################
 #####   Methods for collaborative performance   #####
 #####################################################
 
 @player_method
-def accompany(self, other, values=[0, 2, 4], debug=False):
+def accompany(self: Player, other, values=[0, 2, 4], debug=False):
     """ Similar to "follow" but when the value has changed """
     if isinstance(other, self.__class__):
         self.degree = other.degree.accompany()
     return self
 
 @player_method
-def follow(self, other=False):
+def follow(self: Player, other=False):
     """ Takes a Player object and then follows the notes """
     if isinstance(other, self.__class__):
         self.degree = other.degree
     return self
 
 @player_method
-def versus(self, other_key, rule=lambda x, y: x > y, attr=None):
+def versus(self: Player, other_key, rule=lambda x, y: x > y, attr=None):
     """ Sets the 'amplify' key for both players to be dependent on the comparison of keys """
     # Get reference to the second player object
     other = other_key.player
@@ -305,39 +414,40 @@ def versus(self, other_key, rule=lambda x, y: x > y, attr=None):
     other.amplify = this_key.transform(lambda value: not rule(value, other_key.now()))
     return self
 
-@player_method
-def reload(self):
-    """ If this is a 'play' or 'loop' SynthDef, reload the filename used"""
-    if self.synthdef == LoopPlayer:
-        Samples.reload(self.filename)
-    return self
 
 @player_method
-def only(self):
-    """ Stops all players except this one """
-    for player in list(self.metro.playing):
-        if player is not self and not player.always_on:
-            player.stop()
+def versus_old(self: Player, other: Player, key=lambda x: x.freq, f=max):
+    """Takes another Player object and a function that takes
+    two player arguments and returns one, default is the higher
+    pitched
+    """
+    if other is not None:
+        # make sure it's using another player
+        assert other.__class__ == self.__class__
+
+        def func(x, y):
+            return f(x, y, key=key)
+
+        self.condition = lambda: func(self, other) == self
+        other.condition = lambda: func(self, other) == other
+        self._versus = other
+    else:
+        self.condition = lambda: True
+        self._versus.condition = lambda: True
+        self._versus = None
     return self
 
-@player_method
-def solo(self, action=1):
-    """ Silences all players except this player. Undo the solo
-        by using `Player.solo(0)` """
-    action = int(action)
-    if action == 0:
-        self.metro.solo.reset()
-    elif action == 1:
-        self.metro.solo.set(self)
-        for player in self.metro.playing:
-            if player.always_on:
-                self.metro.solo.add(player)
-    elif action == 2:
-        pass
-    return self
+# def versus(self, other, func = lambda a, b: a > b):
+
+#     self.amp  = self.pitch > other.pitch
+#     other.amp = other.pitch > self.pitch
+
+#     return self
+
+
 
 @player_method
-def versus_old(self, other, key=lambda x: x.freq, f=max):
+def versus_old(self: Player, other: Player, key=lambda x: x.freq, f=max):
     """ Takes another Player object and a function that takes
         two player arguments and returns one, default is the higher
         pitched
@@ -361,9 +471,26 @@ def versus_old(self, other, key=lambda x: x.freq, f=max):
 
 #     return self
 
+@player_method
+def bang(self: Player, **kwargs):
+    """
+    Triggered when sendNote is called. Responsible for any
+    action to be triggered by a note being played. Default action
+    is underline the player
+    """
+    if kwargs:
+        self.bang_kwargs = kwargs
+
+    elif self.bang_kwargs:
+        bang = Bang(self, self.bang_kwargs)
+
+    return self
+
+
+
 
 @player_method
-def fade(self, dur=8, fvol=1, ivol=None, autostop=True):
+def fade(self: Player, dur=8, fvol=1, ivol=None, autostop=True):
     if ivol == None:
         ivol = float(self.amplify)
     self.amplify = linvar([ivol, fvol], [dur, inf], start=self.metro.mod(4))
@@ -376,34 +503,34 @@ def fade(self, dur=8, fvol=1, ivol=None, autostop=True):
     return self
 
 @player_method
-def fadein(self, dur=8, fvol=1, ivol=0, autostop=True):
+def fadein(self: Player, dur=8, fvol=1, ivol=0, autostop=True):
     self.fade(dur=dur, fvol=fvol, ivol=ivol, autostop=autostop)
     return self
 
 @player_method
-def fadeout(self, dur=4, fvol=0, ivol=1, autostop=True):
+def fadeout(self: Player, dur=4, fvol=0, ivol=1, autostop=True):
     self.fade(dur=dur, fvol=fvol, ivol=ivol, autostop=autostop)
     return self
 
 @player_method
-def solofade(self, dur=16, fvol=0, ivol=None, autostop=False):
+def solofade(self: Player, dur=16, fvol=0, ivol=None, autostop=False):
     for player in list(self.metro.playing):
         if player is not self: # and not player.always_on:
             player.fade(dur, ivol, fvol, autostop)
     return self
 
 @player_method
-def solofadeout(self, dur=16, fvol=0, ivol=None, autostop=False):
+def solofadeout(self: Player, dur=16, fvol=0, ivol=None, autostop=False):
     self.solofade(dur, ivol, fvol, autostop=autostop)
     return self
 
 @player_method
-def solofadein(self, dur=16, fvol=1, ivol=None, autostop=False):
+def solofadein(self: Player, dur=16, fvol=1, ivol=None, autostop=False):
     self.solofade(dur, ivol, fvol, autostop=autostop)
     return self
 
 @player_method
-def eclipse(self, dur=4, total=16, leftshift=0, smooth=0):
+def eclipse(self: Player, dur=4, total=16, leftshift=0, smooth=0):
     """periodic pause of the player: pause 4 beats every 16"""
     if smooth == 0:
         self.amplify = var([1, 0, 1], [leftshift, dur, total - leftshift - dur])
@@ -412,3 +539,10 @@ def eclipse(self, dur=4, total=16, leftshift=0, smooth=0):
                                 [leftshift, smooth * dur, dur - smooth * dur, smooth * dur,
                                 total - leftshift - dur - smooth * dur])
     return self
+
+
+# @player_method
+# def addfx(self: Player, **kwargs):
+#     """Not implemented - add an effect to the SynthDef bus on SuperCollider
+#     after it has been triggered."""
+#     return self
