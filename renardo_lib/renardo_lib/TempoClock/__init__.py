@@ -58,10 +58,10 @@ import inspect
 from .SchedulingQueue import Queue, SoloPlayer, History, ScheduleError, Wrapper
 from renardo_lib.Player import Player
 from renardo_lib.Repeat import MethodCall
-from renardo_lib.Patterns import asStream
+from renardo_lib.Patterns import as_pattern
 from renardo_lib.TimeVar import TimeVar
 from renardo_lib.Midi import MidiIn, MIDIDeviceNotFound
-from renardo_lib.Utils import modi
+from renardo_lib.Utils import modulo_index
 from renardo_sc_backend import TempoClient, ServerManager, RequestTimeout
 from renardo_lib.Settings import CPU_USAGE
 

@@ -13,7 +13,7 @@ except ImportError:
 
     TypeType = type
     
-from renardo_lib.Utils import modi
+from renardo_lib.Utils import modulo_index
 
 from renardo_lib.Settings import FOXDOT_STARTUP_PATH, PERFORMANCE_EXCEPTIONS_CATCHING
 
@@ -41,7 +41,7 @@ class LiveObject(object):
         return self
 
     def __call__(self):
-        self.metro.schedule(self, self.metro.now() + float(modi(self.step, self.n)))
+        self.metro.schedule(self, self.metro.now() + float(modulo_index(self.step, self.n)))
         self.n += 1
         return self
 

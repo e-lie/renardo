@@ -1,4 +1,4 @@
-from renardo_lib.Patterns.Main import Pattern, asStream, PGroup
+from renardo_lib.Patterns.Main import Pattern, as_pattern, PGroup
 from renardo_lib.Patterns.Sequences import PDur
 
 # Other useful functions that don't return a single pattern
@@ -8,7 +8,7 @@ def CalculateEuclideanDelay(durations):
         tuples/PGroups and the PDur algorithm -- currently not implemented.
     """
     durs, dels = Pattern(), Pattern()
-    for item in asStream(durations).data:
+    for item in as_pattern(durations).data:
         # If it's a pattern / list, calc the delays
         if isinstance(item, (list, Pattern)):
             a, b = CalculateEuclideanDelay(item)
@@ -41,7 +41,7 @@ def CalculateDelaysFromDur(durations):
         return durs, dels
     # Continue if not a pvargenerator
     durs, dels = Pattern(), Pattern()
-    for item in asStream(durations).data:
+    for item in as_pattern(durations).data:
         # If it's a pattern / list, calc the delays
         if isinstance(item, (list, Pattern)):
             a, b = CalculateDelaysFromDur(item)
