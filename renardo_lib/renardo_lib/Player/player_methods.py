@@ -432,30 +432,7 @@ def versus_old(self: Player, other: Player, key=lambda x: x.freq, f=max):
 
 
 
-@player_method
-def versus_old(self: Player, other: Player, key=lambda x: x.freq, f=max):
-    """ Takes another Player object and a function that takes
-        two player arguments and returns one, default is the higher
-        pitched
-    """
-    if other is not None:
-        assert (other.__class__ == self.__class__)  # make sure it's using another player
-        func = lambda x, y: f(x, y, key=key)
-        self.condition = lambda: func(self, other) == self
-        other.condition = lambda: func(self, other) == other
-        self._versus = other
-    else:
-        self.condition = lambda: True
-        self._versus.condition = lambda: True
-        self._versus = None
-    return self
 
-# def versus(self, other, func = lambda a, b: a > b):
-
-#     self.amp  = self.pitch > other.pitch
-#     other.amp = other.pitch > self.pitch
-
-#     return self
 
 @player_method
 def bang(self: Player, **kwargs):
@@ -477,7 +454,7 @@ def bang(self: Player, **kwargs):
 
 @player_method
 def fade(self: Player, dur=8, fvol=1, ivol=None, autostop=True):
-    if ivol == None:
+    if ivol is None:
         ivol = float(self.amplify)
     self.amplify = linvar([ivol, fvol], [dur, inf], start=self.metro.mod(4))
     def static_final_value():
