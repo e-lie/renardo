@@ -39,6 +39,40 @@ b1 >> blip([0,2,0,5], dur=[1,.25,.75, .5,.5], sus=1).follow(b2)
 
 b1 >> blip([0,2,0,5], dur=[1,.25,.75, .5,.5], sus=1).accompany(b2)
 
+b1 >> blip([0,2,0,5], dur=[1,.25,.75, .5,.5], sus=1).spread()
+
+b2 >> blip([0,1,2,3], dur=1, oct=3)
+
+b1 >> blip([0,1,2,3], dur=1, sus=1).rshift() # shift played event of one note to the right
+
+b1 >> blip([0,1,2,3], dur=1, sus=1).lshift() # shift played event of one note to the left
+
+b2.stop()
+
+b1 >> blip([0,1,2,3], dur=1, sus=1).penta() # switch to pentatonic mode of the current default scale
+
+b1 >> blip([0,1,2,3], dur=1, sus=1).slider()
+
+b1 >> blip([0,1,2,3], dur=1, sus=1).alt_dur(linvar([.1,1],16)) # switch dur to 1 and use bpm to change dur for use with linvar
+
+b1.reverse()
+
+b1.shuffle()
+
+b1.rotate() # rotate degree pattern of one note
+
+# p1 >> pads().map(b1, {0: {oct=[4,5], dur=PDur(3,8)}, 2: oct})
+
+# smap
+
+# attrmap
+
+
+b1 >> blip([0,2,0,5], dur=[1,.25,.75, .5,.5], sus=1).spread()
+
+b1 >> blip([0,2,0,5], dur=[1,.25,.75, .5,.5], sus=1).unison()
+
+b1.seconds() # mesure dur in second (<=> bpm=60)
 
 b1 >> blip([0,2,0,5], dur=[1,.25,.75, .5,.5], sus=1).versus(b2) # Bug :/
 
