@@ -26,7 +26,6 @@ setup(
         'renardo_lib.Settings',
         'renardo_lib.Utils',
         'renardo_lib.Player',
-        'renardo_lib.ServerManager',
         'renardo_lib.runtime',
         'renardo_lib.runtime.synthdefs_initialisation',
     ],
