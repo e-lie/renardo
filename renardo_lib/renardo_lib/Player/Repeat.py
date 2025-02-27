@@ -381,7 +381,7 @@ class MethodCall:
         n = 0
         acc = 0
         dur = 0
-        now = float(self.parent.metro.now())
+        now = float(self.parent.main_event_clock.now())
 
         # Get durations
         durations = self.when  # if self.cycle is None else as_pattern(self.cycle)
@@ -465,11 +465,11 @@ class MethodCall:
 
     def schedule(self):
         """Schedules the method to be called in the clock"""
-        self.parent.metro.schedule(self, self.get_next())
+        self.parent.main_event_clock.schedule(self, self.get_next())
 
     def isScheduled(self):
         """Returns True if this is in the Tempo Clock"""
-        return self in self.parent.metro
+        return self in self.parent.main_event_clock
 
     def stop(self):
         self.stopping = True
