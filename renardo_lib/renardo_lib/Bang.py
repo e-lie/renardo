@@ -64,7 +64,7 @@ class Bang:
                 row = player.line_number
                 col = player.whitespace
                 env   = player.envelope
-                clock = player.metro
+                clock = player.main_event_clock
 
                 duration     = clock.beat_dur( player.dur / 2 )
                 # message_time = player.queue_block.time

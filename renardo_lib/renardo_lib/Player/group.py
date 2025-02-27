@@ -18,7 +18,7 @@ class Group:
 
     def solo(self, arg=True):
         if self.metro is None:
-            self.__class__.metro = Player.metro
+            self.__class__.metro = Player.main_event_clock
 
         if arg:
             self.metro.solo.set(self.players[0])
@@ -33,7 +33,7 @@ class Group:
 
     def only(self):
         if self.metro is None:
-            self.__class__.metro = Player.metro
+            self.__class__.metro = Player.main_event_clock
 
         for player in list(self.metro.playing):
             if player not in self.players:
