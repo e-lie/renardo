@@ -7,15 +7,18 @@ play = FileSynthDef('play2')
 play.defaults["dur"]=.5
 play.add()
 
-#loop = FileSynthDef('loop')
+loop = FileSynthDef('loop')
 #loop.defaults['pos'] = 0
 #loop.defaults['sample'] = 0
-## loop.defaults['spack'] = SAMPLES_PACK_NUMBER
+# loop.defaults['spack'] = SAMPLES_PACK_NUMBER
 #loop.defaults['beat_stretch'] = 0
-#loop.add()
+loop.add()
 
-#stretch = FileSynthDef('stretch')
-#stretch.add()
+stretch = FileSynthDef('stretch')
+stretch.add()
+
+granular = FileSynthDef('granular')
+granular.add()
 
 # SynthDefs read from file
 bass = FileSynthDef('bass')

@@ -14,7 +14,6 @@ class SamplePygenSynthDef(PygenSynthDefBaseClass):
         self.defaults['rate']  = 1.0
         self.base.append("rate = In.kr(bus, 1);")
 
-
 class LoopPygenSynthDef(SamplePygenSynthDef):
     def __init__(self):
         SamplePygenSynthDef.__init__(self, "loop")

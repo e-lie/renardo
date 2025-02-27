@@ -5,7 +5,7 @@ class InstrumentProxy:
         self.mod = 0
         self.kwargs = kwargs
 
-        # transform methods applied
+        # the list of transform methods applied
         # eg blip([0,2]).often("reverse")
         self.methods = []
         self.vars = vars(self)
