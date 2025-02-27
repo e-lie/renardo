@@ -47,10 +47,10 @@ def stop(self: Player, N=0):
     playing state to False in N bars time
     - When N is 0 it stops immediately"""
     self.stopping = True
-    self.stop_point = self.metro.now()
+    self.stop_point = self.main_event_clock.now()
     if N > 0:
-        self.stop_point = self.metro.next_bar() + (
-            (N - 1) * self.metro.bar_length()
+        self.stop_point = self.main_event_clock.next_bar() + (
+            (N - 1) * self.main_event_clock.bar_length()
         )
     else:
         self.kill()
@@ -62,21 +62,21 @@ def kill(self: Player):
     self.isplaying = False
     self.stopping = True
     self.reset()
-    if self in self.metro.playing:
-        self.metro.playing.remove(self)
+    if self in self.main_event_clock.playing:
+        self.main_event_clock.playing.remove(self)
     return
 
 @player_method
 def reload(self: Player):
     """ If this is a 'play' or 'loop' SynthDef, reload the filename used"""
-    if self.synthdef == LoopPlayer:
+    if self.instrument_name == LoopPlayer:
         buffer_manager.load_buffer(self.filename, force=True)
     return self
 
 @player_method
 def only(self: Player):
     """ Stops all players except this one """
-    for player in list(self.metro.playing):
+    for player in list(self.main_event_clock.playing):
         if player is not self:
             player.stop()
     return self
@@ -87,9 +87,9 @@ def solo(self: Player, action=1):
         by using `Player.solo(0)` """
     action = int(action)
     if action == 0:
-        self.metro.solo.reset()
+        self.main_event_clock.solo.reset()
     elif action == 1:
-        self.metro.solo.set(self)
+        self.main_event_clock.solo.set(self)
     elif action == 2:
         pass
     return self
@@ -132,7 +132,7 @@ def stutter(self: Player, amount=None, _beat_=None, **kwargs):
 
     # Only send if n > 1 and the player is playing
 
-    if self.metro.solo == self and n > 1:
+    if self.main_event_clock.solo == self and n > 1:
         new_event = {}
         attributes = self.attr.copy()
         attr_keys = set(list(self.attr.keys()) + list(kwargs.keys()))
@@ -163,7 +163,7 @@ def stutter(self: Player, amount=None, _beat_=None, **kwargs):
 def jump(self: Player, ahead=1, _beat_=None, **kwargs):
     """ Plays an event ahead of time. """
     timestamp = self.get_timestamp(_beat_)
-    if self.metro.solo == self:
+    if self.main_event_clock.solo == self:
         new_event = {}
         attributes = copy(self.attr)
         for key in attributes:
@@ -277,7 +277,7 @@ def alt_dur(self: Player, dur):
         seemingly alter the durations """
 
     self.dur = 1
-    self.bpm = self.metro.bpm * (1 / (dur))
+    self.bpm = self.main_event_clock.bpm * (1 / (dur))
     return self
 
 @player_method
@@ -367,7 +367,7 @@ def changeSynth(self: Player, list_of_synthdefs):
     # TODO write a better check for the synthdef type/name
     # if isinstance(new_synth, SynthDef):
     #    new_synth = str(new_synth.name)
-    self.synthdef = new_synth
+    self.instrument_name = new_synth
     return self
 
 #####################################################
@@ -456,13 +456,13 @@ def bang(self: Player, **kwargs):
 def fade(self: Player, dur=8, fvol=1, ivol=None, autostop=True):
     if ivol is None:
         ivol = float(self.amplify)
-    self.amplify = linvar([ivol, fvol], [dur, inf], start=self.metro.mod(4))
+    self.amplify = linvar([ivol, fvol], [dur, inf], start=self.main_event_clock.mod(4))
     def static_final_value():
         if fvol == 0 and autostop:
             self.stop()
         else:
             self.amplify = fvol
-    self.metro.schedule(static_final_value, self.metro.next_bar()+dur+1)
+    self.main_event_clock.schedule(static_final_value, self.main_event_clock.next_bar() + dur + 1)
     return self
 
 @player_method
@@ -477,7 +477,7 @@ def fadeout(self: Player, dur=4, fvol=0, ivol=1, autostop=True):
 
 @player_method
 def solofade(self: Player, dur=16, fvol=0, ivol=None, autostop=False):
-    for player in list(self.metro.playing):
+    for player in list(self.main_event_clock.playing):
         if player is not self: # and not player.always_on:
             player.fade(dur, ivol, fvol, autostop)
     return self

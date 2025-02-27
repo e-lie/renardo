@@ -88,7 +88,7 @@ class Player(Repeatable):
     samples = buffer_manager
 
     # Set in __init__.py
-    metro = None
+    main_event_clock = None
 
     default_scale = Scale.default
 
@@ -108,7 +108,7 @@ class Player(Repeatable):
 
         # General setup
 
-        self.synthdef = None
+        self.instrument_name = None
         self.id = name
 
         # self.current_event_size   = 0
@@ -179,12 +179,12 @@ class Player(Repeatable):
 
     @classmethod
     def get_attributes(cls):
-        """Returns a list of possible keyword arguments for FoxDot players"""
+        """Returns a list of possible keyword base arguments for players ie dur,pan,etc"""
         return cls.keywords + cls.base_attributes
 
     @classmethod
     def get_fxs(cls):
-        """Returns a list of possible keyword arguments for FoxDot effects"""
+        """Returns a list of possible keyword arguments for effects ie lpf,lpr,etc"""
         return cls.fx_attributes
 
     @classmethod
@@ -194,7 +194,7 @@ class Player(Repeatable):
 
     @classmethod
     def set_clock(cls, tempo_clock):
-        cls.metro = tempo_clock
+        cls.main_event_clock = tempo_clock
 
     # Should this also be instance method?
     @classmethod
@@ -204,28 +204,30 @@ class Player(Repeatable):
     def __hash__(self):
         return hash(self.id)  # could be problematic if there are id clashes?
 
-    # Player Object Manipulation
-    def __rshift__(self, other: InstrumentProxy):
+    def assign_instrument(self, instrument: InstrumentProxy):
         """
-        Handles the allocation of SynthDef objects using >> syntax, other must be
-        an instance of `SynthDefProxy`, which is usually created when calling a
-        `SynthDef`
+        Handles the allocation of instrument (Proxy)
         """
-        if isinstance(other, InstrumentProxy):
-            # Call the update method
-            self.update(other.name, other.degree, **other.kwargs)
+        if not isinstance(instrument, InstrumentProxy):
+            raise TypeError(f"{instrument} is an inappropriate argument type for PlayerObject")
+        # Call the update method
+        self.update_args_and_start(instrument.name, instrument.degree, **instrument.kwargs)
 
-            # self.update_pattern_root('sample' if self.synthdef == SamplePlayer else 'degree')
-            for method, arguments in other.methods:
-                args, kwargs = arguments
-                getattr(self, method).__call__(*args, **kwargs)
-            # Add the modifier (check if not 0 to stop adding 0 to values)
-            if (not isinstance(other.mod, (int, float))) or (other.mod != 0):
-                self + other.mod
-            return self
-        raise TypeError(
-            "{} is an innapropriate argument type for PlayerObject".format(other)
-        )
+        # self.update_pattern_root('sample' if self.synthdef == SamplePlayer else 'degree')
+        # Call methods
+        for method, arguments in instrument.methods:
+            args, kwargs = arguments
+            getattr(self, method).__call__(*args, **kwargs)
+
+        # Add the modifier (check if not 0 to stop adding 0 to values)
+        if (not isinstance(instrument.mod, (int, float))) or (instrument.mod != 0):
+            self + instrument.mod
+        return self
+
+    # Overrides the >> operator to assign an instrument to the player
+    def __rshift__(self, other: InstrumentProxy):
+        self.assign_instrument(other)
+        return self
 
     def test_for_circular_reference(
         self, value, attr, last_player=None, last_attr=None
@@ -280,9 +282,9 @@ class Player(Repeatable):
 
                 # keep track of what values we change with +-
                 if (
-                    (self.synthdef == SamplePlayer and name == "sample")
-                    or (self.synthdef == SamplePlayer and name == "spack")
-                    or (self.synthdef != SamplePlayer and name == "degree")
+                    (self.instrument_name == SamplePlayer and name == "sample")
+                    or (self.instrument_name == SamplePlayer and name == "spack")
+                    or (self.instrument_name != SamplePlayer and name == "degree")
                 ):
                     self.modifier = value
 
@@ -371,8 +373,8 @@ class Player(Repeatable):
             reset.append(key)
 
         # Set SynthDef defaults
-        if self.synthdef in SynthDefs:
-            synth = SynthDefs[self.synthdef]
+        if self.instrument_name in SynthDefs:
+            synth = SynthDefs[self.instrument_name]
             for key in ("atk", "decay", "rel"):
                 setattr(self, key, synth.defaults[key])
                 reset.append(key)
@@ -386,15 +388,15 @@ class Player(Repeatable):
         # Set any non-zero values for FoxDot
 
         # Sustain & Legato
-        self.sus = 0.5 if self.synthdef == SamplePlayer else 1
+        self.sus = 0.5 if self.instrument_name == SamplePlayer else 1
         self.blur = 1
         # Amplitude
         self.amp = 1
         self.amplify = 1
         # Duration of notes
-        self.dur = 0.5 if self.synthdef == SamplePlayer else 1
+        self.dur = 0.5 if self.instrument_name == SamplePlayer else 1
         # Degree of scale / Characters of samples
-        self.degree = " " if self.synthdef is SamplePlayer else 0
+        self.degree = " " if self.instrument_name is SamplePlayer else 0
         # Octave of the note
         self.oct = 5
         # Tempo
@@ -414,7 +416,7 @@ class Player(Repeatable):
         current duration value."""
 
         # If stopping, kill the event
-        if self.stopping and self.metro.now() >= self.stop_point:
+        if self.stopping and self.main_event_clock.now() >= self.stop_point:
             self.kill()
             return
 
@@ -439,7 +441,7 @@ class Player(Repeatable):
         if not isinstance(self.event["dur"], rest):
             try:
                 self.send(
-                    verbose=(self.metro.solo == self and kwargs.get("verbose", True))
+                    verbose=(self.main_event_clock.solo == self and kwargs.get("verbose", True))
                 )
 
             except Exception as err:
@@ -450,14 +452,14 @@ class Player(Repeatable):
 
         if self.event["bpm"] is not None:
             try:
-                tempo_shift = float(self.metro.bpm) / float(self.event["bpm"])
+                tempo_shift = float(self.main_event_clock.bpm) / float(self.event["bpm"])
             except (AttributeError, TypeError, ZeroDivisionError):
                 tempo_shift = 1
             dur *= tempo_shift
 
         # Schedule the next event (could move before get_event and use the index for get_event)
         self.event_index = self.event_index + dur
-        self.metro.schedule(self, self.event_index, kwargs={})
+        self.main_event_clock.schedule(self, self.event_index, kwargs={})
 
         # Change internal marker
         self.event_n += 1
@@ -471,7 +473,7 @@ class Player(Repeatable):
         n = 0
         acc = 0
         dur = 0
-        now = time if time is not None else self.metro.now()
+        now = time if time is not None else self.main_event_clock.now()
 
         if self.current_dur is None:
             self.current_dur = self.rhythm()
@@ -528,30 +530,33 @@ class Player(Repeatable):
             )
         )
 
-    def update(self, synthdef, degree, **kwargs):
-        """Updates the attributes of the player. Called using the >> syntax."""
+    def update_args_and_start(self, instrument_name, degree, **kwargs):
+        """
+        update arguments values depending of the argument and schedule the starting of the player
+        """
+        # TODO split and refactor that
         # SynthDef name
-        self.synthdef = synthdef
+        self.instrument_name = instrument_name
         # Make sure all values are reset to start
         if "filename" in kwargs:
             self.filename = kwargs["filename"]
             del kwargs["filename"]
 
-        # Auto reset when
+        # Auto reset if player was not playing
         if self.isplaying is False:
             self.reset()
 
         # If there is a designated solo player when updating, add this at next bar
-        if self.metro.solo.active() and self.metro.solo != self:
-            self.metro.schedule(
-                lambda *args, **kwargs: self.metro.solo.add(self), self.metro.next_bar()
+        if self.main_event_clock.solo.active() and self.main_event_clock.solo != self:
+            self.main_event_clock.schedule(
+                lambda *args, **kwargs: self.main_event_clock.solo.add(self), self.main_event_clock.next_bar()
             )
 
         # Update the attribute values
         special_cases = ["scale", "root", "dur"]
 
         # Set the degree
-        if synthdef == SamplePlayer:
+        if instrument_name == SamplePlayer:
             if type(degree) == str:
                 self.playstring = degree
             else:
@@ -588,28 +593,28 @@ class Player(Repeatable):
 
             # If we want to update now, set the start point to now
             after = True
-            if self.metro.now_flag:
-                start_point = self.metro.now()
+            if self.main_event_clock.now_flag:
+                start_point = self.main_event_clock.now()
                 after = False
             elif kwargs.get("quantise", True) == False:
-                start_point = self.metro.now()
+                start_point = self.main_event_clock.now()
             else:
-                start_point = self.metro.next_bar()
+                start_point = self.main_event_clock.next_bar()
 
             self.event_n = 0
             self.event_n, self.event_index = self.count(start_point, event_after=after)
-            self.metro.schedule(self, self.event_index)
+            self.main_event_clock.schedule(self, self.event_index)
 
         return self
 
 
     def get_timestamp(self, beat=None):
         if beat is not None:
-            timestamp = self.metro.osc_message_time() - self.metro.beat_dur(
-                self.metro.now() - beat
+            timestamp = self.main_event_clock.osc_message_time() - self.main_event_clock.beat_dur(
+                self.main_event_clock.now() - beat
             )
         else:
-            timestamp = self.metro.osc_message_time()
+            timestamp = self.main_event_clock.osc_message_time()
         return timestamp
 
 
@@ -622,7 +627,7 @@ class Player(Repeatable):
     def __add__(self, data):
         """Change the degree modifier stream"""
         self.mod_data = data
-        if self.synthdef == SamplePlayer:
+        if self.instrument_name == SamplePlayer:
             # self.attr['sample'] = self.modifier + self.mod_data
             self.sample = self.modifier + self.mod_data
         else:
@@ -633,7 +638,7 @@ class Player(Repeatable):
     def __sub__(self, data):
         """Change the degree modifier stream"""
         self.mod_data = 0 - data
-        if self.synthdef == SamplePlayer:
+        if self.instrument_name == SamplePlayer:
             self.attr["sample"] = self.modifier + self.mod_data
         else:
             self.attr["degree"] = self.modifier + self.mod_data
@@ -702,7 +707,7 @@ class Player(Repeatable):
 
     def number_attr(self, attr):
         """Returns true if the attribute should be a number"""
-        return not (self.synthdef == SamplePlayer and attr in ("degree", "freq"))
+        return not (self.instrument_name == SamplePlayer and attr in ("degree", "freq"))
 
     def update_player_key(self, key, value, time):
         """Forces object's dict uses PlayerKey instances"""
@@ -796,7 +801,7 @@ class Player(Repeatable):
         else:
             func_args = (event, timestamp + delay, 0, ignore)
 
-            self.metro.schedule(
+            self.main_event_clock.schedule(
                 self.update_player_key_from_event,
                 timestamp + delay,
                 args=func_args,
@@ -1056,19 +1061,19 @@ class Player(Repeatable):
             verbose
             and (message["amp"] > 0)
             and (
-                (self.synthdef != SamplePlayer and message["freq"] != None)
-                or (self.synthdef == SamplePlayer and message["buf"] > 0)
+                (self.instrument_name != SamplePlayer and message["freq"] != None)
+                or (self.instrument_name == SamplePlayer and message["buf"] > 0)
             )
         ):
             # Need to send delay and synthdef separately
 
-            delay = self.metro.beat_dur(message.get("delay", 0))
+            delay = self.main_event_clock.beat_dur(message.get("delay", 0))
 
             synthdef = self.get_synth_name(
                 message.get("buf", 0)
             )  # to send to play1 or play2
 
-            compiled_msg = self.metro.server.get_bundle(
+            compiled_msg = self.main_event_clock.server.get_bundle(
                 synthdef, message, timestamp=timestamp + delay
             )
 
@@ -1085,14 +1090,14 @@ class Player(Repeatable):
 
         # Let SC know the duration of 1 beat so effects can use it and adjust sustain too
 
-        beat_dur = self.metro.beat_dur()
+        beat_dur = self.main_event_clock.beat_dur()
 
         message = {
             "beat_dur": beat_dur,
             "sus": kwargs.get("sus", event["sus"]) * beat_dur,
         }
 
-        if self.synthdef == SamplePlayer:
+        if self.instrument_name == SamplePlayer:
             degree = kwargs.get("degree", event["degree"])
             sample = kwargs.get("sample", event["sample"])
             spack = kwargs.get("spack", event["spack"])
@@ -1101,7 +1106,7 @@ class Player(Repeatable):
             if rate < 0:
                 sus = kwargs.get("sus", event["sus"])
 
-                pos = self.metro.beat_dur(sus)
+                pos = self.main_event_clock.beat_dur(sus)
 
             else:
                 pos = 0
@@ -1115,23 +1120,23 @@ class Player(Repeatable):
             if "buf" in self.accessed_keys:
                 self.buf = buf
 
-        elif self.synthdef == LoopPlayer:
+        elif self.instrument_name == LoopPlayer:
             pos = kwargs.get("degree", event["degree"])
             buf = kwargs.get("buf", event["buf"])
 
             # Get a user-specified tempo
 
-            given_tempo = kwargs.get("tempo", self.event.get("tempo", self.metro.bpm))
+            given_tempo = kwargs.get("tempo", self.event.get("tempo", self.main_event_clock.bpm))
 
             if given_tempo in (None, 0):
                 tempo = 1
 
             else:
-                tempo = self.metro.bpm / given_tempo
+                tempo = self.main_event_clock.bpm / given_tempo
 
             # Set the position in "beats"
 
-            pos = pos * tempo * self.metro.beat_dur(1)
+            pos = pos * tempo * self.main_event_clock.beat_dur(1)
 
             # If there is a negative rate, move the pos forward
 
@@ -1147,7 +1152,7 @@ class Player(Repeatable):
             if rate < 0:
                 sus = kwargs.get("sus", event["sus"])
 
-                pos += self.metro.beat_dur(sus)
+                pos += self.main_event_clock.beat_dur(sus)
 
             message.update({"pos": pos, "buf": buf, "rate": rate})
 
@@ -1194,14 +1199,14 @@ class Player(Repeatable):
         """Returns the real SynthDef name of the player. Useful only for "play"
         as there is a play1 and play2 SynthDef for playing audio files with
         one or two channels respectively."""
-        if self.synthdef == SamplePlayer:
+        if self.instrument_name == SamplePlayer:
             numChannels = self.samples.get_buffer(buf).channels
             if numChannels == 1:
                 synthdef = "play1"
             else:
                 synthdef = "play2"
         else:
-            synthdef = str(self.synthdef)
+            synthdef = str(self.instrument_name)
         return synthdef
 
 
@@ -1234,9 +1239,9 @@ class Player(Repeatable):
 
     def __repr__(self):
         if self.id is not None:
-            return "<{} - {}>".format(self.id, self.synthdef)
+            return "<{} - {}>".format(self.id, self.instrument_name)
         else:
-            return "a '{}' Player Object".format(self.synthdef)
+            return "a '{}' Player Object".format(self.instrument_name)
 
     # def get_extra_attributes(self):
     #    """ Returns a dict of specific keyword arguments for a particular FoxDot player """
