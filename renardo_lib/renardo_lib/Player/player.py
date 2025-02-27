@@ -366,7 +366,6 @@ class Player(Repeatable):
             reset.append(key)
 
         # Set any non zero defaults for effects, e.g. verb=0.25
-
         for key in Player.fx_attributes:
             value = effect_manager.defaults[key]
             setattr(self, key, value)
@@ -1165,7 +1164,6 @@ class Player(Repeatable):
 
             if degree == None:
                 freq, midinote = None, None
-
             else:
                 freq, midinote = get_freq_and_midi(degree, octave, root, scale)
 
