@@ -1,7 +1,7 @@
 """ Module for converting handling MIDI in/out and functions relating to MIDI pitch calculation. """
 
 
-from renardo_lib.SynthDefManagement import SynthDefProxy
+from renardo_lib.SynthDefManagement import InstrumentProxy
 
 try:
     import rtmidi
@@ -189,10 +189,10 @@ class MidiIn:
         return
 
 
-class MidiOut(SynthDefProxy):
+class MidiOut(InstrumentProxy):
     """ SynthDef proxy for sending midi message via supercollider """
     def __init__(self, degree=0, **kwargs):
-        SynthDefProxy.__init__(self, self.__class__.__name__, degree, kwargs)
+        InstrumentProxy.__init__(self, self.__class__.__name__, degree, kwargs)
 
 class ReaperInstrument(MidiOut):
     """SynthDef proxy to handle MIDI + PyLive/LiveOSC integration"""

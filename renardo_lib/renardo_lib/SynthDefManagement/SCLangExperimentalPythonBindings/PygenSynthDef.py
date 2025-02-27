@@ -1,7 +1,7 @@
 import os
 
 from renardo_lib.SynthDefManagement.SynthDict import SynthDefs
-from renardo_lib.SynthDefManagement.SynthDefProxy import SynthDefProxy
+from renardo_lib.SynthDefManagement.InstrumentProxy import InstrumentProxy
 from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings import format_args, Env
 from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings.core import instance
 from renardo_sc_backend import Server
@@ -117,7 +117,7 @@ class PygenSynthDefBaseClass(object):
     # Returning the SynthDefProxy
     # ---------------------------
     def __call__(self, degree=None, **kwargs):
-        return SynthDefProxy(self.name, degree, kwargs)
+        return InstrumentProxy(self.name, degree, kwargs)
 
     # Getter and setter
     # -----------------

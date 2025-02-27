@@ -2,7 +2,7 @@ import itertools
 
 from renardo_sc_backend import SamplePlayer, LoopPlayer
 from renardo_sc_backend import buffer_manager
-from renardo_lib.SynthDefManagement import SynthDefProxy
+from renardo_lib.SynthDefManagement import InstrumentProxy
 from renardo_lib.SynthDefManagement.SynthDict import SynthDefs
 from renardo_lib.runtime.synthdefs_initialisation import effect_manager
 from renardo_lib.Key import PlayerKey, NumberKey
@@ -338,14 +338,13 @@ class Player(Repeatable):
             err = "Player Object has no attribute '{}'".format(name)
             raise AttributeError(err)
     # Player Object Manipulation
-
-    def __rshift__(self, other):
+    def __rshift__(self, other: InstrumentProxy):
         """
         Handles the allocation of SynthDef objects using >> syntax, other must be
         an instance of `SynthDefProxy`, which is usually created when calling a
         `SynthDef`
         """
-        if isinstance(other, SynthDefProxy):
+        if isinstance(other, InstrumentProxy):
             # Call the update method
             self.update(other.name, other.degree, **other.kwargs)
 
