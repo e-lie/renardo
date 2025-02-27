@@ -1,4 +1,5 @@
 import inspect
+from typing import Dict
 
 from renardo_lib.Code import WarningMsg
 from renardo_lib.Patterns import Pattern, Cycle, as_pattern
@@ -65,7 +66,7 @@ class Repeatable(object):
 
     def __init__(self):
         self.repeat_events = {}
-        self.previous_patterns = {}  # not a good name - TODO change
+        self.previous_patterns: Dict[str, MethodList] = {}  # not a good name - TODO change
 
     def update_pattern_root(self, attr):
         """Update the base attribute pattern that methods are applied to"""
@@ -188,13 +189,15 @@ class Repeatable(object):
         quantise = kwargs.get("quantise", True)
 
         try:
-            event = lambda: getattr(self, cmd)(*args, **kwargs)
+            def event(): 
+                return getattr(self, cmd)(*args, **kwargs)
+            
             if not quantise:
                 time = self.metro.now() + n
             else:
                 time = self.metro.next_bar() + n
             self.metro.schedule(event, time)
-        except:
+        except Exception:
             pass
 
         return self

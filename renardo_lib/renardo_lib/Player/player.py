@@ -6,7 +6,6 @@ from renardo_lib.SynthDefManagement import InstrumentProxy
 from renardo_lib.SynthDefManagement.SynthDict import SynthDefs
 from renardo_lib.runtime.synthdefs_initialisation import effect_manager
 from renardo_lib.Key import PlayerKey, NumberKey
-from renardo_lib.Repeat import Repeatable
 from renardo_lib.Patterns import (
     Pattern, PGroup, as_pattern, pattern_depth,
     GeneratorPattern, modulo_index, group_modulo_index,
@@ -16,6 +15,7 @@ from renardo_lib.Scale import Scale, get_freq_and_midi
 from renardo_lib.TimeVar import TimeVar
 from renardo_lib.Code import WarningMsg
 from renardo_lib.Utils import get_first_item, get_expanded_len
+from .Repeat import Repeatable
 from .rest import rest
 
 
