@@ -1,6 +1,6 @@
 import os
 from renardo_lib.Code import WarningMsg
-from renardo_lib.SynthDefManagement import SynthDefProxy
+from renardo_lib.SynthDefManagement import InstrumentProxy
 from renardo_lib.SynthDefManagement.SynthDict import SynthDefs
 from renardo_sc_backend import Server
 from renardo_lib.Settings import SYNTHDEF_DIR, TMP_SYNTHDEF_DIR
@@ -41,7 +41,7 @@ class SimpleSynthDef(object):
         return str(self.name)
 
     def __call__(self, degree=None, **kwargs):
-        return SynthDefProxy(self.name, degree, kwargs)
+        return InstrumentProxy(self.name, degree, kwargs)
 
     def load_in_server_from_file(self):
         """ Load in server"""

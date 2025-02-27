@@ -8,7 +8,7 @@ from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings import (
 )
 
 from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings.PygenSynthDef import DefaultPygenSynthDef
-from renardo_lib.SynthDefManagement.SynthDefProxy import SynthDefProxy
+from renardo_lib.SynthDefManagement.InstrumentProxy import InstrumentProxy
 from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings.SamplePygenSynthDefs import SamplePygenSynthDef
 
 from renardo_lib.SynthDefManagement.SCLangExperimentalPythonBindings.PygenEffectSynthDefs import Effect, In, Out, Server, TMP_EFFECTS_DIR
