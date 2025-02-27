@@ -4,6 +4,7 @@ from renardo_lib.SynthDefManagement import InstrumentProxy
 from renardo_lib.SynthDefManagement.SynthDict import SynthDefs
 from renardo_sc_backend import Server
 from renardo_lib.Settings import SYNTHDEF_DIR, TMP_SYNTHDEF_DIR
+from renardo_sc_backend import buffer_manager
 
 class SimpleSynthDef(object):
 
@@ -40,8 +41,26 @@ class SimpleSynthDef(object):
     def __repr__(self):
         return str(self.name)
 
-    def __call__(self, degree=None, **kwargs):
-        return InstrumentProxy(self.name, degree, kwargs)
+    def __call__(self, first_argument=None, **kwargs):
+        # "loop" and similar instruments use a different
+        # function signature : first arg is filename and not degree
+        if self.name in ["loop", "stretch"]:
+            filename = first_argument
+            pos = kwargs["pos"] if "pos" in kwargs.keys() else 0
+            sample = kwargs["sample"] if "sample" in kwargs.keys() else 0
+            proxy = InstrumentProxy(self.name, pos, kwargs)
+            proxy.kwargs["filename"] = filename
+            proxy.kwargs["buf"] = buffer_manager.load_buffer(filename, sample)
+            return proxy
+        elif self.name in ["granular"]: # to debug
+            filename = first_argument
+            pos = kwargs["pos"] if "pos" in kwargs.keys() else 0
+            sample = kwargs["sample"] if "sample" in kwargs.keys() else 0
+            kwargs["buf"] = buffer_manager.load_buffer(filename, sample)
+            return InstrumentProxy(self.name, pos, kwargs)
+        else:
+            degree = first_argument
+            return InstrumentProxy(self.name, degree, kwargs)
 
     def load_in_server_from_file(self):
         """ Load in server"""
