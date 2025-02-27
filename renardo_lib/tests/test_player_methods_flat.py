@@ -107,3 +107,17 @@ b1.solofadein() # ?
 b1.eclipse(4, 16, 2)
 
 b2.eclipse(8, 16, 6)
+
+
+
+
+# To debug :
+
+# b1 >> blip([0,2,0,5], dur=[1,.25,.75, .5,.5], sus=1)
+
+# p1 >> pads(dur=.25).map(b1, {0: oct=[4,5], 2: oct=6})   
+
+# p1 >> pads(dur=.25).attrmap(b1, "degree", "dur")
+
+# p1 >> pads(dur=.25).smap({"degree": {4: 0, 5: 1}})
+
