@@ -86,7 +86,7 @@ from renardo_lib.Player import (
     Pattern,
     PlayerKey, PlayerKeyException,
     Repeatable, Root,
-    SamplePlayer, Scale, SynthDefProxy,
+    SamplePlayer, Scale, InstrumentProxy,
     SynthDefs,
     copy,
     effect_manager,

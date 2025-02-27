@@ -1,4 +1,4 @@
-class SynthDefProxy:
+class InstrumentProxy:
     def __init__(self, name, degree, kwargs):
         self.name = name
         self.degree = degree
