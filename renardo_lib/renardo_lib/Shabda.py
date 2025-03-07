@@ -62,6 +62,7 @@ from functools import partial
 from pathlib import Path
 from urllib.parse import urlencode
 from urllib.request import urlopen, urlretrieve
+from threading import Thread
 
 from renardo_gatherer.config_dir import SAMPLES_DIR_PATH
 from renardo_gatherer.collections import DEFAULT_SAMPLES_PACK_NAME, LOOP_SUBDIR
@@ -117,7 +118,10 @@ def samples(definition):
     >>> samples('bass:4,hihat:4,rimshot:2')
 
     """
-    generate(definition)
+    print('Starting the samples download')
+
+    Thread(target=generate, args=(definition,), daemon=True).start()
+
 
 
 def speech(words, language='en-GB', gender='f'):
@@ -138,4 +142,8 @@ def speech(words, language='en-GB', gender='f'):
     >>> speech('vai,voa','pt-BR')
 
     """
-    generate(f'speech/{words}', {'gender': gender, 'language': language})
+    print('Starting the samples download')
+
+    definition = f'speech/{words}'
+    params = {'gender': gender, 'language': language}
+    Thread(target=generate, args=(definition, params), daemon=True).start()
