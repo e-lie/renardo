@@ -80,8 +80,8 @@ print(Player.get_attributes())
 # Más sobre esto más adelante en el tutorial de atributos de jugador
 
 # Podrías almacenar varias instancias de jugador y asignarlas en diferentes momentos
-proxy_1 = pads([0,1,2,3], dur=1/2)
-proxy_2 = pads([4,5,6,7], dur=1)
+proxy_1 = charm([0,1,2,3], dur=1/2)
+proxy_2 = charm([4,5,6,7], dur=1)
 
 p1 >> proxy_1 # Asigna el primero a p1
 
@@ -92,7 +92,7 @@ p1 >> proxy_2 # Esto reemplaza las instrucciones que sigue p1
 
 p1 >> pluck([0, 2, 3, 4], dur=1/2)
 
-p2 >> pads([(0, 2, 4), (3, 5, 7)], dur=8)
+p2 >> charm([(0, 2, 4), (3, 5, 7)], dur=8)
 
 # Toca sólo este reproductor, silenciando los demás
 p1.solo() # El valor por defecto es 1 (solo activado)

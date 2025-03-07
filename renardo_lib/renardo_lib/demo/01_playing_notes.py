@@ -80,8 +80,8 @@ print(Player.get_attributes())
 # More about those later in the player attributes tutorial
 
 # You could store several player instances and assign them at different times
-proxy_1 = pads([0,1,2,3], dur=1/2)
-proxy_2 = pads([4,5,6,7], dur=1)
+proxy_1 = charm([0,1,2,3], dur=1/2)
+proxy_2 = charm([4,5,6,7], dur=1)
 
 p1 >> proxy_1 # Assign the first to p1
 
@@ -92,7 +92,7 @@ p1 >> proxy_2 # This replaces the instructions being followed by p1
 
 p1 >> pluck([0, 2, 3, 4], dur=1/2)
 
-p2 >> pads([(0, 2, 4), (3, 5, 7)], dur=8)
+p2 >> charm([(0, 2, 4), (3, 5, 7)], dur=8)
 
 # Play only this player, muting others
 p1.solo() # default value is 1 (solo on)

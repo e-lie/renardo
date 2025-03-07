@@ -36,9 +36,9 @@ print(Scale.names())
 
 
 # Puedes cambiar la escala utilizada por un player utilizando la palabra clave 'scale'.
-p1 >> pads([0,1,2], scale=Scale.minor)
+p1 >> charm([0,1,2], scale=Scale.minor)
 
 
 # De forma similar, puedes cambiar los players de las notas root usando la palabra clave root
 # y el objeto Root.default
-p1 >> pads([0,1,2], scale=Scale.minor, root=2)
+p1 >> charm([0,1,2], scale=Scale.minor, root=2)
