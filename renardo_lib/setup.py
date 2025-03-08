@@ -37,5 +37,6 @@ setup(
     install_requires=[
         'renardo_gatherer==0.1.4.dev1',
         'midiutil',
+        'python-rtmidi>=1.5.8,<2.0.0',
     ],
 )
