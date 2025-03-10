@@ -22,6 +22,7 @@ MENU_ON_STARTUP = True
 CONSOLE_ON_STARTUP = True
 LINENUMBERS_ON_STARTUP = True
 TREEVIEW_ON_STARTUP = False
+MIDIBAR_ON_STARTUP = False
 TRANSPARENT_ON_STARTUP = False
 RECOVER_WORK = True
 LINE_NUMBER_MARKER_OFFSET = 0
@@ -30,8 +31,7 @@ CPU_USAGE = 2  # 0=low, 1=medium, 2=high
 CLOCK_LATENCY = 0  # 0=low, 1=medium, 2=high
 FORWARD_ADDRESS = ''
 FORWARD_PORT = 0
-COLOR_THEME = 'cyborg'
-TEXT_COLORS = 'default'
+COLOR_THEME = 'vapor'
 
 # Loading from file
 # ------------------
@@ -62,6 +62,7 @@ except FileNotFoundError:
     settings["CONSOLE_ON_STARTUP"] = True
     settings["LINENUMBERS_ON_STARTUP"] = True
     settings["TREEVIEW_ON_STARTUP"] = False
+    settings["MIDIBAR_ON_STARTUP"] = False
     settings["TRANSPARENT_ON_STARTUP"] = False
     settings["RECOVER_WORK"] = True
     settings["LINE_NUMBER_MARKER_OFFSET"] = 0
@@ -70,8 +71,7 @@ except FileNotFoundError:
     settings["CLOCK_LATENCY"] = 0
     settings["FORWARD_ADDRESS"] = ''
     settings["FORWARD_PORT"] = 0
-    settings["COLOR_THEME"] = 'cyborg'
-    settings["TEXT_COLORS"] = 'default'
+    settings["COLOR_THEME"] = 'vapor'
     # Write Settings into json file
     filename = os.path.join(os.path.dirname(__file__), "conf.json")
     try:
@@ -83,36 +83,36 @@ except FileNotFoundError:
 
 
 try:
-    file = FOXDOT_EDITOR_THEMES + '/' + TEXT_COLORS + '.json'
     # Opening JSON file
-    with open(file, 'r') as openfile:
+    with open(FOXDOT_EDITOR_THEMES, 'r') as openfile:
         # Reading from json file
         json_object = json.load(openfile)
         # Text area colours
         # ------------------
-        plaintext = json_object[TEXT_COLORS]['plaintext']
-        background = json_object[TEXT_COLORS]['background']
-        functions = json_object[TEXT_COLORS]['functions']
-        key_types = json_object[TEXT_COLORS]['key_types']
-        user_defn = json_object[TEXT_COLORS]['user_defn']
-        other_kws = json_object[TEXT_COLORS]['other_kws']
-        comments = json_object[TEXT_COLORS]['comments']
-        numbers = json_object[TEXT_COLORS]['numbers']
-        strings = json_object[TEXT_COLORS]['strings']
-        dollar = json_object[TEXT_COLORS]['dollar']
-        arrow = json_object[TEXT_COLORS]['arrow']
-        players = json_object[TEXT_COLORS]['players']
-        # Prompt colours
-        # ------------------
-        prompt_fg = json_object[TEXT_COLORS]['prompt_fg']
-        prompt_bg = json_object[TEXT_COLORS]['prompt_bg']
-        # Console area colours
-        # ------------------
-        console_text = json_object[TEXT_COLORS]['console_text']
-        console_bg = json_object[TEXT_COLORS]['console_bg']
-
+        for item in json_object["themes"]:
+            if COLOR_THEME in item:
+                plaintext = item[COLOR_THEME]["colors"]["fg"]
+                background = item[COLOR_THEME]["colors"]["bg"]
+                functions = item[COLOR_THEME]["colors"]["secondary"]
+                key_types = item[COLOR_THEME]["colors"]["info"]
+                user_defn = item[COLOR_THEME]["colors"]["success"]
+                other_kws = item[COLOR_THEME]["colors"]["success"]
+                comments = item[COLOR_THEME]["colors"]["light"]
+                numbers = item[COLOR_THEME]["colors"]["secondary"]
+                strings = item[COLOR_THEME]["colors"]["warning"]
+                dollar = item[COLOR_THEME]["colors"]["active"]
+                arrow = item[COLOR_THEME]["colors"]["warning"]
+                players = item[COLOR_THEME]["colors"]["danger"]
+                # Prompt colours
+                # ------------------
+                prompt_fg = item[COLOR_THEME]["colors"]["selectfg"]
+                prompt_bg = item[COLOR_THEME]["colors"]["selectbg"]
+                # Console area colours
+                # ------------------
+                console_text = item[COLOR_THEME]["colors"]["inputfg"]
+                console_bg = item[COLOR_THEME]["colors"]["inputbg"]
 except FileNotFoundError:
-    print(f"{FOXDOT_EDITOR_THEMES + '/' + TEXT_COLORS + '.json'} color config file not found! Use default values instead.")
+    print(f"{FOXDOT_EDITOR_THEMES}: File not found! Use default values instead.")
     # Text area colours
     # ------------------
     plaintext = '#ffffff'
@@ -154,7 +154,7 @@ tom = '#ff3838'
 noise = '#6b5e9b'
 ride = '#ffffa6'
 perc = '#ff8000'
-snare = '#ffff38'
+snare = '#f9e644'
 rim = '#ffff38'
 loops = '#1e1e19'
 default = '#b2b2b2'

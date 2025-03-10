@@ -3,15 +3,16 @@ from __future__ import absolute_import
 
 import multiprocessing
 import os
+import time
 from .tkimport import *
 from .Format import *
 from renardo_lib.Settings import *
 from renardo_gatherer.collections import nonalpha, SAMPLES_DIR_PATH
 
 try:
-    from playsound import playsound
+    from soundplay import playsound
 except Exception:
-    print("playsound library not installed...")
+    print("soundplay library not installed...")
 
 
 class SampleChart:
@@ -21,6 +22,7 @@ class SampleChart:
         self.root = Tk()
         self.width = 800
         self.height = 600
+        self.root.geometry(str(self.width)+"x"+str(self.height))
         self.wheel_count = 0
         self.root.minsize(self.width, self.height)
         self.root.title("FoxDot >> Samples Database Chart")
@@ -86,7 +88,7 @@ class SampleChart:
         self.dict_loops = []
         # First go through all letters and get file paths in upper and lower
         # Fill dictionary with letters as key and file names of audio as values
-        self.sp_path_l = str(SAMPLES_DIR_PATH) + "/" + spack_id + "/"
+        self.sp_path_l = os.path.join(SAMPLES_DIR_PATH, spack_id, "")
         self.dir_list_l = []
 
         for filename in os.listdir(self.sp_path_l):
@@ -97,7 +99,10 @@ class SampleChart:
 
         for i in self.dir_list_l:
             if i != "_" and i != "_loop_":
-                self.new_path = self.sp_path_l + str(i) + "/lower/"
+                self.new_path = os.path.join(self.sp_path_l,
+                                             str(i),
+                                             "lower",
+                                             "")
                 # self.smpl_list = os.path.isdir(self.new_path)
                 self.smpl_list = [
                     f for f in os.listdir(self.new_path)
@@ -109,7 +114,10 @@ class SampleChart:
                         self.smpl_list.remove(n)
                 self.dict_letters[i.upper()] = self.smpl_list
                 self.dict_letters[i] = self.smpl_list
-                self.new_path = self.sp_path_l + str(i) + "/upper/"
+                self.new_path = os.path.join(self.sp_path_l,
+                                             str(i),
+                                             "upper",
+                                             "")
                 self.smpl_list = [
                     f for f in os.listdir(self.new_path)
                     if os.path.isfile(os.path.join(self.new_path, f))
@@ -122,14 +130,17 @@ class SampleChart:
 
         # Fill dictionary with specials as key and file names of
         # audio as values
-        self.sp_path_s = self.sp_path_s = str(SAMPLES_DIR_PATH)+"/"+spack_id+"/_/"
+        self.sp_path_s = os.path.join(SAMPLES_DIR_PATH,
+                                      str(spack_id),
+                                      "_",
+                                      "")
         self.dir_list_s = []
         for filename in os.listdir(self.sp_path_s):
             if os.path.isdir(os.path.join(self.sp_path_s, filename)):
                 self.dir_list_s.append(filename)
         self.dir_list_s.sort()
         for j in self.dir_list_s:
-            self.new_path = self.sp_path_s + str(j) + "/"
+            self.new_path = os.path.join(self.sp_path_s, str(j), "")
             self.smpl_list = [
                 f for f in os.listdir(self.new_path)
                 if os.path.isfile(os.path.join(self.new_path, f))
@@ -140,7 +151,10 @@ class SampleChart:
                     self.smpl_list.remove(n)
             self.dict_specials[j] = self.smpl_list
         # Fill dictionary with loops as value
-        self.sp_path_loops = str(SAMPLES_DIR_PATH)+"/"+spack_id+"/"+FOXDOT_LOOP
+        self.sp_path_loops = os.path.join(SAMPLES_DIR_PATH,
+                                          spack_id,
+                                          FOXDOT_LOOP,
+                                          "")
         self.smpl_list = [
             f for f in os.listdir(self.sp_path_loops)
             if os.path.isfile(os.path.join(self.sp_path_loops, f))
@@ -215,9 +229,21 @@ class SampleChart:
         """Generate audio sample buttons"""
         self.colors = list(colour_map.keys())
         self.col_space = 12
+        self.bar_length = 260
         # First delete all in btn_frame
         for widgets in self.btn_frame.winfo_children():
             widgets.destroy()
+        self.total_max = len(self.dict_letters) + len(self.dict_specials) + 1
+        self.tl = tb.Toplevel(topmost=True, width=self.bar_length, height=20)
+        self.tl.title("Loading Samples")
+        self.pbar = ttk.Progressbar(self.tl,
+                                    length=self.bar_length,
+                                    mode="indeterminate",
+                                    max=self.total_max
+                                    )
+        self.pbar.grid()
+        self.pbar.start()
+        self.pbar_count = 0
         # Add category buttons
         self.counter = 0
         for k in self.dict_letters.keys():
@@ -262,6 +288,10 @@ class SampleChart:
                         self.btn.configure(bg=colour_map["default"])
                 self.btn.grid(row=self.dcounter, column=self.fcounter + self.col_space)
                 self.fcounter += 1
+                self.pbar_count += 1
+                # time.sleep(0.1)
+                self.pbar["value"] = self.pbar_count
+                self.tl.update_idletasks()
             self.dcounter += 1
         # Create buttons for each sample in the specials dictionary
         for n in self.dict_specials:
@@ -289,6 +319,10 @@ class SampleChart:
                         self.btn.configure(bg=colour_map["default"])
                 self.btn.grid(row=self.dcounter, column=self.fcounter + self.col_space)
                 self.fcounter += 1
+                self.pbar_count += 1
+                # time.sleep(0.1)
+                self.pbar["value"] = self.pbar_count
+                self.tl.update_idletasks()
             self.dcounter += 1
         self.fcounter = 0
         for path in self.dict_loops:
@@ -305,6 +339,13 @@ class SampleChart:
             # self.btn_frame.bind('<Return>', lambda event=None: button.invoke())
             self.btn.grid(row=self.dcounter, column=self.fcounter + self.col_space)
             self.fcounter += 1
+            self.pbar["value"] = self.pbar_count
+            self.tl.update_idletasks()
+            # time.sleep(0.1)
+        self.pbar_count = 76
+        self.tl.update_idletasks()
+        self.pbar.stop()
+        self.tl.withdraw()
 
     def play_audio(self, char, sample, path, row, col):
         """Displays sample code to copy and plays audio"""
@@ -318,12 +359,23 @@ class SampleChart:
 
         if len(self.char) == 1 and self.char.isalpha():
             if self.char.isupper():
-                self.path = self.sp_path_l + self.char.lower() + "/upper/" + path
+                self.path = os.path.join(self.sp_path_l,
+                                         self.char.lower(),
+                                         "upper",
+                                         path,
+                                         "")
             elif self.char.islower():
-                self.path = self.sp_path_l + self.char + "/lower/" + path
+                self.path = os.path.join(self.sp_path_l,
+                                         self.char,
+                                         "lower",
+                                         path,
+                                         "")
             self.cmd = "play"
         elif self.char == "loops":
-            self.path = self.sp_path_l + FOXDOT_LOOP + "/" + path
+            self.path = os.path.join(self.sp_path_l,
+                                     FOXDOT_LOOP,
+                                     path,
+                                     "")
             self.cmd = "loop"
             self.char = os.path.splitext(path)[0]
         else:

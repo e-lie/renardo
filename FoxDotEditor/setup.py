@@ -24,5 +24,6 @@ setup(
         'renardo_gatherer==0.1.4.dev1',
         'psutil',
         'ttkbootstrap==1.10.1',
+        'soundplay'
     ],
 )

@@ -33,9 +33,10 @@ setup(
     long_description_content_type="text/markdown",
     # entry_points={'gui_scripts' : ['FoxDotEditor = FoxDotEditor.__init__:main']},
     # data_files=[('', 'LICENSE')],
-    package_data = {'renardo_lib': ['README.md','demo/**', 'SynthDefManagement/sclang_code/**'],},
+    package_data = {'renardo_lib': ['README.md','demo/**', 'SynthDefManagement/sclang_code/**', 'MidiMaps/*'],},
     install_requires=[
         'renardo_gatherer==0.1.4.dev1',
         'midiutil',
+        'python-rtmidi>=1.5.8,<2.0.0',
     ],
 )

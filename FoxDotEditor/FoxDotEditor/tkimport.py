@@ -2,6 +2,10 @@ import sys
 import os
 import json
 import ttkbootstrap as tb
+from ttkbootstrap.constants import *
+from ttkbootstrap.scrolled import ScrolledText
+from ttkbootstrap.dialogs import Messagebox
+from ttkbootstrap import Style
 
 if sys.version_info[0] >= 3:
     from tkinter import *

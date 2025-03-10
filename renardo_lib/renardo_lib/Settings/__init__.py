@@ -10,8 +10,6 @@ try:
 except ImportError:
     FOXDOT_EDITOR_ROOT = os.path.realpath(__file__ + "/../../../../FoxDotEditor/FoxDotEditor")
 
-
-
 # Check for OS -> mac, linux, win
 SYSTEM = 0
 WINDOWS = 0
@@ -39,7 +37,8 @@ FOXDOT_ICON = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/icon.ico")
 FOXDOT_ICON_GIF = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/icon.gif")
 FOXDOT_HELLO = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/hello.txt")
 FOXDOT_STARTUP_PATH = os.path.realpath(FOXDOT_ROOT + "/Custom/startup.py")
-FOXDOT_EDITOR_THEMES = os.path.realpath(FOXDOT_EDITOR_ROOT + "/themes")
+FOXDOT_EDITOR_THEMES = os.path.realpath(FOXDOT_EDITOR_ROOT + "/themes/themes.json")
+FOXDOT_MIDI_MAPS = os.path.realpath(FOXDOT_ROOT + "/MidiMaps")
 # FOXDOT_SND = SAMPLES_FOLDER_PATH / 'foxdot_default'
 FOXDOT_SND = get_samples_dir_path()
 # FOXDOT_LOOP = SAMPLES_FOLDER_PATH / 'foxdot_default' / '_loop_'
@@ -116,6 +115,7 @@ MENU_ON_STARTUP = conf.MENU_ON_STARTUP
 CONSOLE_ON_STARTUP = conf.CONSOLE_ON_STARTUP
 LINENUMBERS_ON_STARTUP = conf.LINENUMBERS_ON_STARTUP
 TREEVIEW_ON_STARTUP = conf.TREEVIEW_ON_STARTUP
+MIDIBAR_ON_STARTUP = conf.MIDIBAR_ON_STARTUP
 TRANSPARENT_ON_STARTUP = conf.TRANSPARENT_ON_STARTUP
 RECOVER_WORK = conf.RECOVER_WORK
 CHECK_FOR_UPDATE = conf.CHECK_FOR_UPDATE
@@ -128,7 +128,6 @@ FORWARD_PORT = conf.FORWARD_PORT
 SAMPLES_DIR = conf.SAMPLES_DIR
 SAMPLES_PACK_NUMBER = conf.SAMPLES_PACK_NUMBER
 COLOR_THEME = conf.COLOR_THEME
-TEXT_COLORS = conf.TEXT_COLORS
 
 if conf.SAMPLES_DIR is not None and conf.SAMPLES_DIR != "":
     FOXDOT_SND = os.path.realpath(conf.SAMPLES_DIR)
