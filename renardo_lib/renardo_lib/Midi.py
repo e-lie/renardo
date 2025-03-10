@@ -2,28 +2,27 @@
 Module for converting handling MIDI in/out and functions relating to MIDI pitch
 calculation.
 """
-from renardo_lib.SynthDefManagement import SynthDefProxy
-from renardo_lib.Settings import FOXDOT_MIDI_MAPS
-from renardo_lib.Utils import midi_cmd
-
-try:
-    import rtmidi
-    from rtmidi import midiconstants
-    TIMING_CLOCK = midiconstants.TIMING_CLOCK
-    SONG_POSITION_POINTER = midiconstants.SONG_POSITION_POINTER
-    SONG_START = midiconstants.SONG_START
-    SONG_STOP = midiconstants.SONG_STOP
-    MODULATION = midiconstants.MODULATION
-    CONTROL_CHANGE = midiconstants.CONTROL_CHANGE
-    CHANNEL_VOLUME = midiconstants.CHANNEL_VOLUME
-    EXPRESSION_CONTROLLER = midiconstants.EXPRESSION_CONTROLLER
-except ImportError:
-    pass
 import time
 import json
 import os
 from threading import Thread
+
+import rtmidi
+from rtmidi import midiconstants
+
 from renardo_lib.Code import execute
+from renardo_lib.SynthDefManagement import SynthDefProxy
+from renardo_lib.Settings import FOXDOT_MIDI_MAPS
+from renardo_lib.Utils import midi_cmd
+
+TIMING_CLOCK = midiconstants.TIMING_CLOCK
+SONG_POSITION_POINTER = midiconstants.SONG_POSITION_POINTER
+SONG_START = midiconstants.SONG_START
+SONG_STOP = midiconstants.SONG_STOP
+MODULATION = midiconstants.MODULATION
+CONTROL_CHANGE = midiconstants.CONTROL_CHANGE
+CHANNEL_VOLUME = midiconstants.CHANNEL_VOLUME
+EXPRESSION_CONTROLLER = midiconstants.EXPRESSION_CONTROLLER
 
 
 class MidiInputHandler(object):
@@ -97,10 +96,7 @@ class MidiIn:
     def __init__(self, port_id=0):
         """ Class for listening for MIDI clock messages
             from a midi device """
-        try:
-            self.device = rtmidi.MidiIn()
-        except NameError:
-            raise ImportError("Rtmidi not imported")
+        self.device = rtmidi.MidiIn()
 
         self.available_ports = self.device.get_ports()
 
