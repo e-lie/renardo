@@ -1,2 +1,5 @@
+from renardo.lib import *
+
 def main() -> None:
-    print("Hello from renardo!")
+    from renardo.tui import RenardoApp
+    RenardoApp()
