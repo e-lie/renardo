@@ -1,17 +1,32 @@
+[build-system]
+requires = ["uv", "hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "renardo"
-version = "0.1.0"
-description = "Add your description here"
+version = "1.0.0.dev14"
+description = "Python livecoding environment - New fork of FoxDot"
 readme = "README.md"
+requires-python = ">=3.9"
 authors = [
-    { name = "Elie Gavoty", email = "mail@eliegavoty.fr" }
+    {name = "Elie Gavoty", email = "eliegavoty@free.fr"}
 ]
-requires-python = ">=3.12"
-dependencies = []
+license = {text = "GPL-3.0"}
+dependencies = [
+    "midiutil",
+    "tomli",
+    "tomli-w",
+    "requests",
+    "psutil",
+    "indexed",
+    "python-rtmidi",
+    "ttkbootstrap",
+    "textual",
+    "python-reapy"
+]
 
 [project.scripts]
 renardo = "renardo:main"
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+[project.urls]
+Homepage = "http://renardo.org/"
