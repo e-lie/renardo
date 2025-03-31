@@ -63,13 +63,13 @@ jobs:
           pip install build
       - name: Build package
         run: |
-          cd renardo_gatherer
+          cd renardo.gatherer
           python -m build
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           #password: ${{ secrets.PYPI_API_TOKEN }}
-          packages-dir: renardo_gatherer/dist/
+          packages-dir: renardo.gatherer/dist/
           skip-existing: true
 
   pypi-publish-renardo-lib:
