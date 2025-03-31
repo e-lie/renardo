@@ -1,21 +1,22 @@
-# demo and debug folders
+# Python-generated files
 __pycache__/
-venv*
-*.pyc
+*.py[oc]
+build/
+dist/
+wheels/
 *.egg-info
-build
-dist
 
-myTests/*
-renardo_lib/debug/*
-renardo_lib/Settings/conf.py
-renardo_lib/Extensions/VRender/tmp/*
-build/*
-dist/*
-renardo_lib/osc/**/**
-renardo_lib/osc/scsyndef/test.scd
-renardo_lib/GhostCoder/*
-renardo_lib/Settings/conf.txt
+# Virtual environments
+.venv
+
+renardo.lib/debug/*
+renardo.lib/Settings/conf.py
+renardo.lib/Extensions/VRender/tmp/*
+renardo.lib/osc/**/**
+renardo.lib/osc/scsyndef/test.scd
+renardo.lib/GhostCoder/*
+renardo.lib/Settings/conf.txt
+
 changed_files.txt
 
 # To-do list
@@ -27,30 +28,20 @@ renardo_samples
 *.mp3
 *.ogg
 
-
-
-
 autodoc.py
 
 snd/mkdir.py
 
-
-
 # PIP Registration file
-
 
 .pypirc
 
-
 # Directory created by pip install -e
-
 
 /*.egg-info
 
 
-
 # Compiled Python file
-
 
 *.pyc
 
