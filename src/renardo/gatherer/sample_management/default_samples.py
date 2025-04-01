@@ -8,8 +8,7 @@ def is_default_spack_initialized():
     return (SAMPLES_DIR_PATH / DEFAULT_SAMPLES_PACK_NAME / 'downloaded_at.txt').exists()
 
 
-def default_loop_path() -> Path:
-    return SAMPLES_DIR_PATH/DEFAULT_SAMPLES_PACK_NAME/LOOP_SUBDIR
+
 
 
 def download_default_sample_pack(logger=None):
