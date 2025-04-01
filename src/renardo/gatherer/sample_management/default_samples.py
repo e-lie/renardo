@@ -1,13 +1,8 @@
 from datetime import datetime
 from pathlib import Path
 
-from renardo.gatherer.config_dir import get_samples_dir_path
-from renardo.gatherer.collection_download import download_files_from_json_index_concurrent, SAMPLES_DOWNLOAD_SERVER
-
-SAMPLES_DIR_PATH = get_samples_dir_path()
-DEFAULT_SAMPLES_PACK_NAME = '0_foxdot_default'
-# DEFAULT_SAMPLES_PACK_NAME = '0_foxdot_default_testing'
-LOOP_SUBDIR = '_loop_'
+from renardo.settings_manager import DEFAULT_SAMPLES_PACK_NAME, SAMPLES_DIR_PATH, SAMPLES_DOWNLOAD_SERVER
+from renardo.gatherer.collection_download import download_files_from_json_index_concurrent
 
 def is_default_spack_initialized():
     return (SAMPLES_DIR_PATH / DEFAULT_SAMPLES_PACK_NAME / 'downloaded_at.txt').exists()
