@@ -3,7 +3,8 @@ from pathlib import Path
 from pprint import pformat
 from typing import Dict, Optional, List, Iterator
 
-from renardo.gatherer.sample_management.sample_category import SampleCategory, nonalpha, alpha
+from renardo.gatherer.sample_management.sample_category import SampleCategory
+from renardo.settings_manager import nonalpha, alpha
 from renardo.gatherer.sample_management.sample_file import SampleFile
 from renardo.gatherer.sample_management.default_samples import LOOP_SUBDIR
 

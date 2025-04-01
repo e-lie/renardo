@@ -6,10 +6,8 @@
 
 # Expose effectively used only
 
-from renardo.gatherer.config_dir import get_samples_dir_path, get_user_config_dir_path
 from renardo.gatherer.sample_management.sample_pack_library import SamplePackLibrary, sample_pack_library, sample_packs
 from renardo.gatherer.sample_management.sample_file import SampleFile
-from renardo.gatherer.sample_management.sample_category import nonalpha
 from renardo.gatherer.sample_management.default_samples import is_default_spack_initialized, download_default_sample_pack, default_loop_path, LOOP_SUBDIR
 
 # def main():
