@@ -5,7 +5,7 @@ from urllib.parse import urlparse, urljoin
 
 import requests
 
-SAMPLES_DOWNLOAD_SERVER = 'https://collections.renardo.org/sample_packs'
+
 
 def download_file_in_pool(url, dest_path, retries=5, delay=1, logger=None):
     filename = os.path.basename(urlparse(url).path)

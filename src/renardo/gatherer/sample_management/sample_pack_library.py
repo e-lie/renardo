@@ -7,7 +7,7 @@ from pprint import pformat, PrettyPrinter
 from typing import Optional, List, Iterator
 
 from renardo.gatherer.sample_management.default_samples import default_loop_path
-from renardo.gatherer.sample_management.sample_category import nonalpha
+from renardo.settings_manager import nonalpha
 from renardo.gatherer.sample_management.sample_pack import SamplePack
 from renardo.gatherer.sample_management.sample_file import SampleFile
 #from renardo.gatherer.sample_management.default_samples import DEFAULT_SAMPLES_PACK_NAME

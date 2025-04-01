@@ -108,8 +108,10 @@ from renardo.lib.Midi import MidiInputHandler, MidiOut, midi, rtMidiNotFound
 from renardo.sc_backend import (
     Buffer, buffer_management, BufferManager, DESCRIPTIONS, Dict, Optional, Path,
     Server, SynthDefManagement, TempoServer, alpha, closing, custom_osc_lib, heapq,
-    nil, settings_manager, supercollider_settings, wave
+    nil, supercollider_settings, wave
 )
+
+from renardo.settings_manager import settings_manager
 
 from renardo.gatherer import sample_pack_library, sample_packs
 
