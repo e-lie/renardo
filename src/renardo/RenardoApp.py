@@ -1,7 +1,7 @@
-from renardo.tui.supercollider_mgt.sc_classes_files import write_sc_renardo_files_in_user_config
-from renardo.tui.supercollider_mgt.sclang_instances_mgt import SupercolliderInstance
-from .pulsar_mgt import PulsarInstance
-from .RenardoTUI import RenardoTUI
+from renardo.tui import write_sc_renardo_files_in_user_config
+from renardo.tui import SupercolliderInstance
+from renardo.tui import PulsarInstance
+from renardo.tui import RenardoTUI
 
 import argparse
 import time
