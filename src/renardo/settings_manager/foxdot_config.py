@@ -6,7 +6,7 @@ FOXDOT_ROOT = str(Path(__file__).parent.parent)
 ADDRESS = 'localhost'
 PORT = 57110
 PORT2 = 57120
-FONT = 'Consolas'
+
 SUPERCOLLIDER = ""
 BOOT_ON_STARTUP = False
 
@@ -24,8 +24,8 @@ FORWARD_PORT = 0
 
 FOXDOT_SND = get_samples_dir_path()
 FOXDOT_LOOP = "_loop_"
-TUTORIAL_DIR = os.path.realpath(FOXDOT_ROOT + "/demo/")
-RECORDING_DIR = os.path.realpath(FOXDOT_ROOT + "/rec/")
+TUTORIAL_DIR = os.path.realpath(FOXDOT_ROOT + "/lib/demo/")
+RECORDING_DIR = os.path.realpath(FOXDOT_ROOT + "/lib/rec/")
 
 PERFORMANCE_EXCEPTIONS_CATCHING = True
 

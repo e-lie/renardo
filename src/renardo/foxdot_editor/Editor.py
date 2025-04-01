@@ -32,8 +32,9 @@ import os
 import re
 import socket
 # Code execution
-from renardo.foxdot_editor.EditorSettings import SYSTEM, WINDOWS, MAC_OS, LINUX, FOXDOT_TEMP_FILE
-from renardo.lib.Settings import (
+
+from renardo.settings_manager import (
+    SYSTEM, WINDOWS, MAC_OS, LINUX, FOXDOT_TEMP_FILE,
     FONT, COLOR_THEME, USE_ALPHA, MENU_ON_STARTUP, TREEVIEW_ON_STARTUP,
     LINENUMBERS_ON_STARTUP, CONSOLE_ON_STARTUP, FOXDOT_ICON, FOXDOT_ICON_GIF,
     CHECK_FOR_UPDATE, RECOVER_WORK, TRANSPARENT_ON_STARTUP, 

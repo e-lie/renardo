@@ -4,6 +4,7 @@ from .RenardoApp import RenardoApp
 def main() -> None:
    RenardoApp()
 
+RenardoApp()
 
 # from .RenardoApp import RenardoApp
 
