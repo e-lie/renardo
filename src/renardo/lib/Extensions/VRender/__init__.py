@@ -1,7 +1,7 @@
 from renardo.lib.Extensions.VRender.VRender import renderizeVoice
 from renardo.lib.SynthDefManagement import DefaultPygenSynthDef
 from renardo.lib.runtime import Clock, Scale, Root
-from renardo.lib.Settings import FOXDOT_ROOT
+from renardo.settings_manager import FOXDOT_ROOT
 
 class VRenderSynthDef(DefaultPygenSynthDef):
     def __init__(self):

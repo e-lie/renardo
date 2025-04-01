@@ -7,13 +7,13 @@ import logging
 #print(symbols_str)
 
 
-from renardo.lib.Settings import (
+from renardo.settings_manager import (
     ADDRESS, ALPHA_VALUE, AUTO_COMPLETE_BRACKETS, BOOT_ON_STARTUP, CHECK_FOR_UPDATE,
     CLOCK_LATENCY, COLOR_THEME, COLOURS, CONSOLE_ON_STARTUP, CPU_USAGE,
-    EFFECTS_DIR, ENVELOPE_DIR, FONT, FORWARD_ADDRESS, FORWARD_PORT,
-    FOXDOT_CONFIG_FILE, FOXDOT_EDITOR_ROOT, FOXDOT_EDITOR_THEMES_PATH, FOXDOT_EFFECTS_FILE,
+    EFFECTS_DIR, ENVELOPE_DIR, FORWARD_ADDRESS, FORWARD_PORT,
+    FOXDOT_EDITOR_ROOT, FOXDOT_EDITOR_THEMES_PATH, FOXDOT_EFFECTS_FILE,
     FOXDOT_HELLO, FOXDOT_ICON, FOXDOT_ICON_GIF, FOXDOT_LOOP, FOXDOT_ROOT,
-    FOXDOT_SETTINGS, FOXDOT_SND, FOXDOT_STARTUP_PATH,
+    FOXDOT_SND, FOXDOT_STARTUP_PATH,
     GET_SC_INFO, LINENUMBERS_ON_STARTUP, LINE_NUMBER_MARKER_OFFSET,
     MAX_CHANNELS, MENU_ON_STARTUP, PORT, PORT2, RECORDING_DIR,
     RECOVER_WORK, SAMPLES_DIR, SAMPLES_PACK_NUMBER, SC3_PLUGINS, SUPERCOLLIDER,
@@ -22,8 +22,8 @@ from renardo.lib.Settings import (
     conf,
     get_samples_dir_path, get_synthdefs_dir_path,
     get_tutorial_files,
-    reload,
 )
+
 from renardo.lib.Code import (
     CodeString,
     CodeType,
@@ -99,7 +99,7 @@ from renardo.lib.Player import (
 from renardo.lib.TimeVar import (
     ChildPvar, ChildTimeVar, PATTERN_METHODS, Pvar, PvarGenerator, PvarGeneratorEx,
     URLError, expvar, fetch, get_expanded_len, get_inverse_op, get_pypi_version,
-    isiterable, json, max_length, recursive_any, sinvar, socket_timeout, urlopen
+    isiterable, json, max_length, recursive_any, sinvar, socket_timeout, urlopen, Get
 )
 
 from renardo.lib.Constants import NoneConst, const
@@ -108,7 +108,7 @@ from renardo.lib.Midi import MidiInputHandler, MidiOut, midi, rtMidiNotFound
 from renardo.sc_backend import (
     Buffer, buffer_management, BufferManager, DESCRIPTIONS, Dict, Optional, Path,
     Server, SynthDefManagement, TempoServer, alpha, closing, custom_osc_lib, heapq,
-    nil, supercollider_settings, wave
+    nil, wave
 )
 
 from renardo.settings_manager import settings_manager

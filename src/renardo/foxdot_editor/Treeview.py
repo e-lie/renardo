@@ -3,7 +3,7 @@
 """
 from renardo.foxdot_editor.tkimport import *
 from pathlib import Path
-from renardo.lib.Settings import FOXDOT_EDITOR_ROOT
+from renardo.settings_manager import FOXDOT_EDITOR_ROOT
 import os
 
 

@@ -32,8 +32,9 @@ import os
 import re
 import socket
 # Code execution
-from renardo.foxdot_editor.EditorSettings import SYSTEM, WINDOWS, MAC_OS, LINUX, FOXDOT_TEMP_FILE
-from renardo.lib.Settings import (
+
+from renardo.settings_manager import (
+    SYSTEM, WINDOWS, MAC_OS, LINUX, FOXDOT_TEMP_FILE
     FONT, COLOR_THEME, USE_ALPHA, MENU_ON_STARTUP, TREEVIEW_ON_STARTUP,
     LINENUMBERS_ON_STARTUP, CONSOLE_ON_STARTUP, FOXDOT_ICON, FOXDOT_ICON_GIF,
     CHECK_FOR_UPDATE, RECOVER_WORK, TRANSPARENT_ON_STARTUP, 
@@ -683,23 +684,24 @@ class workspace:
             self.menu_toggled.set(True)
         return "break"
 
-    def toggle_sc3_plugins(self, event=None):
-        """
-        Allows you to change the SC3 plugins variable from the editor.
-        Restart of the editor is required.
-        """
-        with open(FOXDOT_CONFIG_FILE, "r") as f:
-            lines = f.readlines()
-        with open(FOXDOT_CONFIG_FILE, "w") as f:
-            for line in lines:
-                if "SC3_PLUGINS" in line:
-                    f.write("SC3_PLUGINS={}\n".format(not bool(SC3_PLUGINS)))
-                else:
-                    f.write(line)
-        # Pop-up to tell the user a restart is required
-        tkMessageBox.showwarning(title="Just a heads up",
-                                 message="Restart of Renardo is required for the changes to take effect")
-        return "break"
+    # TODO remove this toggle feature since it's not gonna be pertinent in new arch
+    # def toggle_sc3_plugins(self, event=None): 
+    #     """
+    #     Allows you to change the SC3 plugins variable from the editor.
+    #     Restart of the editor is required.
+    #     """
+    #     with open(FOXDOT_CONFIG_FILE, "r") as f:
+    #         lines = f.readlines()
+    #     with open(FOXDOT_CONFIG_FILE, "w") as f:
+    #         for line in lines:
+    #             if "SC3_PLUGINS" in line:
+    #                 f.write("SC3_PLUGINS={}\n".format(not bool(SC3_PLUGINS)))
+    #             else:
+    #                 f.write(line)
+    #     # Pop-up to tell the user a restart is required
+    #     tkMessageBox.showwarning(title="Just a heads up",
+    #                              message="Restart of Renardo is required for the changes to take effect")
+    #     return "break"
 
     def toggle_transparency(self, event=None):
         """

@@ -4,7 +4,7 @@ import json
 from subprocess import check_output
 
 from renardo.lib.Scale import freqtomidi
-from renardo.lib.Settings import TMP_SYNTHDEF_DIR
+from renardo.settings_manager import TMP_SYNTHDEF_DIR
 
 from urllib.request import urlretrieve
 

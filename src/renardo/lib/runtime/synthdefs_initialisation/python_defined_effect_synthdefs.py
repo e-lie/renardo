@@ -1,6 +1,6 @@
 from renardo.lib.SynthDefManagement.EffectManager import EffectManager
 from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings.PygenEffectSynthDefs import *
-from renardo.lib.Settings import SC3_PLUGINS
+from renardo.settings_manager import SC3_PLUGINS
 
 effect_manager = EffectManager()
 

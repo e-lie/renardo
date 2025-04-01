@@ -1,3 +1,5 @@
+import os, sys, json
+
 from .foxdot_config import FOXDOT_ROOT
 
 FOXDOT_EDITOR_ROOT = os.path.realpath(__file__ + "/..")
@@ -64,124 +66,123 @@ try:
         json_object = json.load(openfile)
         # Text area colours
         # ------------------
-        plaintext = json_object[TEXT_COLORS]['plaintext']
-        background = json_object[TEXT_COLORS]['background']
-        functions = json_object[TEXT_COLORS]['functions']
-        key_types = json_object[TEXT_COLORS]['key_types']
-        user_defn = json_object[TEXT_COLORS]['user_defn']
-        other_kws = json_object[TEXT_COLORS]['other_kws']
-        comments = json_object[TEXT_COLORS]['comments']
-        numbers = json_object[TEXT_COLORS]['numbers']
-        strings = json_object[TEXT_COLORS]['strings']
-        dollar = json_object[TEXT_COLORS]['dollar']
-        arrow = json_object[TEXT_COLORS]['arrow']
-        players = json_object[TEXT_COLORS]['players']
+        conf["plaintext"] = json_object[TEXT_COLORS]['plaintext']
+        conf["background"] = json_object[TEXT_COLORS]['background']
+        conf["functions"] = json_object[TEXT_COLORS]['functions']
+        conf["key_types"] = json_object[TEXT_COLORS]['key_types']
+        conf["user_defn"] = json_object[TEXT_COLORS]['user_defn']
+        conf["other_kws"] = json_object[TEXT_COLORS]['other_kws']
+        conf["comments"] = json_object[TEXT_COLORS]['comments']
+        conf["numbers"] = json_object[TEXT_COLORS]['numbers']
+        conf["strings"] = json_object[TEXT_COLORS]['strings']
+        conf["dollar"] = json_object[TEXT_COLORS]['dollar']
+        conf["arrow"] = json_object[TEXT_COLORS]['arrow']
+        conf["players"] = json_object[TEXT_COLORS]['players']
         # Prompt colours
         # ------------------
-        prompt_fg = json_object[TEXT_COLORS]['prompt_fg']
-        prompt_bg = json_object[TEXT_COLORS]['prompt_bg']
+        conf["prompt_fg"] = json_object[TEXT_COLORS]['prompt_fg']
+        conf["prompt_bg"] = json_object[TEXT_COLORS]['prompt_bg']
         # Console area colours
         # ------------------
-        console_text = json_object[TEXT_COLORS]['console_text']
-        console_bg = json_object[TEXT_COLORS]['console_bg']
+        conf["console_text"] = json_object[TEXT_COLORS]['console_text']
+        conf["console_bg"] = json_object[TEXT_COLORS]['console_bg']
 
 except FileNotFoundError:
     print(f"{FOXDOT_EDITOR_THEMES_PATH + '/' + TEXT_COLORS + '.json'} color config file not found! Use default values instead.")
     # Text area colours
     # ------------------
-    plaintext = '#ffffff'
-    background = '#1a1a1a'
-    functions = '#bf4acc'
-    key_types = '#29abe2'
-    user_defn = '#29abe2'
-    other_kws = '#49db8b'
-    comments = '#666666'
-    numbers = '#e89c18'
-    strings = '#eae02a'
-    dollar = '#ec4e20'
-    arrow = '#eae02a'
-    players = '#ec4e20'
+    conf["plaintext"] = '#ffffff'
+    conf["background"] = '#1a1a1a'
+    conf["functions"] = '#bf4acc'
+    conf["key_types"] = '#29abe2'
+    conf["user_defn"] = '#29abe2'
+    conf["other_kws"] = '#49db8b'
+    conf["comments"] = '#666666'
+    conf["numbers"] = '#e89c18'
+    conf["strings"] = '#eae02a'
+    conf["dollar"] = '#ec4e20'
+    conf["arrow"] = '#eae02a'
+    conf["players"] = '#ec4e20'
     # Prompt colours
     # ------------------
-    prompt_fg = '#4d4d4d'
-    prompt_bg = '#666666'
+    conf["prompt_fg"] = '#4d4d4d'
+    conf["prompt_bg"] = '#666666'
     # Console area colours
     # ------------------
-    console_text = '#ffffff'
-    console_bg = '#000000'
+    conf["console_text"] = '#ffffff'
+    conf["console_bg"] = '#000000'
 
 # Sound category colours
 # ------------------
-kick = '#780373'
-various = '#ffbf00'
-vocal = '#ffa6a6'
-bell = '#158466'
-hihat = '#81d41a'
-clap = '#729fcf'
-snap = '#729fcf'
-shaker = '#a7074b'
-tambourine = '#a7074b'
-crash = '#bbe33d'
-cymbal = '#bbe33d'
-soundfx = '#3465a4'
-tom = '#ff3838'
-noise = '#6b5e9b'
-ride = '#ffffa6'
-perc = '#ff8000'
-snare = '#ffff38'
-rim = '#ffff38'
-loops = '#1e1e19'
-default = '#b2b2b2'
-text1 = '#ffffff'
-text2 = '#000000'
+conf["kick"] = '#780373'
+conf["various"] = '#ffbf00'
+conf["vocal"] = '#ffa6a6'
+conf["bell"] = '#158466'
+conf["hihat"] = '#81d41a'
+conf["clap"] = '#729fcf'
+conf["snap"] = '#729fcf'
+conf["shaker"] = '#a7074b'
+conf["tambourine"] = '#a7074b'
+conf["crash"] = '#bbe33d'
+conf["cymbal"] = '#bbe33d'
+conf["soundfx"] = '#3465a4'
+conf["tom"] = '#ff3838'
+conf["noise"] = '#6b5e9b'
+conf["ride"] = '#ffffa6'
+conf["perc"] = '#ff8000'
+conf["snare"] = '#ffff38'
+conf["rim"] = '#ffff38'
+conf["loops"] = '#1e1e19'
+conf["default"] = '#b2b2b2'
+conf["text1"] = '#ffffff'
+conf["text2"] = '#000000'
 
 # Loading from env
 # ------------------
 for key, value in os.environ.items():
-    if key in globals():
-        globals()[key] = value
+    if key in conf:
+        conf[key] = value
 
 # Colours
 class COLOURS:
     # Text area colours
-    plaintext = conf.plaintext
-    background = conf.background
-    functions = conf.functions
-    key_types = conf.key_types
-    user_defn = conf.user_defn
-    other_kws = conf.other_kws
-    comments = conf.comments
-    numbers = conf.numbers
-    strings = conf.strings
-    dollar = conf.dollar
-    arrow = conf.arrow
-    players = conf.players
-    prompt_fg = conf.prompt_fg
-    prompt_bg = conf.prompt_bg
+    plaintext = conf["plaintext"]
+    background = conf["background"]
+    functions = conf["functions"]
+    key_types = conf["key_types"]
+    user_defn = conf["user_defn"]
+    other_kws = conf["other_kws"]
+    comments = conf["comments"]
+    numbers = conf["numbers"]
+    strings = conf["strings"]
+    dollar = conf["dollar"]
+    arrow = conf["arrow"]
+    players = conf["players"]
+    prompt_fg = conf["prompt_fg"]
+    prompt_bg = conf["prompt_bg"]
     # Console area colours
-    console_text = conf.console_text
-    console_bg = conf.console_bg
+    console_text = conf["console_text"]
+    console_bg = conf["console_bg"]
     # Sample chart colours
-    kick = conf.kick
-    various = conf.various
-    vocal = conf.vocal
-    bell = conf.bell
-    hihat = conf.hihat
-    clap = conf.clap
-    snap = conf.snap
-    shaker = conf.shaker
-    tambourine = conf.tambourine
-    crash = conf.crash
-    cymbal = conf.cymbal
-    soundfx = conf.soundfx
-    tom = conf.tom
-    noise = conf.noise
-    ride = conf.ride
-    perc = conf.perc
-    snare = conf.snare
-    rim = conf.rim
-    loops = conf.loops
-    default = conf.default
-    text1 = conf.text1
-    text2 = conf.text2
-
+    kick = conf["kick"]
+    various = conf["various"]
+    vocal = conf["vocal"]
+    bell = conf["bell"]
+    hihat = conf["hihat"]
+    clap = conf["clap"]
+    snap = conf["snap"]
+    shaker = conf["shaker"]
+    tambourine = conf["tambourine"]
+    crash = conf["crash"]
+    cymbal = conf["cymbal"]
+    soundfx = conf["soundfx"]
+    tom = conf["tom"]
+    noise = conf["noise"]
+    ride = conf["ride"]
+    perc = conf["perc"]
+    snare = conf["snare"]
+    rim = conf["rim"]
+    loops = conf["loops"]
+    default = conf["default"]
+    text1 = conf["text1"]
+    text2 = conf["text2"]

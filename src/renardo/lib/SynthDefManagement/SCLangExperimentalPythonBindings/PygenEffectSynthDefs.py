@@ -60,7 +60,7 @@
 """
 
 import os.path
-from renardo.lib.Settings import TMP_EFFECTS_DIR
+from renardo.settings_manager import TMP_EFFECTS_DIR
 from renardo.sc_backend import Server
 
 

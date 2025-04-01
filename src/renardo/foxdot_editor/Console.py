@@ -3,7 +3,7 @@ from renardo.foxdot_editor.tkimport import *
 from renardo.foxdot_editor.Format import *
 from renardo.foxdot_editor.AppFunctions import stdout
 from renardo.foxdot_editor.MenuBar import ConsolePopupMenu
-from renardo.foxdot_editor.EditorSettings import SYSTEM, MAC_OS
+from from renardo.settings_manager import SYSTEM, MAC_OS
 import math
 import random
 try:
