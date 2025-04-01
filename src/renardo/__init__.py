@@ -1,3 +1,4 @@
+from renardo.settings_manager import settings_manager
 from renardo.lib import *
 from renardo.RenardoApp import RenardoApp
 
