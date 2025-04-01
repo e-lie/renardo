@@ -2,7 +2,7 @@ import os, sys, json
 
 from .foxdot_config import FOXDOT_ROOT
 
-FOXDOT_EDITOR_ROOT = os.path.realpath(__file__ + "/..")
+FOXDOT_EDITOR_ROOT = os.path.realpath(FOXDOT_ROOT + "/foxdot_editor")
 FOXDOT_TEMP_FILE = os.path.realpath(FOXDOT_EDITOR_ROOT + "/tmp/tempfile.txt")
 
 # If the tempfile doesn't exist, create it
@@ -39,6 +39,7 @@ FOXDOT_ICON = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/icon.ico")
 FOXDOT_ICON_GIF = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/icon.gif")
 FOXDOT_HELLO = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/hello.txt")
 
+FONT = 'Consolas'
 AUTO_COMPLETE_BRACKETS = True
 USE_ALPHA = True
 ALPHA_VALUE = 0.8
