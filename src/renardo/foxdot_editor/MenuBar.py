@@ -7,7 +7,7 @@ from renardo.lib.Settings import (
     SC3_PLUGINS, CPU_USAGE, CLOCK_LATENCY,
     get_tutorial_files
 )
-from renardo.foxdot_editor.EditorSettings import SYSTEM, MAC_OS
+from renardo.settings_manager import SYSTEM, MAC_OS
 from renardo.lib.Code import FoxDotCode
 
 # Code menu
