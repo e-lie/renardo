@@ -24,7 +24,7 @@
 # try:
 #     reload(conf)  # incase of a reload
 # except NameError:
-#     from renardo.lib.Settings import conf
+#     from renardo.settings_manager import conf
 
 # FOXDOT_CONFIG_FILE = conf.filename
 # ADDRESS = conf.ADDRESS

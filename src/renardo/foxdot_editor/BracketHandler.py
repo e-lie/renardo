@@ -1,7 +1,7 @@
 from renardo.foxdot_editor.tkimport import *
 from renardo.foxdot_editor.Format import *
 from renardo.foxdot_editor.AppFunctions import *
-from renardo.lib.Settings import AUTO_COMPLETE_BRACKETS
+from renardo.settings_manager import AUTO_COMPLETE_BRACKETS
 
 whitespace = [" ", "\t", "\n", "\r", "\f", "\v"]
 

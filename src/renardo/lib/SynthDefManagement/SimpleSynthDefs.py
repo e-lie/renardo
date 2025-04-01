@@ -3,7 +3,7 @@ from renardo.lib.Code import WarningMsg
 from renardo.lib.SynthDefManagement import InstrumentProxy
 from renardo.lib.SynthDefManagement.SynthDict import SynthDefs
 from renardo.sc_backend import Server
-from renardo.lib.Settings import SYNTHDEF_DIR, TMP_SYNTHDEF_DIR
+from renardo.settings_manager import SYNTHDEF_DIR, TMP_SYNTHDEF_DIR
 from renardo.sc_backend import buffer_manager
 
 class SimpleSynthDef(object):

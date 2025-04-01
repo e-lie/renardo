@@ -15,7 +15,7 @@ except ImportError:
     
 from renardo.lib.Utils import modulo_index
 
-from renardo.lib.Settings import FOXDOT_STARTUP_PATH, PERFORMANCE_EXCEPTIONS_CATCHING
+from renardo.settings_manager import FOXDOT_STARTUP_PATH, PERFORMANCE_EXCEPTIONS_CATCHING
 
 """
 Live Object

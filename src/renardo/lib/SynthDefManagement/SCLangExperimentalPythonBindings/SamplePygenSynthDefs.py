@@ -1,6 +1,6 @@
 from renardo.sc_backend import buffer_manager
 from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings.PygenSynthDef import PygenSynthDefBaseClass
-from renardo.lib.Settings import SAMPLES_PACK_NUMBER
+from renardo.settings_manager import SAMPLES_PACK_NUMBER
 
 
 class SamplePygenSynthDef(PygenSynthDefBaseClass):

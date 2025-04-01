@@ -1,5 +1,8 @@
 from pathlib import Path
 from .supercollider_settings import get_synthdefs_dir_path
+from .config_dir import get_samples_dir_path
+
+import os
 
 FOXDOT_ROOT = str(Path(__file__).parent.parent)
 

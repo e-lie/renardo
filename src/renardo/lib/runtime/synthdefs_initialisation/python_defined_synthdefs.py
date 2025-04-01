@@ -1,7 +1,7 @@
 from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings import *
 from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings.core import instance
 from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings.PygenSynthDef import DefaultPygenSynthDef
-from renardo.lib.Settings import SC3_PLUGINS
+from renardo.settings_manager import SC3_PLUGINS
 from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings import Env
 
 # with SynthDef("sinepad") as sinepad:

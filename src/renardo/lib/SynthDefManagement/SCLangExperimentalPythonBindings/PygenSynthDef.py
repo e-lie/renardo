@@ -5,7 +5,7 @@ from renardo.lib.SynthDefManagement.InstrumentProxy import InstrumentProxy
 from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings import format_args, Env
 from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings.core import instance
 from renardo.sc_backend import Server
-from renardo.lib.Settings import TMP_SYNTHDEF_DIR
+from renardo.settings_manager import TMP_SYNTHDEF_DIR
 from renardo.lib.Code import WarningMsg
 
 

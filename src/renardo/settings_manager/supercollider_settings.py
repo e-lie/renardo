@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from .config_dir import  get_user_config_dir_path
-from renardo.sc_backend.settings_manager import SettingsManager
+from .settings_manager import SettingsManager
 
 
 # Define default settings

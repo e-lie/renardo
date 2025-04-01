@@ -1,5 +1,5 @@
 from renardo.foxdot_editor.tkimport import *
-from renardo.lib.Settings import LINE_NUMBER_MARKER_OFFSET
+from renardo.settings_manager import LINE_NUMBER_MARKER_OFFSET
 from renardo.lib.Code import execute
 
 

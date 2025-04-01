@@ -1,6 +1,6 @@
 
 from renardo.foxdot_editor.tkimport import *
-from renardo.lib.Settings import *
+from renardo.settings_manager import FOXDOT_ICON
 from .Format import *
 from ttkbootstrap.dialogs.colorchooser import ColorChooserDialog
 try:
@@ -34,7 +34,7 @@ class Preferences:
             theme = os.path.splitext(file_name)[0]
             self.text_themes = self.text_themes + (theme,)
         self.settings = {}
-        self.conf_json = FOXDOT_CONFIG_FILE
+        #self.conf_json = FOXDOT_CONFIG_FILE
         self.tabview = tb.Notebook(self.stop)
         self.general = tb.Frame(self.tabview)
         self.colors = tb.Frame(self.tabview)
@@ -674,56 +674,58 @@ class Preferences:
                                        parent=self.stop)
         self.stop.lift(aboveThis=None)
         if answer:
+            # TODO reimplement save changes using the new central settings manager
             return self.save_changes()
         else:
             pass
         return self.stop.destroy()
         pass
 
-    def save_changes(self):
-        self.text_settings = self.textbox.get("1.0", "end-1c")
-        if self.text_settings != self.text:
-            try:
-                self.settings.clear()
-                self.settings = json.loads(self.text_settings)
-            except Exception:
-                print("Can not convert text to json file. Please check your changes in this file!")
-        else:
-            self.settings.clear()
-            self.settings['ADDRESS'] = self.address.get()
-            self.settings['PORT'] = int(self.port.get())
-            self.settings['PORT2'] = int(self.port2.get())
-            self.settings['FONT'] = self.font.get()
-            self.settings['SUPERCOLLIDER'] = self.sc_path.get()
-            self.settings['BOOT_ON_STARTUP'] = self.sc_start.get()
-            self.settings['SC3_PLUGINS'] = self.sc3_start.get()
-            self.settings['MAX_CHANNELS'] = int(self.max_ch.get())
-            self.settings['SAMPLES_DIR'] = self.samples_dir.get()
-            self.settings['SAMPLES_PACK_NUMBER'] = int(self.sample_pack.get())
-            self.settings['GET_SC_INFO'] = self.sc_info.get()
-            self.settings['USE_ALPHA'] = self.use_alpha.get()
-            self.settings['ALPHA_VALUE'] = float(self.alpha_val.get())
-            self.settings['MENU_ON_STARTUP'] = self.menu_start.get()
-            self.settings['CONSOLE_ON_STARTUP'] = self.console_start.get()
-            self.settings['LINENUMBERS_ON_STARTUP'] = self.linenumbers_start.get()
-            self.settings['TREEVIEW_ON_STARTUP'] = self.treeview_start.get()
-            self.settings['TRANSPARENT_ON_STARTUP'] = self.alpha_start.get()
-            self.settings['RECOVER_WORK'] = self.recover_work.get()
-            self.settings['CHECK_FOR_UPDATE'] = self.check_update.get()
-            self.settings['LINE_NUMBER_MARKER_OFFSET'] = int(self.linenumber_offset.get())
-            self.settings['AUTO_COMPLETE_BRACKETS'] = self.brackets_auto.get()
-            self.convert2number(self.cpu_use.get(), 0)
-            self.settings['CPU_USAGE'] = int(self.cpu_use.get())
-            self.convert2number(self.clk_lat.get(), 1)
-            self.settings['CLOCK_LATENCY'] = int(self.clk_lat.get())
-            self.settings['FORWARD_ADDRESS'] = self.fwd_address.get()
-            self.settings['FORWARD_PORT'] = int(self.fwd_port.get())
-            self.settings['COLOR_THEME'] = self.theme.get()
-            self.settings['TEXT_COLORS'] = self.text_theme.get()
-        settings_file = open(self.conf_json, "w")
-        json.dump(self.settings, settings_file, indent=6)
-        settings_file.close()
-        msg = "A restart of FoxDot is required for the changes to take effect"
-        tkMessageBox.showwarning(parent=self.stop, title="Just a heads up", message=msg)
-        self.stop.destroy()
-        return
+    # # TODO reimplement save changes using the new central settings manager
+    # def save_changes(self):
+    #     self.text_settings = self.textbox.get("1.0", "end-1c")
+    #     if self.text_settings != self.text:
+    #         try:
+    #             self.settings.clear()
+    #             self.settings = json.loads(self.text_settings)
+    #         except Exception:
+    #             print("Can not convert text to json file. Please check your changes in this file!")
+    #     else:
+    #         self.settings.clear()
+    #         self.settings['ADDRESS'] = self.address.get()
+    #         self.settings['PORT'] = int(self.port.get())
+    #         self.settings['PORT2'] = int(self.port2.get())
+    #         self.settings['FONT'] = self.font.get()
+    #         self.settings['SUPERCOLLIDER'] = self.sc_path.get()
+    #         self.settings['BOOT_ON_STARTUP'] = self.sc_start.get()
+    #         self.settings['SC3_PLUGINS'] = self.sc3_start.get()
+    #         self.settings['MAX_CHANNELS'] = int(self.max_ch.get())
+    #         self.settings['SAMPLES_DIR'] = self.samples_dir.get()
+    #         self.settings['SAMPLES_PACK_NUMBER'] = int(self.sample_pack.get())
+    #         self.settings['GET_SC_INFO'] = self.sc_info.get()
+    #         self.settings['USE_ALPHA'] = self.use_alpha.get()
+    #         self.settings['ALPHA_VALUE'] = float(self.alpha_val.get())
+    #         self.settings['MENU_ON_STARTUP'] = self.menu_start.get()
+    #         self.settings['CONSOLE_ON_STARTUP'] = self.console_start.get()
+    #         self.settings['LINENUMBERS_ON_STARTUP'] = self.linenumbers_start.get()
+    #         self.settings['TREEVIEW_ON_STARTUP'] = self.treeview_start.get()
+    #         self.settings['TRANSPARENT_ON_STARTUP'] = self.alpha_start.get()
+    #         self.settings['RECOVER_WORK'] = self.recover_work.get()
+    #         self.settings['CHECK_FOR_UPDATE'] = self.check_update.get()
+    #         self.settings['LINE_NUMBER_MARKER_OFFSET'] = int(self.linenumber_offset.get())
+    #         self.settings['AUTO_COMPLETE_BRACKETS'] = self.brackets_auto.get()
+    #         self.convert2number(self.cpu_use.get(), 0)
+    #         self.settings['CPU_USAGE'] = int(self.cpu_use.get())
+    #         self.convert2number(self.clk_lat.get(), 1)
+    #         self.settings['CLOCK_LATENCY'] = int(self.clk_lat.get())
+    #         self.settings['FORWARD_ADDRESS'] = self.fwd_address.get()
+    #         self.settings['FORWARD_PORT'] = int(self.fwd_port.get())
+    #         self.settings['COLOR_THEME'] = self.theme.get()
+    #         self.settings['TEXT_COLORS'] = self.text_theme.get()
+    #     settings_file = open(self.conf_json, "w")
+    #     json.dump(self.settings, settings_file, indent=6)
+    #     settings_file.close()
+    #     msg = "A restart of FoxDot is required for the changes to take effect"
+    #     tkMessageBox.showwarning(parent=self.stop, title="Just a heads up", message=msg)
+    #     self.stop.destroy()
+    #     return
