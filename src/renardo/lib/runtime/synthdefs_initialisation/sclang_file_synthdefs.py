@@ -20,6 +20,22 @@ stretch.add()
 granular = FileSynthDef('granular')
 granular.add()
 
+# Classic FoxDot
+
+# SynthDefs read from file
+blip = FileSynthDef('blip')
+blip.add()
+
+# SynthDefs read from file
+charm = FileSynthDef('charm')
+charm.add()
+
+# SynthDefs read from file
+pluck = FileSynthDef('pluck')
+pluck.add()
+
+# TODO import the other classics here
+
 # SynthDefs read from file
 bass = FileSynthDef('bass')
 bass.add()
