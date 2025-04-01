@@ -5,7 +5,7 @@ from .config_dir import (
     SAMPLES_DOWNLOAD_SERVER, get_samples_dir_path, get_user_config_dir_path
 )
 
-from .sample_config import nonalpha, alpha
+from .sample_config import nonalpha, alpha, default_loop_path
 
 from .supercollider_settings import (
     OSC_MIDI_ADDRESS, GET_SC_INFO, FOXDOT_INFO_FILE, FOXDOT_RECORD_FILE,

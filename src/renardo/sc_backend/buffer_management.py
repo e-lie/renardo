@@ -5,7 +5,7 @@
 #from itertools import chain
 #from os.path import abspath, join, isabs, isfile, isdir, splitext
 #
-#from renardo.gatherer import default_loop_path, sample_pack_library
+#from renardo.gatherer import sample_pack_library
 ## from renardo.lib.Code import WarningMsg
 ## from renardo.lib.Logging import Timing
 #from renardo.sc_backend.ServerManager.default_server import Server

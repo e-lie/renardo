@@ -1,3 +1,9 @@
+from pathlib import Path
+from .config_dir import SAMPLES_DIR_PATH, DEFAULT_SAMPLES_PACK_NAME, LOOP_SUBDIR
+
+def default_loop_path() -> Path:
+    return SAMPLES_DIR_PATH/DEFAULT_SAMPLES_PACK_NAME/LOOP_SUBDIR
+
 alpha    = "abcdefghijklmnopqrstuvwxyz"
 nonalpha = {"&": "_ampersand",
             "*": "_asterix",
