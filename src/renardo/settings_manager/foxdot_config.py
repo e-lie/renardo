@@ -1,6 +1,5 @@
 from pathlib import Path
 from .supercollider_settings import get_synthdefs_dir_path
-from .config_dir import get_samples_dir_path
 
 import os
 
@@ -25,7 +24,6 @@ CLOCK_LATENCY = 0  # 0=low, 1=medium, 2=high
 FORWARD_ADDRESS = ''
 FORWARD_PORT = 0
 
-FOXDOT_SND = get_samples_dir_path()
 FOXDOT_LOOP = "_loop_"
 TUTORIAL_DIR = os.path.realpath(FOXDOT_ROOT + "/lib/demo/")
 RECORDING_DIR = os.path.realpath(FOXDOT_ROOT + "/lib/rec/")

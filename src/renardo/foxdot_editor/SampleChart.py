@@ -6,9 +6,9 @@ import os
 from .tkimport import *
 from .Format import *
 from renardo.settings_manager import *
-from renardo.settings_manager import nonalpha, get_samples_dir_path
+from renardo.settings_manager import settings_manager, nonalpha
 
-SAMPLES_DIR_PATH = get_samples_dir_path()
+SAMPLES_DIR = settings_manager.get("SAMPLES_DIR")
 
 try:
     from playsound import playsound
@@ -31,8 +31,8 @@ class SampleChart:
         self.root.grid_columnconfigure(0, weight=1)
         # self.root.iconbitmap('img/foxdot.ico')
         # Call init methods
-        self.sp_count = len([name for name in os.listdir(str(SAMPLES_DIR_PATH))])
-        self.sp_names = os.listdir(str(SAMPLES_DIR_PATH))
+        self.sp_count = len([name for name in os.listdir(str(SAMPLES_DIR))])
+        self.sp_names = os.listdir(str(SAMPLES_DIR))
         self.sp_names.sort()
         self.sp_view()
         self.create_dics(spack_id="0_foxdot_default")
@@ -88,7 +88,7 @@ class SampleChart:
         self.dict_loops = []
         # First go through all letters and get file paths in upper and lower
         # Fill dictionary with letters as key and file names of audio as values
-        self.sp_path_l = str(SAMPLES_DIR_PATH) + "/" + spack_id + "/"
+        self.sp_path_l = str(SAMPLES_DIR) + "/" + spack_id + "/"
         self.dir_list_l = []
 
         for filename in os.listdir(self.sp_path_l):
@@ -124,7 +124,7 @@ class SampleChart:
 
         # Fill dictionary with specials as key and file names of
         # audio as values
-        self.sp_path_s = self.sp_path_s = str(SAMPLES_DIR_PATH)+"/"+spack_id+"/_/"
+        self.sp_path_s = self.sp_path_s = str(SAMPLES_DIR)+"/"+spack_id+"/_/"
         self.dir_list_s = []
         for filename in os.listdir(self.sp_path_s):
             if os.path.isdir(os.path.join(self.sp_path_s, filename)):
@@ -142,7 +142,7 @@ class SampleChart:
                     self.smpl_list.remove(n)
             self.dict_specials[j] = self.smpl_list
         # Fill dictionary with loops as value
-        self.sp_path_loops = str(SAMPLES_DIR_PATH)+"/"+spack_id+"/"+FOXDOT_LOOP
+        self.sp_path_loops = str(SAMPLES_DIR)+"/"+spack_id+"/"+FOXDOT_LOOP
         self.smpl_list = [
             f for f in os.listdir(self.sp_path_loops)
             if os.path.isfile(os.path.join(self.sp_path_loops, f))
