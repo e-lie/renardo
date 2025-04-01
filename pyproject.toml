@@ -21,7 +21,7 @@ dependencies = [
     "indexed",
     "python-rtmidi",
     "ttkbootstrap",
-    "textual"
+    "textual < 3"
 ]
 
 [project.scripts]
@@ -29,3 +29,8 @@ renardo = "renardo:main"
 
 [project.urls]
 Homepage = "http://renardo.org/"
+
+[tool.hatch.build.targets.wheel.shared-data]
+"renardo/lib/README.md" = "."
+"renardo/lib/demo" = "renardo/lib/demo"
+"renardo/lib/SynthDefManagement/sclang_code" = "renardo/lib/SynthDefManagement/sclang_code"
