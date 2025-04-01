@@ -6,9 +6,9 @@ import wx
 from .SimpleText import Text
 from .SimpleMenu import Menu
 # FoxDot imports
-from ....Settings import *
-from from renardo.settings_manager import SYSTEM
-from ...Code import execute
+#from ....Settings import *
+from renardo.settings_manager import SYSTEM
+#from ...Code import execute
 
 
 class workspace:
