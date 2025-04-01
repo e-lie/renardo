@@ -15,7 +15,6 @@ class SamplePack:
         self.name = self._parse_pack_name(directory.name)
         self.index = self._parse_pack_index(directory.name)
         self._load_categories()
-        self.complete = self._is_complete()
 
     @staticmethod
     def _parse_pack_name(dirname: str) -> str:
@@ -36,7 +35,15 @@ class SamplePack:
     def _load_categories(self):
         """Load all category folders and their samples."""
         for category_dir in self.directory.iterdir():
-            if category_dir.is_dir():
+            # check if the folder is a single letter directory then use upper lower subdir
+            # because macOS is not case-sensitive with file names WTF
+            if  category_dir.is_dir() and len(category_dir.name)==1 and category_dir.name in alpha+alpha.upper():
+
+                lower_category = category_dir.name.lower()
+                upper_category = category_dir.name.upper()
+                self._categories[lower_category] = SampleCategory(category_dir / 'lower', lower_category)
+                self._categories[upper_category] = SampleCategory(category_dir / 'upper', upper_category)
+            elif category_dir.is_dir():
                 category = category_dir.name  # The letter/symbol
                 self._categories[category] = SampleCategory(category_dir, category)
 
@@ -51,16 +58,6 @@ class SamplePack:
         if category_obj:
             return category_obj.get_sample(index)
         return None
-
-    def _is_complete(self) -> bool:
-        "check if every basic symbol/letter is provided with a sample"
-        # IMPROVE define what complete means and effectively check if there is a sample in each category
-        complete = True
-        all_base_categories = list(alpha) + list(alpha.upper()) + list(nonalpha.values()) + [LOOP_SUBDIR]
-        for cat in all_base_categories:
-            if cat not in self._categories.keys():
-                complete = False
-        return complete
 
     def list_categories(self) -> List[str]:
         """List all category letters/symbols."""
