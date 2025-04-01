@@ -8,7 +8,7 @@
 
 from renardo.gatherer.sample_management.sample_pack_library import SamplePackLibrary, sample_pack_library, sample_packs
 from renardo.gatherer.sample_management.sample_file import SampleFile
-from renardo.gatherer.sample_management.default_samples import is_default_spack_initialized, download_default_sample_pack, default_loop_path, LOOP_SUBDIR
+from renardo.gatherer.sample_management.default_samples import is_default_spack_initialized, download_default_sample_pack
 
 # def main():
     # pass

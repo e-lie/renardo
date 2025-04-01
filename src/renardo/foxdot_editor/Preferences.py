@@ -30,7 +30,7 @@ class Preferences:
                               self.stop._w,
                               PhotoImage(file=FOXDOT_ICON_GIF))
         self.text_themes = ()
-        for file_name in [file for file in os.listdir(FOXDOT_EDITOR_THEMES) if file.endswith('.json')]:
+        for file_name in [file for file in os.listdir(FOXDOT_EDITOR_THEMES_PATH) if file.endswith('.json')]:
             theme = os.path.splitext(file_name)[0]
             self.text_themes = self.text_themes + (theme,)
         self.settings = {}
@@ -549,7 +549,7 @@ class Preferences:
     def load_tt(self):
         self.theme_name = self.text_colors_opt.get()
         try:
-            file = FOXDOT_EDITOR_THEMES + '/' + self.theme_name + '.json'
+            file = FOXDOT_EDITOR_THEMES_PATH + '/' + self.theme_name + '.json'
             # Opening JSON file
             with open(file, 'r') as openfile:
                 # Reading from json file
@@ -616,7 +616,7 @@ class Preferences:
         self.stop.iconify()
         self.filename = tkFileDialog.asksaveasfilename(
             filetypes=[("JSON files", ".json")],
-            initialdir=FOXDOT_EDITOR_THEMES + '/',
+            initialdir=FOXDOT_EDITOR_THEMES_PATH + '/',
             defaultextension=".json")
         if self.filename:
             new_file = open(self.filename, "w")
