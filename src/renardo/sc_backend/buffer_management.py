@@ -20,7 +20,7 @@ from renardo.settings_manager import DESCRIPTIONS
 from renardo.gatherer import sample_pack_library
 from renardo.sc_backend.ServerManager.default_server import Server
 
-alpha    = "abcdefghijklmnopqrstuvwxyz"
+alpha = "abcdefghijklmnopqrstuvwxyz"
 
 class Buffer:
     def __init__(self, sample_file, buffer_num: int, channels: int = 1):
@@ -78,7 +78,7 @@ class BufferManager:
 
     def get_buffer_from_symbol(self, symbol: str, spack: int = 0, index: int = 0) -> Buffer:
         """Get a buffer by its symbol representation."""
-        if symbol.isspace():
+        if symbol.isspace() or symbol=='.':
             return nil
 
         # Find the sample using SamplePackLibrary
