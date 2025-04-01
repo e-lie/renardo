@@ -3,6 +3,9 @@ import tomli
 import tomli_w
 from typing import Any, Dict, Optional
 import copy
+import os
+import pathlib
+from sys import platform
 
 
 class SettingsManager:
@@ -89,7 +92,7 @@ class SettingsManager:
 
         return success
 
-    def get(self, key: str, default: Any = None, internal: bool = False) -> Any:
+    def get(self, key: str, default: Any = None) -> Any:
         """
         Get a setting value.
 
@@ -101,7 +104,7 @@ class SettingsManager:
         Returns:
             Setting value or default if not found
         """
-        settings = self._internal_settings if internal else self._public_settings
+        settings = self._internal_settings | self._public_settings
 
         try:
             value = settings
@@ -167,60 +170,38 @@ class SettingsManager:
             else:
                 target[key] = value
 
+RENARDO_USER_DIR : Optional[Path] = None
 
-# Example usage
-if __name__ == "__main__":
-    # Define default settings
-    public_defaults = {
-        "app": {
-            "name": "MyApp",
-            "version": "1.0.0",
-            "theme": "light",
-            "window": {
-                "width": 800,
-                "height": 600
-            }
-        }
-    }
+# default config path
+# on windows AppData/Roaming/renardo
+# on Linux ~/.config/renardo
+# on MacOS /Users/<username>/Library/Application Support/renardo
+if platform == "linux" or platform == "linux2" :
+    home_path = pathlib.Path.home()
+    RENARDO_USER_DIR = home_path / '.config' / 'renardo'
+elif platform == "darwin":
+    home_path = pathlib.Path.home()
+    RENARDO_USER_DIR = home_path / 'Library' / 'Application Support' / 'renardo'
+elif platform == "win32":
+    appdata_roaming_path = pathlib.Path(os.getenv('APPDATA'))
+    RENARDO_USER_DIR = appdata_roaming_path / 'renardo'
 
-    internal_defaults = {
-        "user": {
-            "api_key": "",
-            "credentials": {
-                "username": "",
-                "password": ""
-            }
-        },
-        "server": {
-            "host": "localhost",
-            "port": 8080
-        }
-    }
+# def get_user_config_dir_path():
+#     return RENARDO_USER_DIR
 
-    # Create settings manager
-    settings = SettingsManager(
-        Path("settings.toml"),
-        Path("internal.toml"),
-        public_defaults,
-        internal_defaults
-    )
+public_defaults = {
+    "RENARDO_USER_DIR": str(RENARDO_USER_DIR)
+}
 
-    # Work with public settings
-    print(f"App name: {settings.get('app.name')}")
-    settings.set('app.theme', 'dark')
+internal_defaults = {
+    "SAMPLES_DIR": str(Path(public_defaults["RENARDO_USER_DIR"]) / 'sample_packs'),
+}
 
-    # Work with internal settings
-    settings.set('user.api_key', 'secret_key', internal=True)
-    print(f"API Key: {settings.get('user.api_key', internal=True)}")
+settings_manager = SettingsManager(
+    Path("settings.toml"),
+    Path("internal_settings.toml"),
+    public_defaults,
+    internal_defaults
+)
 
-    # Save both
-    settings.save()
-
-    # Save only public settings
-    settings.save(save_internal=False)
-
-    # Reset specific internal setting
-    settings.reset('user.api_key', internal=True)
-
-    # Reset all public settings
-    settings.reset()
+settings_manager.save()

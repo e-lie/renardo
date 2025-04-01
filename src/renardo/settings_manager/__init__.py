@@ -1,8 +1,8 @@
-from .settings_manager import SettingsManager
+from .settings_manager import SettingsManager, settings_manager
 
 from .config_dir import (
-    SAMPLES_DIR_PATH, DEFAULT_SAMPLES_PACK_NAME, LOOP_SUBDIR, DESCRIPTIONS,
-    SAMPLES_DOWNLOAD_SERVER, get_samples_dir_path, get_user_config_dir_path
+    DEFAULT_SAMPLES_PACK_NAME, LOOP_SUBDIR, DESCRIPTIONS,
+    SAMPLES_DOWNLOAD_SERVER
 )
 
 from .sample_config import nonalpha, alpha, default_loop_path
@@ -18,7 +18,7 @@ from .foxdot_config import (
     EFFECTS_DIR, ENVELOPE_DIR, FORWARD_ADDRESS, FORWARD_PORT,
     FOXDOT_EFFECTS_FILE,
     FOXDOT_LOOP, FOXDOT_ROOT,
-    FOXDOT_SND, FOXDOT_STARTUP_PATH,
+    FOXDOT_STARTUP_PATH,
     GET_SC_INFO, PERFORMANCE_EXCEPTIONS_CATCHING,
     MAX_CHANNELS, PORT, PORT2, RECORDING_DIR,
     SAMPLES_DIR, SAMPLES_PACK_NUMBER, SC3_PLUGINS, SUPERCOLLIDER,
