@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from renardo.gatherer import  get_user_config_dir_path
+from .config_dir import  get_user_config_dir_path
 from renardo.sc_backend.settings_manager import SettingsManager
 
 

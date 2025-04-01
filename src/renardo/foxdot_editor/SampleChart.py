@@ -6,7 +6,7 @@ import os
 from .tkimport import *
 from .Format import *
 from renardo.lib.Settings import *
-from renardo.gatherer import nonalpha, get_samples_dir_path
+from renardo.settings_manager import nonalpha, get_samples_dir_path
 
 SAMPLES_DIR_PATH = get_samples_dir_path()
 

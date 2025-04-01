@@ -12,7 +12,7 @@ from time import sleep
 from collections import namedtuple
 from threading import Thread
 
-from renardo.sc_backend.supercollider_settings import (
+from renardo.settings_manager import (
     OSC_MIDI_ADDRESS, GET_SC_INFO, FOXDOT_INFO_FILE, FOXDOT_RECORD_FILE,
     RECORDING_DIR,
 )
