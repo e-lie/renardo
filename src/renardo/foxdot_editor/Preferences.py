@@ -1,3 +1,4 @@
+import tomli
 
 from renardo.foxdot_editor.tkimport import *
 from renardo.settings_manager import settings
@@ -8,7 +9,6 @@ try:
 except ImportError:
     from tkinter import messagebox as tkMessageBox
 import os.path
-
 
 class Preferences:
     def __init__(self):
@@ -118,8 +118,6 @@ class Preferences:
         # SuperCollider
         self.sc_start = BooleanVar()
         self.sc_start.set(settings.get("sc_backend.BOOT_SCLANG_ON_STARTUP"))
-        self.sc_path = StringVar()
-        self.sc_path.set(settings.get("sc_backend.SUPERCOLLIDER"))
         self.sc3_start = BooleanVar()
         self.sc3_start.set(settings.get("sc_backend.SC3_PLUGINS"))
         self.max_ch = StringVar()
@@ -283,13 +281,6 @@ class Preferences:
             style='Roundtoggle.Toolbutton')
         self.tgl_sc_start.grid(column=2, row=1, padx=self.padx, pady=10,
                                sticky="sw")
-        self.lbl_sc_path = tb.Label(
-            self.g3, text="SuperCollider Path")
-        self.lbl_sc_path.grid(column=2, row=2, padx=self.padx, sticky="sw")
-        self.entry_sc_path = tb.Entry(
-            self.g3, textvariable=self.sc_path)
-        self.entry_sc_path.grid(column=2, row=3, padx=self.padx, pady=5,
-                                sticky="nw")
         self.tgl_sc3_start = tb.Checkbutton(
             self.g3, text="Use sc3-plugins", variable=self.sc3_start,
             style='Roundtoggle.Toolbutton')
@@ -691,51 +682,51 @@ class Preferences:
         return self.stop.destroy()
         pass
 
-    # # TODO reimplement save changes using the new central settings manager
-    # def save_changes(self):
-    #     self.text_settings = self.textbox.get("1.0", "end-1c")
-    #     if self.text_settings != self.text:
-    #         try:
-    #             self.settings.clear()
-    #             self.settings = json.loads(self.text_settings)
-    #         except Exception:
-    #             print("Can not convert text to json file. Please check your changes in this file!")
-    #     else:
-    #         self.settings.clear()
-    #         self.settings['settings.get("sc_backend.ADDRESS")'] = self.address.get()
-    #         self.settings['settings.get("sc_backend.PORT")'] = int(self.port.get())
-    #         self.settings['settings.get("sc_backend.PORT2")'] = int(self.port2.get())
-    #         self.settings['settings.get("foxdot_editor.FONT")'] = self.font.get()
-    #         self.settings['SUPERCOLLIDER'] = self.sc_path.get()
-    #         self.settings['settings.get("core.BOOT_ON_STARTUP")'] = self.sc_start.get()
-    #         self.settings['settings.get("sc_backend.SC3_PLUGINS")'] = self.sc3_start.get()
-    #         self.settings['settings.get("samples.MAX_CHANNELS")'] = int(self.max_ch.get())
-    #         self.settings['settings.get("samples.SAMPLES_DIR")'] = self.samples_dir.get()
-    #         self.settings['settings.get("samples.SAMPLES_PACK_NUMBER")'] = int(self.sample_pack.get())
-    #         self.settings['settings.get("sc_backend.GET_SC_INFO")'] = self.sc_info.get()
-    #         self.settings['settings.get("foxdot_editor.USE_ALPHA)'] = self.use_alpha.get()
-    #         self.settings['settings.get("foxdot_editor.ALPHA_VALUE")'] = float(self.alpha_val.get())
-    #         self.settings['settings.get("foxdot_editor.MENU_ON_STARTUP")'] = self.menu_start.get()
-    #         self.settings['settings.get("foxdot_editor.CONSOLE_ON_STARTUP")'] = self.console_start.get()
-    #         self.settings['settings.get("foxdot_editor.LINENUMBERS_ON_STARTUP")'] = self.linenumbers_start.get()
-    #         self.settings['settings.get("foxdot_editor.TREEVIEW_ON_STARTUP)'] = self.treeview_start.get()
-    #         self.settings['settings.get("foxdot_editor.TRANSPARENT_ON_STARTUP)'] = self.alpha_start.get()
-    #         self.settings['settings.get("foxdot_editor.RECOVER_WORK")'] = self.recover_work.get()
-    #         self.settings['settings.get("foxdot_editor.CHECK_FOR_UPDATE")'] = self.check_update.get()
-    #         self.settings['settings.get("foxdot_editor.LINE_NUMBER_MARKER_OFFSET")'] = int(self.linenumber_offset.get())
-    #         self.settings['settings.get("foxdot_editor.AUTO_COMPLETE_BRACKETS")'] = self.brackets_auto.get()
-    #         self.convert2number(self.cpu_use.get(), 0)
-    #         self.settings['settings.get("core.CPU_USAGE")'] = int(self.cpu_use.get())
-    #         self.convert2number(self.clk_lat.get(), 1)
-    #         self.settings['settings.get("core.CLOCK_LATENCY")'] = int(self.clk_lat.get())
-    #         self.settings['settings.get("sc_backend.FORWARD_ADDRESS")'] = self.fwd_address.get()
-    #         self.settings['settings.get("sc_backend.FORWARD_PORT")'] = int(self.fwd_port.get())
-    #         self.settings['settings.get("foxdot_editor.COLOR_THEME")'] = self.theme.get()
-    #         self.settings['settings.get("foxdot_editor.TEXT_COLORS")'] = self.text_theme.get()
-    #     settings_file = open(self.conf_json, "w")
-    #     json.dump(self.settings, settings_file, indent=6)
-    #     settings_file.close()
-    #     msg = "A restart of FoxDot is required for the changes to take effect"
-    #     tkMessageBox.showwarning(parent=self.stop, title="Just a heads up", message=msg)
-    #     self.stop.destroy()
-    #     return
+    def save_changes(self):
+        self.text_settings = self.textbox.get("1.0", "end-1c")
+        if self.text_settings != self.text:
+            #try:
+                toml_bytes = self.text_settings.encode("utf-8")
+                config_dict = tomli.loads(self.text_settings)
+                settings.set_from_dict(config_dict)
+                settings.save_to_file()
+            #except Exception:
+            #    print("Can not convert text to TOML file. Please check your changes in this file!")
+        else:
+            settings.set("sc_backend.ADDRESS", self.address.get())
+            settings.set("sc_backend.PORT", int(self.port.get()))
+            settings.set("sc_backend.PORT2", int(self.port2.get()))
+            settings.set("foxdot_editor.FONT", self.font.get())
+            settings.set("core.BOOT_SCLANG_ON_STARTUP", self.sc_start.get())
+            settings.set("sc_backend.SC3_PLUGINS", self.sc3_start.get())
+            settings.set("samples.MAX_CHANNELS", int(self.max_ch.get()))
+            settings.set("samples.SAMPLES_DIR", self.samples_dir.get())
+            settings.set("samples.SAMPLES_PACK_NUMBER", int(self.sample_pack.get()))
+            settings.set("sc_backend.GET_SC_INFO", self.sc_info.get())
+            settings.set("foxdot_editor.USE_ALPHA", self.use_alpha.get())
+            settings.set("foxdot_editor.ALPHA_VALUE", float(self.alpha_val.get()))
+            settings.set("foxdot_editor.MENU_ON_STARTUP", self.menu_start.get())
+            settings.set("foxdot_editor.CONSOLE_ON_STARTUP", self.console_start.get())
+            settings.set("foxdot_editor.LINENUMBERS_ON_STARTUP", self.linenumbers_start.get())
+            settings.set("foxdot_editor.TREEVIEW_ON_STARTUP", self.treeview_start.get())
+            settings.set("foxdot_editor.TRANSPARENT_ON_STARTUP", self.alpha_start.get())
+            settings.set("foxdot_editor.RECOVER_WORK", self.recover_work.get())
+            settings.set("foxdot_editor.CHECK_FOR_UPDATE", self.check_update.get())
+            settings.set("foxdot_editor.LINE_NUMBER_MARKER_OFFSET", int(self.linenumber_offset.get()))
+            settings.set("foxdot_editor.AUTO_COMPLETE_BRACKETS", self.brackets_auto.get())
+            self.convert2number(self.cpu_use.get(), 0)
+            settings.set("core.CPU_USAGE", int(self.cpu_use.get()))
+            self.convert2number(self.clk_lat.get(), 1)
+            settings.set("core.CLOCK_LATENCY", int(self.clk_lat.get()))
+            settings.set("sc_backend.FORWARD_ADDRESS", self.fwd_address.get())
+            settings.set("sc_backend.FORWARD_PORT", int(self.fwd_port.get()))
+            settings.set("foxdot_editor.COLOR_THEME", self.theme.get())
+            settings.set("foxdot_editor.TEXT_COLORS", self.text_theme.get())
+        #settings_file = open(self.conf_json, "w")
+        #json.dump(self.settings, settings_file, indent=6)
+        #settings_file.close()
+        settings.save_to_file()
+        msg = "A restart of Renardo is required for the changes to take effect"
+        tkMessageBox.showwarning(parent=self.stop, title="Just a heads up", message=msg)
+        self.stop.destroy()
+        return
