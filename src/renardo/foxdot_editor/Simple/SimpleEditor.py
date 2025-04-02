@@ -7,9 +7,8 @@ from .SimpleText import Text
 from .SimpleMenu import Menu
 # FoxDot imports
 #from ....Settings import *
-from renardo.settings_manager import SYSTEM
+from renardo.foxdot_editor.tkimport import SYSTEM, MAC_OS
 #from ...Code import execute
-
 
 class workspace:
     """ Wrapper for wxPython app """
