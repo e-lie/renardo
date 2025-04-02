@@ -1,66 +1,48 @@
 import os, sys, json
+from pathlib import Path
 
-from .foxdot_config import RENARDO_ROOT_PATH
+from .settings_manager import settings
+from .renardo_core_settings import RENARDO_ROOT_PATH
 
-FOXDOT_EDITOR_ROOT = os.path.realpath(RENARDO_ROOT_PATH + "/foxdot_editor")
-FOXDOT_TEMP_FILE = os.path.realpath(FOXDOT_EDITOR_ROOT + "/tmp/tempfile.txt")
+FOXDOT_EDITOR_ROOT = RENARDO_ROOT_PATH / "foxdot_editor"
+TEMP_FILE : Path = FOXDOT_EDITOR_ROOT / "tmp" / "tempfile.txt"
+TEMP_FILE.touch(exist_ok=True)
 
-# If the tempfile doesn't exist, create it
-if not os.path.isfile(FOXDOT_TEMP_FILE):
-    try:
-        with open(FOXDOT_TEMP_FILE, "w") as f:
-            pass
-    except FileNotFoundError:
-        pass
-
-# Check for OS -> mac, linux, win
-SYSTEM = 0
-WINDOWS = 0
-LINUX = 1
-MAC_OS = 2
-
-if sys.platform.startswith('darwin'):
-    SYSTEM = MAC_OS
-    # Attempted fix for some Mac OS users
-    try:
-        import matplotlib
-        matplotlib.use('TkAgg')
-    except ImportError:
-        pass
-elif sys.platform.startswith('win'):
-    SYSTEM = WINDOWS
-elif sys.platform.startswith('linux'):
-    SYSTEM = LINUX
-
-
-FOXDOT_EDITOR_ROOT = RENARDO_ROOT_PATH + "/foxdot_editor"
-
-FOXDOT_ICON = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/icon.ico")
-FOXDOT_ICON_GIF = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/icon.gif")
-FOXDOT_HELLO = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/hello.txt")
-
-FONT = 'Consolas'
-AUTO_COMPLETE_BRACKETS = True
-USE_ALPHA = True
-ALPHA_VALUE = 0.8
-MENU_ON_STARTUP = True
-CONSOLE_ON_STARTUP = True
-LINENUMBERS_ON_STARTUP = True
-TREEVIEW_ON_STARTUP = False
-TRANSPARENT_ON_STARTUP = False
-RECOVER_WORK = True
-LINE_NUMBER_MARKER_OFFSET = 0
-CHECK_FOR_UPDATE = True
-
-COLOR_THEME = 'cyborg'
-TEXT_COLORS = 'default'
-
-FOXDOT_EDITOR_THEMES_PATH = os.path.realpath(FOXDOT_EDITOR_ROOT + "/themes")
+settings.set_defaults_from_dict({
+    "foxdot_editor" : {
+        "FOXDOT_EDITOR_ROOT": str(RENARDO_ROOT_PATH / "foxdot_editor"),
+        "TEMP_FILE": str(FOXDOT_EDITOR_ROOT / "tmp" / "tempfile.txt"),
+        "ICON": str(FOXDOT_EDITOR_ROOT / "img" / "icon.ico"),
+        "ICON_GIF": str(FOXDOT_EDITOR_ROOT / "img" / "icon.gif"),
+        "HELLO": str(FOXDOT_EDITOR_ROOT / "img" / "hello.txt"),
+        "THEMES_PATH": str(FOXDOT_EDITOR_ROOT / "themes"),
+        "FONT": 'Consolas',
+        "AUTO_COMPLETE_BRACKETS": True,
+        "USE_ALPHA": True,
+        "ALPHA_VALUE": 0.8,
+        "MENU_ON_STARTUP": True,
+        "CONSOLE_ON_STARTUP": True,
+        "LINENUMBERS_ON_STARTUP": True,
+        "TREEVIEW_ON_STARTUP": False,
+        "TRANSPARENT_ON_STARTUP": False,
+        "RECOVER_WORK": True,
+        "LINE_NUMBER_MARKER_OFFSET": 0,
+        "CHECK_FOR_UPDATE": True,
+        "COLOR_THEME": 'cyborg',
+        "TEXT_COLORS": 'default',
+    }
+},
+internal=True
+)
 
 conf = {}
 
+TEXT_COLORS = settings.get("foxdot_editor.TEXT_COLORS")
+theme_file_path = Path(settings.get("foxdot_editor.THEMES_PATH")) / f"{TEXT_COLORS}.json"
+
 try:
-    file = FOXDOT_EDITOR_THEMES_PATH + '/' + TEXT_COLORS + '.json'
+
+    file = Path(settings.get("foxdot_editor.THEMES_PATH")) / f"{TEXT_COLORS}.json"
     # Opening JSON file
     with open(file, 'r') as openfile:
         # Reading from json file
@@ -89,7 +71,7 @@ try:
         conf["console_bg"] = json_object[TEXT_COLORS]['console_bg']
 
 except FileNotFoundError:
-    print(f"{FOXDOT_EDITOR_THEMES_PATH + '/' + TEXT_COLORS + '.json'} color config file not found! Use default values instead.")
+    print(f"{theme_file_path} color config file not found! Use default values instead.")
     # Text area colours
     # ------------------
     conf["plaintext"] = '#ffffff'

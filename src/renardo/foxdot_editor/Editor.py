@@ -10,13 +10,13 @@ try:
 except Exception:
     pass
 # Tkinter Interface
+from renardo.foxdot_editor.tkimport import SYSTEM, MAC_OS, WINDOWS, LINUX
 from renardo.foxdot_editor.tkimport import *
 # Custom app modules
 from renardo.lib.Code import write_to_file
 from renardo.lib.Utils import get_pypi_version
 from .Format import *
 from .AppFunctions import *
-from .Console import console
 from .Prompt import TextPrompt
 from .BracketHandler import BracketHandler
 from .TextBox import ThreadedText
@@ -35,7 +35,7 @@ import socket
 
 from renardo.settings_manager import (
     settings,
-    SYSTEM, WINDOWS, MAC_OS, LINUX, FOXDOT_TEMP_FILE,
+    FOXDOT_TEMP_FILE,
     FONT, COLOR_THEME, USE_ALPHA, MENU_ON_STARTUP, TREEVIEW_ON_STARTUP,
     LINENUMBERS_ON_STARTUP, CONSOLE_ON_STARTUP, FOXDOT_ICON, FOXDOT_ICON_GIF,
     CHECK_FOR_UPDATE, RECOVER_WORK, TRANSPARENT_ON_STARTUP, 
@@ -43,7 +43,6 @@ from renardo.settings_manager import (
 
 from renardo.lib.Code import execute
 from renardo.sc_backend import TempoServer
-
 
 # App object
 class workspace:

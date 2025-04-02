@@ -232,7 +232,9 @@ public_defaults = {
 }
 
 internal_defaults = {
-    "SAMPLES_DIR": str(Path(public_defaults["RENARDO_USER_DIR"]) / 'sample_packs'),
+    "samples": {
+        "SAMPLES_DIR": str(Path(public_defaults["RENARDO_USER_DIR"]) / 'sample_packs')
+    }
 }
 
 settings = SettingsManager(
