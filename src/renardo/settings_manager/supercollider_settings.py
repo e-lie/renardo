@@ -47,4 +47,6 @@ settings.set_defaults_from_dict({
 internal=True
 )
 
-settings.save()
+
+
+settings.save_to_file()

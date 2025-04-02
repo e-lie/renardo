@@ -142,7 +142,7 @@ class SampleChart:
                     self.smpl_list.remove(n)
             self.dict_specials[j] = self.smpl_list
         # Fill dictionary with loops as value
-        self.sp_path_loops = str(SAMPLES_DIR)+"/"+spack_id+"/"+FOXDOT_LOOP
+        self.sp_path_loops = str(SAMPLES_DIR)+"/"+spack_id+"/"+LOOP_DIR_NAME
         self.smpl_list = [
             f for f in os.listdir(self.sp_path_loops)
             if os.path.isfile(os.path.join(self.sp_path_loops, f))
@@ -325,7 +325,7 @@ class SampleChart:
                 self.path = self.sp_path_l + self.char + "/lower/" + path
             self.cmd = "play"
         elif self.char == "loops":
-            self.path = self.sp_path_l + FOXDOT_LOOP + "/" + path
+            self.path = self.sp_path_l + LOOP_DIR_NAME + "/" + path
             self.cmd = "loop"
             self.char = os.path.splitext(path)[0]
         else:
