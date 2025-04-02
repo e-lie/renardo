@@ -3,7 +3,7 @@ from renardo.foxdot_editor.tkimport import *
 from renardo.foxdot_editor.Format import *
 from renardo.foxdot_editor.AppFunctions import stdout
 from renardo.foxdot_editor.MenuBar import ConsolePopupMenu
-from renardo.settings_manager import SYSTEM, MAC_OS
+from renardo.foxdot_editor.Editor import  SYSTEM, MAC_OS
 import math
 import random
 try:
@@ -12,7 +12,7 @@ except ImportError:
     import queue as Queue
 
 """ Console widget that displays the true Python input """
-
+from renardo.foxdot_editor.tkimport import SYSTEM, MAC_OS
 
 class console:
 

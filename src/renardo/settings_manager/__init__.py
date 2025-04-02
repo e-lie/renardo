@@ -5,15 +5,15 @@ from .config_dir import (
     SAMPLES_DOWNLOAD_SERVER
 )
 
-from .sample_config import nonalpha, alpha, default_loop_path
+from .samples_pack_settings import nonalpha, alpha, default_loop_path
 
-from .supercollider_settings import (
+from .sc_backend_settings import (
     OSC_MIDI_ADDRESS, GET_SC_INFO, FOXDOT_INFO_FILE, FOXDOT_RECORD_FILE,
     RECORDING_DIR, get_synthdefs_dir_path, ADDRESS, FORWARD_ADDRESS, FORWARD_PORT,
     PORT, PORT2,
 )
 
-from .foxdot_config import (
+from .renardo_core_settings import (
     BOOT_ON_STARTUP,
     CLOCK_LATENCY, CPU_USAGE,
     EFFECTS_DIR, ENVELOPE_DIR,
@@ -28,7 +28,7 @@ from .foxdot_config import (
     get_tutorial_files,
 )
 
-from .foxdot_editor_config import (
+from .foxdot_editor_settings import (
     SYSTEM, WINDOWS, MAC_OS, LINUX, FOXDOT_TEMP_FILE,
     ALPHA_VALUE, AUTO_COMPLETE_BRACKETS, CHECK_FOR_UPDATE,
     COLOR_THEME, COLOURS, CONSOLE_ON_STARTUP,
