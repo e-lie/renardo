@@ -1,8 +1,8 @@
 import os, sys, json
 
-from .foxdot_config import FOXDOT_ROOT
+from .foxdot_config import RENARDO_ROOT_PATH
 
-FOXDOT_EDITOR_ROOT = os.path.realpath(FOXDOT_ROOT + "/foxdot_editor")
+FOXDOT_EDITOR_ROOT = os.path.realpath(RENARDO_ROOT_PATH + "/foxdot_editor")
 FOXDOT_TEMP_FILE = os.path.realpath(FOXDOT_EDITOR_ROOT + "/tmp/tempfile.txt")
 
 # If the tempfile doesn't exist, create it
@@ -33,7 +33,7 @@ elif sys.platform.startswith('linux'):
     SYSTEM = LINUX
 
 
-FOXDOT_EDITOR_ROOT = FOXDOT_ROOT + "/foxdot_editor"
+FOXDOT_EDITOR_ROOT = RENARDO_ROOT_PATH + "/foxdot_editor"
 
 FOXDOT_ICON = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/icon.ico")
 FOXDOT_ICON_GIF = os.path.realpath(FOXDOT_EDITOR_ROOT + "/img/icon.gif")
