@@ -6,9 +6,9 @@ import os
 from .tkimport import *
 from .Format import *
 from renardo.settings_manager import *
-from renardo.settings_manager import settings, nonalpha
+from renardo.settings_manager import settings
 
-SAMPLES_DIR = settings.get("SAMPLES_DIR")
+
 
 try:
     from playsound import playsound
@@ -31,8 +31,8 @@ class SampleChart:
         self.root.grid_columnconfigure(0, weight=1)
         # self.root.iconbitmap('img/foxdot.ico')
         # Call init methods
-        self.sp_count = len([name for name in os.listdir(str(SAMPLES_DIR))])
-        self.sp_names = os.listdir(str(SAMPLES_DIR))
+        self.sp_count = len([name for name in os.listdir(str(settings.get("samples.SAMPLES_DIR")))])
+        self.sp_names = os.listdir(str(settings.get("samples.SAMPLES_DIR")))
         self.sp_names.sort()
         self.sp_view()
         self.create_dics(spack_id="0_foxdot_default")
@@ -88,7 +88,7 @@ class SampleChart:
         self.dict_loops = []
         # First go through all letters and get file paths in upper and lower
         # Fill dictionary with letters as key and file names of audio as values
-        self.sp_path_l = str(SAMPLES_DIR) + "/" + spack_id + "/"
+        self.sp_path_l = str(settings.get("samples.SAMPLES_DIR")) + "/" + spack_id + "/"
         self.dir_list_l = []
 
         for filename in os.listdir(self.sp_path_l):
@@ -124,7 +124,7 @@ class SampleChart:
 
         # Fill dictionary with specials as key and file names of
         # audio as values
-        self.sp_path_s = self.sp_path_s = str(SAMPLES_DIR)+"/"+spack_id+"/_/"
+        self.sp_path_s = self.sp_path_s = str(settings.get("samples.SAMPLES_DIR"))+"/"+spack_id+"/_/"
         self.dir_list_s = []
         for filename in os.listdir(self.sp_path_s):
             if os.path.isdir(os.path.join(self.sp_path_s, filename)):
@@ -142,7 +142,7 @@ class SampleChart:
                     self.smpl_list.remove(n)
             self.dict_specials[j] = self.smpl_list
         # Fill dictionary with loops as value
-        self.sp_path_loops = str(SAMPLES_DIR)+"/"+spack_id+"/"+LOOP_DIR_NAME
+        self.sp_path_loops = str(settings.get("samples.SAMPLES_DIR"))+"/"+spack_id+"/"+settings.get("samples.LOOP_DIR_NAME")
         self.smpl_list = [
             f for f in os.listdir(self.sp_path_loops)
             if os.path.isfile(os.path.join(self.sp_path_loops, f))
@@ -228,7 +228,7 @@ class SampleChart:
             self.btn.grid(row=self.counter, column=0)
             self.counter += 1
         for n in self.dict_specials.keys():
-            self.special = list(nonalpha.keys())[list(nonalpha.values()).index(n)]
+            self.special = list(settings.get("samples.NON_ALPHA").keys())[list(settings.get("samples.NON_ALPHA").values()).index(n)]
             self.btn = Button(self.btn_frame, text=self.special,
                               width=10, fg='white',
                               bg=colour_map['background'])
@@ -325,12 +325,12 @@ class SampleChart:
                 self.path = self.sp_path_l + self.char + "/lower/" + path
             self.cmd = "play"
         elif self.char == "loops":
-            self.path = self.sp_path_l + LOOP_DIR_NAME + "/" + path
+            self.path = self.sp_path_l + settings.get("samples.LOOP_DIR_NAME") + "/" + path
             self.cmd = "loop"
             self.char = os.path.splitext(path)[0]
         else:
-            self.char = list(nonalpha.keys())[list(
-                nonalpha.values()).index(self.char)]
+            self.char = list(settings.get("samples.NON_ALPHA").keys())[list(
+                settings.get("samples.NON_ALPHA").values()).index(self.char)]
             self.path = self.sp_path_s + char + "/" + path
             self.cmd = "play"
         try:

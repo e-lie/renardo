@@ -25,6 +25,7 @@ from .MenuBar import MenuBar, PopupMenu
 from .Treeview import TreeView
 from .SampleChart import SampleChart
 from .SearchBar import SearchBar
+from .Console import console
 from functools import partial
 # from distutils.version import LooseVersion as VersionNumber
 import webbrowser
@@ -33,20 +34,14 @@ import re
 import socket
 # Code execution
 
-from renardo.settings_manager import (
-    settings,
-    FOXDOT_TEMP_FILE,
-    FONT, COLOR_THEME, USE_ALPHA, MENU_ON_STARTUP, TREEVIEW_ON_STARTUP,
-    LINENUMBERS_ON_STARTUP, CONSOLE_ON_STARTUP, FOXDOT_ICON, FOXDOT_ICON_GIF,
-    CHECK_FOR_UPDATE, RECOVER_WORK, TRANSPARENT_ON_STARTUP, 
-)
+from renardo.settings_manager import settings
 
 from renardo.lib.Code import execute
 from renardo.sc_backend import TempoServer
 
 # App object
 class workspace:
-    default_font = FONT
+    default_font = settings.get("foxdot_editor.FONT")
     namespace = {}
 
     def __init__(self, CodeClass):
@@ -55,7 +50,7 @@ class workspace:
         CodeClass.namespace['Player'].widget = self
         self.version = this_version = '0.9.13'
         pypi_version = get_pypi_version()
-        self.theme = COLOR_THEME
+        self.theme = settings.get("foxdot_editor.COLOR_THEME")
 
         def check_versions():
             # if pypi_version is not None and VersionNumber(pypi_version)
@@ -86,7 +81,7 @@ class workspace:
         # Track whether user wants transparent background
         self.transparent = BooleanVar()
         self.transparent.set(False)
-        self.using_alpha = USE_ALPHA
+        self.using_alpha = settings.get("foxdot_editor.USE_ALPHA")
         # Boolean for connection
         self.listening_for_connections = BooleanVar()
         self.listening_for_connections.set(False)
@@ -94,15 +89,15 @@ class workspace:
         self.fullscreen_toggled = BooleanVar()
         self.fullscreen_toggled.set(False)
         self.menu_toggled = BooleanVar()
-        self.menu_toggled.set(MENU_ON_STARTUP)
+        self.menu_toggled.set(settings.get("foxdot_editor.MENU_ON_STARTUP"))
         self.treeview_toggled = BooleanVar()
-        self.treeview_toggled.set(TREEVIEW_ON_STARTUP)
+        self.treeview_toggled.set(settings.get("foxdot_editor.TREEVIEW_ON_STARTUP"))
         self.linenumbers_toggled = BooleanVar()
-        self.linenumbers_toggled.set(LINENUMBERS_ON_STARTUP)
+        self.linenumbers_toggled.set(settings.get("foxdot_editor.LINENUMBERS_ON_STARTUP"))
         self.searchbar_toggled = BooleanVar()
         self.searchbar_toggled.set(False)
         self.console_toggled = BooleanVar()
-        self.console_toggled.set(CONSOLE_ON_STARTUP)
+        self.console_toggled.set(settings.get("foxdot_editor.CONSOLE_ON_STARTUP"))
         # Boolean for beat counter
         self.show_counter = BooleanVar()
         self.show_counter.set(False)
@@ -112,13 +107,13 @@ class workspace:
         # --- Set icon
         try:
             # Use .ico file by default
-            self.root.iconbitmap(FOXDOT_ICON)
+            self.root.iconbitmap(settings.get("foxdot_editor.ICON"))
         except TclError:
             # Use .gif if necessary
             self.root.tk.call('wm',
                               'iconphoto',
                               self.root._w,
-                              PhotoImage(file=FOXDOT_ICON_GIF))
+                              PhotoImage(file=settings.get("foxdot_editor.ICON_GIF")))
         # --- Setup font
         system_fonts = tkFont.families()
         self.codefont = "CodeFont"  # name for font
@@ -140,7 +135,7 @@ class workspace:
             self.console_font = (self.default_font, 12)
         self.help_key = "K" if SYSTEM == MAC_OS else "H"
         # --- start create menu
-        self.menu = MenuBar(self, visible=MENU_ON_STARTUP)
+        self.menu = MenuBar(self, visible=settings.get("foxdot_editor.MENU_ON_STARTUP"))
         self.popup = PopupMenu(self)
         # Create y-axis scrollbar
         self.y_scroll = tb.Scrollbar(self.root)
@@ -291,7 +286,7 @@ class workspace:
         self.linenumbers.redraw()  # ToDo: move to generic redraw functions
         # Check temporary file
         def recover_work():
-            with open(FOXDOT_TEMP_FILE) as f:
+            with open(settings.get("foxdot_editor.TEMP_FILE")) as f:
                 text = f.read()
             if len(text):
                 loading = tkMessageBox.askyesno("Load unsaved work?", "Your code wasn't saved last time you used Renardo, do you want to load any unsaved work?")
@@ -304,13 +299,13 @@ class workspace:
             # Execute startup file
             return execute.load_startup_file()
         # Check online if a new version if available
-        if CHECK_FOR_UPDATE:
+        if settings.get("foxdot_editor.CHECK_FOR_UPDATE"):
             self.root.after(90, check_versions)
         # Ask after widget loaded
-        if RECOVER_WORK:
+        if settings.get("foxdot_editor.RECOVER_WORK"):
             self.root.after(100, recover_work)
         # Check transparency on startup
-        if TRANSPARENT_ON_STARTUP:
+        if settings.get("foxdot_editor.TRANSPARENT_ON_STARTUP"):
             self.transparent.set(True)
             self.root.after(100, self.toggle_transparency)
 
@@ -323,7 +318,7 @@ class workspace:
             try:
                 self.root.mainloop()
                 break
-            # Temporary fix to unicode issues with Mac OS
+            # Temporary fix to Unicode issues with macOS
             except (UnicodeDecodeError):
                 pass
             except (KeyboardInterrupt, SystemExit):
@@ -597,10 +592,10 @@ class workspace:
         else:
             cmd = 'xdg-open'
         try:
-            subprocess.Popen([cmd, settings.get("SAMPLES_DIR")])
+            subprocess.Popen([cmd, settings.get("samples.SAMPLES_DIR")])
         except OSError as e:
             print(e)
-            print("Hmm... Looks like we couldn't open the directory but you can find the samples in {}".format(settings.get("SAMPLES_DIR")))
+            print("Hmm... Looks like we couldn't open the directory but you can find the samples in {}".format(settings.get("samples.SAMPLES_DIR")))
         return
 
     def open_samples_chart_app(self):
@@ -695,8 +690,8 @@ class workspace:
     #         lines = f.readlines()
     #     with open(FOXDOT_CONFIG_FILE, "w") as f:
     #         for line in lines:
-    #             if "SC3_PLUGINS" in line:
-    #                 f.write("SC3_PLUGINS={}\n".format(not bool(SC3_PLUGINS)))
+    #             if "settings.get("sc_backend.SC3_PLUGINS")" in line:
+    #                 f.write("SC3_PLUGINS={}\n".format(not bool(settings.get("sc_backend.SC3_PLUGINS"))))
     #             else:
     #                 f.write(line)
     #     # Pop-up to tell the user a restart is required
@@ -726,7 +721,7 @@ class workspace:
                     except TclError:
                         self.using_alpha = True
                 if self.using_alpha:
-                    self.root.wm_attributes("-alpha", ALPHA_VALUE)
+                    self.root.wm_attributes("-alpha", settings.get("foxdot_editor.ALPHA_VALUE"))
             # Re-set the colours
             elif not self.using_alpha:
                 # self.text.config(background=colour_map['background'])
@@ -1395,7 +1390,7 @@ class workspace:
         return
 
     def set_temp_file(self, text):
-        write_to_file(FOXDOT_TEMP_FILE, text)
+        write_to_file(settings.get("foxdot_editor.TEMP_FILE"), text)
         return
 
     def clear_temp_file(self):

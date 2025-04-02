@@ -1,5 +1,4 @@
 from renardo.foxdot_editor.tkimport import *
-from renardo.settings_manager import FONT
 from .Format import *
 from renardo.foxdot_editor.AppFunctions import index as get_index
 from renardo.foxdot_editor.Format import get_keywords

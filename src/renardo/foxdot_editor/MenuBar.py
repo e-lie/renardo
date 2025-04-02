@@ -2,11 +2,7 @@ from renardo.foxdot_editor.tkimport import Menu, BooleanVar, IntVar, DISABLED
 from renardo.foxdot_editor.tkimport import *
 import os.path
 from functools import partial
-#from renardo.settings_manager import *
-from renardo.settings_manager import (
-    SC3_PLUGINS, CPU_USAGE, CLOCK_LATENCY,
-    get_tutorial_files
-)
+from renardo.settings_manager import settings, get_tutorial_files
 from renardo.foxdot_editor.tkimport import SYSTEM, MAC_OS
 from renardo.lib.Code import FoxDotCode
 
@@ -21,11 +17,11 @@ class MenuBar(Menu):
         Menu.__init__(self, master.root)
         # "ticked" menu options
         self.sc3_plugins = BooleanVar()
-        self.sc3_plugins.set(SC3_PLUGINS)
+        self.sc3_plugins.set(settings.get("sc_backend.SC3_PLUGINS"))
         self.cpu_usage = IntVar()
-        self.cpu_usage.set(CPU_USAGE)
+        self.cpu_usage.set(settings.get("core.CPU_USAGE"))
         self.latency = IntVar()
-        self.latency.set(CLOCK_LATENCY)
+        self.latency.set(settings.get("core.CLOCK_LATENCY"))
         # File menu
         self.filemenu = Menu(self, tearoff=0)
         self.filemenu.add_command(label="New Document",

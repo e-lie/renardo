@@ -1,6 +1,6 @@
 from renardo.lib.SynthDefManagement.EffectManager import EffectManager
 from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings.PygenEffectSynthDefs import *
-from renardo.settings_manager import SC3_PLUGINS
+from renardo.settings_manager import settings
 
 effect_manager = EffectManager()
 
@@ -110,7 +110,7 @@ fx.doc("DFM1 filter")
 fx.add('osc = DFM1.ar(osc, dfm, dfmr, dfmd,0.0)')
 fx.save()
 
-if SC3_PLUGINS:
+if settings.get("sc_backend.SC3_PLUGINS"):
 
     fx = effect_manager.new('crush', 'bitcrush', {
                     'bits': 8, 'sus': 1, 'amp': 1, 'crush': 0}, order=1)

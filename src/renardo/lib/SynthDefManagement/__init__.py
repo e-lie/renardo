@@ -11,5 +11,5 @@ from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings.PygenSynthD
 from renardo.lib.SynthDefManagement.InstrumentProxy import InstrumentProxy
 from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings.SamplePygenSynthDefs import SamplePygenSynthDef
 
-from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings.PygenEffectSynthDefs import Effect, In, Out, Server, TMP_EFFECTS_DIR
+from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings.PygenEffectSynthDefs import Effect, In, Out, Server
 

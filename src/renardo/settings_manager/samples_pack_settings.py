@@ -4,11 +4,18 @@ from .settings_manager import settings
 settings.set_defaults_from_dict(
 {
     "samples" : {
-        "MAX_CHANNELS": 2,
         "SAMPLES_DIR": "",
         "SAMPLES_PACK_NUMBER": 0,
-        "LOOP_DIR_NAME": "_loop_",
         "DEFAULT_SAMPLES_PACK_NAME": '0_foxdot_default',
+    }
+})
+
+
+settings.set_defaults_from_dict(
+{
+    "samples" : {
+        "MAX_CHANNELS": 2,
+        "LOOP_DIR_NAME": "_loop_",
         # "DEFAULT_SAMPLES_PACK_NAME": '0_foxdot_default_testing',
         "SAMPLES_DOWNLOAD_SERVER": 'https://collections.renardo.org/sample_packs',
         "ALPHA": "abcdefghijklmnopqrstuvwxyz",
@@ -88,4 +95,4 @@ settings.set_defaults_from_dict(
 settings.save_to_file()
 
 def default_loop_path() -> Path:
-    return Path(settings.get("SAMPLES_DIR")) / settings.get("DEFAULT_SAMPLES_PACK_NAME") / settings.get("LOOP_DIR_NAME")
+    return Path(settings.get("samples.SAMPLES_DIR")) / settings.get("samples.DEFAULT_SAMPLES_PACK_NAME") / settings.get("samples.LOOP_DIR_NAME")

@@ -1243,7 +1243,7 @@ class Player(Repeatable):
 
     # def get_extra_attributes(self):
     #    """ Returns a dict of specific keyword arguments for a particular FoxDot player """
-    #    filename = SYNTHDEF_DIR + f"/{self.id}.scd"
+    #    filename = settings.get("sc_backend.SYNTHDEF_DIR") + f"/{self.id}.scd"
     #    file = open(filename, "r")
     #    contents = file.read()
     #    file.close()

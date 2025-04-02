@@ -10,7 +10,7 @@ play.add()
 loop = FileSynthDef('loop')
 #loop.defaults['pos'] = 0
 #loop.defaults['sample'] = 0
-# loop.defaults['spack'] = SAMPLES_PACK_NUMBER
+# loop.defaults['spack'] = settings.get("samples.SAMPLES_PACK_NUMBER")
 #loop.defaults['beat_stretch'] = 0
 loop.add()
 
