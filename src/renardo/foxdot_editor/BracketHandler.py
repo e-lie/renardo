@@ -1,7 +1,7 @@
 from renardo.foxdot_editor.tkimport import *
 from renardo.foxdot_editor.Format import *
 from renardo.foxdot_editor.AppFunctions import *
-from renardo.lib.Settings import AUTO_COMPLETE_BRACKETS
+from renardo.settings_manager import settings
 
 whitespace = [" ", "\t", "\n", "\r", "\f", "\v"]
 
@@ -12,7 +12,7 @@ class BracketHandler:
     def __init__(self, master):
         self.root = master
         self.text = master.text
-        self.active = AUTO_COMPLETE_BRACKETS
+        self.active = settings.get("foxdot_editor.AUTO_COMPLETE_BRACKETS")
         self.inbrackets = False
         self.separators = py_separators
         self.style = bracket_formatting

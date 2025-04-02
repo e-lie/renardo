@@ -1,11 +1,6 @@
 
 from renardo.foxdot_editor.tkimport import *
-from renardo.settings_manager import (
-    FOXDOT_ICON, FOXDOT_ICON_GIF, FOXDOT_EDITOR_THEMES_PATH, MENU_ON_STARTUP,
-    LINENUMBERS_ON_STARTUP, CONSOLE_ON_STARTUP, CPU_USAGE, TREEVIEW_ON_STARTUP, RECOVER_WORK,
-    CHECK_FOR_UPDATE, LINE_NUMBER_MARKER_OFFSET, AUTO_COMPLETE_BRACKETS, SAMPLES_PACK_NUMBER,
-
-)
+from renardo.settings_manager import settings
 from .Format import *
 from ttkbootstrap.dialogs.colorchooser import ColorChooserDialog
 try:
@@ -27,19 +22,19 @@ class Preferences:
         self.stop.geometry(str(self.w)+"x"+str(self.h))
         try:
             # Use .ico file by default
-            self.stop.iconbitmap(FOXDOT_ICON)
+            self.stop.iconbitmap(settings.get("foxdot_editor.ICON"))
         except TclError:
             # Use .gif if necessary
             self.stop.tk.call('wm',
                               'iconphoto',
                               self.stop._w,
-                              PhotoImage(file=FOXDOT_ICON_GIF))
+                              PhotoImage(file=settings.get("foxdot_editor.ICON_GIF")))
         self.text_themes = ()
-        for file_name in [file for file in os.listdir(FOXDOT_EDITOR_THEMES_PATH) if file.endswith('.json')]:
+        for file_name in [file for file in os.listdir(settings.get("foxdot_editor.THEMES_PATH")) if file.endswith('.json')]:
             theme = os.path.splitext(file_name)[0]
             self.text_themes = self.text_themes + (theme,)
         self.settings = {}
-        self.conf_json = FOXDOT_CONFIG_FILE
+        self.conf_toml = settings.get("core.PUBLIC_SETTINGS_FILE")
         self.tabview = tb.Notebook(self.stop)
         self.general = tb.Frame(self.tabview)
         self.colors = tb.Frame(self.tabview)
@@ -63,87 +58,98 @@ class Preferences:
             text="Cancel",
             command=self.save_and_close)
         self.exit.grid(row=1, column=2, padx=20, sticky="ew")
+
         self.save = tb.Button(
             self.stop,
             text="Save Changes",
             command=self.save_and_close)
         self.save.grid(row=1, column=3, padx=20, sticky="ew")
         self.unsaved = True
+
         try:
-            with open(self.conf_json) as f:
+            with open(self.conf_toml) as f:
                 self.text = f.read().rstrip()
             self.textbox.insert(INSERT, self.text)
         except FileNotFoundError:
-            print("conf.json file not found")
+            print(f"{settings.get("core.PUBLIC_SETTINGS_FILE")} file not found")
         # Add binds?
         self.textbox.bind()
+
         self.theme_name = ""
+
         # Settings values
         self.menu_start = BooleanVar()
-        self.menu_start.set(MENU_ON_STARTUP)
+        self.menu_start.set(settings.get("foxdot_editor.MENU_ON_STARTUP"))
         self.linenumbers_start = BooleanVar()
-        self.linenumbers_start.set(LINENUMBERS_ON_STARTUP)
+        self.linenumbers_start.set(settings.get("foxdot_editor.LINENUMBERS_ON_STARTUP"))
         self.console_start = BooleanVar()
-        self.console_start.set(CONSOLE_ON_STARTUP)
+        self.console_start.set(settings.get("foxdot_editor.CONSOLE_ON_STARTUP"))
         self.treeview_start = BooleanVar()
-        self.treeview_start.set(TREEVIEW_ON_STARTUP)
+        self.treeview_start.set(settings.get("foxdot_editor.TREEVIEW_ON_STARTUP"))
         self.recover_work = BooleanVar()
-        self.recover_work.set(RECOVER_WORK)
+        self.recover_work.set(settings.get("foxdot_editor.RECOVER_WORK"))
         self.check_update = BooleanVar()
-        self.check_update.set(CHECK_FOR_UPDATE)
+        self.check_update.set(settings.get("foxdot_editor.CHECK_FOR_UPDATE"))
+
         # Editor
         self.linenumber_offset = StringVar()
-        self.linenumber_offset.set(LINE_NUMBER_MARKER_OFFSET)
+        self.linenumber_offset.set(settings.get("foxdot_editor.LINE_NUMBER_MARKER_OFFSET"))
         self.brackets_auto = BooleanVar()
-        self.brackets_auto.set(AUTO_COMPLETE_BRACKETS)
+        self.brackets_auto.set(settings.get("foxdot_editor.AUTO_COMPLETE_BRACKETS"))
+
         # Sample values
         self.samples_dir = StringVar()
-        self.samples_dir.set(SAMPLES_DIR)
+        self.samples_dir.set(settings.get("samples.SAMPLES_DIR"))
         self.sample_pack = StringVar()
-        self.sample_pack.set(SAMPLES_PACK_NUMBER)
+        self.sample_pack.set(settings.get("samples.SAMPLES_PACK_NUMBER"))
+
         # Connection values
         self.address = StringVar()
-        self.address.set(ADDRESS)
+        self.address.set(settings.get("sc_backend.ADDRESS"))
         self.port = StringVar()
-        self.port.set(PORT)
+        self.port.set(settings.get("sc_backend.PORT"))
         self.port2 = StringVar()
-        self.port2.set(PORT2)
+        self.port2.set(settings.get("sc_backend.PORT2"))
         self.fwd_address = StringVar()
-        self.fwd_address.set(FORWARD_ADDRESS)
+        self.fwd_address.set(settings.get("sc_backend.FORWARD_ADDRESS"))
         self.fwd_port = StringVar()
-        self.fwd_port.set(FORWARD_PORT)
+        self.fwd_port.set(settings.get("sc_backend.FORWARD_PORT"))
+
         # SuperCollider
         self.sc_start = BooleanVar()
-        self.sc_start.set(BOOT_ON_STARTUP)
+        self.sc_start.set(settings.get("sc_backend.BOOT_SCLANG_ON_STARTUP"))
         self.sc_path = StringVar()
-        self.sc_path.set(SUPERCOLLIDER)
+        self.sc_path.set(settings.get("sc_backend.SUPERCOLLIDER"))
         self.sc3_start = BooleanVar()
-        self.sc3_start.set(SC3_PLUGINS)
+        self.sc3_start.set(settings.get("sc_backend.SC3_PLUGINS"))
         self.max_ch = StringVar()
-        self.max_ch.set(MAX_CHANNELS)
+        self.max_ch.set(settings.get("samples.MAX_CHANNELS"))
         self.sc_info = BooleanVar()
-        self.sc_info.set(GET_SC_INFO)
+        self.sc_info.set(settings.get("sc_backend.GET_SC_INFO"))
+
         # Performance
         self.cpu_use = StringVar()
-        cpu_val = self.convert2str(CPU_USAGE)
+        cpu_val = self.convert2str(settings.get("core.CPU_USAGE"))
         self.cpu_use.set(cpu_val)
-        lat_val = self.convert2str(CLOCK_LATENCY)
+        lat_val = self.convert2str(settings.get("core.CLOCK_LATENCY"))
         self.clk_lat = StringVar()
         self.clk_lat.set(lat_val)
+
         # Appearance
         # theme
         self.theme = StringVar()
-        self.theme.set(COLOR_THEME)
+        self.theme.set(settings.get("foxdot_editor.COLOR_THEME"))
         self.text_theme = StringVar()
-        self.text_theme.set(TEXT_COLORS)
+        self.text_theme.set(settings.get("foxdot_editor.TEXT_COLORS"))
         self.font = StringVar()
-        self.font.set(FONT)
+        self.font.set(settings.get("foxdot_editor.FONT"))
         self.use_alpha = BooleanVar()
-        self.use_alpha.set(USE_ALPHA)
+        self.use_alpha.set(settings.get("foxdot_editor.USE_ALPHA"))
         self.alpha_val = StringVar()
-        self.alpha_val.set(ALPHA_VALUE)
+        self.alpha_val.set(settings.get("foxdot_editor.ALPHA_VALUE"))
         self.alpha_start = BooleanVar()
-        self.alpha_start.set(TRANSPARENT_ON_STARTUP)
+        self.alpha_start.set(settings.get("foxdot_editor.TRANSPARENT_ON_STARTUP"))
+
         # Colors
         # ------------------
         self.plaintext = colour_map['plaintext']
@@ -268,7 +274,7 @@ class Preferences:
             self.g2, textvariable=self.fwd_port)
         self.entry_fwd_port.grid(column=1, row=10, padx=self.padx, pady=5,
                                  sticky="nw")
-        # SUPERCOLLIDER
+        # settings.get("sc_backend.SUPERCOLLIDER")
         self.lbl_sc = tb.Label(
             self.g3, text="SUPERCOLLIDER")
         self.lbl_sc.grid(column=2, row=0, padx=self.padx, pady=10, sticky="nw")
@@ -554,7 +560,7 @@ class Preferences:
     def load_tt(self):
         self.theme_name = self.text_colors_opt.get()
         try:
-            file = FOXDOT_EDITOR_THEMES_PATH + '/' + self.theme_name + '.json'
+            file = settings.get("foxdot_editor.THEMES_PATH") + '/' + self.theme_name + '.json'
             # Opening JSON file
             with open(file, 'r') as openfile:
                 # Reading from json file
@@ -621,7 +627,7 @@ class Preferences:
         self.stop.iconify()
         self.filename = tkFileDialog.asksaveasfilename(
             filetypes=[("JSON files", ".json")],
-            initialdir=FOXDOT_EDITOR_THEMES_PATH + '/',
+            initialdir=settings.get("foxdot_editor.THEMES_PATH") + '/',
             defaultextension=".json")
         if self.filename:
             new_file = open(self.filename, "w")
@@ -685,50 +691,51 @@ class Preferences:
         return self.stop.destroy()
         pass
 
-    def save_changes(self):
-        self.text_settings = self.textbox.get("1.0", "end-1c")
-        if self.text_settings != self.text:
-            try:
-                self.settings.clear()
-                self.settings = json.loads(self.text_settings)
-            except Exception:
-                print("Can not convert text to json file. Please check your changes in this file!")
-        else:
-            self.settings.clear()
-            self.settings['ADDRESS'] = self.address.get()
-            self.settings['PORT'] = int(self.port.get())
-            self.settings['PORT2'] = int(self.port2.get())
-            self.settings['FONT'] = self.font.get()
-            self.settings['SUPERCOLLIDER'] = self.sc_path.get()
-            self.settings['BOOT_ON_STARTUP'] = self.sc_start.get()
-            self.settings['SC3_PLUGINS'] = self.sc3_start.get()
-            self.settings['MAX_CHANNELS'] = int(self.max_ch.get())
-            self.settings['SAMPLES_DIR'] = self.samples_dir.get()
-            self.settings['SAMPLES_PACK_NUMBER'] = int(self.sample_pack.get())
-            self.settings['GET_SC_INFO'] = self.sc_info.get()
-            self.settings['USE_ALPHA'] = self.use_alpha.get()
-            self.settings['ALPHA_VALUE'] = float(self.alpha_val.get())
-            self.settings['MENU_ON_STARTUP'] = self.menu_start.get()
-            self.settings['CONSOLE_ON_STARTUP'] = self.console_start.get()
-            self.settings['LINENUMBERS_ON_STARTUP'] = self.linenumbers_start.get()
-            self.settings['TREEVIEW_ON_STARTUP'] = self.treeview_start.get()
-            self.settings['TRANSPARENT_ON_STARTUP'] = self.alpha_start.get()
-            self.settings['RECOVER_WORK'] = self.recover_work.get()
-            self.settings['CHECK_FOR_UPDATE'] = self.check_update.get()
-            self.settings['LINE_NUMBER_MARKER_OFFSET'] = int(self.linenumber_offset.get())
-            self.settings['AUTO_COMPLETE_BRACKETS'] = self.brackets_auto.get()
-            self.convert2number(self.cpu_use.get(), 0)
-            self.settings['CPU_USAGE'] = int(self.cpu_use.get())
-            self.convert2number(self.clk_lat.get(), 1)
-            self.settings['CLOCK_LATENCY'] = int(self.clk_lat.get())
-            self.settings['FORWARD_ADDRESS'] = self.fwd_address.get()
-            self.settings['FORWARD_PORT'] = int(self.fwd_port.get())
-            self.settings['COLOR_THEME'] = self.theme.get()
-            self.settings['TEXT_COLORS'] = self.text_theme.get()
-        settings_file = open(self.conf_json, "w")
-        json.dump(self.settings, settings_file, indent=6)
-        settings_file.close()
-        msg = "A restart of FoxDot is required for the changes to take effect"
-        tkMessageBox.showwarning(parent=self.stop, title="Just a heads up", message=msg)
-        self.stop.destroy()
-        return
+    # # TODO reimplement save changes using the new central settings manager
+    # def save_changes(self):
+    #     self.text_settings = self.textbox.get("1.0", "end-1c")
+    #     if self.text_settings != self.text:
+    #         try:
+    #             self.settings.clear()
+    #             self.settings = json.loads(self.text_settings)
+    #         except Exception:
+    #             print("Can not convert text to json file. Please check your changes in this file!")
+    #     else:
+    #         self.settings.clear()
+    #         self.settings['settings.get("sc_backend.ADDRESS")'] = self.address.get()
+    #         self.settings['settings.get("sc_backend.PORT")'] = int(self.port.get())
+    #         self.settings['settings.get("sc_backend.PORT2")'] = int(self.port2.get())
+    #         self.settings['settings.get("foxdot_editor.FONT")'] = self.font.get()
+    #         self.settings['SUPERCOLLIDER'] = self.sc_path.get()
+    #         self.settings['settings.get("core.BOOT_ON_STARTUP")'] = self.sc_start.get()
+    #         self.settings['settings.get("sc_backend.SC3_PLUGINS")'] = self.sc3_start.get()
+    #         self.settings['settings.get("samples.MAX_CHANNELS")'] = int(self.max_ch.get())
+    #         self.settings['settings.get("samples.SAMPLES_DIR")'] = self.samples_dir.get()
+    #         self.settings['settings.get("samples.SAMPLES_PACK_NUMBER")'] = int(self.sample_pack.get())
+    #         self.settings['settings.get("sc_backend.GET_SC_INFO")'] = self.sc_info.get()
+    #         self.settings['settings.get("foxdot_editor.USE_ALPHA)'] = self.use_alpha.get()
+    #         self.settings['settings.get("foxdot_editor.ALPHA_VALUE")'] = float(self.alpha_val.get())
+    #         self.settings['settings.get("foxdot_editor.MENU_ON_STARTUP")'] = self.menu_start.get()
+    #         self.settings['settings.get("foxdot_editor.CONSOLE_ON_STARTUP")'] = self.console_start.get()
+    #         self.settings['settings.get("foxdot_editor.LINENUMBERS_ON_STARTUP")'] = self.linenumbers_start.get()
+    #         self.settings['settings.get("foxdot_editor.TREEVIEW_ON_STARTUP)'] = self.treeview_start.get()
+    #         self.settings['settings.get("foxdot_editor.TRANSPARENT_ON_STARTUP)'] = self.alpha_start.get()
+    #         self.settings['settings.get("foxdot_editor.RECOVER_WORK")'] = self.recover_work.get()
+    #         self.settings['settings.get("foxdot_editor.CHECK_FOR_UPDATE")'] = self.check_update.get()
+    #         self.settings['settings.get("foxdot_editor.LINE_NUMBER_MARKER_OFFSET")'] = int(self.linenumber_offset.get())
+    #         self.settings['settings.get("foxdot_editor.AUTO_COMPLETE_BRACKETS")'] = self.brackets_auto.get()
+    #         self.convert2number(self.cpu_use.get(), 0)
+    #         self.settings['settings.get("core.CPU_USAGE")'] = int(self.cpu_use.get())
+    #         self.convert2number(self.clk_lat.get(), 1)
+    #         self.settings['settings.get("core.CLOCK_LATENCY")'] = int(self.clk_lat.get())
+    #         self.settings['settings.get("sc_backend.FORWARD_ADDRESS")'] = self.fwd_address.get()
+    #         self.settings['settings.get("sc_backend.FORWARD_PORT")'] = int(self.fwd_port.get())
+    #         self.settings['settings.get("foxdot_editor.COLOR_THEME")'] = self.theme.get()
+    #         self.settings['settings.get("foxdot_editor.TEXT_COLORS")'] = self.text_theme.get()
+    #     settings_file = open(self.conf_json, "w")
+    #     json.dump(self.settings, settings_file, indent=6)
+    #     settings_file.close()
+    #     msg = "A restart of FoxDot is required for the changes to take effect"
+    #     tkMessageBox.showwarning(parent=self.stop, title="Just a heads up", message=msg)
+    #     self.stop.destroy()
+    #     return

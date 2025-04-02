@@ -3,8 +3,7 @@
 import re
 from os.path import abspath, join, dirname
 from renardo.lib.Code import classes, functions, instances
-# from renardo.lib.Settings import *
-from renardo.lib.Settings import COLOURS
+from renardo.settings_manager import settings, Colours
 from renardo.lib.Patterns import Main, Sequences, Generators
 from renardo.lib.SynthDefManagement import SCLangExperimentalPythonBindings
 
@@ -179,44 +178,44 @@ functions = r"(?<![a-zA-Z._])(" + "|".join(py_functions) + ")(?![_a-zA-Z])"
 key_types = r"(?<![a-zA-Z._])(" + "|".join(py_key_types) + ")(?![_a-zA-Z])"
 other_kws = r"(?<![a-zA-Z._])(" + "|".join(py_other_kws) + ")(?![_a-zA-Z])"
 
-colour_map = {'plaintext': COLOURS.plaintext,
-              'background': COLOURS.background,
-              'functions': COLOURS.functions,
-              'key_types': COLOURS.key_types,
-              'user_defn': COLOURS.user_defn,
-              'other_kws': COLOURS.other_kws,
-              'comments': COLOURS.comments,
-              'numbers': COLOURS.numbers,
-              'strings': COLOURS.strings,
-              'dollar': COLOURS.dollar,
-              'arrow': COLOURS.arrow,
-              'players': COLOURS.players,
-              'prompt_fg': COLOURS.prompt_fg,
-              'prompt_bg': COLOURS.prompt_bg,
-              'console_text': COLOURS.console_text,
-              'console_bg': COLOURS.console_bg,
-              'kick': COLOURS.kick,
-              'various': COLOURS.various,
-              'vocal': COLOURS.vocal,
-              'bell': COLOURS.bell,
-              'hihat': COLOURS.hihat,
-              'clap': COLOURS.clap,
-              'snap': COLOURS.snap,
-              'shaker': COLOURS.shaker,
-              'tambourine': COLOURS.tambourine,
-              'crash': COLOURS.crash,
-              'cymbal': COLOURS.cymbal,
-              'soundfx': COLOURS.soundfx,
-              'tom': COLOURS.tom,
-              'noise': COLOURS.noise,
-              'ride': COLOURS.ride,
-              'perc': COLOURS.perc,
-              'snare': COLOURS.snare,
-              'rim': COLOURS.rim,
-              'loops': COLOURS.loops,
-              'default': COLOURS.default,
-              'text1': COLOURS.text1,
-              'text2': COLOURS.text2
+colour_map = {'plaintext': Colours.plaintext,
+              'background': Colours.background,
+              'functions': Colours.functions,
+              'key_types': Colours.key_types,
+              'user_defn': Colours.user_defn,
+              'other_kws': Colours.other_kws,
+              'comments': Colours.comments,
+              'numbers': Colours.numbers,
+              'strings': Colours.strings,
+              'dollar': Colours.dollar,
+              'arrow': Colours.arrow,
+              'players': Colours.players,
+              'prompt_fg': Colours.prompt_fg,
+              'prompt_bg': Colours.prompt_bg,
+              'console_text': Colours.console_text,
+              'console_bg': Colours.console_bg,
+              'kick': Colours.kick,
+              'various': Colours.various,
+              'vocal': Colours.vocal,
+              'bell': Colours.bell,
+              'hihat': Colours.hihat,
+              'clap': Colours.clap,
+              'snap': Colours.snap,
+              'shaker': Colours.shaker,
+              'tambourine': Colours.tambourine,
+              'crash': Colours.crash,
+              'cymbal': Colours.cymbal,
+              'soundfx': Colours.soundfx,
+              'tom': Colours.tom,
+              'noise': Colours.noise,
+              'ride': Colours.ride,
+              'perc': Colours.perc,
+              'snare': Colours.snare,
+              'rim': Colours.rim,
+              'loops': Colours.loops,
+              'default': Colours.default,
+              'text1': Colours.text1,
+              'text2': Colours.text2
               }
 
 re_patterns = {'functions': functions,

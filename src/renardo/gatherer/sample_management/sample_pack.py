@@ -4,7 +4,7 @@ from pprint import pformat
 from typing import Dict, Optional, List, Iterator
 
 from renardo.gatherer.sample_management.sample_category import SampleCategory
-from renardo.settings_manager import nonalpha, alpha, LOOP_SUBDIR
+from renardo.settings_manager import settings
 from renardo.gatherer.sample_management.sample_file import SampleFile
 
 class SamplePack:
@@ -37,7 +37,7 @@ class SamplePack:
         for category_dir in self.directory.iterdir():
             # check if the folder is a single letter directory then use upper lower subdir
             # because macOS is not case-sensitive with file names WTF
-            if  category_dir.is_dir() and len(category_dir.name)==1 and category_dir.name in alpha+alpha.upper():
+            if  category_dir.is_dir() and len(category_dir.name)==1 and category_dir.name in settings.get("samples.ALPHA")+settings.get("samples.ALPHA").upper():
 
                 lower_category = category_dir.name.lower()
                 upper_category = category_dir.name.upper()
@@ -49,7 +49,7 @@ class SamplePack:
 
     def get_category(self, category: str) -> Optional[SampleCategory]:
         """Get a category by its letter/symbol."""
-        category_fullname = nonalpha[category] if category in nonalpha.keys() else category
+        category_fullname = settings.get("samples.NON_ALPHA")[category] if category in settings.get("samples.NON_ALPHA").keys() else category
         return self._categories.get(category_fullname)
 
     def get_sample(self, category: str, index: int) -> Optional[SampleFile]:

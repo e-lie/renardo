@@ -10,12 +10,7 @@ TEMP_FILE.touch(exist_ok=True)
 
 settings.set_defaults_from_dict({
     "foxdot_editor" : {
-        "FOXDOT_EDITOR_ROOT": str(RENARDO_ROOT_PATH / "foxdot_editor"),
         "TEMP_FILE": str(FOXDOT_EDITOR_ROOT / "tmp" / "tempfile.txt"),
-        "ICON": str(FOXDOT_EDITOR_ROOT / "img" / "icon.ico"),
-        "ICON_GIF": str(FOXDOT_EDITOR_ROOT / "img" / "icon.gif"),
-        "HELLO": str(FOXDOT_EDITOR_ROOT / "img" / "hello.txt"),
-        "THEMES_PATH": str(FOXDOT_EDITOR_ROOT / "themes"),
         "FONT": 'Consolas',
         "AUTO_COMPLETE_BRACKETS": True,
         "USE_ALPHA": True,
@@ -30,6 +25,16 @@ settings.set_defaults_from_dict({
         "CHECK_FOR_UPDATE": True,
         "COLOR_THEME": 'cyborg',
         "TEXT_COLORS": 'default',
+    }
+},
+)
+
+settings.set_defaults_from_dict({
+    "foxdot_editor" : {
+        "FOXDOT_EDITOR_ROOT": str(RENARDO_ROOT_PATH / "foxdot_editor"),
+        "ICON": str(FOXDOT_EDITOR_ROOT / "img" / "icon.ico"),
+        "ICON_GIF": str(FOXDOT_EDITOR_ROOT / "img" / "icon.gif"),
+        "THEMES_PATH": str(FOXDOT_EDITOR_ROOT / "themes"),
     }
 },
 internal=True
@@ -127,7 +132,7 @@ for key, value in os.environ.items():
         globals()[key] = value
 
 # Colours
-class COLOURS:
+class Colours:
     # Text area colours
     plaintext = conf.plaintext
     background = conf.background

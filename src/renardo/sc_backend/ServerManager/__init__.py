@@ -12,10 +12,7 @@ from time import sleep
 from collections import namedtuple
 from threading import Thread
 
-from renardo.lib.Settings import (
-    OSC_MIDI_ADDRESS, GET_SC_INFO, FOXDOT_INFO_FILE, FOXDOT_RECORD_FILE,
-    RECORDING_DIR,
-)
+from renardo.settings_manager import settings
 
 from renardo.sc_backend.SynthDefManagement.SpecialSynthDefs import SamplePlayer, LoopPlayer
 from renardo.sc_backend.custom_osc_lib import *
@@ -161,12 +158,12 @@ class ServerManager:
         self.client = OSCClientWrapper()
 
         # self.sclang is the OSC Connection for custom OSCFunc in SuperCollider
-        self.sclang = BidirectionalOSCServer() if GET_SC_INFO else OSCClientWrapper()
+        self.sclang = BidirectionalOSCServer() if settings.get("sc_backend.GET_SC_INFO") else OSCClientWrapper()
 
 
     def test_connection(self):
         self.sclang.connect((self.addr, self.SCLang_port))
-        self.loadSynthDef(FOXDOT_INFO_FILE)
+        self.loadSynthDef(settings.get("sc_backend.INFO_FILE"))
         try:
             self.getInfo()
             return True
@@ -178,8 +175,8 @@ class ServerManager:
         self.sclang.connect((self.addr, self.SCLang_port))
 
         # Use bidirectionnal connection to ask SuperCollider for info
-        if GET_SC_INFO:
-            self.loadSynthDef(FOXDOT_INFO_FILE)
+        if settings.get("sc_backend.GET_SC_INFO"):
+            self.loadSynthDef(settings.get("sc_backend.INFO_FILE"))
             try:
                 info = self.getInfo()
             except RequestTimeout:
@@ -224,7 +221,7 @@ class ServerManager:
 
     def sendOSC(self, osc_message):
         """ Sends an OSC message to the server. Checks for midi messages """
-        if osc_message.address == OSC_MIDI_ADDRESS:
+        if osc_message.address == settings.get("sc_backend.OSC_MIDI_ADDRESS"):
             self.sclang.send(osc_message)
         else:
             self.client.send(osc_message)
@@ -264,9 +261,9 @@ class ServerManager:
         """ Prepares an OSC message to trigger midi sent from SuperCollider """
 
         bundle = OSCBundle(time=timestamp)
-        bundle.setAddress(OSC_MIDI_ADDRESS)  # these need to be variable names at least
+        bundle.setAddress(settings.get("sc_backend.OSC_MIDI_ADDRESS"))  # these need to be variable names at least
 
-        msg = OSCMessage(OSC_MIDI_ADDRESS)
+        msg = OSCMessage(settings.get("sc_backend.OSC_MIDI_ADDRESS"))
 
         note = packet.get("midinote", 60)
         vel = min(127, (packet.get("amp", 1) * 128) - 1)
@@ -487,7 +484,7 @@ class ServerManager:
         message.append([bufnum])
         self.client.send(message)
 
-    def sendMidi(self, msg, cmd=OSC_MIDI_ADDRESS):
+    def sendMidi(self, msg, cmd=settings.get("sc_backend.OSC_MIDI_ADDRESS")):
         """ Sends a message to the FoxDot class in SuperCollider to forward a MIDI message """
         msg.setAddress(cmd)
         self.sclang.send(msg)
@@ -503,7 +500,7 @@ class ServerManager:
 
     def loadRecorder(self):
         """ Loads an OSCFunc that starts/stops recording to a set path """
-        self.loadSynthDef(FOXDOT_RECORD_FILE)
+        self.loadSynthDef(settings.get("sc_backend.RECORD_FILE"))
         self._is_recording = False
         return
 
@@ -514,7 +511,7 @@ class ServerManager:
             if fn is None:
                 fn = "{}.aiff".format(get_timestamp())
 
-            path = os.path.join(RECORDING_DIR, fn)
+            path = os.path.join(settings.get("sc_backend.RECORDING_DIR"), fn)
             msg = OSCMessage('/foxdot-record')
             msg.append([1, path])
             self.sclang.send(msg)

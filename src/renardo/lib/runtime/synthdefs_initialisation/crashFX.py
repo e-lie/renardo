@@ -1,4 +1,5 @@
 # Legato slide
+from renardo.settings_manager import settings
 
 fx = effect_manager.new("leg", "leg", {"leg":0, "sus":1 }, order = 0)
 fx.add("osc = osc * XLine.ar(Rand(0.5,1.5)*leg,1,0.05*sus)")
@@ -23,7 +24,7 @@ fx.doc("DFM1 filter")
 fx.add('osc = DFM1.ar(osc, dfm, dfmr, dfmd,0.0)')
 fx.save()
 
-if SC3_PLUGINS:
+if settings.get("sc_backend.SC3_PLUGINS"):
     #Dist mod
     fx = effect_manager.new('disto', 'disto_mod', {'disto': 0, 'smooth': 0.3, 'distomix': 1}, order=1)
     fx.add("osc = LinXFade2.ar(CrossoverDistortion.ar(osc, amp:0.5*disto, smooth:smooth),  osc, 1-distomix)")

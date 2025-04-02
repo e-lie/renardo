@@ -1,5 +1,5 @@
 from renardo.foxdot_editor.tkimport import *
-from renardo.lib.Settings import LINE_NUMBER_MARKER_OFFSET
+from renardo.settings_manager import settings
 from renardo.lib.Code import execute
 
 
@@ -31,7 +31,7 @@ class LineNumbers(tb.Canvas):
             curr_row = int(self.textwidget.index(INSERT).split(".")[0])
 
             if linenum == curr_row:
-                x1, y1 = 0, y + LINE_NUMBER_MARKER_OFFSET
+                x1, y1 = 0, y + settings.get("foxdot_editor.LINE_NUMBER_MARKER_OFFSET")
                 x2, y2 = w - 2, y + h
                 self.create_rectangle(x1,
                                       y1,

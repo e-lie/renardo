@@ -4,7 +4,7 @@ import json
 from subprocess import check_output
 
 from renardo.lib.Scale import freqtomidi
-from renardo.lib.Settings import TMP_SYNTHDEF_DIR
+from renardo.settings_manager import settings
 
 from urllib.request import urlretrieve
 
@@ -108,7 +108,7 @@ def LoadSonicPiSynths(metadata_file=SONIC_PI_FILE):
         data = json.load(ifile)
     ref = data.pop('__ref__')
     def create_filename(fullname):
-        filename = os.path.join(TMP_SYNTHDEF_DIR, fullname + '.scsyndef')
+        filename = os.path.join(settings.get("sc_backend.TMP_SYNTHDEF_DIR"), fullname + '.scsyndef')
         if not os.path.exists(filename):
             url = "https://github.com/samaaron/sonic-pi/raw/%s/etc/synthdefs/compiled/%s.scsyndef" % (ref, fullname)
             print("Downloading", url)

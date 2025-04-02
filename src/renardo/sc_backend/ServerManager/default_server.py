@@ -1,9 +1,9 @@
-from renardo.sc_backend.supercollider_settings import ADDRESS, PORT, PORT2, FORWARD_PORT, FORWARD_ADDRESS
+from renardo.settings_manager import settings
 from renardo.sc_backend.ServerManager import ServerManager
 
-# DefaultServer = SCLangServerManager(ADDRESS, PORT, PORT2)
-Server = ServerManager(ADDRESS, PORT, PORT2)
+# DefaultServer = SCLangServerManager(settings.get("sc_backend.ADDRESS"), PORT, settings.get("sc_backend.PORT2"))
+Server = ServerManager(settings.get("sc_backend.ADDRESS"), settings.get("sc_backend.PORT"), settings.get("sc_backend.PORT2"))
 Server.init_connection()
 
-if FORWARD_PORT and FORWARD_ADDRESS:
-    Server.add_forward(FORWARD_ADDRESS, FORWARD_PORT)
+if settings.get("sc_backend.FORWARD_PORT") and settings.get("sc_backend.FORWARD_ADDRESS"):
+    Server.add_forward(settings.get("sc_backend.FORWARD_ADDRESS"), settings.get("sc_backend.FORWARD_PORT"))
