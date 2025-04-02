@@ -6,9 +6,9 @@ import os
 from .tkimport import *
 from .Format import *
 from renardo.settings_manager import *
-from renardo.settings_manager import settings_manager, nonalpha
+from renardo.settings_manager import settings, nonalpha
 
-SAMPLES_DIR = settings_manager.get("SAMPLES_DIR")
+SAMPLES_DIR = settings.get("SAMPLES_DIR")
 
 try:
     from playsound import playsound

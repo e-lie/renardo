@@ -37,9 +37,9 @@ class SettingsManager:
         self._internal_settings = copy.deepcopy(internal_defaults)
 
         # Load both settings files
-        self.load()
+        self.load_from_file()
 
-    def load(self) -> None:
+    def load_from_file(self) -> None:
         """Load settings from both public and internal TOML files."""
         # Load public settings
         try:
@@ -59,7 +59,7 @@ class SettingsManager:
         except Exception as e:
             print(f"Error loading internal settings: {e}")
 
-    def save(self, save_internal: bool = True) -> bool:
+    def save_to_file(self, save_internal: bool = True) -> bool:
         """
         Save current settings to TOML files.
 
@@ -91,6 +91,44 @@ class SettingsManager:
                 success = False
 
         return success
+
+    def set_from_dict(self, settings_dict: Dict[str, Any], internal: bool = False) -> None:
+        """
+        Add multiple settings at once from a dictionary.
+
+        Args:
+            settings_dict: Dictionary of settings to add
+            internal: Whether to add to internal settings
+        """
+        target = self._internal_settings if internal else self._public_settings
+        self._recursive_update(target, settings_dict)
+
+    def set_defaults_from_dict(self, defaults_dict: Dict[str, Any], internal: bool = False) -> None:
+        """
+        Set defaults from a dictionary and add them to settings only if keys don't already exist.
+
+        Args:
+            defaults_dict: Dictionary of default settings to add
+            internal: Whether to set defaults for internal settings
+        """
+        # First update the defaults
+        defaults = self._internal_defaults if internal else self._public_defaults
+        self._recursive_update(defaults, defaults_dict)
+
+        # Then add to settings only if keys don't exist
+        settings = self._internal_settings if internal else self._public_settings
+        self._recursive_update_if_not_exists(settings, defaults_dict)
+
+    def _recursive_update_if_not_exists(self, target: Dict, source: Dict) -> None:
+        """Recursively update nested dictionaries, but only for keys that don't exist in target."""
+        for key, value in source.items():
+            if key not in target:
+                # Key doesn't exist, add it
+                target[key] = copy.deepcopy(value)
+            elif isinstance(target[key], dict) and isinstance(value, dict):
+                # Key exists and both are dictionaries, recurse
+                self._recursive_update_if_not_exists(target[key], value)
+            # If key exists but is not a dict, keep the existing value
 
     def get(self, key: str, default: Any = None) -> Any:
         """
@@ -197,11 +235,11 @@ internal_defaults = {
     "SAMPLES_DIR": str(Path(public_defaults["RENARDO_USER_DIR"]) / 'sample_packs'),
 }
 
-settings_manager = SettingsManager(
-    Path("settings.toml"),
-    Path("internal_settings.toml"),
+settings = SettingsManager(
+    Path(RENARDO_USER_DIR/"settings.toml"),
+    Path(RENARDO_USER_DIR/"internal_settings.toml"),
     public_defaults,
     internal_defaults
 )
 
-settings_manager.save()
+settings.save_to_file()
