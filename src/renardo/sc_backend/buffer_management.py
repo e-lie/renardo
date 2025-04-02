@@ -16,11 +16,9 @@ from contextlib import closing
 from pathlib import Path
 import heapq
 
-from renardo.settings_manager import DESCRIPTIONS
+from renardo.settings_manager import settings
 from renardo.gatherer import sample_pack_library
 from renardo.sc_backend.ServerManager.default_server import Server
-
-alpha = "abcdefghijklmnopqrstuvwxyz"
 
 class Buffer:
     def __init__(self, sample_file, buffer_num: int, channels: int = 1):
@@ -181,6 +179,6 @@ class BufferManager:
 
 
 # Samples and DefaultSamples just display default samples list (compat with FoxDot print(Samples))
-DefaultSamples = Samples = "\n".join(["%r: %s" % (k, v) for k, v in sorted(DESCRIPTIONS.items())])
+DefaultSamples = Samples = "\n".join(["%r: %s" % (k, v) for k, v in sorted(settings.get("samples.SYMBOLS_DESCRIPTION").items())])
 
 buffer_manager =  BufferManager()

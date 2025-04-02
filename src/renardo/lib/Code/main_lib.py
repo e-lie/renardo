@@ -15,7 +15,7 @@ except ImportError:
     
 from renardo.lib.Utils import modulo_index
 
-from renardo.lib.Settings import FOXDOT_STARTUP_PATH, PERFORMANCE_EXCEPTIONS_CATCHING
+from renardo.settings_manager import settings
 
 """
 Live Object
@@ -93,7 +93,7 @@ class _StartupFile:
                 WarningMsg("'{}' startup file not found.".format(self.path))
         return ""
 
-FOXDOT_STARTUP = _StartupFile(FOXDOT_STARTUP_PATH)
+FOXDOT_STARTUP = _StartupFile(settings.get("core.STARTUP_FILE_PATH"))
         
 class FoxDotCode:
     namespace={}
@@ -136,7 +136,7 @@ class FoxDotCode:
         if not code:
             return
 
-        catching_exceptions_in_performance_code = PERFORMANCE_EXCEPTIONS_CATCHING
+        catching_exceptions_in_performance_code = settings.get("core.PERFORMANCE_EXCEPTIONS_CATCHING")
 
         if catching_exceptions_in_performance_code == True: 
             try:

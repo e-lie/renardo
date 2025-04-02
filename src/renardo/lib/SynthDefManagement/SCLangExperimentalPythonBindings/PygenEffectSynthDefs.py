@@ -60,7 +60,7 @@
 """
 
 import os.path
-from renardo.lib.Settings import TMP_EFFECTS_DIR
+from renardo.settings_manager import settings
 from renardo.sc_backend import Server
 
 
@@ -72,7 +72,7 @@ class Effect:
         #self.server =Server
         self.name = foxdot_name
         self.synthdef = synthdef
-        self.filename = TMP_EFFECTS_DIR + "/{}.scd".format(self.synthdef)
+        self.filename = settings.get("sc_backend.TMP_EFFECTS_DIR") + "/{}.scd".format(self.synthdef)
         self.args = args.keys()
         self.vars = ["osc"]
         self.defaults = args

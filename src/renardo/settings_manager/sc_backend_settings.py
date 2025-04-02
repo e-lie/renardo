@@ -2,15 +2,31 @@
 from pathlib import Path
 from .settings_manager import settings
 
-SCLANG_DIR_PATH = Path(settings.get("RENARDO_USER_DIR")) / 'sclang_code'
-RECORDING_DIR = Path(settings.get("RENARDO_USER_DIR")) / "rec"
+SCLANG_DIR_PATH = Path(settings.get("core.RENARDO_USER_DIR")) / 'sclang_code'
+RECORDING_DIR = Path(settings.get("core.RENARDO_USER_DIR")) / "rec"
 RECORDING_DIR.mkdir(exist_ok=True)
 
 # def GET_SYNTHDEF_FILES():
-#    return [os.path.realpath(SYNTHDEF_DIR + "/" + path) for path in os.listdir(SYNTHDEF_DIR)]
+#    return [os.path.realpath(settings.get("sc_backend.SYNTHDEF_DIR") + "/" + path) for path in os.listdir(settings.get("sc_backend.SYNTHDEF_DIR"))]
 
 # def GET_FX_FILES():
-#    return [os.path.realpath(EFFECTS_DIR + "/" + path) for path in os.listdir(EFFECTS_DIR)]
+#    return [os.path.realpath(settings.get("sc_backend.EFFECTS_DIR") + "/" + path) for path in os.listdir(settings.get("sc_backend.EFFECTS_DIR"))]
+
+settings.set_defaults_from_dict({
+    "sc_backend": {
+        "RECORDING_DIR": str(RECORDING_DIR),
+        "OSC_MIDI_ADDRESS": "/foxdot_midi",
+        "GET_SC_INFO": True,
+        "ADDRESS": 'localhost',
+        "PORT": 57110,
+        "PORT2": 57120,
+        "FORWARD_PORT": 0,
+        "FORWARD_ADDRESS": '',
+        "BOOT_SCLANG_ON_STARTUP": False,
+        "SC3_PLUGINS": False,
+    }
+},
+)
 
 settings.set_defaults_from_dict({
     "sc_backend": {
@@ -30,17 +46,7 @@ settings.set_defaults_from_dict({
         # To avoid overwriting permanent (default) synthdef scd files
         "TMP_SYNTHDEF_DIR" : str(SCLANG_DIR_PATH / "tmp_code" / "scsynth"),
         "TMP_EFFECTS_DIR": str(SCLANG_DIR_PATH / "tmp_code" / "sceffects"),
-        "RECORDING_DIR": str(RECORDING_DIR),
-        "OSC_MIDI_ADDRESS": "/foxdot_midi",
-        "GET_SC_INFO": True,
-        "ADDRESS": 'localhost',
-        "PORT": 57110,
-        "PORT2": 57120,
-        "FORWARD_PORT": 0,
-        "FORWARD_ADDRESS": '',
         "SUPERCOLLIDER": "",
-        "BOOT_SCLANG_ON_STARTUP": False,
-        "SC3_PLUGINS": False,
     }
 },
 internal=True
