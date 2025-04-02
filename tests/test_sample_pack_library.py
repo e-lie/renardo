@@ -6,7 +6,7 @@ import pytest
 from pathlib import Path
 import tempfile
 from renardo.gatherer import SamplePackLibrary
-from renardo.settings import settings_manager
+from renardo.settings_manager import settings
 
 @pytest.fixture
 def sample_dir():
@@ -54,7 +54,7 @@ def sample_dir():
 def sample_pack_lib(sample_dir):
     """Create a Sample Pack Library instance configured with the sample directory."""
     spack_lib = SamplePackLibrary(
-        root_directory=settings_manager.get("SAMPLES_DIR"),
+        root_directory=settings.get("SAMPLES_DIR"),
         extra_paths=[sample_dir['root']]
     )
     return spack_lib

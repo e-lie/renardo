@@ -1,4 +1,5 @@
 from pathlib import Path
+from .settings_manager import settings
 from .supercollider_settings import get_synthdefs_dir_path
 
 import os
@@ -53,3 +54,22 @@ FOXDOT_EFFECTS_FILE = str(get_synthdefs_dir_path() / "Effects.scd")
 
 def get_tutorial_files():
     return [os.path.realpath(TUTORIAL_DIR + "/" + path) for path in sorted(os.listdir(TUTORIAL_DIR))]
+
+settings.set_defaults_from_dict({
+    "TUTORIAL_DIR": str(TUTORIAL_DIR),
+    "FOXDOT_INFO_FILE": str(SCLANG_DIR_PATH / "Info.scd"),
+    "FOXDOT_RECORD_FILE" : str(SCLANG_DIR_PATH / "Record.scd"),
+    "FOXDOT_STARTUP_FILE" : str(SCLANG_DIR_PATH / "Startup.scd"),
+    "FOXDOT_OSC_FUNC" : str(SCLANG_DIR_PATH / "OSCFunc.scd"),
+    "FOXDOT_BUFFERS_FILE" : str(SCLANG_DIR_PATH / "Buffers.scd"),
+    "RECORDING_DIR" : str(Path(settings.get("RENARDO_USER_DIR")) / "rec"),
+    "OSC_MIDI_ADDRESS" : "/foxdot_midi",
+    "GET_SC_INFO" : True,
+    "ADDRESS" : 'localhost',
+    "PORT" : 57110,
+    "PORT2" : 57120,
+    "FORWARD_PORT" : 0,
+    "FORWARD_ADDRESS" : '',
+},
+internal=True
+)
