@@ -1,6 +1,11 @@
 
 from renardo.foxdot_editor.tkimport import *
-from renardo.lib.Settings import *
+from renardo.settings_manager import (
+    FOXDOT_ICON, FOXDOT_ICON_GIF, FOXDOT_EDITOR_THEMES_PATH, MENU_ON_STARTUP,
+    LINENUMBERS_ON_STARTUP, CONSOLE_ON_STARTUP, CPU_USAGE, TREEVIEW_ON_STARTUP, RECOVER_WORK,
+    CHECK_FOR_UPDATE, LINE_NUMBER_MARKER_OFFSET, AUTO_COMPLETE_BRACKETS, SAMPLES_PACK_NUMBER,
+
+)
 from .Format import *
 from ttkbootstrap.dialogs.colorchooser import ColorChooserDialog
 try:

@@ -34,7 +34,7 @@ import socket
 # Code execution
 
 from renardo.settings_manager import (
-    settings_manager,
+    settings,
     SYSTEM, WINDOWS, MAC_OS, LINUX, FOXDOT_TEMP_FILE,
     FONT, COLOR_THEME, USE_ALPHA, MENU_ON_STARTUP, TREEVIEW_ON_STARTUP,
     LINENUMBERS_ON_STARTUP, CONSOLE_ON_STARTUP, FOXDOT_ICON, FOXDOT_ICON_GIF,
@@ -600,10 +600,10 @@ class workspace:
         else:
             cmd = 'xdg-open'
         try:
-            subprocess.Popen([cmd, settings_manager.get("SAMPLES_DIR")])
+            subprocess.Popen([cmd, settings.get("SAMPLES_DIR")])
         except OSError as e:
             print(e)
-            print("Hmm... Looks like we couldn't open the directory but you can find the samples in {}".format(settings_manager.get("SAMPLES_DIR")))
+            print("Hmm... Looks like we couldn't open the directory but you can find the samples in {}".format(settings.get("SAMPLES_DIR")))
         return
 
     def open_samples_chart_app(self):

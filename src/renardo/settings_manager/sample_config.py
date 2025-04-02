@@ -1,9 +1,9 @@
 from pathlib import Path
 from .config_dir import DEFAULT_SAMPLES_PACK_NAME, LOOP_SUBDIR
-from .settings_manager import settings_manager
+from .settings_manager import settings
 
 def default_loop_path() -> Path:
-    return Path(settings_manager.get("SAMPLES_DIR")) / DEFAULT_SAMPLES_PACK_NAME / LOOP_SUBDIR
+    return Path(settings.get("SAMPLES_DIR")) / DEFAULT_SAMPLES_PACK_NAME / LOOP_SUBDIR
 
 alpha    = "abcdefghijklmnopqrstuvwxyz"
 nonalpha = {"&": "_ampersand",

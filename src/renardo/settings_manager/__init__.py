@@ -1,4 +1,4 @@
-from .settings_manager import SettingsManager, settings_manager
+from .settings_manager import SettingsManager, settings
 
 from .config_dir import (
     DEFAULT_SAMPLES_PACK_NAME, LOOP_SUBDIR, DESCRIPTIONS,
