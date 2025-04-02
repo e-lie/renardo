@@ -1,7 +1,7 @@
 from renardo.lib.Extensions.VRender.VRender import renderizeVoice
 from renardo.lib.SynthDefManagement import DefaultPygenSynthDef
 from renardo.lib.runtime import Clock, Scale, Root
-from renardo.lib.Settings import FOXDOT_ROOT
+from renardo.settings_manager import RENARDO_ROOT_PATH
 
 class VRenderSynthDef(DefaultPygenSynthDef):
     def __init__(self):
@@ -35,6 +35,6 @@ class VRenderSynthDef(DefaultPygenSynthDef):
 
         notes = list(map(lambda x: x + Root.default,notes))
 
-        renderizeVoice(filename,lyrics,notes,durations,tempo,scale,sex,FOXDOT_ROOT)
+        renderizeVoice(filename,lyrics,notes,durations,tempo,scale,sex,RENARDO_ROOT_PATH)
 
 vrender = VRenderSynthDef()
