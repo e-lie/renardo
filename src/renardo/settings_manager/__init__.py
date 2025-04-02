@@ -1,42 +1,6 @@
 from .settings_manager import SettingsManager, settings
 
-from .config_dir import (
-    DEFAULT_SAMPLES_PACK_NAME, LOOP_SUBDIR, DESCRIPTIONS,
-    SAMPLES_DOWNLOAD_SERVER
-)
-
-from .samples_pack_settings import nonalpha, alpha, default_loop_path
-
-from .sc_backend_settings import (
-    OSC_MIDI_ADDRESS, GET_SC_INFO, FOXDOT_INFO_FILE, FOXDOT_RECORD_FILE,
-    RECORDING_DIR, get_synthdefs_dir_path, ADDRESS, FORWARD_ADDRESS, FORWARD_PORT,
-    PORT, PORT2,
-)
-
-from .renardo_core_settings import (
-    BOOT_ON_STARTUP,
-    CLOCK_LATENCY, CPU_USAGE,
-    EFFECTS_DIR, ENVELOPE_DIR,
-    FOXDOT_EFFECTS_FILE,
-    LOOP_DIR_NAME, RENARDO_ROOT_PATH,
-    FOXDOT_STARTUP_PATH,
-    GET_SC_INFO, PERFORMANCE_EXCEPTIONS_CATCHING,
-    MAX_CHANNELS, RECORDING_DIR,
-    SAMPLES_DIR, SAMPLES_PACK_NUMBER, SC3_PLUGINS, SUPERCOLLIDER,
-    SYNTHDEF_DIR, TMP_EFFECTS_DIR, TMP_SYNTHDEF_DIR,
-    TUTORIAL_DIR,
-    get_tutorial_files,
-)
-
-from .foxdot_editor_settings import (
-    SYSTEM, WINDOWS, MAC_OS, LINUX, FOXDOT_TEMP_FILE,
-    ALPHA_VALUE, AUTO_COMPLETE_BRACKETS, CHECK_FOR_UPDATE,
-    COLOR_THEME, COLOURS, CONSOLE_ON_STARTUP,
-    FOXDOT_EDITOR_ROOT, FOXDOT_EDITOR_THEMES_PATH,
-    FOXDOT_HELLO, FOXDOT_ICON, FOXDOT_ICON_GIF,
-    LINENUMBERS_ON_STARTUP, LINE_NUMBER_MARKER_OFFSET,
-    MENU_ON_STARTUP, FONT,
-    RECOVER_WORK, TEXT_COLORS,
-    TRANSPARENT_ON_STARTUP, TREEVIEW_ON_STARTUP, USE_ALPHA,
-    conf,
-)
+from .samples_pack_settings import default_loop_path
+from .renardo_core_settings import get_tutorial_files
+from .foxdot_editor_settings import Colours, conf
+from .sc_backend_settings import *

@@ -142,15 +142,20 @@ class SettingsManager:
         Returns:
             Setting value or default if not found
         """
-        settings = self._internal_settings | self._public_settings
 
         try:
-            value = settings
+            value = self._internal_settings
             for k in key.split('.'):
                 value = value[k]
             return value
-        except KeyError:
-            return default
+        except KeyError: # if not in internal settings try with public settings
+            try:
+                value = self._public_settings
+                for k in key.split('.'):
+                    value = value[k]
+                return value
+            except KeyError:
+                return default
 
     def set(self, key: str, value: Any, internal: bool = False) -> None:
         """
@@ -228,12 +233,18 @@ elif platform == "win32":
 #     return RENARDO_USER_DIR
 
 public_defaults = {
-    "RENARDO_USER_DIR": str(RENARDO_USER_DIR)
+    "core": {
+        "RENARDO_USER_DIR": str(RENARDO_USER_DIR),
+        "PUBLIC_SETTINGS_FILE": str(RENARDO_USER_DIR / "settings.toml")
+    }
 }
 
 internal_defaults = {
     "samples": {
-        "SAMPLES_DIR": str(Path(public_defaults["RENARDO_USER_DIR"]) / 'sample_packs')
+        "SAMPLES_DIR": str(RENARDO_USER_DIR / 'sample_packs')
+    },
+    "core": {
+        "INTERNAL_SETTINGS_FILE": str(RENARDO_USER_DIR / "internal_settings.toml")
     }
 }
 

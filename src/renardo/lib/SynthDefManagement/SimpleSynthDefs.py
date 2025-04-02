@@ -3,7 +3,7 @@ from renardo.lib.Code import WarningMsg
 from renardo.lib.SynthDefManagement import InstrumentProxy
 from renardo.lib.SynthDefManagement.SynthDict import SynthDefs
 from renardo.sc_backend import Server
-from renardo.settings_manager import SYNTHDEF_DIR, TMP_SYNTHDEF_DIR
+from renardo.settings_manager import settings
 from renardo.sc_backend import buffer_manager
 
 class SimpleSynthDef(object):
@@ -20,7 +20,7 @@ class SimpleSynthDef(object):
     def __init__(self, name):
         self.name = name
         self.synth_added = False
-        self.filename     = SYNTHDEF_DIR + "/{}.scd".format(self.name)
+        self.filename     = settings.get("sc_backend.SYNTHDEF_DIR") + "/{}.scd".format(self.name)
         self.synthdef_dict[self.name] = self
         self.defaults = { "amp"       : 1,
                             "sus"       : 1,
@@ -108,7 +108,7 @@ class LiveSynthDef(SimpleSynthDef):
 
     def __init__(self, name, sccode=None, auto_add_synth=True):
         super(LiveSynthDef, self).__init__(name)
-        self.filename     = TMP_SYNTHDEF_DIR + "/{}.scd".format(self.name)
+        self.filename     = settings.get("sc_backend.TMP_SYNTHDEF_DIR") + "/{}.scd".format(self.name)
         self.sccode = sccode
         if self.sccode:
             self.complete_code()

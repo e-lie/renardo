@@ -61,7 +61,7 @@ from renardo.lib.TimeVar import TimeVar
 from renardo.lib.Midi import MidiIn, MIDIDeviceNotFound
 from renardo.lib.Utils import modulo_index
 from renardo.sc_backend import TempoClient, ServerManager, RequestTimeout
-from renardo.settings_manager import CPU_USAGE
+from renardo.settings_manager import settings
 
 
 class TempoClock(object):
@@ -126,7 +126,8 @@ class TempoClock(object):
 
         # The duration to sleep while continually looping
         self.sleep_values = [0.01, 0.001, 0.0001]
-        self.sleep_time = self.sleep_values[CPU_USAGE]
+        set = settings.get("core.TUTORIAL_DIR")
+        self.sleep_time = self.sleep_values[settings.get("core.CPU_USAGE")]
         self.midi_nudge = 0
 
         # Debug

@@ -1,7 +1,7 @@
 from textual.app import App, ComposeResult
 from textual.reactive import reactive
 from renardo.sc_backend import ServerManager
-from renardo.settings_manager import ADDRESS, PORT, PORT2
+from renardo.settings_manager import settings
 from textual import work
 from textual.binding import Binding
 from textual.css.query import NoMatches
@@ -78,7 +78,7 @@ class RenardoTUI(App[None]):
         return "music-resources-1"
 
     def test_sclang_connection(self):
-        TestServer = ServerManager(ADDRESS, PORT, PORT2)
+        TestServer = ServerManager(settings.get("sc_backend.ADDRESS"), settings.get("sc_backend.PORT"), settings.get("sc_backend.PORT2"))
         TestServer.sclang._printed_error = True
         return TestServer.test_connection()
 
