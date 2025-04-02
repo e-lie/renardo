@@ -1,7 +1,7 @@
 from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings import *
 from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings.core import instance
 from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings.PygenSynthDef import DefaultPygenSynthDef
-from renardo.lib.Settings import SC3_PLUGINS
+from renardo.settings_manager import settings
 from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings import Env
 
 # with SynthDef("sinepad") as sinepad:
@@ -125,7 +125,7 @@ with DefaultPygenSynthDef("klank") as klank:
     klank.sus = klank.sus * 1.5
     klank.osc = Klank.ar([[1, 2, 3, 4], [1, 1, 1, 1], [
                          2, 2, 2, 2]], ClipNoise.ar(0.0005).dup, klank.freq)
-    if SC3_PLUGINS:
+    if settings.get("sc_backend.SC3_PLUGINS"):
         klank.osc = Decimator.ar(klank.osc, bits=klank.rate - 1)
     klank.env = Env.env(klank.sus * 2)
 
@@ -482,7 +482,7 @@ with DefaultPygenSynthDef("klank") as klank:
     klank.sus = klank.sus * 1.5
     klank.osc = Klank.ar([[1, 2, 3, 4], [1, 1, 1, 1], [
                          2, 2, 2, 2]], ClipNoise.ar(0.0005).dup, klank.freq)
-    if SC3_PLUGINS:
+    if settings.get("sc_backend.SC3_PLUGINS"):
         klank.osc = Decimator.ar(klank.osc, bits=klank.rate - 1)
     klank.env = Env.env(klank.sus * 2)
 
@@ -718,7 +718,7 @@ with DefaultPygenSynthDef("jbass") as jbass:
     jbass.osc = LFTri.ar(jbass.freq, mul=jbass.amp)
     jbass.adsr(atk=0.01, decay=0.01, rel=0.01)
 
-if SC3_PLUGINS:
+if settings.get("sc_backend.SC3_PLUGINS"):
 
     piano = DefaultPygenSynthDef("piano")
     piano.amp = piano.amp * 0.7
@@ -732,7 +732,7 @@ if SC3_PLUGINS:
 
 del synth
 
-if SC3_PLUGINS:
+if settings.get("sc_backend.SC3_PLUGINS"):
 
     piano = DefaultPygenSynthDef("piano")
     piano.amp = piano.amp * 0.7

@@ -6,10 +6,9 @@ from pprint import pformat, PrettyPrinter
 #from os.path import isfile, isdir, splitext, join, abspath, isabs
 from typing import Optional, List, Iterator
 
-from renardo.settings_manager import settings, nonalpha, default_loop_path
+from renardo.settings_manager import settings, default_loop_path
 from renardo.gatherer.sample_management.sample_pack import SamplePack
 from renardo.gatherer.sample_management.sample_file import SampleFile
-#from renardo.gatherer.sample_management.default_samples import DEFAULT_SAMPLES_PACK_NAME
 
 class SamplePackLibrary:
     """Manages multiple sample packs in an ordered dictionary."""
@@ -57,7 +56,7 @@ class SamplePackLibrary:
         return [f"{pack.index}: {pack.name}" for pack in self._packs.values()]
 
     def sample_category_path_from_symbol(self, symbol: str, spack=0):
-        category = nonalpha[symbol] if symbol in nonalpha.keys() else symbol
+        category = settings.get("samples.NON_ALPHA")[symbol] if symbol in settings.get("samples.NON_ALPHA").keys() else symbol
         return self.get_pack(spack).get_category(category).directory
 
     def _find_sample(self, sample_glob: str, index: int = 0) -> Optional[SampleFile]:
@@ -212,10 +211,10 @@ class SamplePackLibrary:
         return f"The sample pack library contains {len(self)} pack(s) :\n{pp.pformat(packs)}\n Display content of a pack with : print(sample_packs[<pack_number>])."
 
 def ensure_renardo_samples_directory():
-    sample_dir_path = Path(settings.get("SAMPLES_DIR"))
+    sample_dir_path = Path(settings.get("samples.SAMPLES_DIR"))
     if not sample_dir_path.exists():
         sample_dir_path.mkdir(parents=True, exist_ok=True)
 
 ensure_renardo_samples_directory()
-sample_pack_library = SamplePackLibrary(settings.get("SAMPLES_DIR"), [])
+sample_pack_library = SamplePackLibrary(settings.get("samples.SAMPLES_DIR"), [])
 sample_packs = sample_pack_library

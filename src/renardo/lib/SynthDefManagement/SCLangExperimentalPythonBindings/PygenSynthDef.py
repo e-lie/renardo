@@ -5,7 +5,7 @@ from renardo.lib.SynthDefManagement.InstrumentProxy import InstrumentProxy
 from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings import format_args, Env
 from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings.core import instance
 from renardo.sc_backend import Server
-from renardo.lib.Settings import TMP_SYNTHDEF_DIR
+from renardo.settings_manager import settings
 from renardo.lib.Code import WarningMsg
 
 
@@ -34,7 +34,7 @@ class PygenSynthDefBaseClass(object):
         self.attr = [] # stores custom attributes
 
         # Name of the file to store the SynthDef
-        self.filename     = TMP_SYNTHDEF_DIR + "/{}.scd".format(self.name)
+        self.filename     = settings.get("sc_backend.TMP_SYNTHDEF_DIR") + "/{}.scd".format(self.name)
 
         # SynthDef default arguments
         self.osc         = instance("osc")
