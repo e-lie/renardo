@@ -1,7 +1,7 @@
 import os
 
 from renardo.lib.SynthDefManagement.SynthDict import SynthDefs
-from renardo.lib.SynthDefManagement.InstrumentProxy import InstrumentProxy
+from renardo.sc_backend.InstrumentProxy import InstrumentProxy
 from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings import format_args, Env
 from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings.core import instance
 from renardo.sc_backend import Server
