@@ -1,6 +1,5 @@
-import os
 from renardo.lib.Code import WarningMsg
-from renardo.lib.SynthDefManagement import InstrumentProxy
+from renardo.sc_backend import InstrumentProxy
 from renardo.lib.SynthDefManagement.SynthDict import SynthDefs
 from renardo.sc_backend import Server
 from renardo.settings_manager import settings
