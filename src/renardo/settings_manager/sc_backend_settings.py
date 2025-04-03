@@ -14,6 +14,7 @@ RECORDING_DIR.mkdir(exist_ok=True)
 
 settings.set_defaults_from_dict({
     "sc_backend": {
+        "SCCODE_LIBRARY": str(Path(settings.get("core.RENARDO_USER_DIR")) / 'sccode_library'),
         "RECORDING_DIR": str(RECORDING_DIR),
         "OSC_MIDI_ADDRESS": "/foxdot_midi",
         "GET_SC_INFO": True,

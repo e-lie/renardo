@@ -10,3 +10,5 @@ from renardo.sc_backend.ServerManager import ServerManager, TempoServer, TempoCl
 from renardo.sc_backend.ServerManager.default_server import Server
 from renardo.sc_backend.SynthDefManagement.SpecialSynthDefs import SamplePlayer, LoopPlayer
 
+from renardo.sc_backend.InstrumentProxy import InstrumentProxy
+

@@ -3,15 +3,14 @@ from collections import OrderedDict
 from typing import List, Optional, Iterator
 import re
 
-from renardo.gatherer.sccode_management.synthdef_bank import SynthDefBank
-from renardo.gatherer.sccode_management.synthdef_file_and_type import SynthDefType
+from renardo.gatherer.sccode_management.sccode_bank import SCCodeBank
 
 
-class SynthDefLibrary:
+class SCCodeLibrary:
     """Manages multiple synthdef banks in an ordered dictionary."""
     def __init__(self, root_directory: Path):
         self.root_directory = Path(root_directory)
-        self._banks: OrderedDict[int, SynthDefBank] = OrderedDict()
+        self._banks: OrderedDict[int, SCCodeBank] = OrderedDict()
         self._load_banks()
     
     def _load_banks(self):
@@ -29,16 +28,16 @@ class SynthDefLibrary:
         # Load each bank
         for bank_dir in bank_dirs:
             try:
-                bank = SynthDefBank(bank_dir)
+                bank = SCCodeBank(bank_dir)
                 self._banks[bank.index] = bank
             except ValueError as e:
                 print(f"Warning: Skipping invalid bank directory {bank_dir}: {e}")
     
-    def get_bank(self, index: int) -> Optional[SynthDefBank]:
+    def get_bank(self, index: int) -> Optional[SCCodeBank]:
         """Get a synthdef bank by its index."""
         return self._banks.get(index)
     
-    def get_bank_by_name(self, name: str) -> Optional[SynthDefBank]:
+    def get_bank_by_name(self, name: str) -> Optional[SCCodeBank]:
         """Get a synthdef bank by its name."""
         for bank in self._banks.values():
             if bank.name == name:
@@ -52,6 +51,6 @@ class SynthDefLibrary:
     def __len__(self) -> int:
         return len(self._banks)
     
-    def __iter__(self) -> Iterator[SynthDefBank]:
+    def __iter__(self) -> Iterator[SCCodeBank]:
         return iter(self._banks.values())
 

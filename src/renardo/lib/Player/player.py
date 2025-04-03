@@ -1,8 +1,6 @@
 import itertools
 
-from renardo.sc_backend import SamplePlayer, LoopPlayer
-from renardo.sc_backend import buffer_manager
-from renardo.lib.SynthDefManagement import InstrumentProxy
+from renardo.sc_backend import SamplePlayer, LoopPlayer, buffer_manager, InstrumentProxy
 from renardo.lib.SynthDefManagement.SynthDict import SynthDefs
 from renardo.lib.runtime.synthdefs_initialisation import effect_manager
 from renardo.lib.Key import PlayerKey, NumberKey

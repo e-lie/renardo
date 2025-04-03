@@ -10,7 +10,7 @@ from renardo.gatherer.sample_management.sample_pack_library import SamplePackLib
 from renardo.gatherer.sample_management.sample_file import SampleFile
 from renardo.gatherer.sample_management.default_samples import is_default_spack_initialized, download_default_sample_pack
 
-from renardo.gatherer.sccode_management import SynthDefLibrary
+from renardo.gatherer.sccode_management import SCCodeLibrary
 
 # def main():
     # pass
