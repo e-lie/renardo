@@ -1,14 +1,14 @@
 from enum import Enum
 from pathlib import Path
 
-class SynthDefType(Enum):
+class SCCodeType(Enum):
     INSTRUMENT = "instrument"
     EFFECT = "effect"
 
 
-class SynthDefFile:
+class SCCodeFile:
     """Represents a single SuperCollider synthdef file."""
-    def __init__(self, path: Path, synth_type: SynthDefType, category: str):
+    def __init__(self, path: Path, synth_type: SCCodeType, category: str):
         self.path = path
         self.name = path.stem
         self.extension = path.suffix
@@ -25,3 +25,4 @@ class SynthDefFile:
 
     def __repr__(self) -> str:
         return self.__str__()
+

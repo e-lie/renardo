@@ -2,9 +2,6 @@ from renardo.settings_manager import settings
 from renardo.lib import *
 from .RenardoApp import RenardoApp
 
-from renardo.gatherer import SynthDefLibrary
-
-
 
 def main() -> None:
    RenardoApp()
