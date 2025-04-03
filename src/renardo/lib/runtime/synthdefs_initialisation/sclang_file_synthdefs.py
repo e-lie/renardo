@@ -1,4 +1,4 @@
-from renardo.lib.SynthDefManagement.SimpleSynthDefs import FileSynthDef
+from renardo.sc_backend.SynthDefManagement.SimpleSynthDefs import FileSynthDef
 
 play = FileSynthDef('play1')
 play.defaults["dur"]=.5
