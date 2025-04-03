@@ -1,4 +1,4 @@
-from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings.PygenEffectSynthDefs import Effect, In, Out
+from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings.PygenEffectSynthDefs import PygenEffect, In, Out
 
 class EffectManager(dict):
     def __init__(self):
@@ -20,29 +20,21 @@ class EffectManager(dict):
         return sorted(self.keys(), key=lambda effect: getattr(self[effect], attr))
 
     def new(self, foxdot_arg_name, synthdef, args, order=2):
-        self[foxdot_arg_name] = Effect(
-            foxdot_arg_name, synthdef, args, order == 0)
+        self[foxdot_arg_name] = PygenEffect(foxdot_arg_name, synthdef, args, order == 0)
 
         if order in self.order:
-
             self.order[order].append(foxdot_arg_name)
-
         else:
-
             self.order[order] = [foxdot_arg_name]
 
         # Store the main keywords together
-
         self.kw.append(foxdot_arg_name)
 
         # Store other sub-keys
-
         for arg in args:
             if arg not in self.all_kw:
                 self.all_kw.append(arg)
-
             # Store the default value
-
             self.defaults[arg] = args[arg]
 
         return self[foxdot_arg_name]
@@ -62,7 +54,7 @@ class EffectManager(dict):
     def reload(self):
         """ Re-sends each effect to SC """
         for kw, effect in self:
-            effect.load()
+            effect.load_in_server()
         In()
         Out()
         return
