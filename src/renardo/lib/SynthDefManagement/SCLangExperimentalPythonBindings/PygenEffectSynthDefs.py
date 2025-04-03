@@ -64,19 +64,19 @@ from renardo.settings_manager import settings
 from renardo.sc_backend import Server
 
 
-class Effect:
+class PygenEffect:
     server = Server
 
-    def __init__(self, foxdot_name, synthdef, args={}, control=False):
+    def __init__(self, short_name, synthdef_fullname, args={}, control=False):
 
         #self.server =Server
-        self.name = foxdot_name
-        self.synthdef = synthdef
-        self.filename = settings.get("sc_backend.TMP_EFFECTS_DIR") + "/{}.scd".format(self.synthdef)
+        self.short_name = short_name
+        self.synthdef_fullname = synthdef_fullname
+        self.file_path = settings.get("sc_backend.TMP_EFFECTS_DIR") + "/{}.scd".format(self.synthdef_fullname)
         self.args = args.keys()
         self.vars = ["osc"]
         self.defaults = args
-        self.effects = []
+        self.effect_code_lines = []
         self.control = control
 
         self.suffix = "kr" if self.control else "ar"
@@ -93,31 +93,31 @@ class Effect:
     def __repr__(self):
         # return "<Fx '{}' -- args: {}>".format(self.synthdef, ", ".join(self.args))
         other_args = ['{}'.format(arg)
-                      for arg in self.args if arg != self.name]
+                      for arg in self.args if arg != self.short_name]
         other_args = ", other args={}".format(other_args) if other_args else ""
-        return "<'{}': keyword='{}'{}>".format(self.synthdef, self.name, other_args)
+        return "<'{}': keyword='{}'{}>".format(self.synthdef_fullname, self.short_name, other_args)
 
     def __str__(self):
-        s = "SynthDef.new(\\{},\n".format(self.synthdef)
+        s = "SynthDef.new(\\{},\n".format(self.synthdef_fullname)
         s += "{" + "|bus, {}|\n".format(", ".join(self.args))
         s += "var {};\n".format(",".join(self.vars))
         s += self.input
-        s += self.list_effects()
+        s += self.list_effect_lines()
         s += self.output
         s += "(bus, osc)}).add;"
         return s
 
-    def add(self, string):
-        self.effects.append(string)
+    def add_effect_line(self, string):
+        self.effect_code_lines.append(string)
         return
 
     def doc(self, string):
         """ Set a docstring for the effects"""
         return
 
-    def list_effects(self):
+    def list_effect_lines(self):
         s = ""
-        for p in self.effects:
+        for p in self.effect_code_lines:
             s += p + ";\n"
         return s
 
@@ -126,52 +126,36 @@ class Effect:
             self.vars.append(name)
         return
 
-    def save(self):
+    def add(self):
         ''' writes to file and sends to server '''
-
         # 1. See if the file exists
-
-        if os.path.isfile(self.filename):
-
-            with open(self.filename) as f:
-
+        if os.path.isfile(self.file_path):
+            with open(self.file_path) as f:
                 contents = f.read()
-
         else:
-
             contents = ""
-
         # 2. If it does, check contents
-
         this_string = self.__str__()
-
         if contents != this_string:
-
             try:
-
-                with open(self.filename, 'w') as f:
-
+                with open(self.file_path, 'w') as f:
                     f.write(this_string)
-
             except IOError:
-
-                print("IOError: Unable to update '{}' effect.".format(self.synthdef))
-
+                print("IOError: Unable to update '{}' effect.".format(self.synthdef_fullname))
         # 3. Send to server
+        self.load_in_server()
 
-        self.load()
-
-    def load(self):
+    def load_in_server(self):
         """ Load the Effect """
         if self.server is not None:
-            self.server.loadSynthDef(self.filename)
+            self.server.loadSynthDef(self.file_path)
         return
 
 
-class In(Effect):
+class In(PygenEffect):
     def __init__(self):
-        Effect.__init__(self, 'startSound', 'startSound')
-        self.save()
+        PygenEffect.__init__(self, 'startSound', 'startSound')
+        self.add()
 
     def __str__(self):
         s = "SynthDef.new(\\startSound,\n"
@@ -180,11 +164,11 @@ class In(Effect):
         return s
 
 
-class Out(Effect):
+class Out(PygenEffect):
     def __init__(self):
         self.max_duration = 8
-        Effect.__init__(self, 'makeSound', 'makeSound')
-        self.save()
+        PygenEffect.__init__(self, 'makeSound', 'makeSound')
+        self.add()
 
     def __str__(self):
         s = "SynthDef.new(\\makeSound,\n"
