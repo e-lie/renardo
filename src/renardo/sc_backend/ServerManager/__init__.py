@@ -239,7 +239,7 @@ class ServerManager:
 
     def setFx(self, fx_list):
         self.fxlist = fx_list
-        self.fx_names = {name: fx.synthdef for name, fx in fx_list.items()}
+        self.fx_names = {name: fx.synthdef_fullname for name, fx in fx_list.items()}
         return
 
     def set_midi_nudge(self, value):
