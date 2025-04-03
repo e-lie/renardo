@@ -1,7 +1,7 @@
 from renardo.sc_backend.SynthDefManagement.SimpleSynthDefs import SimpleSynthDef, LiveSynthDef, FileSynthDef
 
 from .python_defined_effect_synthdefs import (
-    Effect, EffectManager, Effects, In, Out, Server, effect_manager, fx
+    PygenEffect, EffectManager, Effects, In, Out, Server, effect_manager, fx
 )
 
 # from .special_synthdefs import (
