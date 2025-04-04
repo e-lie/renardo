@@ -13,6 +13,7 @@ from renardo.sc_backend.InstrumentProxy import InstrumentProxy
 
 from renardo.sc_backend.SpecialSynthDefs import SamplePlayer, LoopPlayer
 from renardo.sc_backend.SimpleSynthDefs import FileSynthDef, LiveSynthDef
+from renardo.sc_backend.SimpleEffectSynthDefs import FileEffect, StartSoundEffect, MakeSoundEffect
 from renardo.sc_backend.EffectManager import effect_manager, Effects
 from renardo.sc_backend.PygenEffectSynthDefs import In, Out, PygenEffect
 from renardo.sc_backend.SynthDict import SynthDefs
