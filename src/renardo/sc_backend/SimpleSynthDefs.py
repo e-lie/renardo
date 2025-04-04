@@ -17,10 +17,10 @@ class SimpleSynthDef(object):
     bus_name = 'bus'
     synthdef_dict = SynthDefs
 
-    def __init__(self, name):
+    def __init__(self, name, sccode_path):
         self.name = name
         self.synth_added = False
-        self.filename     = settings.get("sc_backend.SYNTHDEF_DIR") + "/{}.scd".format(self.name)
+        self.sccode_path = str(sccode_path)
         self.synthdef_dict[self.name] = self
         self.defaults = { "amp"       : 1,
                             "sus"       : 1,
@@ -64,7 +64,7 @@ class SimpleSynthDef(object):
 
     def load_in_server_from_file(self):
         """ Load in server"""
-        return SimpleSynthDef.server.loadSynthDef(self.filename)
+        return SimpleSynthDef.server.loadSynthDef(self.sccode_path)
 
     def add(self):
         try:
@@ -79,12 +79,12 @@ class SimpleSynthDef(object):
 
 class FileSynthDef(SimpleSynthDef):
 
-    def __init__(self, name):
-        super().__init__(name)
+    def __init__(self, name, sccode_path):
+        super().__init__(name, sccode_path)
         self.add()
 
     def __str__(self):
-        return open(self.filename, 'rb').read()
+        return open(self.sccode_path, 'rb').read()
 
 class LiveSynthDef(SimpleSynthDef):
 
@@ -111,8 +111,7 @@ class LiveSynthDef(SimpleSynthDef):
     """
 
     def __init__(self, name, sccode=None, auto_add_synth=True):
-        super(LiveSynthDef, self).__init__(name)
-        self.filename     = settings.get("sc_backend.TMP_SYNTHDEF_DIR") + "/{}.scd".format(self.name)
+        super(LiveSynthDef, self).__init__(name, sccode_path=settings.get("sc_backend.TMP_SYNTHDEF_DIR") + "/{}.scd".format(self.name))
         self.sccode = sccode
         if self.sccode:
             self.complete_code()
@@ -138,7 +137,7 @@ class LiveSynthDef(SimpleSynthDef):
 
     def write_tmp_file(self):
         try:
-            with open(self.filename, 'w') as f:
+            with open(self.sccode_path, 'w') as f:
                 f.write(self.sccode)
         except IOError:
             pass
