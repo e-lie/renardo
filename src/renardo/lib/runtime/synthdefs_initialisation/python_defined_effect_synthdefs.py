@@ -1,5 +1,5 @@
 from renardo.lib.SynthDefManagement.EffectManager import EffectManager
-from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings.PygenEffectSynthDefs import *
+from renardo.lib.SynthDefManagement.PygenEffectSynthDefs import *
 from renardo.settings_manager import settings
 
 effect_manager = EffectManager()
@@ -64,7 +64,6 @@ fx.add()
 # fx.save()
 
 # Signal effects
-
 fx = effect_manager.new('hpf', 'highPassFilter', {'hpf': 0, 'hpr': 1}, order=2)
 fx.doc("Highpass filter")
 fx.add_effect_line('osc = RHPF.ar(osc, hpf, hpr)')
