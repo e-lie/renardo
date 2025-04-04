@@ -1,10 +1,5 @@
-from renardo.lib.SynthDefManagement.EffectManager import EffectManager
-from renardo.lib.SynthDefManagement.PygenEffectSynthDefs import *
 from renardo.settings_manager import settings
-
-effect_manager = EffectManager()
-
-Effects = effect_manager  # Alias - to become default
+from renardo.sc_backend import effect_manager, PygenEffect, In, Out
 
 # Frequency Effects
 
