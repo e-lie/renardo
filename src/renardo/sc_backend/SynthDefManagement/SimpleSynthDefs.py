@@ -78,6 +78,10 @@ class SimpleSynthDef(object):
 
 class FileSynthDef(SimpleSynthDef):
 
+    def __init__(self, name):
+        super().__init__(name)
+        self.add()
+
     def __str__(self):
         return open(self.filename, 'rb').read()
 
