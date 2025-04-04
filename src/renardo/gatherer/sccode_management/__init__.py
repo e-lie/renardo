@@ -21,7 +21,7 @@ from pathlib import Path
 #     #         tape_delay.scsyndef
 #
 
-sccode_library = SCCodeLibrary(Path(settings.get("sc_backend.SCCODE_LIBRARY")))
+sccode_library = SCCodeLibrary(settings.get("sc_backend.SCCODE_LIBRARY"))
 
 # # List all banks
 # print("Available synthdef banks:")
