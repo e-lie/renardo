@@ -5,12 +5,9 @@ from os.path import abspath, join, dirname
 from renardo.lib.Code import classes, functions, instances
 from renardo.settings_manager import settings, Colours
 from renardo.lib.Patterns import Main, Sequences, Generators
-from renardo.lib.SynthDefManagement import SCLangExperimentalPythonBindings
-
 
 def path(fn):
     return abspath(join(dirname(__file__), fn))
-
 
 # RegEx Group 1
 user_defn = r"(?<=def )(\w+)"
