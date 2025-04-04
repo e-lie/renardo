@@ -1,4 +1,4 @@
-from renardo.lib.SynthDefManagement.PygenEffectSynthDefs import PygenEffect, In, Out
+from renardo.sc_backend.PygenEffectSynthDefs import PygenEffect, In, Out
 
 class EffectManager(dict):
     def __init__(self):
@@ -58,3 +58,8 @@ class EffectManager(dict):
         In()
         Out()
         return
+
+
+effect_manager = EffectManager()
+
+Effects = effect_manager  # Alias - to become default

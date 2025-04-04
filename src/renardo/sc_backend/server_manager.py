@@ -14,7 +14,7 @@ from threading import Thread
 
 from renardo.settings_manager import settings
 
-from renardo.sc_backend.SynthDefManagement.SpecialSynthDefs import SamplePlayer, LoopPlayer
+from renardo.sc_backend.SpecialSynthDefs import SamplePlayer, LoopPlayer
 from renardo.sc_backend.custom_osc_lib import *
 
 def get_timestamp():

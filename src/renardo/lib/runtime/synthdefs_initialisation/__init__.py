@@ -1,10 +1,10 @@
-from renardo.sc_backend.SynthDefManagement.SimpleSynthDefs import SimpleSynthDef, LiveSynthDef, FileSynthDef
+from renardo.sc_backend import LiveSynthDef, FileSynthDef
+from .python_defined_effect_synthdefs import effect_manager, PygenEffect, In, Out
 
-from .python_defined_effect_synthdefs import (
-    PygenEffect, EffectManager, Effects, In, Out, Server, effect_manager, fx
-)
+# from .python_defined_effect_synthdefs import (
+#     PygenEffect, In, Out, Server, effect_manager, fx
+# )
 
-from renardo.sc_backend.SynthDefManagement.SimpleSynthDefs import FileSynthDef
 from renardo.gatherer import sccode_library
 from renardo.settings_manager import settings
 

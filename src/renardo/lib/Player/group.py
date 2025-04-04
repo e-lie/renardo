@@ -1,5 +1,5 @@
 from .player import Player, TimeVar
-from ...sc_backend.ServerManager import WarningMsg
+from renardo.sc_backend import WarningMsg
 
 
 class Group:

@@ -18,7 +18,7 @@ import heapq
 
 from renardo.settings_manager import settings
 from renardo.gatherer import sample_pack_library
-from renardo.sc_backend.ServerManager.default_server import Server
+from renardo.sc_backend.default_server import Server
 
 class Buffer:
     def __init__(self, sample_file, buffer_num: int, channels: int = 1):
