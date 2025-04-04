@@ -92,15 +92,13 @@ from renardo.lib.Midi import MidiInputHandler, MidiOut, midi, rtMidiNotFound
 
 from renardo.sc_backend import (
     Buffer, buffer_management, BufferManager, Dict, Optional, Path,
-    Server, SynthDefManagement, TempoServer, closing, custom_osc_lib, heapq,
-    nil, wave
+    Server, TempoServer, closing, custom_osc_lib, heapq,
+    nil, wave, SynthDefs
 )
 
 from renardo.settings_manager import settings_manager
 
 from renardo.gatherer import sample_pack_library, sample_packs
-
-from renardo.lib.SynthDefManagement.SynthDict import SynthDefs
 
 
 @PatternMethod
