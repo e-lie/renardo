@@ -130,7 +130,7 @@ class SettingsManager:
                 self._recursive_update_if_not_exists(target[key], value)
             # If key exists but is not a dict, keep the existing value
 
-    def get(self, key: str, default: Any = None) -> Any:
+    def get(self, key: str, default: Any = None, internal=True) -> Any:
         """
         Get a setting value.
 
@@ -144,18 +144,24 @@ class SettingsManager:
         """
 
         try:
-            value = self._internal_settings
+            value = self._public_settings
             for k in key.split('.'):
                 value = value[k]
             return value
-        except KeyError: # if not in internal settings try with public settings
-            try:
-                value = self._public_settings
-                for k in key.split('.'):
-                    value = value[k]
-                return value
-            except KeyError:
+        except KeyError: # if not in public settings try with internal settings
+            if internal:
+                try:
+                    value = self._internal_settings
+                    for k in key.split('.'):
+                        value = value[k]
+                    return value
+                except KeyError:
+                    print(f"Setting {key} not found ! returning {default} ...")
+                    return default
+            else:
+                print(f"Setting {key} not found ! returning {default} ...")
                 return default
+
 
     def set(self, key: str, value: Any, internal: bool = False) -> None:
         """
