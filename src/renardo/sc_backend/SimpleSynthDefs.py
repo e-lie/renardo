@@ -1,9 +1,10 @@
 from renardo.lib.Code import WarningMsg
-from renardo.sc_backend import InstrumentProxy
-from renardo.lib.SynthDefManagement.SynthDict import SynthDefs
-from renardo.sc_backend import Server
+from renardo.sc_backend.InstrumentProxy import InstrumentProxy
+from renardo.sc_backend.SynthDict import SynthDefs
+from renardo.sc_backend.default_server import Server
+from renardo.sc_backend.buffer_management import buffer_manager
 from renardo.settings_manager import settings
-from renardo.sc_backend import buffer_manager
+
 
 class SimpleSynthDef(object):
 
