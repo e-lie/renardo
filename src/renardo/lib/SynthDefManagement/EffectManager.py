@@ -1,4 +1,4 @@
-from renardo.lib.SynthDefManagement.SCLangExperimentalPythonBindings.PygenEffectSynthDefs import PygenEffect, In, Out
+from renardo.lib.SynthDefManagement.PygenEffectSynthDefs import PygenEffect, In, Out
 
 class EffectManager(dict):
     def __init__(self):
