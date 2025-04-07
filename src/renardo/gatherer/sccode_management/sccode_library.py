@@ -4,8 +4,7 @@ from typing import List, Optional, Iterator, Dict, Any
 import re
 
 from renardo.gatherer.sccode_management.sccode_bank import SCCodeBank
-from renardo.gatherer.sccode_management.sccode_type_and_file import SCCodeType
-from renardo.gatherer.sccode_management.sc_resource import SCSynth, SCEffect
+from renardo.gatherer.sccode_management.sc_resource import SCSynth, SCEffect, SCResourceType
 
 
 class SCCodeLibrary:
@@ -71,7 +70,7 @@ class SCCodeLibrary:
                 return bank
         return None
     
-    def get_resource(self, bank_index: int, section_type: SCCodeType, category: str, name: str):
+    def get_resource(self, bank_index: int, section_type: SCResourceType, category: str, name: str):
         """Get a specific resource by its bank, section, category and name."""
         bank = self.get_bank(bank_index)
         if bank:
@@ -88,7 +87,7 @@ class SCCodeLibrary:
     def __iter__(self) -> Iterator[SCCodeBank]:
         return iter(self._banks.values())
         
-    def find_resources(self, query: str, section_type: Optional[SCCodeType] = None) -> List[Dict[str, Any]]:
+    def find_resources(self, query: str, section_type: Optional[SCResourceType] = None) -> List[Dict[str, Any]]:
         """
         Search for resources by name or description.
         
