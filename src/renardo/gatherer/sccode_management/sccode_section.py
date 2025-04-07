@@ -1,13 +1,13 @@
 from pathlib import Path
 from typing import Dict, Optional, List, Iterator
 
-from renardo.gatherer.sccode_management.sccode_type_and_file import SCCodeType
+from renardo.gatherer.sccode_management.sc_resource import SCResourceType
 from renardo.gatherer.sccode_management.sccode_category import SCCodeCategory
 
 
 class SCCodeSection:
     """Represents either the instruments or effects section of a bank."""
-    def __init__(self, directory: Path, synth_type: SCCodeType):
+    def __init__(self, directory: Path, synth_type: SCResourceType):
         self.directory = directory
         self.type = synth_type
         self._categories: Dict[str, SCCodeCategory] = {}

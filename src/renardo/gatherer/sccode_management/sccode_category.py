@@ -3,13 +3,12 @@ from typing import Dict, Optional, List, Iterator, Any
 import importlib.util
 import sys
 
-from renardo.gatherer.sccode_management.sccode_type_and_file import SCCodeType
-from renardo.gatherer.sccode_management.sc_resource import SCSynth, SCEffect
+from renardo.gatherer.sccode_management.sc_resource import SCSynth, SCEffect, SCResourceType
 
 
 class SCCodeCategory:
     """Represents a collection of resources (synths or effects) in a category (e.g., 'bass', 'lead' or 'reverb', 'delay')."""
-    def __init__(self, directory: Path, category: str, synth_type: SCCodeType, default_arguments: Dict[str, Any] = None):
+    def __init__(self, directory: Path, category: str, synth_type: SCResourceType, default_arguments: Dict[str, Any] = None):
         self.directory = directory
         self.category = category
         self.type = synth_type
@@ -44,14 +43,17 @@ class SCCodeCategory:
                 return None
                 
             module = importlib.util.module_from_spec(spec)
+            # Inject the necessary classes into the module namespace
+            module.SCSynth = SCSynth
+            module.SCEffect = SCEffect
             sys.modules[module_name] = module
             spec.loader.exec_module(module)
             
             # Look for a resource instance in the module
             resource = None
-            if self.type == SCCodeType.INSTRUMENT and hasattr(module, 'synth'):
+            if self.type == SCResourceType.INSTRUMENT and hasattr(module, 'synth'):
                 resource = module.synth
-            elif self.type == SCCodeType.EFFECT and hasattr(module, 'effect'):
+            elif self.type == SCResourceType.EFFECT and hasattr(module, 'effect'):
                 resource = module.effect
                 
             # Apply default arguments if they don't exist in the resource

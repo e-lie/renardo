@@ -1,5 +1,11 @@
 from typing import Dict, Any
 
+from enum import Enum
+
+
+class SCResourceType(Enum):
+    INSTRUMENT = "instrument"
+    EFFECT = "effect"
 
 class SCResource:
     """Base class for SuperCollider resources (synths and effects)."""
