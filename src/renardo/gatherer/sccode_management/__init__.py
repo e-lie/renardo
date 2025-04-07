@@ -1,6 +1,6 @@
 from renardo import settings
 from renardo.gatherer.sccode_management.sccode_library import SCCodeLibrary
-from renardo.gatherer.sccode_management.sccode_type_and_file import SCCodeType
+from renardo.gatherer.sccode_management.sc_resource import SCResourceType
 from pathlib import Path
 
 # # Example usage
@@ -46,11 +46,11 @@ sccode_library = SCCodeLibrary(settings.get("sc_backend.SCCODE_LIBRARY"))
 #             print(f"    {synthdef}")
 #
 #     # Get a specific instrument
-#     bass = bank.get_synthdef(SCCodeType.INSTRUMENT, "bass", "sub_bass")
+#     bass = bank.get_synthdef(SCResourceType.INSTRUMENT, "bass", "sub_bass")
 #     if bass:
 #         print(f"\nFound instrument: {bass}")
 #
 #     # Get a specific effect
-#     reverb = bank.get_synthdef(SCCodeType.EFFECT, "reverb", "plate_reverb")
+#     reverb = bank.get_synthdef(SCResourceType.EFFECT, "reverb", "plate_reverb")
 #     if reverb:
 #         print(f"Found effect: {reverb}")
