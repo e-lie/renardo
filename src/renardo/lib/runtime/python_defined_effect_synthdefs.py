@@ -1,5 +1,5 @@
 from renardo.settings_manager import settings
-from renardo.sc_backend import effect_manager, PygenEffect, In, Out
+from renardo.lib.runtime.managers_instanciation import effect_manager
 
 # Frequency Effects
 
@@ -334,9 +334,7 @@ fx.add_effect_line("osc = SelectX.ar(mix2, [dry, osc])")
 fx.add()
 
 
-In()
-Out()
-PygenEffect.server.setFx(effect_manager)
+
 
 
 ####FXs that need work before implementing###########

@@ -1,9 +1,10 @@
 import itertools
 
 from renardo.sc_backend import (
-    SamplePlayer, LoopPlayer, buffer_manager, InstrumentProxy,
-    SynthDefs, effect_manager
+    SamplePlayer, LoopPlayer, InstrumentProxy,
 )
+
+
 from renardo.lib.Key import PlayerKey, NumberKey
 from renardo.lib.Patterns import (
     Pattern, PGroup, as_pattern, pattern_depth,
@@ -51,6 +52,14 @@ class Player(Repeatable):
         p1 >> proxy_2 # This replaces the instructions being followed by p1
     """
 
+    effect_manager = None
+    fx_attributes = None
+    fx_keys = None
+
+    samples = None
+
+    SynthDefs = None
+
     debug = 0
     __vars = []
     __init = False
@@ -80,11 +89,7 @@ class Player(Repeatable):
     # Aliases
     alias = {"pitch": "degree", "char": "degree"}
 
-    fx_attributes = effect_manager.all_kwargs()
-    fx_keys = effect_manager.kwargs()
 
-    # Load default sample bank
-    samples = buffer_manager
 
     # Set in __init__.py
     main_event_clock = None
@@ -194,6 +199,22 @@ class Player(Repeatable):
     @classmethod
     def set_clock(cls, tempo_clock):
         cls.main_event_clock = tempo_clock
+
+
+    @classmethod
+    def set_buffer_manager(cls, buffer_manager):
+        cls.buffer_manager = buffer_manager
+        cls.samples = buffer_manager
+
+    @classmethod
+    def set_effect_manager(cls, effect_manager):
+        cls.effect_manager = effect_manager
+        cls.fx_attributes = cls.effect_manager.all_kwargs()
+        cls.fx_keys = cls.effect_manager.kwargs()
+
+    @classmethod
+    def set_synth_dict(cls, synth_dict):
+        cls.SynthDefs = synth_dict
 
     # Should this also be instance method?
     @classmethod
@@ -366,13 +387,13 @@ class Player(Repeatable):
 
         # Set any non zero defaults for effects, e.g. verb=0.25
         for key in Player.fx_attributes:
-            value = effect_manager.defaults[key]
+            value = self.effect_manager.defaults[key]
             setattr(self, key, value)
             reset.append(key)
 
         # Set SynthDef defaults
-        if self.instrument_name in SynthDefs:
-            synth = SynthDefs[self.instrument_name]
+        if self.instrument_name in self.SynthDefs:
+            synth = self.SynthDefs[self.instrument_name]
             for key in ("atk", "decay", "rel"):
                 setattr(self, key, synth.defaults[key])
                 reset.append(key)
@@ -437,13 +458,13 @@ class Player(Repeatable):
 
         # Play the note
         if not isinstance(self.event["dur"], rest):
-            try:
-                self.send(
-                    verbose=(self.main_event_clock.solo == self and kwargs.get("verbose", True))
-                )
+            #try:
+            self.send(
+                verbose=(self.main_event_clock.solo == self and kwargs.get("verbose", True))
+            )
 
-            except Exception as err:
-                print("Error in Player {}: {}".format(self.id, err))
+            #except Exception as err:
+            #print("Error in Player {}: {}".format(self.id, err))
 
         # If using custom bpm
         dur = self.event["dur"]
