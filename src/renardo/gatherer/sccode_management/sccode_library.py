@@ -4,7 +4,7 @@ from typing import List, Optional, Iterator, Dict, Any
 import re
 
 from renardo.gatherer.sccode_management.sccode_bank import SCCodeBank
-from renardo.gatherer.sccode_management.sc_resource import SCSynth, SCEffect, SCResourceType
+from renardo.gatherer.sccode_management.sc_resource import SCInstrument, SCEffect, SCResourceType
 
 
 class SCCodeLibrary:
