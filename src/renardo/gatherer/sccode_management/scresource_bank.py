@@ -2,12 +2,12 @@ import re
 from pathlib import Path
 from typing import Optional
 
-from renardo.gatherer.sccode_management.sccode_category import SCCodeCategory
-from renardo.gatherer.sccode_management.sc_resource import SCResourceType
-from renardo.gatherer.sccode_management.sccode_section import SCCodeSection
+from renardo.gatherer.sccode_management.scresource_category import SCResourceCategory
+from renardo.gatherer.sccode_management.scresource_type_and_file import SCResourceFile, SCResourceType
+from renardo.gatherer.sccode_management.scresource_section import SCResourceSection
 
 
-class SCCodeBank:
+class SCResourceBank:
     """Represents a collection of instrument and effect categories."""
     def __init__(self, directory: Path):
         self.directory = directory
@@ -16,11 +16,11 @@ class SCCodeBank:
         self.default_arguments = {}
 
         # Initialize instruments and effects sections
-        self.instruments = SCCodeSection(
+        self.instruments = SCResourceSection(
             directory / SCResourceType.INSTRUMENT.value,
             SCResourceType.INSTRUMENT
         )
-        self.effects = SCCodeSection(
+        self.effects = SCResourceSection(
             directory / SCResourceType.EFFECT.value,
             SCResourceType.EFFECT
         )
@@ -41,25 +41,25 @@ class SCCodeBank:
             raise ValueError(f"Invalid bank directory format: {dirname}")
         return int(match.group(1))
 
-    def get_section(self, section_type: SCResourceType) -> SCCodeSection:
+    def get_section(self, section_type: SCResourceType) -> SCResourceSection:
         """Get either the instruments or effects section."""
         if section_type == SCResourceType.INSTRUMENT:
             return self.instruments
         return self.effects
 
-    def get_category(self, section_type: SCResourceType, category: str) -> Optional[SCCodeCategory]:
+    def get_category(self, section_type: SCResourceType, category: str) -> Optional[SCResourceCategory]:
         """Get a category from either instruments or effects."""
         section = self.get_section(section_type)
         return section.get_category(category)
 
-    # def get_synthdef(self, section_type: SCResourceType, category: str, name: str) -> Optional[SCCodeFile]:
-    #     """Get a specific synthdef by its section, category and name."""
-    #     category_obj = self.get_category(section_type, category)
-    #     if category_obj:
-    #         return category_obj.get_synthdef(name)
-    #     return None
+    def get_synthdef(self, section_type: SCResourceType, category: str, name: str) -> Optional[SCResourceFile]:
+        """Get a specific synthdef by its section, category and name."""
+        category_obj = self.get_category(section_type, category)
+        if category_obj:
+            return category_obj.get_resource(name)
+        return None
 
     def __str__(self) -> str:
-        return (f"SynthDefBank({self.index}: {self.name}, "
+        return (f"SCResourceBank({self.index}: {self.name}, "
                 f"{len(self.instruments)} instrument categories, "
                 f"{len(self.effects)} effect categories)")
