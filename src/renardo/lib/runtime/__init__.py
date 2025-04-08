@@ -6,7 +6,6 @@ import logging
 #symbols_str = f"import {', '.join(sorted(new_symbols))}"
 #print(symbols_str)
 
-
 from renardo.settings_manager import conf, get_tutorial_files
 
 from renardo.lib.Code import (
@@ -25,8 +24,32 @@ from renardo.lib.Code import (
 
 FoxDotCode.namespace = globals()
 
-from renardo.sc_backend import buffer_manager, DefaultSamples, Samples
-from renardo.lib.runtime import synthdefs_initialisation
+from renardo.lib.runtime.managers_instanciation import (
+    settings, Server, sample_pack_library, sample_packs,
+    DefaultSamples, buffer_manager, effect_manager, Effects,
+    scresource_library, SynthDefs
+)
+
+from renardo.sc_backend.SimpleSynthDefs import SCInstrument
+SCInstrument.set_instrument_dict(SynthDefs)
+SCInstrument.set_buffer_manager(buffer_manager)
+SCInstrument.set_server(Server)
+
+import renardo.lib.runtime.synthdefs_initialisation
+
+import renardo.lib.runtime.python_defined_effect_synthdefs
+
+from renardo.sc_backend.PygenEffectSynthDefs import In, Out, PygenEffect
+PygenEffect.set_server(Server)
+In()
+Out()
+PygenEffect.server.setFx(effect_manager)
+
+from renardo.lib.Player import Player
+
+Player.set_effect_manager(effect_manager)
+Player.set_synth_dict(SynthDefs)
+Player.set_buffer_manager(buffer_manager)
 
 from renardo.lib.TempoClock import (
     Code, History, MIDIDeviceNotFound, MethodCall, MethodType, MidiIn, Player,
@@ -72,9 +95,7 @@ from renardo.lib.Player import (
     PlayerKey, PlayerKeyException,
     Repeatable, Root,
     SamplePlayer, Scale, InstrumentProxy,
-    SynthDefs,
     copy,
-    effect_manager,
     get_first_item, get_freq_and_midi, inf,
     linvar, mapvar,
     rest,
@@ -92,13 +113,10 @@ from renardo.lib.Midi import MidiInputHandler, MidiOut, midi, rtMidiNotFound
 
 from renardo.sc_backend import (
     Buffer, buffer_management, BufferManager, Dict, Optional, Path,
-    Server, TempoServer, closing, custom_osc_lib, heapq,
-    nil, wave, SynthDefs
+    TempoServer, closing, custom_osc_lib, heapq,
+    nil, wave, PygenEffect
 )
 
-from renardo.settings_manager import settings_manager
-
-from renardo.gatherer import sample_pack_library, sample_packs
 
 
 @PatternMethod
@@ -204,14 +222,15 @@ def update_foxdot_server(serv):
 
     return
 
-def _reload_synths():
-    """ Resends all the synth / sample info to SuperCollider. Useful for times
-        when starting FoxDot before running `FoxDot.start` in SuperCollider. """
-    from renardo.lib import SynthDefManagement
-    reload(SynthDefManagement._SynthDefs)
-    reload(Effects)
-    buffer_manager.reallocate_buffers()
-    return
+# TODO redesign this with new synthdef loading
+# def _reload_synths():
+#     """ Resends all the synth / sample info to SuperCollider. Useful for times
+#         when starting FoxDot before running `FoxDot.start` in SuperCollider. """
+#     from renardo.lib import SynthDefManagement
+#     reload(SynthDefManagement._SynthDefs)
+#     reload(Effects)
+#     buffer_manager.reallocate_buffers()
+#     return
 
 def foxdot_reload():
     Server.init_connection()

@@ -60,6 +60,3 @@ class EffectManager(dict):
         return
 
 
-effect_manager = EffectManager()
-
-Effects = effect_manager  # Alias - to become default

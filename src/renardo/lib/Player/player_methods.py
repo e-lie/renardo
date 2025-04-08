@@ -6,7 +6,6 @@ from random import choice
 from .player import Player
 from renardo.lib.Patterns import PwRand, PRand, PGroup, PGroupPrime, as_pattern
 from renardo.lib.TimeVar import mapvar, var, linvar, inf
-from renardo.sc_backend import buffer_manager
 from renardo.sc_backend import LoopPlayer
 from renardo.lib.Bang import Bang
 
@@ -70,7 +69,7 @@ def kill(self: Player):
 def reload(self: Player):
     """ If this is a 'play' or 'loop' SynthDef, reload the filename used"""
     if self.instrument_name == LoopPlayer:
-        buffer_manager.load_buffer(self.filename, force=True)
+        self.buffer_manager.load_buffer(self.filename, force=True)
     return self
 
 @player_method
