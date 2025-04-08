@@ -3,7 +3,7 @@ from typing import Dict, Optional, List, Iterator, Any
 import importlib.util
 import sys
 
-from renardo.gatherer.sccode_management.sc_resource import SCSynth, SCEffect, SCResourceType
+from renardo.gatherer.sccode_management.sc_resource import SCInstrument, SCEffect, SCResourceType
 
 
 class SCCodeCategory:
@@ -14,9 +14,9 @@ class SCCodeCategory:
         self.type = synth_type
         self.default_arguments = default_arguments or {}
         self._resources = {}
-        self._load_resources()
+        self._load_resource_files()
 
-    def _load_resources(self):
+    def _load_resource_files(self):
         """Load all resource files from the category directory."""
         if not self.directory.exists():
             return
@@ -44,7 +44,7 @@ class SCCodeCategory:
                 
             module = importlib.util.module_from_spec(spec)
             # Inject the necessary classes into the module namespace
-            module.SCSynth = SCSynth
+            module.SCSynth = SCInstrument
             module.SCEffect = SCEffect
             sys.modules[module_name] = module
             spec.loader.exec_module(module)
