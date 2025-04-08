@@ -1,5 +1,5 @@
 from renardo.settings_manager import settings
-from renardo.sc_backend import effect_manager, PygenEffect, In, Out
+from renardo.lib.runtime.managers_instanciation import effect_manager
 
 # Frequency Effects
 
@@ -338,9 +338,7 @@ fx.doc("Output select Bus")
 fx.add("Out.ar(output, osc)")
 fx.save()
 
-In()
-Out()
-PygenEffect.server.setFx(effect_manager)
+
 
 
 ####FXs that need work before implementing###########

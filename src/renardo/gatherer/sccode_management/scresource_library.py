@@ -3,24 +3,15 @@ from collections import OrderedDict
 from typing import List, Optional, Iterator, Dict, Any
 import re
 
-from renardo.gatherer.sccode_management.sccode_bank import SCCodeBank
-from renardo.gatherer.sccode_management.sc_resource import SCInstrument, SCEffect, SCResourceType
+from renardo.gatherer.sccode_management.scresource_bank import SCResourceBank
+from renardo.sc_backend.SimpleSynthDefs import SCResourceType
 
 
-class SCCodeLibrary:
-    """Manages multiple banks of SuperCollider resources in an ordered dictionary."""
+class SCResourceLibrary:
+    """Manages multiple synthdef banks in an ordered dictionary."""
     def __init__(self, root_directory: Path):
         self.root_directory = Path(root_directory)
-        self._banks: OrderedDict[int, SCCodeBank] = OrderedDict()
-        
-        # Global default arguments that apply to all banks
-        self.global_defaults: Dict[str, Any] = {}
-        
-        # Look for a global_config.py file
-        global_config_path = self.root_directory / "global_config.py"
-        if global_config_path.exists():
-            self._load_global_config(global_config_path)
-            
+        self._banks: OrderedDict[int, SCResourceBank] = OrderedDict()
         self._load_banks()
     
     def _load_global_config(self, config_path: Path):
@@ -50,21 +41,17 @@ class SCCodeLibrary:
         # Load each bank
         for bank_dir in bank_dirs:
             try:
-                bank = SCCodeBank(bank_dir)
-                # Apply global defaults to bank defaults
-                for key, value in self.global_defaults.items():
-                    if key not in bank.default_arguments:
-                        bank.default_arguments[key] = value
+                bank = SCResourceBank(bank_dir)
                 self._banks[bank.index] = bank
             except ValueError as e:
                 print(f"Warning: Skipping invalid bank directory {bank_dir}: {e}")
     
-    def get_bank(self, index: int) -> Optional[SCCodeBank]:
-        """Get a bank by its index."""
+    def get_bank(self, index: int) -> Optional[SCResourceBank]:
+        """Get a synthdef bank by its index."""
         return self._banks.get(index)
     
-    def get_bank_by_name(self, name: str) -> Optional[SCCodeBank]:
-        """Get a bank by its name."""
+    def get_bank_by_name(self, name: str) -> Optional[SCResourceBank]:
+        """Get a synthdef bank by its name."""
         for bank in self._banks.values():
             if bank.name == name:
                 return bank
@@ -84,7 +71,7 @@ class SCCodeLibrary:
     def __len__(self) -> int:
         return len(self._banks)
     
-    def __iter__(self) -> Iterator[SCCodeBank]:
+    def __iter__(self) -> Iterator[SCResourceBank]:
         return iter(self._banks.values())
         
     def find_resources(self, query: str, section_type: Optional[SCResourceType] = None) -> List[Dict[str, Any]]:

@@ -215,6 +215,4 @@ def ensure_renardo_samples_directory():
     if not sample_dir_path.exists():
         sample_dir_path.mkdir(parents=True, exist_ok=True)
 
-ensure_renardo_samples_directory()
-sample_pack_library = SamplePackLibrary(settings.get("samples.SAMPLES_DIR"), [])
-sample_packs = sample_pack_library
+
