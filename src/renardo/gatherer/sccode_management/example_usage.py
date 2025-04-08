@@ -22,7 +22,7 @@ default_arguments = {
 """
 Define a simple bass synth.
 """
-from renardo.gatherer.sccode_management.sc_resource import SCSynth
+from renardo.gatherer.sccode_management.sc_resource import SCInstrument
 
 # SuperCollider code for the synth definition
 sc_code = '''
@@ -38,7 +38,7 @@ SynthDef("simple_bass", { |out=0, freq=60, cutoff=1000, resonance=0.5,
 }).add;
 '''
 
-synth = SCSynth(
+synth = SCInstrument(
     shortname="simple_bass",
     fullname="Simple Bass Synthesizer",
     description="A basic subtractive bass synth with low-pass filter",
