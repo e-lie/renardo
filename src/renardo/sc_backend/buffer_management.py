@@ -17,8 +17,6 @@ from pathlib import Path
 import heapq
 
 from renardo.settings_manager import settings
-from renardo.gatherer import sample_pack_library
-from renardo.sc_backend.default_server import Server
 
 class Buffer:
     def __init__(self, sample_file, buffer_num: int, channels: int = 1):
@@ -44,12 +42,11 @@ class Buffer:
             numChannels = 1
         return cls(sample_file, number, numChannels)
 
-
 # Create empty buffer (buffer 0)
 nil = Buffer(None, 0)
 
 class BufferManager:
-    def __init__(self, server=Server, paths=None):
+    def __init__(self, server, sample_library, paths=None):
         self._server = server
         self._max_buffers = server.max_buffers
 
@@ -63,7 +60,7 @@ class BufferManager:
         self._path_to_buffer: Dict[str, Buffer] = {}  # path -> Buffer
 
         # Set up sample pack library paths
-        self._sample_library = sample_pack_library
+        self._sample_library = sample_library
         if paths:
             for path in paths:
                 self._sample_library._extra_paths.append(Path(path))
@@ -178,7 +175,4 @@ class BufferManager:
         return buffer.bufnum
 
 
-# Samples and DefaultSamples just display default samples list (compat with FoxDot print(Samples))
-DefaultSamples = Samples = "\n".join(["%r: %s" % (k, v) for k, v in sorted(settings.get("samples.SYMBOLS_DESCRIPTION").items())])
 
-buffer_manager =  BufferManager()

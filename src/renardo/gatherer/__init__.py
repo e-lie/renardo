@@ -6,11 +6,11 @@
 
 # Expose effectively used only
 
-from renardo.gatherer.sample_management.sample_pack_library import SamplePackLibrary, sample_pack_library, sample_packs
+from renardo.gatherer.sample_management import SamplePackLibrary, ensure_renardo_samples_directory
 from renardo.gatherer.sample_management.sample_file import SampleFile
 from renardo.gatherer.sample_management.default_samples import is_default_spack_initialized, download_default_sample_pack
 
-from renardo.gatherer.sccode_management import sccode_library, SCCodeLibrary
+from renardo.gatherer.sccode_management import SCResourceLibrary, SCResourceFile
 
 # def main():
     # pass

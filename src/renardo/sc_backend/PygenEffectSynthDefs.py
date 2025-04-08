@@ -61,11 +61,11 @@
 
 import os.path
 from renardo.settings_manager import settings
-from renardo.sc_backend import Server
 
 
 class PygenEffect:
-    server = Server
+
+    server = None
 
     def __init__(self, short_name, synthdef_fullname, args={}, control=False):
 
@@ -150,7 +150,6 @@ class PygenEffect:
         if self.server is not None:
             self.server.loadSynthDef(self.file_path)
         return
-
 
 class In(PygenEffect):
     def __init__(self):

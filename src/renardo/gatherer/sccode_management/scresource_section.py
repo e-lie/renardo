@@ -1,16 +1,16 @@
 from pathlib import Path
 from typing import Dict, Optional, List, Iterator
 
-from renardo.gatherer.sccode_management.sc_resource import SCResourceType
-from renardo.gatherer.sccode_management.sccode_category import SCCodeCategory
+from renardo.sc_backend.SimpleSynthDefs import SCResourceType
+from renardo.gatherer.sccode_management.scresource_category import SCResourceCategory
 
 
-class SCCodeSection:
+class SCResourceSection:
     """Represents either the instruments or effects section of a bank."""
-    def __init__(self, directory: Path, synth_type: SCResourceType):
+    def __init__(self, directory: Path, resource_type: SCResourceType):
         self.directory = directory
-        self.type = synth_type
-        self._categories: Dict[str, SCCodeCategory] = {}
+        self.type = resource_type
+        self._categories: Dict[str, SCResourceCategory] = {}
         self._load_categories()
 
     def _load_categories(self):
@@ -21,13 +21,13 @@ class SCCodeSection:
         for category_dir in self.directory.iterdir():
             if category_dir.is_dir():
                 category = category_dir.name
-                self._categories[category] = SCCodeCategory(
+                self._categories[category] = SCResourceCategory(
                     category_dir,
                     category,
                     self.type
                 )
 
-    def get_category(self, category: str) -> Optional[SCCodeCategory]:
+    def get_category(self, category: str) -> Optional[SCResourceCategory]:
         """Get a category by its name."""
         return self._categories.get(category)
 
@@ -38,8 +38,8 @@ class SCCodeSection:
     def __len__(self) -> int:
         return len(self._categories)
 
-    def __iter__(self) -> Iterator[SCCodeCategory]:
+    def __iter__(self) -> Iterator[SCResourceCategory]:
         return iter(self._categories.values())
 
     def __str__(self) -> str:
-        return f"SynthDefSection({self.type.value}, {len(self)} categories)"
+        return f"SCResourceSection({self.type.value}, {len(self)} categories)"
