@@ -15,8 +15,12 @@ for scresource_bank in scresource_library:
             for scresource_file in instrument_category:
                 # load the SCInstrument instance declared in every python resource file found in library
                 scinstrument = scresource_file.load_resource_from_python()
-                # define a variable for each scinstrument (callable in the context of a player and returns a InstrumentProxy)
-                globals()[scinstrument.shortname] = scinstrument
+                if scinstrument:
+                    # define a variable for each scinstrument (callable in the context of a player and returns a InstrumentProxy)
+                    globals()[scinstrument.shortname] = scinstrument
+                else:
+                    WarningMsg(f"resource from {scresource_file.path} could not be loaded !")
+
 
 # create the special sccode dir in the user dir if not exist
 Path(settings.get("sc_backend.SPECIAL_SCCODE_DIR")).mkdir(parents=True, exist_ok=True)
