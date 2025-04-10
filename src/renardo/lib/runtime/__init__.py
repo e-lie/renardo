@@ -37,7 +37,7 @@ SCInstrument.set_server(Server)
 
 import renardo.lib.runtime.synthdefs_initialisation
 
-import renardo.lib.runtime.python_defined_effect_synthdefs
+# import renardo.lib.runtime.python_defined_effect_synthdefs
 
 from renardo.sc_backend.PygenEffectSynthDefs import In, Out, PygenEffect
 PygenEffect.set_server(Server)

@@ -43,13 +43,47 @@ class SCEffect(SCResource):
             description: str,
             code: str,
             arguments: Dict[str, Any] = None,
-            category: str = None
+            category: str = None,
+            order=2,
     ):
         super().__init__(shortname, fullname, description, code, arguments)
         self.category = category
+        self.order=order
+        self.args=arguments
+        self.defaults=arguments
 
     def __str__(self) -> str:
         return f"SCEffect({self.shortname}, {len(self.arguments)} args)"
+
+    @classmethod
+    def set_server(cls, server):
+        cls.server = server
+
+    def __repr__(self):
+        # return "<Fx '{}' -- args: {}>".format(self.synthdef, ", ".join(self.args))
+        other_args = ['{}'.format(arg)
+                      for arg in self.arguments if arg != self.shortname]
+        other_args = ", other args={}".format(other_args) if other_args else ""
+        return "<'{}': keyword='{}'{}>".format(self.fullname, self.shortname, other_args)
+
+    # def doc(self, string):
+    #     """ Set a docstring for the effects"""
+    #     return
+
+    def load_in_server_from_tempfile(self):
+        """ Load resource in SuperCollider server"""
+        try:
+            os_temporary_dir = Path(tempfile.gettempdir())
+            # Create a new file in the temporary directory
+            sceffects_temporary_file = os_temporary_dir / f"{self.shortname}.scd"
+            # Write sc code content to the file
+            sceffects_temporary_file.write_text(self.code)
+            self.server.loadSynthDef(str(sceffects_temporary_file))
+        except Exception as e:
+            WarningMsg(
+                "{}: Effect '{}' could not be added to the server:\n{}".format(e.__class__.__name__, self.shortname,                                                                  e))
+        return None
+
 
 
 class SCInstrument(SCResource):
@@ -76,7 +110,7 @@ class SCInstrument(SCResource):
 
         self.synthdef_dict[self.shortname] = self
 
-        #TODO merge with arguments nd clarify how this is used later
+        #TODO merge with arguments and clarify how this is used later
         self.defaults = {"amp": 1,
                          "sus": 1,
                          "pan": 0,
