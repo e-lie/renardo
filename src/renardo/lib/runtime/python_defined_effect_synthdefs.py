@@ -313,8 +313,8 @@ fx.add_effect_line("osc = osc + delayedSignal")
 fx.add()
 
 fx = effect_manager.new(
-    foxdot_arg_name='vol',
-    synthdef='volume',
+    shortname='vol',
+    fullname='volume',
     args={'vol': 1},
     order=2
 )
@@ -337,9 +337,6 @@ fx = effect_manager.new('output','output', {'output': 0}, order=2)
 fx.doc("Output select Bus")
 fx.add("Out.ar(output, osc)")
 fx.save()
-
-
-
 
 ####FXs that need work before implementing###########
 
