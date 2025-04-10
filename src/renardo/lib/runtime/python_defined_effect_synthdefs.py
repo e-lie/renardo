@@ -313,8 +313,8 @@ fx.add_effect_line("osc = osc + delayedSignal")
 fx.add()
 
 fx = effect_manager.new(
-    foxdot_arg_name='vol',
-    synthdef='volume',
+    shortname='vol',
+    fullname='volume',
     args={'vol': 1},
     order=2
 )
@@ -332,9 +332,6 @@ fx.add_effect_line("osc = FreeVerb2.ar(osc[0], osc[1], 1, room2, damp2)")
 fx.add_effect_line("osc = osc * EnvGen.ar(Env([0,1,0], [revatk,revsus], curve: 'welch'))")
 fx.add_effect_line("osc = SelectX.ar(mix2, [dry, osc])")
 fx.add()
-
-
-
 
 
 ####FXs that need work before implementing###########
