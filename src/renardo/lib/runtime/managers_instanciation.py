@@ -5,7 +5,7 @@ from renardo.gatherer import SamplePackLibrary, ensure_renardo_samples_directory
 
 from renardo.gatherer import SCResourceLibrary
 
-from renardo.sc_backend import BufferManager, ServerManager, EffectManager
+from renardo.sc_backend import BufferManager, ServerManager, EffectManager, SCEffect, FileEffect
 
 # DefaultServer = SCLangServerManager(settings.get("sc_backend.ADDRESS"), PORT, settings.get("sc_backend.PORT2"))
 Server = ServerManager(settings.get("sc_backend.ADDRESS"), settings.get("sc_backend.PORT"), settings.get("sc_backend.PORT2"))
@@ -28,3 +28,5 @@ SynthDefs = {}
 
 effect_manager = EffectManager()
 Effects = effect_manager  # Alias - to become default
+SCEffect.set_server(Server)
+FileEffect.set_server(Server)
