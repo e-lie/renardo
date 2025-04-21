@@ -4,14 +4,24 @@ from typing import List, Optional, Iterator, Dict, Any
 import re
 
 from renardo.gatherer.sccode_management.scresource_bank import SCResourceBank
-from renardo.sc_backend.SimpleSynthDefs import SCResourceType
+from renardo.gatherer.sccode_management.sc_resource import SCInstrument, SCEffect
+from renardo.gatherer.sccode_management.scresource_type_and_file import SCResourceType
 
 
 class SCResourceLibrary:
     """Manages multiple synthdef banks in an ordered dictionary."""
     def __init__(self, root_directory: Path):
-        self.root_directory = Path(root_directory)
+        self.root_directory = root_directory
         self._banks: OrderedDict[int, SCResourceBank] = OrderedDict()
+        
+        # Global default arguments that apply to all banks
+        self.global_defaults: Dict[str, Any] = {}
+        
+        # Look for a global_config.py file
+        global_config_path = self.root_directory / "global_config.py"
+        if global_config_path.exists():
+            self._load_global_config(global_config_path)
+            
         self._load_banks()
     
     def _load_global_config(self, config_path: Path):

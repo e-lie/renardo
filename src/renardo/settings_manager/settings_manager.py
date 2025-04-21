@@ -8,6 +8,7 @@ import pathlib
 from sys import platform
 
 
+
 class SettingsManager:
     """Manages application settings with separate public and internal TOML files."""
 
@@ -219,44 +220,85 @@ class SettingsManager:
             else:
                 target[key] = value
 
-RENARDO_USER_DIR : Optional[Path] = None
 
-# default config path
-# on windows AppData/Roaming/renardo
-# on Linux ~/.config/renardo
-# on MacOS /Users/<username>/Library/Application Support/renardo
-if platform == "linux" or platform == "linux2" :
-    home_path = pathlib.Path.home()
-    RENARDO_USER_DIR = home_path / '.config' / 'renardo'
-elif platform == "darwin":
-    home_path = pathlib.Path.home()
-    RENARDO_USER_DIR = home_path / 'Library' / 'Application Support' / 'renardo'
-elif platform == "win32":
-    appdata_roaming_path = pathlib.Path(os.getenv('APPDATA'))
-    RENARDO_USER_DIR = appdata_roaming_path / 'renardo'
+    @staticmethod
+    def get_renardo_user_dir():
+        renardo_user_dir: Optional[Path] = None
+        try: # if env variable exists to define custom user dir use it
+            renardo_user_dir = Path(os.environ["RENARDO_USER_DIR"])
+        except KeyError: # if not use os specific standard user dir
+            # default config path
+            # on windows AppData/Roaming/renardo
+            # on Linux ~/.config/renardo
+            # on MacOS /Users/<username>/Library/Application Support/renardo
+            if platform == "linux" or platform == "linux2":
+                home_path = pathlib.Path.home()
+                renardo_user_dir = home_path / '.config' / 'renardo'
+            elif platform == "darwin":
+                home_path = pathlib.Path.home()
+                renardo_user_dir = home_path / 'Library' / 'Application Support' / 'renardo'
+            elif platform == "win32":
+                appdata_roaming_path = pathlib.Path(os.getenv('APPDATA'))
+                renardo_user_dir = appdata_roaming_path / 'renardo'
+        return renardo_user_dir
 
-# def get_user_config_dir_path():
-#     return RENARDO_USER_DIR
+    def get_path(self, path_name: str) -> Optional[Path]:
+        """Paths for files used by renardo and foxdot editor are dynamically resolved
+        in one method depending on OS and initial user dir setting"""
+        if path_name == "SAMPLES_DIR":
+            return self.get_renardo_user_dir() / "sample_packs"
+        elif path_name == "RECORDING_DIR":
+            return self.get_renardo_user_dir() / "rec"
+        elif path_name == "SCCODE_LIBRARY":
+            return self.get_renardo_user_dir() / 'sccode_library'
+        elif path_name == "SPECIAL_SCCODE_DIR":
+            return self.get_renardo_user_dir() / "special_sccode"
+        elif path_name == "SCLANG_CODE_DIR_PATH":
+            return self.get_renardo_user_dir() / "sclang_code"
+        elif path_name == "LOOP_PATH":
+            return self.get_path("SAMPLES_DIR") / self.get("samples.DEFAULT_SAMPLES_PACK_NAME") / self.get("samples.LOOP_DIR_NAME")
+        # Directory for permanent/externally managed .scd file for synths
+        # (not overwritten)
+        # elif path_name == "SYNTHDEF_DIR":
+        #     self.get_path("SCLANG_CODE_DIR_PATH") / "scsynth"
+        # elif path_name == "EFFECTS_DIR":
+        #     self.get_path("SCLANG_CODE_DIR_PATH") / "sceffects"
+        # elif path_name == "ENVELOPE_DIR":
+        #     self.get_path("SCLANG_CODE_DIR_PATH") / "scenvelopes"
+        # Directory to write temporary Python generated or Live sclang .scd synths
+        # To avoid overwriting permanent (default) synthdef scd files
+        elif path_name == "TMP_SYNTHDEF_DIR":
+            return self.get_path("SCLANG_CODE_DIR_PATH") / "tmp_code" / "scsynth"
+        elif path_name == "TMP_EFFECTS_DIR":
+            return self.get_path("SCLANG_CODE_DIR_PATH") / "tmp_code" / "sceffects"
+        elif path_name == "RENARDO_ROOT_PATH":
+            return Path(__file__).parent.parent
+        elif path_name == "FOXDOT_EDITOR_ROOT":
+            return self.get_path("RENARDO_ROOT_PATH") / "foxdot_editor"
+        elif path_name == "STARTUP_FILE_PATH":
+            return self.get_path("RENARDO_ROOT_PATH") / "Custom" / "startup.py"
+
+        else:
+            raise KeyError(f"{path_name} does not exist")
 
 public_defaults = {
     "core": {
-        "RENARDO_USER_DIR": str(RENARDO_USER_DIR),
-        "PUBLIC_SETTINGS_FILE": str(RENARDO_USER_DIR / "settings.toml")
+        "PUBLIC_SETTINGS_FILE": str(SettingsManager.get_renardo_user_dir() / "settings.toml")
     }
 }
 
 internal_defaults = {
     "samples": {
-        "SAMPLES_DIR": str(RENARDO_USER_DIR / 'sample_packs')
+        "SAMPLES_DIR": str(SettingsManager.get_renardo_user_dir() / 'sample_packs')
     },
     "core": {
-        "INTERNAL_SETTINGS_FILE": str(RENARDO_USER_DIR / "internal_settings.toml")
+        "INTERNAL_SETTINGS_FILE": str(SettingsManager.get_renardo_user_dir() / "internal_settings.toml")
     }
 }
 
 settings = SettingsManager(
-    Path(RENARDO_USER_DIR/"settings.toml"),
-    Path(RENARDO_USER_DIR/"internal_settings.toml"),
+    SettingsManager.get_renardo_user_dir() / "settings.toml",
+    SettingsManager.get_renardo_user_dir() / "internal_settings.toml",
     public_defaults,
     internal_defaults
 )
