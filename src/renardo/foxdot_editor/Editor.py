@@ -107,13 +107,13 @@ class workspace:
         # --- Set icon
         try:
             # Use .ico file by default
-            self.root.iconbitmap(settings.get("foxdot_editor.ICON"))
+            self.root.iconbitmap(str(settings.get_path("FOXDOT_EDITOR_ROOT") / settings.get("foxdot_editor.ICON")))
         except TclError:
             # Use .gif if necessary
             self.root.tk.call('wm',
                               'iconphoto',
                               self.root._w,
-                              PhotoImage(file=settings.get("foxdot_editor.ICON_GIF")))
+                              PhotoImage(file=str(settings.get_path("FOXDOT_EDITOR_ROOT") / settings.get("foxdot_editor.ICON_GIF"))))
         # --- Setup font
         system_fonts = tkFont.families()
         self.codefont = "CodeFont"  # name for font
@@ -286,7 +286,8 @@ class workspace:
         self.linenumbers.redraw()  # ToDo: move to generic redraw functions
         # Check temporary file
         def recover_work():
-            with open(settings.get("foxdot_editor.TEMP_FILE")) as f:
+            tempfile_path_str = str(settings.get_path("FOXDOT_EDITOR_ROOT")/settings.get("foxdot_editor.TEMP_FILE"))
+            with open(tempfile_path_str) as f:
                 text = f.read()
             if len(text):
                 loading = tkMessageBox.askyesno("Load unsaved work?", "Your code wasn't saved last time you used Renardo, do you want to load any unsaved work?")
