@@ -6,7 +6,7 @@ from pprint import pformat, PrettyPrinter
 #from os.path import isfile, isdir, splitext, join, abspath, isabs
 from typing import Optional, List, Iterator
 
-from renardo.settings_manager import settings, default_loop_path
+from renardo.settings_manager import settings
 from renardo.gatherer.sample_management.sample_pack import SamplePack
 from renardo.gatherer.sample_management.sample_file import SampleFile
 
@@ -17,7 +17,7 @@ class SamplePackLibrary:
         self._packs: OrderedDict[int, SamplePack] = OrderedDict()
         self._load_packs()
         self._extra_paths = [Path(p) for p in extra_paths]
-        self._extra_paths = extra_paths + [default_loop_path()]
+        self._extra_paths = extra_paths + [settings.get_path("LOOP_PATH")]
 
     def _load_packs(self):
         """Load all sample packs from the root directory."""
@@ -211,8 +211,10 @@ class SamplePackLibrary:
         return f"The sample pack library contains {len(self)} pack(s) :\n{pp.pformat(packs)}\n Display content of a pack with : print(sample_packs[<pack_number>])."
 
 def ensure_renardo_samples_directory():
-    sample_dir_path = Path(settings.get("samples.SAMPLES_DIR"))
+    sample_dir_path = settings.get_path("SAMPLES_DIR")
     if not sample_dir_path.exists():
         sample_dir_path.mkdir(parents=True, exist_ok=True)
 
-
+ensure_renardo_samples_directory()
+sample_pack_library = SamplePackLibrary(settings.get_path("SAMPLES_DIR"), [])
+sample_packs = sample_pack_library

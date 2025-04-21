@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Dict, Optional, List, Iterator
 
-from renardo.sc_backend.SimpleSynthDefs import SCResourceType
+from renardo.gatherer.sccode_management.scresource_type_and_file import SCResourceType
 from renardo.gatherer.sccode_management.scresource_category import SCResourceCategory
 
 

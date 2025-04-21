@@ -17,6 +17,7 @@ from renardo.settings_manager import settings
 from renardo.sc_backend.SpecialSynthDefs import SamplePlayer, LoopPlayer
 from renardo.sc_backend.custom_osc_lib import *
 
+
 def get_timestamp():
     import time
     return time.strftime("%Y%m%d-%H%M%S")
@@ -511,7 +512,7 @@ class ServerManager:
             if fn is None:
                 fn = "{}.aiff".format(get_timestamp())
 
-            path = os.path.join(settings.get("sc_backend.RECORDING_DIR"), fn)
+            path = os.path.join(str(settings.get_path("RECORDING_DIR")), fn)
             msg = OSCMessage('/foxdot-record')
             msg.append([1, path])
             self.sclang.send(msg)
