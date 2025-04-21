@@ -2,15 +2,14 @@ import os, sys, json
 from pathlib import Path
 
 from .settings_manager import settings
-from .renardo_core_settings import RENARDO_ROOT_PATH
 
-FOXDOT_EDITOR_ROOT = RENARDO_ROOT_PATH / "foxdot_editor"
-TEMP_FILE : Path = FOXDOT_EDITOR_ROOT / "tmp" / "tempfile.txt"
+
+TEMP_FILE : Path = settings.get_path("FOXDOT_EDITOR_ROOT") / "tmp" / "tempfile.txt"
 TEMP_FILE.touch(exist_ok=True)
 
 settings.set_defaults_from_dict({
     "foxdot_editor" : {
-        "TEMP_FILE": str(FOXDOT_EDITOR_ROOT / "tmp" / "tempfile.txt"),
+        "TEMP_FILE": "tmp/tempfile.txt",
         "FONT": 'Consolas',
         "AUTO_COMPLETE_BRACKETS": True,
         "USE_ALPHA": True,
@@ -31,10 +30,9 @@ settings.set_defaults_from_dict({
 
 settings.set_defaults_from_dict({
     "foxdot_editor" : {
-        "FOXDOT_EDITOR_ROOT": str(RENARDO_ROOT_PATH / "foxdot_editor"),
-        "ICON": str(FOXDOT_EDITOR_ROOT / "img" / "icon.ico"),
-        "ICON_GIF": str(FOXDOT_EDITOR_ROOT / "img" / "icon.gif"),
-        "THEMES_PATH": str(FOXDOT_EDITOR_ROOT / "themes"),
+        "ICON":  "img/icon.ico",
+        "ICON_GIF": "img/icon.gif",
+        "THEMES_PATH": "themes",
     }
 },
 internal=True

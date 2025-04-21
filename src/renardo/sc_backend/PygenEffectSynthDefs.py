@@ -72,7 +72,7 @@ class PygenEffect:
         #self.server =Server
         self.short_name = short_name
         self.synthdef_fullname = synthdef_fullname
-        self.file_path = settings.get("sc_backend.TMP_EFFECTS_DIR") + "/{}.scd".format(self.synthdef_fullname)
+        self.file_path = str(settings.get_path("TMP_EFFECTS_DIR")) + "/{}.scd".format(self.synthdef_fullname)
         self.args = args.keys()
         self.vars = ["osc"]
         self.defaults = args

@@ -15,14 +15,14 @@ if settings.get("sc_backend.FORWARD_PORT") and settings.get("sc_backend.FORWARD_
     Server.add_forward(settings.get("sc_backend.FORWARD_ADDRESS"), settings.get("sc_backend.FORWARD_PORT"))
 
 ensure_renardo_samples_directory()
-sample_pack_library = SamplePackLibrary(settings.get("samples.SAMPLES_DIR"), [])
+sample_pack_library = SamplePackLibrary(settings.get_path("SAMPLES_DIR"), [])
 sample_packs = sample_pack_library
 
 # Samples and DefaultSamples just display default samples list (compat with FoxDot print(Samples))
 DefaultSamples = Samples = "\n".join(["%r: %s" % (k, v) for k, v in sorted(settings.get("samples.SYMBOLS_DESCRIPTION").items())])
 buffer_manager =  BufferManager(server=Server, sample_library=sample_pack_library)
 
-scresource_library = SCResourceLibrary(settings.get("sc_backend.SCCODE_LIBRARY"))
+scresource_library = SCResourceLibrary(settings.get_path("SCCODE_LIBRARY"))
 
 SynthDefs = {}
 

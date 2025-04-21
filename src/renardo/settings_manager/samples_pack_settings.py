@@ -1,10 +1,9 @@
 from pathlib import Path
-from .settings_manager import settings
+from .settings_manager import settings, get_path
 
 settings.set_defaults_from_dict(
 {
     "samples" : {
-        "SAMPLES_DIR": str(Path(settings.get("core.RENARDO_USER_DIR")) / 'sample_packs'),
         "SAMPLES_PACK_NUMBER": 0,
         "DEFAULT_SAMPLES_PACK_NAME": '0_foxdot_default',
     }
@@ -93,6 +92,3 @@ settings.set_defaults_from_dict(
 )
 
 settings.save_to_file()
-
-def default_loop_path() -> Path:
-    return Path(settings.get("samples.SAMPLES_DIR")) / settings.get("samples.DEFAULT_SAMPLES_PACK_NAME") / settings.get("samples.LOOP_DIR_NAME")

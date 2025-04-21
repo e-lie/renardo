@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Optional
 
 from renardo.gatherer.sccode_management.scresource_category import SCResourceCategory
-from renardo.gatherer.sccode_management.scresource_type_and_file import SCResourceFile, SCResourceType
+from renardo.gatherer.sccode_management.scresource_type_and_file import SCResourceType, SCResourceFile
 from renardo.gatherer.sccode_management.scresource_section import SCResourceSection
 
 
