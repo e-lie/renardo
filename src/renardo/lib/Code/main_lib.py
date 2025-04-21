@@ -93,7 +93,7 @@ class _StartupFile:
                 WarningMsg("'{}' startup file not found.".format(self.path))
         return ""
 
-FOXDOT_STARTUP = _StartupFile(settings.get("core.STARTUP_FILE_PATH"))
+FOXDOT_STARTUP = _StartupFile(str(settings.get_path("STARTUP_FILE_PATH")))
         
 class FoxDotCode:
     namespace={}

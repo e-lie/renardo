@@ -98,13 +98,13 @@ class FileEffect:
 
 class StartSoundEffect(FileEffect):
     def __init__(self):
-        FileEffect.__init__(self, 'startSound', sccode_path=Path(settings.get("sc_backend.SPECIAL_SCCODE_DIR"))/'startSound.scd')
+        FileEffect.__init__(self, 'startSound', sccode_path=Path(settings.get_path("PLAY_SCCODE_DIR"))/'startSound.scd')
         self.load_in_server()
 
 class MakeSoundEffect(FileEffect):
     def __init__(self):
         self.max_duration = 8
-        FileEffect.__init__(self, 'makeSound', sccode_path=Path(settings.get("sc_backend.SPECIAL_SCCODE_DIR"))/'makeSound.scd')
+        FileEffect.__init__(self, 'makeSound', sccode_path=Path(settings.get_path("PLAY_SCCODE_DIR"))/'makeSound.scd')
         self.load_in_server()
 
 # -- TODO

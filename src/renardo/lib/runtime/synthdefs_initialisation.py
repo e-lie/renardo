@@ -26,18 +26,18 @@ for scresource_bank in scresource_library:
 
 
 # create the special sccode dir in the user dir if not exist
-Path(settings.get("sc_backend.SPECIAL_SCCODE_DIR")).mkdir(parents=True, exist_ok=True)
+settings.get_path("SPECIAL_SCCODE_DIR").mkdir(parents=True, exist_ok=True)
 
 # The 1 or 2 channels buffer strategy of play (which is currently sending a channel error in SC so broken strategry) implies a specific setup with two players
 play1_resource_file = SCResourceFile(
-    path=Path(settings.get("sc_backend.SPECIAL_SCCODE_DIR")) / 'play1.py',
+    path=settings.get_path("SPECIAL_SCCODE_DIR") / 'play1.py',
     resource_type=SCResourceType.INSTRUMENT,
     category="sampler"
 )
 play = play1_resource_file.load_resource_from_python()
 
 play2_resource_file = SCResourceFile(
-    path=Path(settings.get("sc_backend.SPECIAL_SCCODE_DIR")) / 'play2.py',
+    path=settings.get_path("SPECIAL_SCCODE_DIR") / 'play2.py',
     resource_type=SCResourceType.INSTRUMENT,
     category="sampler"
 )
