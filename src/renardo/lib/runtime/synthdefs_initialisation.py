@@ -14,7 +14,10 @@ for scresource_bank in scresource_library:
         for instrument_category in scresource_bank.instruments:
             for scresource_file in instrument_category:
                 # load the SCInstrument instance declared in every python resource file found in library
-                scinstrument = scresource_file.load_resource_from_python()
+                scinstrument:SCInstrument = scresource_file.load_resource_from_python()
+                scinstrument.bank = scresource_bank.name
+                scinstrument.category = instrument_category.category
+                scinstrument.load_in_server_from_tempfile()
                 if scinstrument:
                     # define a variable for each scinstrument (callable in the context of a player and returns a InstrumentProxy)
                     globals()[scinstrument.shortname] = scinstrument
@@ -47,6 +50,8 @@ for scresource_bank in scresource_library:
             for scresource_file in effect_category:
                 # load the SCInstrument instance declared in every python resource file found in library
                 sceffect = scresource_file.load_resource_from_python()
+                sceffect.bank = scresource_bank.name
+                sceffect.category = effect_category.category
                 if sceffect:
                     effect_manager.new(sceffect)
                 else:
