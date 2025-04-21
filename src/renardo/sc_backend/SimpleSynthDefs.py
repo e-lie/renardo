@@ -43,10 +43,12 @@ class SCEffect(SCResource):
             description: str,
             code: str,
             arguments: Dict[str, Any] = None,
-            category: str = None,
+            bank: str = "undefined",
+            category: str = "undefined",
             order=2,
     ):
         super().__init__(shortname, fullname, description, code, arguments)
+        self.bank = bank
         self.category = category
         self.order=order
         self.args=arguments
@@ -73,9 +75,10 @@ class SCEffect(SCResource):
     def load_in_server_from_tempfile(self):
         """ Load resource in SuperCollider server"""
         try:
-            os_temporary_dir = Path(tempfile.gettempdir())
+            scd_temporary_dir = Path(tempfile.gettempdir()) / "renardo" / self.bank / "effects"
             # Create a new file in the temporary directory
-            sceffects_temporary_file = os_temporary_dir / f"{self.shortname}.scd"
+            scd_temporary_dir.mkdir(parents=True, exist_ok=True)
+            sceffects_temporary_file = scd_temporary_dir / f"{self.shortname}.scd"
             # Write sc code content to the file
             sceffects_temporary_file.write_text(self.code)
             self.server.loadSynthDef(str(sceffects_temporary_file))
@@ -100,11 +103,13 @@ class SCInstrument(SCResource):
             description: str,
             code: str,
             arguments: Dict[str, Any] = None,
-            category: str = None,
-            auto_load_to_server: bool = True,
+            bank: str = "undefined",
+            category: str = "undefined",
+            auto_load_to_server: bool = False,
     ):
         super().__init__(shortname, fullname, description, code, arguments)
         self.category = category
+        self.bank = bank
         self.name = self.shortname # old alias to remove
         self.synth_added = False
 
@@ -172,9 +177,11 @@ class SCInstrument(SCResource):
     def load_in_server_from_tempfile(self):
         """ Load resource in SuperCollider server"""
         try:
-            os_temporary_dir = Path(tempfile.gettempdir())
+            # use os specific temporary dir to save scd files to load
+            scd_temporary_dir = Path(tempfile.gettempdir()) / "renardo" / self.bank / "instruments"
             # Create a new file in the temporary directory
-            scinstrument_temporary_file = os_temporary_dir / f"{self.shortname}.scd"
+            scd_temporary_dir.mkdir(parents=True, exist_ok=True)
+            scinstrument_temporary_file = scd_temporary_dir / f"{self.shortname}.scd"
             # Write sc code content to the file
             scinstrument_temporary_file.write_text(self.code)
             self.synth_added = True
