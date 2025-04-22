@@ -34,8 +34,8 @@ Root.default.set("D")
 print(Scale.names())
 
 # You can change the scale used by a player using the 'scale' keyword
-p1 >> pads([0,1,2], scale=Scale.minor)
+p1 >> charm([0,1,2], scale=Scale.minor)
 
 # Similarly, you can change the root note players using the root keyword
 # and the Root.default object
-p1 >> pads([0,1,2], scale=Scale.minor, root=2)
+p1 >> charm([0,1,2], scale=Scale.minor, root=2)

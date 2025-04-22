@@ -127,6 +127,12 @@ class TempoClock(object):
         self.solo = SoloPlayer()
         self.thread = threading.Thread(target=self.run)
 
+    def reset(self):
+        """ Deprecated """
+        self.time = self.dtype(0)
+        self.beat = self.dtype(0)
+        self.start_time = time.time()
+        return
 
     @classmethod
     def set_server(cls, server):
