@@ -105,7 +105,7 @@ from renardo.lib.Player import (
 from renardo.lib.TimeVar import (
     ChildPvar, ChildTimeVar, PATTERN_METHODS, Pvar, PvarGenerator, PvarGeneratorEx,
     URLError, expvar, fetch, get_expanded_len, get_inverse_op, get_pypi_version,
-    isiterable, json, max_length, recursive_any, sinvar, socket_timeout, urlopen
+    isiterable, json, max_length, recursive_any, sinvar, socket_timeout, urlopen, Get
 )
 
 from renardo.lib.Constants import NoneConst, const

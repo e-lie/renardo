@@ -676,6 +676,7 @@ class Preferences:
                                        parent=self.stop)
         self.stop.lift(aboveThis=None)
         if answer:
+            # TODO reimplement save changes using the new central settings manager
             return self.save_changes()
         else:
             pass
