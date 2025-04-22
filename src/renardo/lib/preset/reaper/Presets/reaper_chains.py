@@ -1,4 +1,4 @@
-from renardo_reaper.ReaperIntegration import init_reapy_project, ReaperInstrumentFactory, ReaTask
+from renardo.reaper_backend.ReaperIntegration import init_reapy_project, ReaperInstrumentFactory, ReaTask
 
 old_style_presets = {}
 
