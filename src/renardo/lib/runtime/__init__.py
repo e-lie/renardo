@@ -52,7 +52,7 @@ Player.set_synth_dict(SynthDefs)
 Player.set_buffer_manager(buffer_manager)
 
 from renardo.lib.TempoClock import (
-    Code, History, MIDIDeviceNotFound, MethodCall, MethodType, MidiIn, Player,
+    History, MIDIDeviceNotFound, MidiIn, Player,
     Queue, QueueBlock, QueueObj, RequestTimeout, ScheduleError, ServerManager,
     SoloPlayer, TempoClient, TempoClock, TimeVar, Wrapper, as_pattern, inspect,
     threading

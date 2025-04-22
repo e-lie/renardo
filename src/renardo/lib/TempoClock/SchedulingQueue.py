@@ -3,11 +3,11 @@ import sys
 
 from types import FunctionType, MethodType
 
-from renardo.lib.Repeat import MethodCall
-from renardo.lib.Players import Player
+from renardo.lib.Player import MethodCall, Player
+
 from renardo.lib.Patterns import as_pattern
 from renardo.lib.Utils import modulo_index
-from renardo_lib import Code
+from renardo.lib import Code
 
 
 class Queue(object):
