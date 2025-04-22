@@ -608,7 +608,7 @@ class Player(Repeatable):
         # Play the note
         if not isinstance(self.event["dur"], rest):
             #try:
-            self.send(
+            self._send_osc_messages_to_server(
                 verbose=(self.main_event_clock.solo == self and kwargs.get("verbose", True))
             )
 
@@ -1204,7 +1204,7 @@ class Player(Repeatable):
 
             delay = self.main_event_clock.beat_dur(message.get("delay", 0))
 
-            synthdef = self.get_synth_name(
+            synthdef = self._get_synth_name(
                 message.get("buf", 0)
             )  # to send to play1 or play2
 

@@ -1,5 +1,5 @@
 from typing import Dict, List
-from renardo_reaper.ReaperIntegration import init_reapy_project, ReaperInstrumentFactory
+from renardo.reaper_backend.ReaperIntegration import init_reapy_project, ReaperInstrumentFactory
 
 #from .Presets import presets
 from renardo.lib.runtime import Clock, Scale

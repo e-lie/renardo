@@ -54,7 +54,7 @@ Player.set_buffer_manager(buffer_manager)
 from renardo.lib.TempoClock import (
     History, MIDIDeviceNotFound, MidiIn, Player,
     Queue, QueueBlock, QueueObj, RequestTimeout, ScheduleError, ServerManager,
-    SoloPlayer, TempoClient, TempoClock, TimeVar, Wrapper, as_pattern, inspect,
+    SoloPlayer, TempoClient, TempoClock, Wrapper, as_pattern, inspect,
     threading
 )
 
@@ -97,15 +97,14 @@ from renardo.lib.Player import (
     SamplePlayer, Scale, InstrumentProxy,
     copy,
     get_first_item, get_freq_and_midi, inf,
-    linvar, mapvar,
     rest,
-    var
 )
 
 from renardo.lib.TimeVar import (
     ChildPvar, ChildTimeVar, PATTERN_METHODS, Pvar, PvarGenerator, PvarGeneratorEx,
     URLError, expvar, fetch, get_expanded_len, get_inverse_op, get_pypi_version,
-    isiterable, json, max_length, recursive_any, sinvar, socket_timeout, urlopen, Get
+    isiterable, json, max_length, recursive_any, sinvar, socket_timeout, urlopen, Get,
+    TimeVar, linvar, expvar, var, xvar, yvar, mapvar
 )
 
 from renardo.lib.Constants import NoneConst, const
