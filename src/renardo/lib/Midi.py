@@ -190,12 +190,17 @@ class MidiIn:
 
 
 class MidiOut(InstrumentProxy):
-    """ SynthDef proxy for sending midi message via supercollider """
+    """ Instrument proxy for sending midi message via supercollider """
+    def __init__(self, degree=0, **kwargs):
+        InstrumentProxy.__init__(self, self.__class__.__name__, degree, kwargs)
+
+class MidiInstrument(InstrumentProxy):
+    """ Instrument proxy for sending midi message via supercollider """
     def __init__(self, degree=0, **kwargs):
         InstrumentProxy.__init__(self, self.__class__.__name__, degree, kwargs)
 
 class ReaperInstrument(MidiOut):
-    """SynthDef proxy to handle MIDI + PyLive/LiveOSC integration"""
+    """Instrument proxy to handle MIDI + reaper integration"""
     def __init__(self, degree=0, **kwargs):
         if isinstance(degree, str) and "midi_map" not in kwargs.keys():
             raise Exception("No midi map defined to translate playstring")

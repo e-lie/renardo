@@ -34,6 +34,7 @@ dependencies = [
     "python-reapy",
     "textual < 3",
     "fastnumbers>=5.1.1",
+    "mido>=1.3.3",
 ]
 
 [project.scripts]
