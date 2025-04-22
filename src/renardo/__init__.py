@@ -1,6 +1,6 @@
 from renardo.settings_manager import settings
 from renardo.lib import *
-from .RenardoApp import RenardoApp
+from renardo.RenardoApp import RenardoApp
 
 
 def main() -> None:
