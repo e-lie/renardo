@@ -1,5 +1,4 @@
 import itertools
-from .rest import rest
 
 from renardo_sc_backend import SamplePlayer, LoopPlayer
 from renardo_sc_backend import buffer_manager
@@ -20,6 +19,12 @@ from renardo_lib.Utils import get_first_item, get_expanded_len
 
 from renardo_reaper.ReaperIntegrationLib.ReaProject import get_reaper_object_and_param_name, set_reaper_param, get_reaper_param
 from renardo_reaper.ReaperIntegrationLib.ReaTrack import ReaTrack
+from .rest import rest
+
+
+
+class PlayerKeyException(Exception):
+    pass
 
 
 class Player(Repeatable):
