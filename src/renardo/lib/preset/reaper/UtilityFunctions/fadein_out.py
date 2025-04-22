@@ -1,6 +1,6 @@
 
 from renardo.lib.runtime import Clock, linvar, sinvar, PWhite, PRand, inf, player_method, nextBar
-from renardo_reaper.ReaperIntegrationLib.ReaTrack import ReaTrack
+from renardo.reaper_backend.ReaperIntegrationLib.ReaTrack import ReaTrack
 
 @player_method
 def fadep(self, param_name, fvalue=1, dur=8, ivalue=None):

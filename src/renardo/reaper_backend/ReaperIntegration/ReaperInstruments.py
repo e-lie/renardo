@@ -1,6 +1,6 @@
 from renardo.lib.Extensions.MidiMapFactory import MidiMapFactory
-from renardo_reaper.ReaperIntegrationLib.ReaProject import get_reaper_object_and_param_name, set_reaper_param
-from renardo_reaper.ReaperIntegrationLib.functions import split_param_name
+from renardo.reaper_backend.ReaperIntegrationLib.ReaProject import get_reaper_object_and_param_name, set_reaper_param
+from renardo.reaper_backend.ReaperIntegrationLib.functions import split_param_name
 from renardo.lib.Midi import ReaperInstrument
 from renardo.lib.Patterns import Pattern
 from typing import Dict
