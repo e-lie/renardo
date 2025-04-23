@@ -56,11 +56,14 @@ Player.set_synth_dict(SynthDefs)
 Player.set_buffer_manager(buffer_manager)
 
 from renardo.lib.TempoClock import (
-    History, MIDIDeviceNotFound, MidiIn, Player,
-    Queue, QueueBlock, QueueObj, RequestTimeout, ScheduleError, ServerManager,
-    SoloPlayer, TempoClient, TempoClock, Wrapper, as_pattern, inspect,
-    threading
+    History,
+    Queue, QueueBlock, QueueObj, ScheduleError,
+    SoloPlayer, TempoClock, Wrapper,
 )
+
+from renardo.sc_backend import TempoClient, ServerManager, RequestTimeout
+
+from renardo.lib.Midi import MidiIn, MIDIDeviceNotFound
 
 from renardo.lib.Patterns import (
     Add, CalculateDelaysFromDur, CalculateEuclideanDelay, ClassPatternMethod,
@@ -86,7 +89,7 @@ from renardo.lib.Patterns import (
     metaPattern, offadd, offlayer, offmul, pattern_depth, patternclass, rAdd, rDiv,
     rFloorDiv, rGet, rMod, rMul, rOr, rPow, rSub, rXor, random, re_arrow,
     re_chars, re_curly, re_nests, re_square, shuffle, sliceToRange,
-    square_type, sum_delays,
+    square_type, sum_delays, as_pattern
 )
 
 from renardo.lib.Player import (

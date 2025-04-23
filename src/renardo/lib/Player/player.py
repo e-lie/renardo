@@ -22,40 +22,13 @@ from renardo.reaper_backend.ReaperIntegrationLib.ReaTrack import ReaTrack
 from .Repeat import Repeatable
 from .rest import rest
 
-
-
 class PlayerKeyException(Exception):
     pass
 
-
 class Player(Repeatable):
     """
-    FoxDot generates music by creating instances of `Player` and giving them instructions
-    to follow. At startup FoxDot creates many instances of `Player` and assigns them to
-    any valid two character variable. This is so that when you start playing you don't
-    have to worry about typing `myPlayer = Player()` and `myPlayer_2 = Player()` every
-    time you want to do something new. Of course there is nothing stopping you from
-    doing that if yo so wish.
-
-    Instances of `Player` are given instructions to generate music using the `>>` syntax,
-    overriding the bitshift operator, and should be given an instance of `SynthDefProxy`.
-    A `SynthDefProxy` is created when calling an instance of `SynthDef` - these are the
-    "instruments" used by player objects and are written in SuperCollider code. You can
-    see more information about these in the `SynthDefManagement` module. Below describes how to assign
-    a `SynthDefProxy` of the `SynthDef` `pads` to a `Player` instance called `p1`: ::
-
-        # Calling pads as if it were a function returns a
-        # pads SynthDefProxy object which is assigned to p1
-        p1 >> pads()
-
-        # You could store several instances and assign them at different times
-        proxy_1 = pads([0,1,2,3], dur=1/2)
-        proxy_2 = pads([4,5,6,7], dur=1)
-
-        p1 >> proxy_1 # Assign the first to p1
-        p1 >> proxy_2 # This replaces the instructions being followed by p1
+    Class that old the state of a musical procedure and support musical event update and dispatch
     """
-
     effect_manager = None
     fx_attributes = None
     fx_keys = None
@@ -96,15 +69,10 @@ class Player(Repeatable):
     # Aliases
     alias = {"pitch": "degree", "char": "degree"}
 
-
-
     # Set in __init__.py
     main_event_clock = None
-
     default_scale = Scale.default
-
     default_root = Root.default()  # TODO//remove callable
-
     after_update_methods = ["stutter"]
 
     # Tkinter Window
@@ -118,12 +86,10 @@ class Player(Repeatable):
         self.method_synonyms["<-"] = "lshift"
 
         # General setup
-
         self.instrument_name = None
         self.id = name
 
         self.always_on = False
-
         #self.current_event_size   = 0
         #self.current_event_length = 0
         #self.current_event_depth  = 0
@@ -359,6 +325,7 @@ class Player(Repeatable):
             err = "Player Object has no attribute '{}'".format(name)
             raise AttributeError(err)
 
+
     def assign_instrument(self, instrument: InstrumentProxy):
         """
         Handles the allocation of instrument (Proxy)
@@ -461,58 +428,13 @@ class Player(Repeatable):
         self.__dict__[name] = value
         return
 
-    def __getattr__(self, name):
-        try:
-            # This checks for aliases, not the actual keys
-            name = self.alias.get(name, name)
-            if name in self.attr and name not in self.__dict__:
-                # Return a Player key
-                self.update_player_key(name, self.now(name), 0)
-
-            item = self.__dict__[name]
-            # If returning a player key, keep track of which are being accessed
-            if isinstance(item, PlayerKey) and name not in self.accessed_keys:
-                self.accessed_keys.append(name)
-            return item
-
-        except KeyError:
-            err = "Player Object has no attribute '{}'".format(name)
-            raise AttributeError(err)
-        return
-
-    def __getattribute__(self, name):
-        # This checks for aliases, not the actual keys
-        name = Player.alias.get(name, name)
-        item = object.__getattribute__(self, name)
-        if isinstance(item, PlayerKey):
-            if name not in self.accessed_keys:
-                self.accessed_keys.append(name)
-        return item
-
-    def __getitem__(self, name):
-        if self.__init:
-            if name not in self.__vars:
-                return self.attr[name]
-            pass
-        return self.__dict__[name]
-
-    def __eq__(self, other):
-        "equal operator"
-        return self is other
-
-    def __ne__(self, other):
-        "not equal"
-        return not self is other
-
     # --- Startup methods
     def reset(self):
         """Sets all Player attributes to 0 unless their default is specified by an effect. Also
         can be called by using a tilde before the player variable. E.g. ~p1"""
 
         # Add all keywords to the dict, then set non-zero defaults
-
         reset = []
-
         for key in Player.Attributes():
             if key not in (
                 "scale",
@@ -821,7 +743,6 @@ class Player(Repeatable):
         return self
 
     # --- Data methods
-
     def __iter__(self):
         for _, value in self.event.items():
             yield value
@@ -862,14 +783,11 @@ class Player(Repeatable):
             event.update(kwargs)
 
         max_val = 0
-
         for attr, value in event.items():
             if isinstance(value, PGroup):
                 l = len(value)
-
             else:
                 l = 1
-
             if l > max_val:
                 max_val = l
 
@@ -883,15 +801,11 @@ class Player(Repeatable):
         """  Forces object's dict uses PlayerKey instances
         """
         if (key not in self.__dict__) or (not isinstance(self.__dict__[key], PlayerKey)):
-
-            self.__dict__[key] = PlayerKey(value, player=self, attr=key) 
-
+            self.__dict__[key] = PlayerKey(value, player=self, attr=key)
         else:
             # Force values if not playing
-
             if self.isplaying is False:
                 self.__dict__[key].set(value, time)
-
             else:
                 self.__dict__[key].update(value, time)
 
@@ -970,24 +884,20 @@ class Player(Repeatable):
             self._update_player_key(item.attr, self.now(item.attr), 0)
 
         # If the parent is in the same queue block, make sure its values are up-to-date
-
         elif self.queue_block is not None:
             # Try and find the item in the queue block
-
             try:
                 queue_item = self.queue_block[item.player]
-
             except KeyError:
                 queue_item = None
-
             # Update the parent with an up-to-date value
-
             if queue_item is not None and queue_item.called is False:
                 item.player._update_player_key(item.attr, item.player.now(item.attr), 0)
+
         return item.now()
 
-    # --- Methods for preparing and sending OSC messages to SuperCollider
 
+    # --- Methods for preparing and sending OSC messages to SuperCollider
     def unpack(self, item):
         """Converts a pgroup to floating point values and updates and time var or playerkey relations"""
 
@@ -1074,50 +984,35 @@ class Player(Repeatable):
 
     def _unduplicate_durs(self, event):
         """ Converts values stored in event["dur"] in a tuple/PGroup into delays """
-
         # If there are more than one dur then add to the delay
-
         if "dur" in event:
             try:
                 if len(event["dur"]) > 1:
                     init_dur = event["dur"][0]
-
                     offset = PGroup(0 | event["dur"][1:])
-
                     event["delay"] = event["delay"] + offset
-
                     event["dur"] = float(init_dur)
-
                 elif len(event["dur"]) == 1:
                     event["dur"] = float(event["dur"][0])
-
             except TypeError:
                 pass
 
         if "sus" in event:
             try:
                 # Also update blur / sus
-
                 if len(event["sus"]) > 1:
                     min_sus = min(event["sus"]) if min(event["sus"]) else 1
-
                     offset = PGroup([(sus / min_sus) for sus in event["sus"]])
-
                     event["blur"] = event["blur"] * offset
-
                     event["sus"] = float(min_sus)
-
                 elif len(event["sus"]) == 1:
                     event["sus"] = float(event["sus"][0])
-
             except TypeError:
                 pass
-
         return event
 
     def _get_event(self):
         """ Returns a dictionary of attr -> now values """
-
         self.event = dict(map(lambda attr: (attr, self.now(attr)), self.attr.keys()))
         self.event = self._unduplicate_durs(self.event)
         self.event = self.get_prime_funcs(self.event)
@@ -1129,59 +1024,44 @@ class Player(Repeatable):
     def _send_osc_messages_to_server(self, timestamp=None, verbose=True, **kwargs):
         """ Goes through the current event and compiles osc messages and sends them to server via the tempo clock """
         timestamp = timestamp if timestamp is not None else self.queue_block.time
-
         # self.do_bang = False
         for i in range(self._get_event_length(**kwargs)):
             self._send_osc_message(self.event, i, timestamp=timestamp, verbose=verbose, **kwargs)
         # if self.do_bang:
-
         #     self.bang()
-
-        return
+        return None
 
     def _send_osc_message(self, event, index, timestamp=None, verbose=True, **kwargs):
         """ Compiles and sends an individual OSC message created by recursively unpacking nested PGroups """
-
         packet = {}
-
         event = event.copy()
         event.update(kwargs)
 
         for key, value in event.items():
             # If we can index a value, trigger a new OSC message to send OSC messages for each
-
             # value = kwargs.get(key, value)
-
             if isinstance(value, PGroup):
                 new_event = {}
-
                 for new_key, new_value in event.items():
                     # new_value = kwargs.get(new_key, new_value)
-
                     if isinstance(new_value, PGroup):
                         new_event[new_key] = new_value[index]
-
                     else:
                         new_event[new_key] = new_value
-
                 # Recursively unpack and send messages
                 for i in range(self._get_event_length(new_event)):
                     self._send_osc_message(new_event, i, timestamp, verbose)
-                return
-
+                return None
             else:
                 # If it is a number, use the numbers (check for kwargs override)
-
                 packet[key] = value
-
         # Special case modulations
-
         if ("amp" in packet) and ("amplify" in packet):
             packet["amp"] = packet["amp"] * packet["amplify"]
-
         # Send compiled messages
         self._push_osc_to_server(packet, timestamp, verbose, **kwargs)
-        return
+
+        return None
 
     def _push_osc_to_server(self, packet, timestamp, verbose=True, **kwargs):
         """ Adds message head, calculating frequency then sends to server if verbose is True and 
@@ -1189,9 +1069,7 @@ class Player(Repeatable):
 
         # Do any calculations e.g. frequency
         message = self._new_message_header(packet, **kwargs)
-
         # Only send if amp > 0 etc
-
         if (
             verbose
             and (message["amp"] > 0)
@@ -1201,37 +1079,26 @@ class Player(Repeatable):
             )
         ):
             # Need to send delay and synthdef separately
-
             delay = self.main_event_clock.beat_dur(message.get("delay", 0))
-
             synthdef = self._get_synth_name(
                 message.get("buf", 0)
             )  # to send to play1 or play2
-
             compiled_msg = self.main_event_clock.server.get_bundle(
                 synthdef, message, timestamp=timestamp + delay
             )
-
             # We can set a condition to only send messages
-
             self.queue_block.append_osc_message(compiled_msg)
-
             # self.do_bang = True
-
-        return
+        return None
 
     def _new_message_header(self, event, **kwargs):
         """ Returns the header of an osc message to be added to by osc_message() """
-
         # Let SC know the duration of 1 beat so effects can use it and adjust sustain too
-
         beat_dur = self.main_event_clock.beat_dur()
-
         message = {
             "beat_dur": beat_dur,
             "sus": kwargs.get("sus", event["sus"]) * beat_dur,
         }
-
         if self.instrument_name == SamplePlayer:
             degree = kwargs.get("degree", event["degree"])
             sample = kwargs.get("sample", event["sample"])
@@ -1242,16 +1109,11 @@ class Player(Repeatable):
                 sus = kwargs.get("sus", event["sus"])
 
                 pos = self.main_event_clock.beat_dur(sus)
-
             else:
                 pos = 0
-
             buf = self.samples.get_buffer_from_symbol(str(degree), spack, sample).bufnum
-
             message.update({"buf": buf, "pos": pos})
-
             # Update player key
-
             if "buf" in self.accessed_keys:
                 self.buf = buf
 
@@ -1260,35 +1122,25 @@ class Player(Repeatable):
             buf = kwargs.get("buf", event["buf"])
 
             # Get a user-specified tempo
-
             given_tempo = kwargs.get("tempo", self.event.get("tempo", self.main_event_clock.bpm))
 
             if given_tempo in (None, 0):
                 tempo = 1
-
             else:
                 tempo = self.main_event_clock.bpm / given_tempo
-
             # Set the position in "beats"
-
             pos = pos * tempo * self.main_event_clock.beat_dur(1)
-
             # If there is a negative rate, move the pos forward
-
             rate = kwargs.get("rate", event["rate"])
 
             if rate == 0:
                 rate = 1
-
             # Adjust the rate to a given tempo
-
             rate = float(tempo * rate)
 
             if rate < 0:
                 sus = kwargs.get("sus", event["sus"])
-
                 pos += self.main_event_clock.beat_dur(sus)
-
             message.update({"pos": pos, "buf": buf, "rate": rate})
 
         else:
@@ -1312,13 +1164,9 @@ class Player(Repeatable):
                 self.midinote = midinote
 
         # Update the dict with other values from the event
-
         event.update(message)
-
         # Remove keys we dont need
-
         del event["bpm"]
-
         return event
 
     def set_queue_block(self, queue_block):
@@ -1367,7 +1215,6 @@ class Player(Repeatable):
         #        self.playstring = str(new_degree)
         setattr(self, "degree", new_degree)
         return
-
 
     def __repr__(self):
         if self.id is not None:
