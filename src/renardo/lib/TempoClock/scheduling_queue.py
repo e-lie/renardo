@@ -10,7 +10,7 @@ from renardo.lib.Utils import modulo_index
 from renardo.lib import Code
 
 
-class Queue(object):
+class SchedulingQueue(object):
     """Queue to store the event blocks to send to SuperCollider"""
     def __init__(self, clock):
         self.data = []
@@ -19,6 +19,13 @@ class Queue(object):
     def __repr__(self):
         return "\n".join([str(item) for item in self.data]
                         ) if len(self.data) > 0 else "[]"
+
+    def __iter__(self):
+        for x in self.data:
+            yield x
+
+    def __len__(self):
+        return len(self.data)
 
     def add(self, item, beat, args=(), kwargs={}, is_priority=False):
         """ Adds a callable object to the queue at a specified beat, args and kwargs for the
@@ -197,6 +204,7 @@ class QueueBlock(object):
         return [item.obj for level in self.events for item in level]
 
 
+
 class QueueObj(object):
     """ Class representing each item in a `QueueBlock` instance """
     def __init__(self, obj, args=(), kwargs={}):
@@ -220,6 +228,7 @@ class QueueObj(object):
         return value
 
 
+
 class History(object):
     """
     Stores osc messages send from the TempoClock so that if the
@@ -229,6 +238,7 @@ class History(object):
         self.data = []
     def add(self, beat, osc_messages):
         self.data.append(osc_messages)
+
 
 
 class Wrapper(Code.LiveObject):

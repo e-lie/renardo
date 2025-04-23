@@ -57,7 +57,7 @@ Player.set_buffer_manager(buffer_manager)
 
 from renardo.lib.TempoClock import (
     History,
-    Queue, QueueBlock, QueueObj, ScheduleError,
+    SchedulingQueue, QueueBlock, QueueObj, ScheduleError,
     SoloPlayer, TempoClock, Wrapper,
 )
 
@@ -204,29 +204,7 @@ def futureBar(n=0):
 ### Reset clock and OSC server
 #########################################
 
-def update_foxdot_clock(clock):
-    """ Tells the TimeVar, Player, and MidiIn classes to use
-        a new instance of TempoClock. """
 
-    assert isinstance(clock, TempoClock)
-
-    for item in (TimeVar, Player, MidiIn):
-
-        item.set_clock(clock)
-
-    clock.add_method(_convert_json_bpm)
-
-    return
-
-def update_foxdot_server(serv):
-    """ Tells the `Effect` and`TempoClock`classes to send OSC messages to
-        a new ServerManager instance.
-    """
-    assert isinstance(serv, ServerManager)
-    TempoClock.set_server(serv)
-    serv.update_synthdef_dict(SynthDefs)
-
-    return
 
 # TODO redesign this with new synthdef loading
 # def _reload_synths():
@@ -245,44 +223,33 @@ def foxdot_reload():
     buffer_manager.reallocate_buffers()
     return
 
-def _convert_json_bpm(clock, data):
-    """ Returns a TimeVar object that has been sent across a network using JSON """
-    if isinstance(data, list):
-        cls = data[0]
-        val = data[1]
-        dur = data[2]
-        return FoxDotCode.namespace[cls](val, dur)
-    else:
-        return data
+# def _convert_json_bpm(clock, data):
+#     """ Returns a TimeVar object that has been sent across a network using JSON """
+#     if isinstance(data, list):
+#         cls = data[0]
+#         val = data[1]
+#         dur = data[2]
+#         return FoxDotCode.namespace[cls](val, dur)
+#     else:
+#         return data
 
 
-def allow_connections(valid = True, *args, **kwargs):
-    """ Starts a new instance of ServerManager.TempoServer and connects it with the clock. Default port is 57999 """
-    if valid:
-        Clock.start_tempo_server(TempoServer, **kwargs)
-        print("Listening for connections on {}".format(Clock.tempo_server))
-    else:
-        Clock.kill_tempo_server()
-        print("Closed connections")
-    return
+# def allow_connections(valid = True, *args, **kwargs):
+#     """ Starts a new instance of ServerManager.TempoServer and connects it with the clock. Default port is 57999 """
+#     if valid:
+#         Clock.start_tempo_server(TempoServer, **kwargs)
+#         print("Listening for connections on {}".format(Clock.tempo_server))
+#     else:
+#         Clock.kill_tempo_server()
+#         print("Closed connections")
+#     return
 
 
 #########################################
 ### Initialize base Player instances
 #########################################
 
-def instantiate_player_objects():
-    """ Instantiates all two-character variable Player Objects """
-    alphabet = list('abcdefghijklmnopqrstuvwxyz')
-    numbers  = list('0123456789')
-    for char1 in alphabet:
-        group = []
-        for char2 in alphabet + numbers:
-            arg = char1 + char2
-            FoxDotCode.namespace[arg] = EmptyPlayer(arg)
-            group.append(arg)
-        FoxDotCode.namespace[char1 + "_all"] = Group(*[FoxDotCode.namespace[char1+str(n)] for n in range(10)])
-    return
+
 
 
 #########################################
@@ -331,9 +298,8 @@ class _util:
 
 FoxDot = _util()
 
-
-# Create a clock and define functions
-
+# None is used for Rest/Silence in Pattern for Players
+# Define _ as a shorthand alias
 _ = None
 
 logging.basicConfig(level=logging.ERROR)
@@ -341,8 +307,42 @@ when.set_namespace(FoxDotCode) # experimental
 
 _Clock = Clock = TempoClock()
 
-update_foxdot_server(Server)
-update_foxdot_clock(Clock)
+def set_main_clock(clock):
+    """ Tells the TimeVar, Player, and MidiIn classes to use
+        a new instance of TempoClock. """
+    assert isinstance(clock, TempoClock)
+    for item in (TimeVar, Player, MidiIn):
+        item.set_clock(clock)
+    # clock.add_method(_convert_json_bpm)
+    return
+
+def set_server_manager(serv):
+    """ Tells the `Effect` and`TempoClock`classes to send OSC messages to
+        a new ServerManager instance.
+    """
+    assert isinstance(serv, ServerManager)
+    TempoClock.set_server(serv)
+    serv.update_synthdef_dict(SynthDefs)
+
+    return
+
+set_server_manager(Server)
+
+set_main_clock(Clock)
+
+def instantiate_player_objects():
+    """ Instantiates all two-character variable Player Objects """
+    alphabet = list('abcdefghijklmnopqrstuvwxyz')
+    numbers  = list('0123456789')
+    for char1 in alphabet:
+        group = []
+        for char2 in alphabet + numbers:
+            arg = char1 + char2
+            FoxDotCode.namespace[arg] = EmptyPlayer(arg)
+            group.append(arg)
+        FoxDotCode.namespace[char1 + "_all"] = Group(*[FoxDotCode.namespace[char1+str(n)] for n in range(10)])
+    return
+
 instantiate_player_objects()
 
 # Create a "now" time variable
@@ -354,5 +354,4 @@ PatternMethods = Pattern.get_methods()
 PatternTypes = functions(Sequences)
 
 # Start
-
 Clock.start()
