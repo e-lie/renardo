@@ -11,7 +11,7 @@ from renardo.lib import Code
 
 
 class Queue(object):
-    """Queue to store the event elocks to send to SuperCollider"""
+    """Queue to store the event blocks to send to SuperCollider"""
     def __init__(self, clock):
         self.data = []
         self.clock = clock
