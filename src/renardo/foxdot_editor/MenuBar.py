@@ -240,11 +240,6 @@ class MenuBar(Menu):
         self.allow_connections(**kwargs)
         return
 
-    def set_cpu_usage(self, *args):
-        """ Updates the cpu usage option """
-        self.root.namespace["Clock"].set_cpu_usage(self.cpu_usage.get())
-        return
-
     def set_latency(self, *args):
         """ Updates the cpu usage option """
         self.root.namespace["Clock"].set_latency(self.latency.get())

@@ -1,5 +1,5 @@
 from random import choice
-from renardo.lib.TempoClock import Queue
+from renardo.lib.TempoClock import SchedulingQueue
 from renardo.lib.GhostCoder import Grammar
 
 class null:
@@ -25,7 +25,7 @@ class Ghost:
 
         self.players = {}
         self.index = [0, 0]
-        self.instructions = Queue.Queue()
+        self.instructions = SchedulingQueue.Queue()
         self.running = True
 
     def defineInstructions(self, original, syntax):
@@ -55,7 +55,7 @@ class Ghost:
 
             else:
                 
-                 raise Queue.Empty()
+                 raise SchedulingQueue.Empty()
                 
             # 2. Replace
 
@@ -71,7 +71,7 @@ class Ghost:
 
             self.widget.root.after(50, self.write)
 
-        except Queue.Empty:
+        except SchedulingQueue.Empty:
 
             if self.running == True:
 

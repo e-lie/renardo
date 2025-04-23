@@ -6,7 +6,7 @@ from traceback import format_exc as error_stack
 import sys
 import threading
 
-from .scheduling_queue import Queue, SoloPlayer, History, ScheduleError, Wrapper
+from .scheduling_queue import SchedulingQueue, SoloPlayer, History, ScheduleError, Wrapper
 
 from renardo.lib.Player import Player
 from renardo.lib.TimeVar import TimeVar
@@ -48,14 +48,14 @@ class TempoClock(object):
         self.meter = meter
 
         # Create the queue
-        self.queue = Queue(clock=self)
+        self.scheduling_queue = SchedulingQueue(clock=self)
         self.current_block = None
 
         # Flag for next_bar wrapper
         self.now_flag = False
 
         # Can be configured
-        self.latency_values = [0.25, 0.5, 0.75]
+        # self.latency_values = [0.25, 0.5, 0.75]
         self.latency = 0.25  # Time between starting processing osc messages and sending to server
         self.nudge = 0.0  # If you want to synchronise with something external, adjust the nudge
         self.hard_nudge = 0.0
@@ -63,10 +63,9 @@ class TempoClock(object):
         self.bpm_start_time = time.time()
         self.bpm_start_beat = 0
 
-        # The duration to sleep while continually looping
-        self.sleep_values = [0.01, 0.001, 0.0001]
-        set = settings.get("core.TUTORIAL_DIR")
-        self.sleep_time = self.sleep_values[settings.get("core.CPU_USAGE")]
+        # This can be set lower to use less CPU power
+        self.sleep_time_between_updates = 0.0001
+
         self.midi_nudge = 0
 
         # Debug
@@ -75,7 +74,27 @@ class TempoClock(object):
 
         # If one object is going to be played
         self.solo = SoloPlayer()
-        self.thread = threading.Thread(target=self.run)
+        self.thread = threading.Thread(target=self.main_loop)
+
+    def start(self):
+        """ Starts the clock thread """
+        self.thread.daemon = True
+        self.thread.start()
+        return
+
+    def __str__(self):
+        return str(self.scheduling_queue)
+
+    # def __iter__(self):
+    #     for x in self.scheduling_queue:
+    #         yield x
+    #
+    # def __len__(self):
+    #     return len(self.scheduling_queue)
+
+    def __contains__(self, item):
+        return item in self.items
+
 
     def reset(self):
         """ Deprecated """
@@ -93,78 +112,135 @@ class TempoClock(object):
         cls.server = server
         return
 
-    @classmethod
-    def add_method(cls, func):
-        setattr(cls, func.__name__, func)
-
-    def start_tempo_server(self, serv, **kwargs):
-        """ Starts listening for FoxDot clients connecting over a network. This uses
-            a TempoClient instance from ServerManager.py """
-        self.tempo_server = serv(self, **kwargs)
-        self.tempo_server.start()
-        return
-
-    def kill_tempo_server(self):
-        """ Kills the tempo server """
-        if self.tempo_server is not None:
-            self.tempo_server.kill()
-        return
-
-    def flag_wait_for_sync(self, value):
-        self.waiting_for_sync = bool(value)
-
-    def connect(self, ip_address, port=57999):
+    def schedule(self, obj, beat=None, args=(), kwargs={}, is_priority=False):
+        """ TempoClock.schedule(callable, beat=None)
+            Add a player / event to the queue """
+        # Make sure the object can actually be called
         try:
-            self.tempo_client = TempoClient(self)
-            self.tempo_client.connect(ip_address, port)
-            self.tempo_client.send(["request"])
-            self.flag_wait_for_sync(True)
-        except ConnectionRefusedError as e:
-            print(e)
-        pass
+            assert callable(obj)
+        except AssertionError:
+            raise ScheduleError(obj)
 
-    def kill_tempo_client(self):
-        if self.tempo_client is not None:
-            self.tempo_client.kill()
-        return
+        # Start the clock ticking if not already
+        if self.ticking == False:
+            self.start()
 
-    def __str__(self):
-        return str(self.queue)
+        # Default is next bar
+        if beat is None:
+            beat = self.next_bar()
 
-    def __iter__(self):
-        for x in self.queue:
-            yield x
+        # Keep track of objects in the Clock
+        if obj not in self.playing and isinstance(obj, Player):
+            self.playing.append(obj)
 
-    def __len__(self):
-        return len(self.queue)
+        if obj not in self.items:
+            self.items.append(obj)
 
-    def __contains__(self, item):
-        return item in self.items
+        # Add to the queue
+        self.scheduling_queue.add(obj, beat, args, kwargs, is_priority)
+        # block.time = self.osc_message_accum
 
-    def update_tempo_now(self, bpm):
-        """ emergency override for updating tempo"""
-        self.last_now_call = self.bpm_start_time = time.time()
-        self.bpm_start_beat = self.now()
-        object.__setattr__(self, "bpm", self._convert_json_bpm(bpm))
-        # self.update_network_tempo(bpm, start_beat, start_time) -- updates at the bar...
-        return
+        return None
 
-    def set_tempo(self, bpm, override=False):
-        """ Short-hand for update_tempo and update_tempo_now """
-        return self.update_tempo_now(bpm) if override else self.update_tempo(bpm)
+
+
+    def _now(self):
+        """ If the bpm is an int or float, use time since the last bpm change to calculate what the current beat is.
+            If the bpm is a TimeVar, increase the beat counter by time since last call to _now()"""
+        if isinstance(self.bpm, (int, float)):
+            self.beat = self.bpm_start_beat + self.get_elapsed_beats_from_last_bpm_change()
+        else:
+            now = self.get_time()
+            self.beat += (now - self.last_now_call) * (self.get_bpm() / 60)
+            self.last_now_call = now
+        return self.beat
+
+    def now(self):
+        """ Returns the total elapsed time (in beats as opposed to seconds) """
+        if self.ticking is False:  # Get the time w/o latency if not ticking
+            self.beat = self._now()
+        return float(self.beat)
+
+    def main_loop(self):
+        """ Main event loop that runs in a thread """
+        self.ticking = True
+        self.polled = False
+
+        while self.ticking:
+            beat = self._now()  # get current time
+            if self.scheduling_queue.after_next_event(beat):
+                self.current_block = self.scheduling_queue.pop()
+
+                # Do the work in a thread
+                if len(self.current_block):
+                    threading.Thread(
+                        target=self._execute_queue_block,
+                        args=(self.current_block, beat)
+                    ).start()
+
+            if self.sleep_time_between_updates > 0:
+                time.sleep(self.sleep_time_between_updates)
+
+        return None
+
+    def _execute_queue_block(self, block, beat):
+        """ Private method for calling all the items in the queue block.
+            This means the clock can still 'tick' while a large number of
+            events are activated  """
+
+        # Set the time to "activate" messages on - adjust in case the block is activated late
+        # `beat` is the actual beat this is happening, `block.beat` is the desired time. Adjust
+        # the osc_message_time accordingly if this is being called late
+        block.time = self.osc_message_time() - self.beat_dur(float(beat) - block.beat)
+        for item in block:
+            # The item might get called by another item in the queue block
+            output = None
+            if item.called is False:
+                try:
+                    output = item.__call__()
+                except SystemExit:
+                    sys.exit()
+                except:
+                    print(error_stack())
+                # TODO: Get OSC message from the call, and add to list?
+
+        # Send all the message to supercollider together
+        block.send_osc_messages()
+        # Store the osc messages -- future idea
+        # self.history.add(block.beat, block.osc_messages)
+
+        return None
+
+    # @classmethod
+    # def add_method(cls, func):
+    #     setattr(cls, func.__name__, func)
+
+
+    # def update_tempo_now(self, bpm):
+    #     """ emergency override for updating tempo"""
+    #     self.last_now_call = self.bpm_start_time = time.time()
+    #     self.bpm_start_beat = self.now()
+    #     object.__setattr__(self, "bpm", self._convert_json_bpm(bpm))
+    #     # self.update_network_tempo(bpm, start_beat, start_time) -- updates at the bar...
+    #     return
+
+    # def set_tempo(self, bpm, override=False):
+    #     """ Short-hand for update_tempo and update_tempo_now """
+    #     return self.update_tempo_now(bpm) if override else self.update_tempo(bpm)
 
     def update_tempo(self, bpm):
         """ Schedules the bpm change at the next bar, returns the beat and start time of the next change """
         try:
-            assert bpm > 0, "Tempo must be a positive number"
+            assert bpm > 0 and bpm < 10000, "Tempo must be a reasonable positive number"
         except AssertionError as err:
             raise (ValueError(err))
+
         next_bar = self.next_bar()
         bpm_start_time = self.get_time_at_beat(next_bar)
         bpm_start_beat = next_bar
 
         def func():
-            object.__setattr__(self, "bpm", self._convert_json_bpm(bpm))
+            # object.__setattr__(self, "bpm", self._convert_json_bpm(bpm))
             self.last_now_call = self.bpm_start_time = bpm_start_time
             self.bpm_start_beat = bpm_start_beat
 
@@ -173,50 +249,45 @@ class TempoClock(object):
 
         return bpm_start_beat, bpm_start_time
 
-    def update_tempo_from_connection(self, bpm, bpm_start_beat, bpm_start_time, schedule_now=False):
-        """ Sets the bpm externally from another connected instance of FoxDot """
+    # def update_tempo_from_connection(self, bpm, bpm_start_beat, bpm_start_time, schedule_now=False):
+    #     """ Sets the bpm externally from another connected instance of FoxDot """
+    #
+    #     def func():
+    #         self.last_now_call = self.bpm_start_time = self.get_time_at_beat(bpm_start_beat)
+    #         self.bpm_start_beat = bpm_start_beat
+    #         object.__setattr__(self, "bpm", self._convert_json_bpm(bpm))
+    #
+    #     # Might be changing immediately
+    #     if schedule_now:
+    #         func()
+    #     else:
+    #         self.schedule(func, is_priority=True)
+    #     return None
+    #
+    # def update_network_tempo(self, bpm, start_beat, start_time):
+    #     """ Updates connected FoxDot instances (client or servers) tempi """
+    #
+    #     json_value = self._convert_bpm_json(bpm)
+    #     # If this is a client, send info to server
+    #     if self.tempo_client is not None:
+    #         self.tempo_client.update_tempo(json_value, start_beat, start_time)
+    #     # If this is a server, send info to clients
+    #     if self.tempo_server is not None:
+    #         self.tempo_server.update_tempo(None, json_value, start_beat, start_time)
+    #
+    #     return None
 
-        def func():
-            self.last_now_call = self.bpm_start_time = self.get_time_at_beat(bpm_start_beat)
-            self.bpm_start_beat = bpm_start_beat
-            object.__setattr__(self, "bpm", self._convert_json_bpm(bpm))
+    # def set_cpu_usage(self, value):
+    #     """ Sets the `sleep_time` attribute to values based on desired high/low/medium cpu usage """
+    #     assert 0 <= value <= 2
+    #     self.sleep_time_between_updates = self.sleep_values[value]
+    #     return None
 
-        # Might be changing immediately
-        if schedule_now:
-            func()
-        else:
-            self.schedule(func, is_priority=True)
-        return None
-
-    def update_network_tempo(self, bpm, start_beat, start_time):
-        """ Updates connected FoxDot instances (client or servers) tempi """
-
-        json_value = self._convert_bpm_json(bpm)
-        # If this is a client, send info to server
-        if self.tempo_client is not None:
-            self.tempo_client.update_tempo(json_value, start_beat, start_time)
-        # If this is a server, send info to clients
-        if self.tempo_server is not None:
-            self.tempo_server.update_tempo(None, json_value, start_beat, start_time)
-
-        return None
-
-    def swing(self, amount=0.1):
-        """ Sets the nudge attribute to var([0, amount * (self.bpm / 120)],1/2)"""
-        self.nudge = TimeVar([0, amount * (self.bpm / 120)], 1 / 2) if amount != 0 else 0
-        return None
-
-    def set_cpu_usage(self, value):
-        """ Sets the `sleep_time` attribute to values based on desired high/low/medium cpu usage """
-        assert 0 <= value <= 2
-        self.sleep_time = self.sleep_values[value]
-        return None
-
-    def set_latency(self, value):
-        """ Sets the `latency` attribute to values based on desired high/low/medium latency """
-        assert 0 <= value <= 2
-        self.latency = self.latency_values[value]
-        return None
+    # def set_latency(self, value):
+    #     """ Sets the `latency` attribute to values based on desired high/low/medium latency """
+    #     assert 0 <= value <= 2
+    #     self.latency = self.latency_values[value]
+    #     return None
 
     def __setattr__(self, attr, value):
         if attr == "bpm" and self.__setup:
@@ -302,7 +373,7 @@ class TempoClock(object):
     def set_time(self, beat):
         """ Set the clock time to 'beat' and update players in the clock """
         self.start_time = time.time()
-        self.queue.clear()
+        self.scheduling_queue.clear()
         self.beat = beat
         self.bpm_start_beat = beat
         self.bpm_start_time = self.start_time
@@ -340,22 +411,7 @@ class TempoClock(object):
         }
         return data
 
-    def _now(self):
-        """ If the bpm is an int or float, use time since the last bpm change to calculate what the current beat is.
-            If the bpm is a TimeVar, increase the beat counter by time since last call to _now()"""
-        if isinstance(self.bpm, (int, float)):
-            self.beat = self.bpm_start_beat + self.get_elapsed_beats_from_last_bpm_change()
-        else:
-            now = self.get_time()
-            self.beat += (now - self.last_now_call) * (self.get_bpm() / 60)
-            self.last_now_call = now
-        return self.beat
 
-    def now(self):
-        """ Returns the total elapsed time (in beats as opposed to seconds) """
-        if self.ticking is False:  # Get the time w/o latency if not ticking
-            self.beat = self._now()
-        return float(self.beat)
 
     def mod(self, beat, t=0):
         """ Returns the next time at which `Clock.now() % beat` will equal `t` """
@@ -366,105 +422,30 @@ class TempoClock(object):
         """ Returns the true time that an osc message should be run i.e. now + latency """
         return time.time() + self.latency
 
-    def start(self):
-        """ Starts the clock thread """
-        self.thread.daemon = True
-        self.thread.start()
-        return
 
-    def _adjust_hard_nudge(self):
-        """ Checks for any drift between the current beat value and the value
-            expected based on time elapsed and adjusts the hard_nudge value accordingly """
 
-        beats_elapsed = int(self.now()) - self.bpm_start_beat
-        expected_beat = self.get_elapsed_beats_from_last_bpm_change()
-        # Dont adjust nudge on first bar of tempo change
-        if beats_elapsed > 0:
-            # Account for nudge in the drift
-            self.drift = self.beat_dur(expected_beat - beats_elapsed) - self.nudge
-            if abs(self.drift) > 0.001:  # value could be reworked / not hard coded
-                self.hard_nudge -= self.drift
-        return self._schedule_adjust_hard_nudge()
+    # def _adjust_hard_nudge(self):
+    #     """ Checks for any drift between the current beat value and the value
+    #         expected based on time elapsed and adjusts the hard_nudge value accordingly """
+    #
+    #     beats_elapsed = int(self.now()) - self.bpm_start_beat
+    #     expected_beat = self.get_elapsed_beats_from_last_bpm_change()
+    #     # Dont adjust nudge on first bar of tempo change
+    #     if beats_elapsed > 0:
+    #         # Account for nudge in the drift
+    #         self.drift = self.beat_dur(expected_beat - beats_elapsed) - self.nudge
+    #         if abs(self.drift) > 0.001:  # value could be reworked / not hard coded
+    #             self.hard_nudge -= self.drift
+    #     return self._schedule_adjust_hard_nudge()
 
-    def _schedule_adjust_hard_nudge(self):
-        """ Start recursive call to adjust hard-nudge values """
-        return self.schedule(self._adjust_hard_nudge)
+    # def _schedule_adjust_hard_nudge(self):
+    #     """ Start recursive call to adjust hard-nudge values """
+    #     return self.schedule(self._adjust_hard_nudge)
 
-    def __run_block(self, block, beat):
-        """ Private method for calling all the items in the queue block.
-            This means the clock can still 'tick' while a large number of
-            events are activated  """
 
-        # Set the time to "activate" messages on - adjust in case the block is activated late
-        # `beat` is the actual beat this is happening, `block.beat` is the desired time. Adjust
-        # the osc_message_time accordingly if this is being called late
-        block.time = self.osc_message_time() - self.beat_dur(float(beat) - block.beat)
-        for item in block:
-            # The item might get called by another item in the queue block
-            output = None
-            if item.called is False:
-                try:
-                    output = item.__call__()
-                except SystemExit:
-                    sys.exit()
-                except:
-                    print(error_stack())
-                # TODO: Get OSC message from the call, and add to list?
 
-        # Send all the message to supercollider together
-        block.send_osc_messages()
-        # Store the osc messages -- future idea
-        # self.history.add(block.beat, block.osc_messages)
 
-        return None
 
-    def run(self):
-        """ Main loop """
-        self.ticking = True
-        self.polled = False
-        while self.ticking:
-            beat = self._now()  # get current time
-            if self.queue.after_next_event(beat):
-                self.current_block = self.queue.pop()
-                # Do the work in a thread
-                if len(self.current_block):
-                    threading.Thread(
-                        target=self.__run_block,
-                        args=(self.current_block, beat)
-                    ).start()
-            if self.sleep_time > 0:
-                time.sleep(self.sleep_time)
-        return
-
-    def schedule(self, obj, beat=None, args=(), kwargs={}, is_priority=False):
-        """ TempoClock.schedule(callable, beat=None)
-            Add a player / event to the queue """
-        # Make sure the object can actually be called
-        try:
-            assert callable(obj)
-        except AssertionError:
-            raise ScheduleError(obj)
-
-        # Start the clock ticking if not already
-        if self.ticking == False:
-            self.start()
-
-        # Default is next bar
-        if beat is None:
-            beat = self.next_bar()
-
-        # Keep track of objects in the Clock
-        if obj not in self.playing and isinstance(obj, Player):
-            self.playing.append(obj)
-
-        if obj not in self.items:
-            self.items.append(obj)
-
-        # Add to the queue
-        self.queue.add(obj, beat, args, kwargs, is_priority)
-        # block.time = self.osc_message_accum
-
-        return None
 
     def future(self, dur, obj, args=(), kwargs={}):
         """ Add a player / event to the queue `dur` beats in the future """
@@ -478,7 +459,7 @@ class TempoClock(object):
 
     def next_event(self):
         """ Returns the beat index for the next event to be called """
-        return self.queue[-1][1]
+        return self.scheduling_queue[-1][1]
 
     def call(self, obj, dur, args=()):
         """ Returns a 'schedulable' wrapper for any callable object """
@@ -488,7 +469,6 @@ class TempoClock(object):
         return [p for p in self.playing if p not in ex]
 
     # Every n beats, do...
-
     def every(self, n, cmd, args=()):
         def event(f, n, args):
             f(*args)
@@ -510,10 +490,15 @@ class TempoClock(object):
         self.beat += n
         return None
 
+    def swing(self, amount=0.1):
+        """ Sets the nudge attribute to var([0, amount * (self.bpm / 120)],1/2)"""
+        self.nudge = TimeVar([0, amount * (self.bpm / 120)], 1 / 2) if amount != 0 else 0
+        return None
+
     def clear(self):
         """ Remove players from clock """
         self.items = []
-        self.queue.clear()
+        self.scheduling_queue.clear()
         self.solo.reset()
 
         for player in list(self.playing):
