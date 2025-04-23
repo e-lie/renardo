@@ -1,5 +1,5 @@
 
 
-from .scheduling_queue import Queue, QueueBlock, QueueObj, SoloPlayer, History, ScheduleError, Wrapper
+from .scheduling_queue import SchedulingQueue, QueueBlock, QueueObj, SoloPlayer, History, ScheduleError, Wrapper
 
 from .clock import TempoClock
