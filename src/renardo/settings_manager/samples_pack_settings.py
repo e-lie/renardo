@@ -1,5 +1,5 @@
 from pathlib import Path
-from .settings_manager import settings, get_path
+from .settings_manager import settings
 
 settings.set_defaults_from_dict(
 {
