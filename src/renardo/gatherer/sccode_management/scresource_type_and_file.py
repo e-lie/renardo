@@ -36,7 +36,7 @@ class SCResourceFile:
 
             module = importlib.util.module_from_spec(spec)
             # Inject the necessary classes into the module namespace
-            module.SCSynth = SCInstrument
+            module.SCInstrument = SCInstrument
             module.SCEffect = SCEffect
             sys.modules[module_name] = module
             spec.loader.exec_module(module)

@@ -57,16 +57,18 @@ class MethodList:
             yield value
 
 
-class Repeatable(object):
+class Repeatable:
     """
     Base class to add to Player support for repeatable methods ie `every`, `after`, `stop_calling_all`, `never`
     """
     after_update_methods = []
     method_synonyms = {}
+    main_event_clock = None
 
     def __init__(self):
         self.repeat_events = {}
         self.previous_patterns: Dict[str, MethodList] = {}  # not a good name - TODO change
+        self.attr = {}
 
     def update_pattern_root(self, attr):
         """Update the base attribute pattern that methods are applied to"""
@@ -104,12 +106,10 @@ class Repeatable(object):
         """
         if cmd in self.method_synonyms:
             attr = [self.method_synonyms[cmd]]
-
         else:
             attr = cmd.split(".")
 
         # We can also schedule attribute methods
-
         if len(attr) == 1:
             attr_name = "degree"
             method_name = attr[0]
@@ -117,6 +117,9 @@ class Repeatable(object):
         elif len(attr) == 2:
             attr_name = attr[0]
             method_name = attr[1]
+
+        else:
+            raise ValueError
 
         return attr_name, method_name
 
@@ -193,10 +196,10 @@ class Repeatable(object):
                 return getattr(self, cmd)(*args, **kwargs)
             
             if not quantise:
-                time = self.metro.now() + n
+                time = self.main_event_clock.now() + n
             else:
-                time = self.metro.next_bar() + n
-            self.metro.schedule(event, time)
+                time = self.main_event_clock.next_bar() + n
+            self.main_event_clock.schedule(event, time)
         except Exception:
             pass
 

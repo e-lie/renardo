@@ -145,7 +145,7 @@ def stutter(self: Player, amount=None, _beat_=None, **kwargs):
                 else:
                     new_event[key] = self.unpack(PGroup(item))
             elif len(attributes[key]) > 0:
-                new_event[key] = self.now(key, ahead)
+                new_event[key] = self.attr_current_value(key, ahead)
         new_event = self.unduplicate_durs(new_event)
         dur = float(kwargs.get("dur", new_event["dur"])) / n
         new_event["dur"] = dur
@@ -169,7 +169,7 @@ def jump(self: Player, ahead=1, _beat_=None, **kwargs):
             if key in kwargs:
                 new_event[key] = self.unpack(PGroup(kwargs[key]))
             elif len(attributes[key]) > 0:
-                new_event[key] = self.now(key, ahead)
+                new_event[key] = self.attr_current_value(key, ahead)
         new_event = self.unduplicate_durs(new_event)
         new_event = self.get_prime_funcs(new_event)
         self.send(timestamp=timestamp, **new_event)
