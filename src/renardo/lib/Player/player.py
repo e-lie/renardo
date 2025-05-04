@@ -76,7 +76,7 @@ class Player(Repeatable):
     after_update_methods = ["stutter"]
 
     # Tkinter Window
-    widget = None
+    ####widget = None
 
     def __init__(self, name=None):
         # Inherit from repeatable i.e. x.every
@@ -259,34 +259,9 @@ class Player(Repeatable):
     def __ne__(self, other):
         return not self is other
 
-    def __int__(self):
-        return int(self.now('degree'))
-
-    def __float__(self):
-        return float(self.now('degree'))
-
-    def __add__(self, data):
-        """ Change the degree modifier stream """
-        self.mod_data = data
-        if self.synthdef == SamplePlayer:
-            # self.attr['sample'] = self.modifier + self.mod_data
-            self.sample = self.modifier + self.mod_data
-        else:
-            #self.attr['degree'] = self.modifier + self.mod_data
-            self.degree = self.modifier + self.mod_data
-        return self
-
     def __lshift__(self, data):
+        """ Experimental Rhythm modifier to document """
         self.dur = Pattern.mimov(self.dur, data)
-        return self
-
-    def __sub__(self, data):
-        """ Change the degree modifier stream """
-        self.mod_data = 0 - data
-        if self.synthdef == SamplePlayer:
-            self.attr['sample'] = self.modifier + self.mod_data
-        else:
-            self.attr['degree'] = self.modifier + self.mod_data
         return self
 
     def __mul__(self, data):
@@ -313,7 +288,7 @@ class Player(Repeatable):
             name = self.alias.get(name, name)
             if name in self.attr and name not in self.__dict__:
                 # Return a Player key
-                self._update_player_key(name, self.now(name), 0)
+                self._update_player_key(name, self.attr_current_value(name), 0)
             item = self.__dict__[name]
 
             # If returning a player key, keep track of which are being accessed
@@ -390,6 +365,8 @@ class Player(Repeatable):
         if self.__init:
             # Force the data into a Pattern if the attribute is used with SuperCollider
             if name not in self.__vars:
+
+                ### REAPER INTEGRATION HOOK for param set
                 # Apply the parameter in reaper if it exists
                 if "reatrack" in self.attr.keys():
                     reatrack = self.attr["reatrack"][0]
@@ -398,6 +375,7 @@ class Player(Repeatable):
                         if device is not None:
                             set_reaper_param(reatrack, name, value)
                             return
+
                 # Get any alias
                 name = self.alias.get(name, name)
                 value = as_pattern(value)
@@ -558,7 +536,7 @@ class Player(Repeatable):
 
     def count(self, time=None, event_after=False):
         """Counts the number of events that will have taken place between 0 and `time`. If
-        `time` is not specified the function uses self.metro.now(). Setting `event_after`
+        `time` is not specified the function uses self.main_event_clock.now(). Setting `event_after`
         to `True` will find the next event *after* `time`"""
         n = 0
         acc = 0
@@ -709,13 +687,6 @@ class Player(Repeatable):
             timestamp = self.main_event_clock.osc_message_time()
         return timestamp
 
-
-    def __int__(self):
-        return int(self.now("degree"))
-
-    def __float__(self):
-        return float(self.now("degree"))
-
     def __add__(self, data):
         """Change the degree modifier stream"""
         self.mod_data = data
@@ -726,7 +697,7 @@ class Player(Repeatable):
             # self.attr['degree'] = self.modifier + self.mod_data
             self.degree = self.modifier + self.mod_data
         return self
-
+    #
     def __sub__(self, data):
         """Change the degree modifier stream"""
         self.mod_data = 0 - data
@@ -735,17 +706,6 @@ class Player(Repeatable):
         else:
             self.attr["degree"] = self.modifier + self.mod_data
         return self
-
-    def __mul__(self, data):
-        return self
-
-    def __div__(self, data):
-        return self
-
-    # --- Data methods
-    def __iter__(self):
-        for _, value in self.event.items():
-            yield value
 
     def number_of_layers(self, **kwargs):
         """Returns the deepest nested item in the event"""
@@ -881,7 +841,7 @@ class Player(Repeatable):
     def _update_player_key_relation(self, item: NumberKey):
         """ Called during 'now' to update any Players that a player key is related to before using that value """
         if item.parent is self:  # If this *is* the parent, just get the current value
-            self._update_player_key(item.attr, self.now(item.attr), 0)
+            self._update_player_key(item.attr, self.attr_current_value(item.attr), 0)
 
         # If the parent is in the same queue block, make sure its values are up-to-date
         elif self.queue_block is not None:
@@ -892,7 +852,7 @@ class Player(Repeatable):
                 queue_item = None
             # Update the parent with an up-to-date value
             if queue_item is not None and queue_item.called is False:
-                item.player._update_player_key(item.attr, item.player.now(item.attr), 0)
+                item.player._update_player_key(item.attr, item.player.attr_current_value(item.attr), 0)
 
         return item.now()
 
@@ -927,7 +887,7 @@ class Player(Repeatable):
 
     # Private method
 
-    def now(self, attr="degree", x=0, **kwargs):
+    def attr_current_value(self, attr="degree", x=0, **kwargs):
         """Calculates the values for each attr to send to the server at the current clock time"""
 
         index = self.event_n + x
@@ -1013,7 +973,7 @@ class Player(Repeatable):
 
     def _get_event(self):
         """ Returns a dictionary of attr -> now values """
-        self.event = dict(map(lambda attr: (attr, self.now(attr)), self.attr.keys()))
+        self.event = dict(map(lambda attr: (attr, self.attr_current_value(attr)), self.attr.keys()))
         self.event = self._unduplicate_durs(self.event)
         self.event = self.get_prime_funcs(self.event)
 
