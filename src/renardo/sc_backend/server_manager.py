@@ -164,7 +164,8 @@ class ServerManager:
 
     def test_connection(self):
         self.sclang.connect((self.addr, self.SCLang_port))
-        self.loadSynthDef(str(settings.get_path("SCLANG_CODE_DIR_PATH") / settings.get("sc_backend.INFO_FILE")))
+        info_file_path=str(settings.get_path("SPECIAL_SCCODE_DIR") / settings.get("sc_backend.INFO_FILE"))
+        self.loadSynthDef(info_file_path)
         try:
             self.getInfo()
             return True
@@ -177,7 +178,7 @@ class ServerManager:
 
         # Use bidirectionnal connection to ask SuperCollider for info
         if settings.get("sc_backend.GET_SC_INFO"):
-            self.loadSynthDef(str(settings.get_path("SCLANG_CODE_DIR_PATH") / settings.get("sc_backend.INFO_FILE")))
+            self.loadSynthDef(str(settings.get_path("SPECIAL_SCCODE_DIR") / settings.get("sc_backend.INFO_FILE")))
             try:
                 info = self.getInfo()
             except RequestTimeout:
@@ -501,7 +502,7 @@ class ServerManager:
 
     def loadRecorder(self):
         """ Loads an OSCFunc that starts/stops recording to a set path """
-        self.loadSynthDef(str(settings.get_path("SCLANG_CODE_DIR_PATH") / settings.get("sc_backend.RECORD_FILE")))
+        self.loadSynthDef(str(settings.get_path("SPECIAL_SCCODE_DIR") / settings.get("sc_backend.RECORD_FILE")))
         self._is_recording = False
         return
 

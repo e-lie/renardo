@@ -595,10 +595,10 @@ class workspace:
         else:
             cmd = 'xdg-open'
         try:
-            subprocess.Popen([cmd, settings.get("samples.SAMPLES_DIR")])
+            subprocess.Popen([cmd, str(settings.get_path("SAMPLES_DIR"))])
         except OSError as e:
             print(e)
-            print("Hmm... Looks like we couldn't open the directory but you can find the samples in {}".format(settings.get("samples.SAMPLES_DIR")))
+            print("Hmm... Looks like we couldn't open the directory but you can find the samples in {}".format(settings.get_path("SAMPLES_DIR")))
         return
 
     def open_samples_chart_app(self):

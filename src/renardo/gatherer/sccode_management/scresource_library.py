@@ -6,6 +6,7 @@ import re
 from renardo.gatherer.sccode_management.scresource_bank import SCResourceBank
 from renardo.gatherer.sccode_management.sc_resource import SCInstrument, SCEffect
 from renardo.gatherer.sccode_management.scresource_type_and_file import SCResourceType
+from renardo.settings_manager import settings
 
 
 class SCResourceLibrary:
@@ -124,3 +125,12 @@ class SCResourceLibrary:
                             })
         
         return results
+
+
+def ensure_sccode_directories():
+    sccode_dir_path = settings.get_path("SCCODE_LIBRARY")
+    if not sccode_dir_path.exists():
+        sccode_dir_path.mkdir(parents=True, exist_ok=True)
+    special_sccode_dir_path = settings.get_path("SPECIAL_SCCODE_DIR")
+    if not special_sccode_dir_path.exists():
+        special_sccode_dir_path.mkdir(parents=True, exist_ok=True)

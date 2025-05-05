@@ -98,8 +98,6 @@ class Preferences:
         self.brackets_auto.set(settings.get("foxdot_editor.AUTO_COMPLETE_BRACKETS"))
 
         # Sample values
-        self.samples_dir = StringVar()
-        self.samples_dir.set(settings.get("samples.SAMPLES_DIR"))
         self.sample_pack = StringVar()
         self.sample_pack.set(settings.get("samples.SAMPLES_PACK_NUMBER"))
 
@@ -327,10 +325,6 @@ class Preferences:
         self.lbl_smpldir = tb.Label(
             self.g4, text="Samples Directory")
         self.lbl_smpldir.grid(column=3, row=6, padx=self.padx*2, sticky="sw")
-        self.entry_smpldir = tb.Entry(
-            self.g4, textvariable=self.samples_dir)
-        self.entry_smpldir.grid(column=3, row=7, padx=self.padx*2, pady=5,
-                                sticky="nw")
         self.lbl_smplpck = tb.Label(
             self.g4, text="Samplepack #")
         self.lbl_smplpck.grid(column=3, row=8, padx=self.padx*2,
@@ -701,7 +695,6 @@ class Preferences:
             settings.set("core.BOOT_SCLANG_ON_STARTUP", self.sc_start.get())
             settings.set("sc_backend.SC3_PLUGINS", self.sc3_start.get())
             settings.set("samples.MAX_CHANNELS", int(self.max_ch.get()))
-            settings.set("samples.SAMPLES_DIR", self.samples_dir.get())
             settings.set("samples.SAMPLES_PACK_NUMBER", int(self.sample_pack.get()))
             settings.set("sc_backend.GET_SC_INFO", self.sc_info.get())
             settings.set("foxdot_editor.USE_ALPHA", self.use_alpha.get())

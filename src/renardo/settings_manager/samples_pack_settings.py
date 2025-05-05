@@ -5,7 +5,6 @@ settings.set_defaults_from_dict(
 {
     "samples" : {
         "SAMPLES_PACK_NUMBER": 0,
-        "DEFAULT_SAMPLES_PACK_NAME": '0_foxdot_default',
     }
 })
 
@@ -15,8 +14,9 @@ settings.set_defaults_from_dict(
     "samples" : {
         "MAX_CHANNELS": 2,
         "LOOP_DIR_NAME": "_loop_",
+        "DEFAULT_SAMPLE_PACK_NAME": '0_foxdot_default',
         # "DEFAULT_SAMPLES_PACK_NAME": '0_foxdot_default_testing',
-        "SAMPLES_DOWNLOAD_SERVER": 'https://collections.renardo.org/sample_packs',
+        "SAMPLES_DIR_NAME": 'sample_packs',
         "ALPHA": "abcdefghijklmnopqrstuvwxyz",
         "NON_ALPHA": {"&": "_ampersand",
                     "*": "_asterix",

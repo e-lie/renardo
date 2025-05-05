@@ -54,7 +54,7 @@ def sample_dir():
 def sample_pack_lib(sample_dir):
     """Create a Sample Pack Library instance configured with the sample directory."""
     spack_lib = SamplePackLibrary(
-        root_directory=settings.get("samples.SAMPLES_DIR"),
+        root_directory=settings.get_path("SAMPLES_DIR"),
         extra_paths=[sample_dir['root']]
     )
     return spack_lib

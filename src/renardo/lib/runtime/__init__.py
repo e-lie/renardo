@@ -45,8 +45,8 @@ import renardo.lib.runtime.synthdefs_initialisation
 
 from renardo.sc_backend.PygenEffectSynthDefs import In, Out, PygenEffect
 PygenEffect.set_server(Server)
-In()
-Out()
+# In()
+# Out()
 PygenEffect.server.setFx(effect_manager)
 
 from renardo.lib.Player import Player

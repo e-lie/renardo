@@ -2,7 +2,6 @@ import tempfile
 from enum import Enum
 from pathlib import Path
 from typing import Dict, Any
-from renardo.lib.Code import WarningMsg
 from renardo.sc_backend.InstrumentProxy import InstrumentProxy
 from renardo.settings_manager import settings
 
@@ -83,8 +82,7 @@ class SCEffect(SCResource):
             sceffects_temporary_file.write_text(self.code)
             self.server.loadSynthDef(str(sceffects_temporary_file))
         except Exception as e:
-            WarningMsg(
-                "{}: Effect '{}' could not be added to the server:\n{}".format(e.__class__.__name__, self.shortname,                                                                  e))
+            print(f"{e.__class__.__name__}: Effect '{self.shortname}' could not be added to the server:\n{e}")
         return None
 
 
@@ -187,7 +185,7 @@ class SCInstrument(SCResource):
             self.synth_added = True
             return SCInstrument.server.loadSynthDef(str(scinstrument_temporary_file))
         except Exception as e:
-            WarningMsg("{}: SynthDef '{}' could not be added to the server:\n{}".format(e.__class__.__name__, self.shortname, e))
+            print(f"{e.__class__.__name__}: SynthDef '{self.shortname}' could not be added to the server:\n{e}")
         return None
 
     def complete_code(self):

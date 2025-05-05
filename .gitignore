@@ -32,6 +32,10 @@ autodoc.py
 
 snd/mkdir.py
 
+# Pytest
+
+.pytest_cache
+
 # PIP Registration file
 
 .pypirc

@@ -18,12 +18,20 @@ class ResourcesRightPane(Static):
             yield Button("Create renardo SC Class files and startup code", id="init-renardo-scfiles-btn")
         else:
             yield Label("Renardo SuperCollider classes are installed")
+
+        if not self.app.base_sccode_downloaded:
+            yield Label("Default supercollider instruments and effects needs to be downloaded")
+            yield Button("Download default instruments and effects", id="dl-renardo-sccode-btn")
+        else:
+            yield Label("The default instruments and effects have been downloaded")
+
         if not self.app.base_sample_pack_downloaded:
             yield Label("Default samples pack needs to be downloaded")
             yield Button("Download renardo default samples pack", id="dl-renardo-samples-btn")
             yield Log(id="collection-dl-log-output")
         else:
-            yield Label("The default sample pack is downloaded")
+            yield Label("The default sample pack has been downloaded")
+
 
 class SCBackendRightPane(Static):
     def compose(self) -> ComposeResult:
