@@ -18,12 +18,9 @@
   - creer les projets from scratch en programmatique
   - sauvegarder les fxchains comme des reaperResources dans le dossier renardo et les mettre dynamiquement dans le dossier Reaper
 
-
-
-
 - commencer un settings editor en TUI
-
 
 # les trucs à debug
 
-- les effets avec les banques bonus
+- spack param not working
+- play has default dur at 1 rather thant .5 (maybe use the default in the .py class)

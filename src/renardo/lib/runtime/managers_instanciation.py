@@ -3,7 +3,7 @@ from renardo.settings_manager import settings
 
 from renardo.gatherer import SamplePackLibrary, ensure_renardo_samples_directory
 
-from renardo.gatherer import SCResourceLibrary
+from renardo.gatherer import SCResourceLibrary, ensure_sccode_directories
 
 from renardo.sc_backend import BufferManager, ServerManager, EffectManager, SCEffect, FileEffect
 
@@ -22,6 +22,8 @@ sample_packs = sample_pack_library
 DefaultSamples = Samples = "\n".join(["%r: %s" % (k, v) for k, v in sorted(settings.get("samples.SYMBOLS_DESCRIPTION").items())])
 buffer_manager =  BufferManager(server=Server, sample_library=sample_pack_library)
 
+
+ensure_sccode_directories()
 scresource_library = SCResourceLibrary(settings.get_path("SCCODE_LIBRARY"))
 
 SynthDefs = {}
