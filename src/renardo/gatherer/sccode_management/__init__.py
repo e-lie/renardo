@@ -1,7 +1,12 @@
 from renardo import settings
-from renardo.gatherer.sccode_management.scresource_library import SCResourceLibrary
+from renardo.gatherer.sccode_management.scresource_library import SCResourceLibrary, ensure_sccode_directories
 from renardo.gatherer.sccode_management.scresource_type_and_file import SCResourceType, SCResourceFile
 from pathlib import Path
+
+
+#sccode_library_path = settings.get_path("SCCODE_LIBRARY")
+#sccode_library = SCResourceLibrary(sccode_library_path)
+
 
 # # Example usage
 # if __name__ == "__main__":
@@ -21,8 +26,6 @@ from pathlib import Path
 #     #         tape_delay.scsyndef
 #
 
-sccode_library_path = settings.get_path("SCCODE_LIBRARY")
-sccode_library = SCResourceLibrary(sccode_library_path)
 
 # # List all banks
 # print("Available synthdef banks:")

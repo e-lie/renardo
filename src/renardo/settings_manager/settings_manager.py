@@ -246,17 +246,15 @@ class SettingsManager:
         """Paths for files used by renardo and foxdot editor are dynamically resolved
         in one method depending on OS and initial user dir setting"""
         if path_name == "SAMPLES_DIR":
-            return self.get_renardo_user_dir() / "sample_packs"
+            return self.get_renardo_user_dir() / self.get("samples.SAMPLES_DIR_NAME")
         elif path_name == "RECORDING_DIR":
             return self.get_renardo_user_dir() / "rec"
         elif path_name == "SCCODE_LIBRARY":
-            return self.get_renardo_user_dir() / 'sccode_library'
+            return self.get_renardo_user_dir() / self.get("sc_backend.SCCODE_LIBRARY_DIR_NAME")
         elif path_name == "SPECIAL_SCCODE_DIR":
-            return self.get_renardo_user_dir() / "special_sccode"
-        elif path_name == "SCLANG_CODE_DIR_PATH":
-            return self.get_renardo_user_dir() / "sclang_code"
+            return self.get_renardo_user_dir() / self.get("sc_backend.SPECIAL_SCCODE_DIR_NAME")
         elif path_name == "LOOP_PATH":
-            return self.get_path("SAMPLES_DIR") / self.get("samples.DEFAULT_SAMPLES_PACK_NAME") / self.get("samples.LOOP_DIR_NAME")
+            return self.get_path("SAMPLES_DIR") / self.get("samples.DEFAULT_SAMPLE_PACK_NAME") / self.get("samples.LOOP_DIR_NAME")
         # Directory for permanent/externally managed .scd file for synths
         # (not overwritten)
         # elif path_name == "SYNTHDEF_DIR":
@@ -267,10 +265,10 @@ class SettingsManager:
         #     self.get_path("SCLANG_CODE_DIR_PATH") / "scenvelopes"
         # Directory to write temporary Python generated or Live sclang .scd synths
         # To avoid overwriting permanent (default) synthdef scd files
-        elif path_name == "TMP_SYNTHDEF_DIR":
-            return self.get_path("SCLANG_CODE_DIR_PATH") / "tmp_code" / "scsynth"
-        elif path_name == "TMP_EFFECTS_DIR":
-            return self.get_path("SCLANG_CODE_DIR_PATH") / "tmp_code" / "sceffects"
+        # elif path_name == "TMP_SYNTHDEF_DIR":
+        #    return self.get_path("SCLANG_CODE_DIR_PATH") / "tmp_code" / "scsynth"
+        # elif path_name == "TMP_EFFECTS_DIR":
+        #     return self.get_path("SCLANG_CODE_DIR_PATH") / "tmp_code" / "sceffects"
         elif path_name == "RENARDO_ROOT_PATH":
             return Path(__file__).parent.parent
         elif path_name == "FOXDOT_EDITOR_ROOT":

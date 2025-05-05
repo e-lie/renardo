@@ -1,12 +1,11 @@
 from textual.app import App, ComposeResult
 from textual.reactive import reactive
-from renardo.sc_backend import ServerManager
+
 from renardo.settings_manager import settings
+
 from textual import work
 from textual.binding import Binding
 from textual.css.query import NoMatches
-from renardo.tui.supercollider_mgt.sc_classes_files import is_renardo_sc_classes_initialized, write_sc_renardo_files_in_user_config
-from renardo.gatherer import is_default_spack_initialized, download_default_sample_pack
 from textual.containers import Horizontal, Vertical, Center, Grid
 from textual.widgets import (
     Header,
@@ -17,6 +16,13 @@ from textual.widgets import (
     TabPane
 )
 
+from renardo.tui.supercollider_mgt.sc_classes_files import is_renardo_sc_classes_initialized, write_sc_renardo_files_in_user_config
+from renardo.gatherer import (
+    is_default_spack_initialized,
+    download_default_sample_pack,
+    is_default_sccode_pack_initialized,
+    download_default_sccode_pack_and_special
+)
 from renardo.tui.widgets.TutoTabPane import TutoTabPane
 from renardo.tui.widgets.RightPane import RightPane, ResourcesRightPane
 
@@ -24,6 +30,7 @@ class RenardoTUI(App[None]):
     CSS_PATH = "RenardoTUI.tcss"
     right_pane_mode = reactive(None)
     base_sample_pack_downloaded = reactive(None, recompose=True)
+    base_sccode_downloaded = reactive(None, recompose=True)
     sc_backend_started = reactive(None)
     renardo_sc_class_initialized = reactive(None, recompose=True)
 
@@ -41,6 +48,7 @@ class RenardoTUI(App[None]):
         self.right_pane_maximized = None # maximization feature TODO ?
         self.renardo_sc_class_initialized = is_renardo_sc_classes_initialized()
         self.base_sample_pack_downloaded = is_default_spack_initialized()
+        self.base_sccode_downloaded = is_default_sccode_pack_initialized()
         self.sc_backend_started = self.test_sclang_connection()
         self.supercollider_found = self.renardo_app.sc_instance.supercollider_ready
         self.pulsar_found = self.renardo_app.pulsar_instance.pulsar_ready
@@ -70,6 +78,7 @@ class RenardoTUI(App[None]):
     def update_app_state(self):
         self.renardo_sc_class_initialized = is_renardo_sc_classes_initialized()
         self.base_sample_pack_downloaded = is_default_spack_initialized()
+        self.base_sccode_downloaded = is_default_sccode_pack_initialized()
         self.sc_backend_started = self.test_sclang_connection()
         self.supercollider_found = self.renardo_app.sc_instance.supercollider_ready
         self.pulsar_found = self.renardo_app.pulsar_instance.pulsar_ready
@@ -78,6 +87,7 @@ class RenardoTUI(App[None]):
         return "music-resources-1"
 
     def test_sclang_connection(self):
+        from renardo.sc_backend import ServerManager
         TestServer = ServerManager(settings.get("sc_backend.ADDRESS"), settings.get("sc_backend.PORT"), settings.get("sc_backend.PORT2"))
         TestServer.sclang._printed_error = True
         return TestServer.test_connection()
@@ -102,10 +112,13 @@ class RenardoTUI(App[None]):
         if button_id in ["music-resources-1-btn", "supercollider-backend-2-btn",
             "renardo-instance-3-btn", "livecoding-editor-3-btn"]:
             self.right_pane_mode = button_id[:-4]
-            pass
 
         if button_id == "dl-renardo-samples-btn":
             self.dl_samples_background()
+
+        if button_id == "dl-renardo-sccode-btn":
+            self.dl_sccode_background()
+
         if button_id == "init-renardo-scfiles-btn":
             self.init_renardo_sc_classes()
         #if button_id == "start-renardo-pipe-btn":
@@ -113,8 +126,10 @@ class RenardoTUI(App[None]):
         #    self.exit()
         if button_id == "start-pulsar-btn":
             self.start_pulsar_background()
+
         if button_id == "start-sc-btn":
             self.start_sc_backend()
+
         if button_id == "start-renardo-foxdot-editor-btn":
             self.start_foxdoteditor_background()
 
@@ -131,6 +146,13 @@ class RenardoTUI(App[None]):
 
 
     ################ Background Jobs
+
+    @work(exclusive=True, thread=True)
+    def dl_sccode_background(self) -> None:
+        log_output_widget = self.query_one("#collection-dl-log-output", Log)
+        #log_output_widget = None
+        download_default_sccode_pack_and_special(logger=log_output_widget)
+        self.update_app_state()
 
     @work(exclusive=True, thread=True)
     def dl_samples_background(self) -> None:

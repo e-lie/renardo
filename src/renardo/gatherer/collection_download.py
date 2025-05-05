@@ -33,6 +33,8 @@ def download_file_in_pool(url, dest_path, retries=5, delay=1, logger=None):
 
 
 def download_files_from_json_index_concurrent(json_url, download_dir, max_workers=3, logger=None):
+    download_dir = str(download_dir)
+
     def download_json_index_from_url(url, logger=logger):
         try:
             response = requests.get(url)

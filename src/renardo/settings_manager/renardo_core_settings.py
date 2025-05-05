@@ -16,6 +16,7 @@ settings.set_defaults_from_dict({
 settings.set_defaults_from_dict({
     "core": {
         "PERFORMANCE_EXCEPTIONS_CATCHING" : True,
+        "COLLECTIONS_DOWNLOAD_SERVER": 'https://collections.renardo.org',
     }
 },
 internal=True
