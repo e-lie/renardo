@@ -58,32 +58,3 @@ def create_webapp():
         return send_from_directory(webapp.static_folder, 'index.html')
     
     return webapp
-
-def run_webserver():
-    # Create the Flask application
-    web_app = create_webapp()
-    
-    # Run the application
-    web_app.run(
-        host=HOST,
-        port=PORT,
-        debug=DEBUG
-    )
-
-# threaded version
-# def run():
-#     # Run the server in a separate thread (not using asyncio)
-#     server_thread = threading.Thread(target=run_server)
-#     server_thread.daemon = True
-#     server_thread.start()
-    
-#     print("WebSocket server running on ws://localhost:5000/ws")
-    
-#     # Keep the main thread alive
-#     try:
-#         while True:
-#             command = input("Type 'exit' to stop the server: ")
-#             if command.lower() == 'exit':
-#                 break
-#     except KeyboardInterrupt:
-#         print("Server shutting down...")

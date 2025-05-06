@@ -7,7 +7,8 @@ import time
 from renardo.tui import write_sc_renardo_files_in_user_config
 from renardo.tui import SupercolliderInstance
 from renardo.tui import PulsarInstance
-from renardo.webserver import run_webserver
+from renardo.webserver import create_webapp
+from renardo.webserver.config import HOST, PORT, DEBUG
 
 from .state_manager import StateManager
 
@@ -38,6 +39,9 @@ class RenardoApp:
         self.sc_instance = None
         self.pulsar_instance = None
         
+        # Flask webapp instance
+        self.webapp = None
+        
         # Parse arguments
         self.args = self.parse_args()
         
@@ -57,12 +61,19 @@ class RenardoApp:
             # Update the state
             self.state_manager.update_renardo_init_status("superColliderClasses", True)
 
-        # Launch web server if not using pipe or foxdot editor
+        # Create and launch web server if not using pipe or foxdot editor
         if not (self.args.pipe or self.args.foxdot_editor):
-            run_webserver()
-
+            # Create the Flask application if it doesn't exist
+            webapp = self.create_webapp_instance()
+            
+            # Run the Flask application
+            webapp.run(
+                host=HOST,
+                port=PORT,
+                debug=DEBUG
+            )
         # Handle different run modes
-        if self.args.pipe:
+        elif self.args.pipe:
             from renardo.lib.runtime import handle_stdin, FoxDotCode
             # Just take commands from the CLI
             handle_stdin()
@@ -76,6 +87,17 @@ class RenardoApp:
         
         print("Quitting...")
 
+    def create_webapp_instance(self):
+        """
+        Create the Flask webapp instance if it doesn't exist
+        
+        Returns:
+            Flask: The Flask webapp instance
+        """
+        if self.webapp is None:
+            self.webapp = create_webapp()
+        return self.webapp
+        
     @staticmethod
     def parse_args():
         """Parse command-line arguments"""
