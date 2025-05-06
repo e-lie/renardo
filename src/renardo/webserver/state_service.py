@@ -1,63 +1,51 @@
 """
 Service for managing application state
+
+This module delegates state management to the StateManager class from RenardoApp.
+It maintains the same API for backward compatibility.
 """
 from datetime import datetime
 
-# Singleton state object
-_state = {
-    "counter": 0,
-    "welcome_text": "Welcome to Renardo Web Interface",
-    # Renardo initialization status
-    "renardo_init": {
-        "superColliderClasses": False,
-        "samples": False,
-        "instruments": False
-    },
-    # Renardo runtime status
-    "runtime_status": {
-        "scBackendRunning": False,
-        "renardoRuntimeRunning": False
-    },
-    # Log messages
-    "log_messages": []
-}
-
+# Prevent circular imports with lazy loading
+def _get_state_manager():
+    """Get the StateManager instance from RenardoApp"""
+    # Import locally to avoid circular imports
+    from renardo.renardo_app import get_instance
+    app = get_instance()
+    return app.state_manager
 
 def get_state():
     """
     Get current application state
-
+    
     Returns:
         dict: Current state
     """
-    return _state
+    return _get_state_manager().get_state()
 
 
 def increment_counter():
     """
     Increment the counter in the state
-
+    
     Returns:
         int: New counter value
     """
-    _state["counter"] += 1
-    return _state["counter"]
+    return _get_state_manager().increment_counter()
 
 
 def update_state(key, value):
     """
     Update a specific state value
-
+    
     Args:
         key (str): State key to update
         value: New value
-
+    
     Returns:
         dict: Updated state
     """
-    if key in _state:
-        _state[key] = value
-    return _state
+    return _get_state_manager().update_state(key, value)
 
 
 def get_renardo_status():
@@ -67,7 +55,7 @@ def get_renardo_status():
     Returns:
         dict: Renardo initialization status
     """
-    return _state["renardo_init"]
+    return _get_state_manager().get_renardo_status()
 
 
 def update_renardo_init_status(component, status):
@@ -81,10 +69,7 @@ def update_renardo_init_status(component, status):
     Returns:
         dict: Updated Renardo initialization status
     """
-    if component in _state["renardo_init"]:
-        _state["renardo_init"][component] = status
-    
-    return _state["renardo_init"]
+    return _get_state_manager().update_renardo_init_status(component, status)
 
 
 def get_runtime_status():
@@ -94,7 +79,7 @@ def get_runtime_status():
     Returns:
         dict: Renardo runtime status
     """
-    return _state["runtime_status"]
+    return _get_state_manager().get_runtime_status()
 
 
 def update_runtime_status(component, status):
@@ -108,10 +93,7 @@ def update_runtime_status(component, status):
     Returns:
         dict: Updated Renardo runtime status
     """
-    if component in _state["runtime_status"]:
-        _state["runtime_status"][component] = status
-    
-    return _state["runtime_status"]
+    return _get_state_manager().update_runtime_status(component, status)
 
 
 def add_log_message(message, level="INFO"):
@@ -125,23 +107,7 @@ def add_log_message(message, level="INFO"):
     Returns:
         dict: Added log message
     """
-    timestamp = datetime.now().strftime("%H:%M:%S")
-    log_entry = {
-        "timestamp": timestamp,
-        "level": level,
-        "message": message
-    }
-    
-    if "log_messages" not in _state:
-        _state["log_messages"] = []
-    
-    _state["log_messages"].append(log_entry)
-    
-    # Keep only the 1000 most recent log messages
-    if len(_state["log_messages"]) > 1000:
-        _state["log_messages"] = _state["log_messages"][-1000:]
-    
-    return log_entry
+    return _get_state_manager().add_log_message(message, level)
 
 
 def get_log_messages():
@@ -151,29 +117,15 @@ def get_log_messages():
     Returns:
         list: All log messages
     """
-    if "log_messages" not in _state:
-        _state["log_messages"] = []
-    
-    return _state["log_messages"]
+    return _get_state_manager().get_log_messages()
 
 
 # Reset the state (useful for testing)
 def reset_state():
     """
     Reset state to default values
-
+    
     Returns:
         dict: Reset state
     """
-    _state["counter"] = 0
-    _state["renardo_init"] = {
-        "superColliderClasses": False,
-        "samples": False,
-        "instruments": False
-    }
-    _state["runtime_status"] = {
-        "scBackendRunning": False,
-        "renardoRuntimeRunning": False
-    }
-    _state["log_messages"] = []
-    return _state
+    return _get_state_manager().reset_state()

@@ -11,6 +11,14 @@ from renardo.gatherer import download_default_sample_pack, is_default_spack_init
 from renardo.gatherer import download_default_sccode_pack_and_special, is_default_sccode_pack_initialized
 from renardo.tui.supercollider_mgt.sc_classes_files import write_sc_renardo_files_in_user_config, is_renardo_sc_classes_initialized
 
+# Try to import the Renardo runtime
+RENARDO_RUNTIME_AVAILABLE = False
+try:
+    from renardo.lib.runtime import FoxDotCode
+    RENARDO_RUNTIME_AVAILABLE = True
+except ImportError:
+    print("Warning: Could not import Renardo runtime. Some features will be unavailable.")
+
 
 # Simple logger class for gatherer functions
 class WebsocketLogger:
