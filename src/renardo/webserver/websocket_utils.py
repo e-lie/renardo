@@ -4,7 +4,7 @@ Utility functions for WebSocket handling
 import json
 import threading
 import time
-from renardo.webserver import state_service
+from renardo.webserver import state_helper
 
 # Store active WebSocket connections
 active_connections = set()
@@ -77,7 +77,7 @@ def initialize_log_observer():
     Initialize log observer to monitor log messages and broadcast them
     """
     # Store the current number of log messages
-    log_count = len(state_service.get_log_messages())
+    log_count = len(state_helper.get_log_messages())
     
     def check_for_new_logs():
         """Check for new log messages and broadcast them"""
@@ -85,7 +85,7 @@ def initialize_log_observer():
         
         while True:
             # Get current log messages
-            current_logs = state_service.get_log_messages()
+            current_logs = state_helper.get_log_messages()
             current_count = len(current_logs)
             
             # If there are new log messages
