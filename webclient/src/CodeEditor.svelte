@@ -1,7 +1,7 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
   import { appState, initWebSocket, sendMessage } from './lib/websocket.js';
-  import { CodeMirror } from 'svelte-codemirror-editor';
+  import CodeMirror from 'svelte-codemirror-editor';
   
   // State for editor content
   let editorContent = `# Renardo Live Coding Editor

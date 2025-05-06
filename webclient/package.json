@@ -13,7 +13,10 @@
         "vite": "^4.4.5"
     },
     "dependencies": {
-        "svelte-codemirror-editor": "^1.4.1",
-        "svelte": "^4.0.5"
+        "@codemirror/basic-setup": "^0.20.0",
+        "@codemirror/lang-python": "^6.2.0",
+        "@codemirror/theme-one-dark": "^6.1.2",
+        "svelte": "^4.0.5",
+        "svelte-codemirror-editor": "^1.4.1"
     }
 }
