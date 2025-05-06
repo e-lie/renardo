@@ -7,6 +7,10 @@
   let samplesInitialized = false;
   let instrumentsInitialized = false;
   
+  // Runtime status
+  let scBackendRunning = false;
+  let renardoRuntimeRunning = false;
+  
   // Log messages collection
   let logMessages = [];
   
@@ -36,6 +40,11 @@
           scFilesInitialized = state.renardoInit.superColliderClasses;
           samplesInitialized = state.renardoInit.samples;
           instrumentsInitialized = state.renardoInit.instruments;
+        }
+        
+        if (state.runtimeStatus) {
+          scBackendRunning = state.runtimeStatus.scBackendRunning;
+          renardoRuntimeRunning = state.runtimeStatus.renardoRuntimeRunning;
         }
         
         if (state.logMessages && state.logMessages.length > 0) {
@@ -93,9 +102,39 @@
     });
   }
   
+  // Runtime functions
+  function startSuperColliderBackend() {
+    // Reset any previous error
+    appState.update(state => ({
+      ...state,
+      error: null
+    }));
+    
+    return sendMessage({
+      type: 'start_supercollider_backend'
+    });
+  }
+  
+  function startRenardoRuntime() {
+    // Reset any previous error
+    appState.update(state => ({
+      ...state,
+      error: null
+    }));
+    
+    return sendMessage({
+      type: 'start_renardo_runtime'
+    });
+  }
+  
   // Helper function to get status class
   function getStatusClass(status) {
     return status ? 'status-success' : 'status-pending';
+  }
+  
+  // Helper function to navigate to editor
+  function goToEditor() {
+    window.location.hash = '#editor';
   }
 </script>
 
@@ -172,10 +211,61 @@
       </div>
     </div>
     
+    <!-- Runtime buttons -->
+    <div class="runtime-section">
+      <h2>Launch Renardo</h2>
+      <p class="description">Start the SuperCollider backend and Renardo runtime</p>
+      
+      <div class="runtime-controls">
+        <div class="runtime-item">
+          <div class="runtime-header">
+            <h3>1. Start SuperCollider Backend</h3>
+            <div class="status-badge {getStatusClass(scBackendRunning)}">
+              {scBackendRunning ? 'Running' : 'Stopped'}
+            </div>
+          </div>
+          <p>Starts the SuperCollider server that processes audio.</p>
+          <button 
+            on:click={startSuperColliderBackend} 
+            disabled={!$appState.connected || !scFilesInitialized || scBackendRunning}
+          >
+            Launch SuperCollider
+          </button>
+        </div>
+        
+        <div class="runtime-item">
+          <div class="runtime-header">
+            <h3>2. Start Renardo Runtime</h3>
+            <div class="status-badge {getStatusClass(renardoRuntimeRunning)}">
+              {renardoRuntimeRunning ? 'Running' : 'Stopped'}
+            </div>
+          </div>
+          <p>Initializes the Renardo runtime environment.</p>
+          <button 
+            on:click={startRenardoRuntime} 
+            disabled={!$appState.connected || !scBackendRunning || renardoRuntimeRunning}
+          >
+            Launch Renardo
+          </button>
+        </div>
+      </div>
+      
+      <!-- Go to editor button -->
+      <div class="editor-link">
+        <button 
+          on:click={goToEditor} 
+          disabled={!renardoRuntimeRunning}
+          class="editor-button"
+        >
+          Open Code Editor
+        </button>
+      </div>
+    </div>
+    
     <!-- Log output -->
     <div class="log-section">
       <h3>Initialization Log</h3>
-      <div class="log-container">
+      <div class="log-container" bind:this={logContainer}>
         {#if logMessages.length === 0}
           <p class="log-empty">No log messages yet. Start initialization to see progress.</p>
         {:else}
@@ -194,7 +284,6 @@
       <div class="success-message">
         <h3>🎉 All components initialized successfully!</h3>
         <p>You're ready to start making music with Renardo.</p>
-        <a href="/" class="button">Go to Home</a>
       </div>
     {/if}
     
@@ -226,10 +315,15 @@
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   }
   
-  h1 {
+  h1, h2 {
     text-align: center;
     margin-top: 0;
     color: #2c3e50;
+  }
+  
+  h2 {
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
   }
   
   .status-bar {
@@ -261,28 +355,39 @@
     color: #7f8c8d;
   }
   
-  .init-section {
+  .init-section, .runtime-section {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
     margin-bottom: 2rem;
   }
   
-  .init-item {
+  .runtime-section {
+    border-top: 1px solid #e0e0e0;
+    padding-top: 1.5rem;
+  }
+  
+  .runtime-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .init-item, .runtime-item {
     border: 1px solid #e0e0e0;
     border-radius: 6px;
     padding: 1.25rem;
     background-color: #fafafa;
   }
   
-  .init-header {
+  .init-header, .runtime-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 0.5rem;
   }
   
-  .init-header h3 {
+  .init-header h3, .runtime-header h3 {
     margin: 0;
     color: #2c3e50;
   }
@@ -328,6 +433,22 @@
     background-color: #e0e0e0;
     color: #9e9e9e;
     cursor: not-allowed;
+  }
+  
+  .editor-link {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+  }
+  
+  .editor-button {
+    background-color: #2ecc71;
+    font-size: 1.1rem;
+    padding: 1rem 2rem;
+  }
+  
+  .editor-button:hover:not(:disabled) {
+    background-color: #27ae60;
   }
   
   .log-section {
