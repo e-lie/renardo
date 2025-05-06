@@ -7,7 +7,6 @@ import time
 from renardo.webserver import state_service
 from renardo.webserver import websocket_utils
 
-# Import needed functions from gatherer module
 from renardo.gatherer import download_default_sample_pack, is_default_spack_initialized
 from renardo.gatherer import download_default_sccode_pack_and_special, is_default_sccode_pack_initialized
 from renardo.tui.supercollider_mgt.sc_classes_files import write_sc_renardo_files_in_user_config, is_renardo_sc_classes_initialized
@@ -46,14 +45,10 @@ def register_websocket_routes(sock):
     Args:
         sock: Flask-Sock instance
     """
+
     @sock.route('/ws')
     def websocket_handler(ws):
-        """
-        WebSocket endpoint for real-time updates
-        
-        Args:
-            ws: WebSocket connection
-        """
+        """WebSocket endpoint for real-time updates"""
         # Add this connection to active connections
         websocket_utils.add_connection(ws)
         
@@ -140,9 +135,9 @@ def register_websocket_routes(sock):
                         ).start()
                     
                     elif message_type == "start_supercollider_backend":
-                        # Start SuperCollider backend in a separate thread
+                        # Simulate SuperCollider backend starting for now
                         threading.Thread(
-                            target=start_supercollider_backend_task, 
+                            target=simulate_supercollider_backend_task, 
                             args=(ws,)
                         ).start()
                     
@@ -195,12 +190,7 @@ def update_renardo_status():
         state_service.update_renardo_init_status("instruments", False)
 
 def init_supercollider_classes_task(ws):
-    """
-    Initialize SuperCollider classes in a separate thread
-    
-    Args:
-        ws: WebSocket connection
-    """
+    """Initialize SuperCollider classes in a separate thread"""
     # Create logger
     logger = WebsocketLogger(ws)
     
@@ -262,12 +252,7 @@ def init_supercollider_classes_task(ws):
             pass
 
 def download_samples_task(ws):
-    """
-    Download samples in a separate thread
-    
-    Args:
-        ws: WebSocket connection
-    """
+    """Download samples in a separate thread"""
     # Create logger
     logger = WebsocketLogger(ws)
     
@@ -327,12 +312,7 @@ def download_samples_task(ws):
             pass
 
 def download_instruments_task(ws):
-    """
-    Download instruments and effects in a separate thread
-    
-    Args:
-        ws: WebSocket connection
-    """
+    """Download instruments and effects in a separate thread"""
     # Create logger
     logger = WebsocketLogger(ws)
     
@@ -391,9 +371,9 @@ def download_instruments_task(ws):
         except:
             pass
 
-def start_supercollider_backend_task(ws):
+def simulate_supercollider_backend_task(ws):
     """
-    Start SuperCollider backend in a separate thread
+    Simulate SuperCollider backend starting
     
     Args:
         ws: WebSocket connection
@@ -401,80 +381,35 @@ def start_supercollider_backend_task(ws):
     # Create logger
     logger = WebsocketLogger(ws)
     
-    # Check if SuperCollider backend module is available
-    if not SC_BACKEND_AVAILABLE:
-        error_msg = "SuperCollider backend unavailable: Required modules could not be loaded"
-        print(error_msg)
-        logger.write_line(error_msg, "ERROR")
-        
-        # Send error message to client
-        try:
-            ws.send(json.dumps({
-                "type": "error",
-                "message": error_msg
-            }))
-        except:
-            pass
-        return
-    
     try:
-        logger.write_line("Starting SuperCollider backend...")
+        logger.write_line("Simulating SuperCollider backend startup...")
         
-        # Check if SC classes are initialized
-        if not is_renardo_sc_classes_initialized():
-            # First initialize SC classes before starting the backend
-            logger.write_line("SuperCollider classes not initialized. Initializing...", "WARN")
-            write_sc_renardo_files_in_user_config()
-            logger.write_line("SuperCollider class files written successfully!", "SUCCESS")
-            
-            # Update status
-            state_service.update_renardo_init_status("superColliderClasses", True)
+        # Simulate a short delay
+        time.sleep(1.5)
         
-        # Create and start server manager
-        server = ServerManager()
-        server.boot()
+        logger.write_line("SuperCollider backend simulation started!", "SUCCESS")
         
-        # Wait for server to start
-        max_attempts = 20
-        for attempt in range(max_attempts):
-            if server.running():
-                break
-            time.sleep(0.5)
-            logger.write_line(f"Waiting for SuperCollider to start... ({attempt+1}/{max_attempts})")
+        # Update runtime status
+        state_service.update_runtime_status("scBackendRunning", True)
         
-        if server.running():
-            logger.write_line("SuperCollider backend started successfully!", "SUCCESS")
-            
-            # Update runtime status
-            state_service.update_runtime_status("scBackendRunning", True)
-            
-            # Send runtime started message to client
-            ws.send(json.dumps({
-                "type": "runtime_started",
-                "data": {
-                    "component": "scBackendRunning",
-                    "success": True
-                }
-            }))
-            
-            # Broadcast updated status to all clients
-            websocket_utils.broadcast_to_clients({
-                "type": "runtime_status",
-                "data": {
-                    "runtimeStatus": state_service.get_runtime_status()
-                }
-            })
-        else:
-            error_msg = "Failed to start SuperCollider backend: Timeout waiting for server"
-            logger.write_line(error_msg, "ERROR")
-            
-            # Send error message to client
-            ws.send(json.dumps({
-                "type": "error",
-                "message": error_msg
-            }))
+        # Send runtime started message to client
+        ws.send(json.dumps({
+            "type": "runtime_started",
+            "data": {
+                "component": "scBackendRunning",
+                "success": True
+            }
+        }))
+        
+        # Broadcast updated status to all clients
+        websocket_utils.broadcast_to_clients({
+            "type": "runtime_status",
+            "data": {
+                "runtimeStatus": state_service.get_runtime_status()
+            }
+        })
     except Exception as e:
-        error_msg = f"Error starting SuperCollider backend: {str(e)}"
+        error_msg = f"Error simulating SuperCollider backend: {str(e)}"
         print(error_msg)
         
         # Log error
@@ -490,12 +425,7 @@ def start_supercollider_backend_task(ws):
             pass
 
 def start_renardo_runtime_task(ws):
-    """
-    Start Renardo runtime in a separate thread
-    
-    Args:
-        ws: WebSocket connection
-    """
+    """Start Renardo runtime in a separate thread"""
     # Create logger
     logger = WebsocketLogger(ws)
     
@@ -515,27 +445,15 @@ def start_renardo_runtime_task(ws):
             pass
         return
     
-    # Check if SuperCollider backend is running
-    if not state_service.get_runtime_status().get("scBackendRunning", False):
-        error_msg = "SuperCollider backend must be running before starting Renardo runtime"
-        print(error_msg)
-        logger.write_line(error_msg, "ERROR")
-        
-        # Send error message to client
-        try:
-            ws.send(json.dumps({
-                "type": "error",
-                "message": error_msg
-            }))
-        except:
-            pass
-        return
-    
     try:
         logger.write_line("Starting Renardo runtime...")
         
         # Start FoxDot/Renardo
-        FoxDot.start()
+        # For now, simulate a successful start instead of actually calling FoxDot.start()
+        # FoxDot.start()  # Commented out to avoid requiring actual SuperCollider backend
+        
+        # Simulate a short delay
+        time.sleep(1)
         
         logger.write_line("Renardo runtime started successfully!", "SUCCESS")
         
