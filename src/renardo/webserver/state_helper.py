@@ -75,31 +75,6 @@ def update_renardo_init_status(component, status):
     """
     return get_state_manager().update_renardo_init_status(component, status)
 
-
-def get_runtime_status():
-    """
-    Get Renardo runtime status
-    
-    Returns:
-        dict: Renardo runtime status
-    """
-    return get_state_manager().get_runtime_status()
-
-
-def update_runtime_status(component, status):
-    """
-    Update Renardo runtime status
-    
-    Args:
-        component (str): Component to update (scBackendRunning or renardoRuntimeRunning)
-        status (bool): New status
-        
-    Returns:
-        dict: Updated Renardo runtime status
-    """
-    return get_state_manager().update_runtime_status(component, status)
-
-
 def add_log_message(message, level="INFO"):
     """
     Add a log message

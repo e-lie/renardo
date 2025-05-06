@@ -74,10 +74,6 @@ export function initWebSocket() {
       type: 'get_renardo_status'
     });
     
-    // Request runtime status
-    sendMessage({
-      type: 'get_runtime_status'
-    });
   });
   
   // Connection closed
@@ -137,8 +133,6 @@ function handleMessage(message) {
         error: null,
         // Update Renardo initialization status if available
         renardoInit: data.renardo_init || state.renardoInit,
-        // Update runtime status if available
-        runtimeStatus: data.runtime_status || state.runtimeStatus
       }));
       break;
       
@@ -147,15 +141,6 @@ function handleMessage(message) {
       appState.update(state => ({
         ...state,
         renardoInit: data.initStatus || data.data?.initStatus || state.renardoInit,
-        error: null
-      }));
-      break;
-      
-    case 'runtime_status':
-      // Update runtime status
-      appState.update(state => ({
-        ...state,
-        runtimeStatus: data.runtimeStatus || data.data?.runtimeStatus || state.runtimeStatus,
         error: null
       }));
       break;
@@ -250,31 +235,6 @@ function handleMessage(message) {
         return {
           ...state,
           renardoInit: updatedRenardoInit
-        };
-      });
-      break;
-    
-    case 'runtime_started':
-      // Update specific runtime status flag
-      appState.update(state => {
-        const updatedRuntimeStatus = {
-          ...state.runtimeStatus,
-          [data.component]: true
-        };
-        
-        // Add console message
-        const updatedConsoleOutput = [...state.consoleOutput, {
-          timestamp: new Date().toLocaleTimeString(),
-          level: 'success',
-          message: `${data.component === 'scBackendRunning' ? 'SuperCollider' : 'Renardo Runtime'} started successfully`
-        }];
-        
-        const trimmedConsoleOutput = updatedConsoleOutput.slice(-1000);
-        
-        return {
-          ...state,
-          runtimeStatus: updatedRuntimeStatus,
-          consoleOutput: trimmedConsoleOutput
         };
       });
       break;
