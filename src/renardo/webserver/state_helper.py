@@ -1,14 +1,18 @@
 """
-Service for managing application state
+Service for managing application state helper functions
 
 This module delegates state management to the StateManager class from RenardoApp.
 It maintains the same API for backward compatibility.
 """
 from datetime import datetime
 
-# Prevent circular imports with lazy loading
-def _get_state_manager():
-    """Get the StateManager instance from RenardoApp"""
+def get_state_manager():
+    """
+    Get the StateManager instance from RenardoApp
+    
+    Returns:
+        StateManager: The StateManager instance
+    """
     # Import locally to avoid circular imports
     from renardo.renardo_app import get_instance
     app = get_instance()
@@ -21,7 +25,7 @@ def get_state():
     Returns:
         dict: Current state
     """
-    return _get_state_manager().get_state()
+    return get_state_manager().get_state()
 
 
 def increment_counter():
@@ -31,7 +35,7 @@ def increment_counter():
     Returns:
         int: New counter value
     """
-    return _get_state_manager().increment_counter()
+    return get_state_manager().increment_counter()
 
 
 def update_state(key, value):
@@ -45,7 +49,7 @@ def update_state(key, value):
     Returns:
         dict: Updated state
     """
-    return _get_state_manager().update_state(key, value)
+    return get_state_manager().update_state(key, value)
 
 
 def get_renardo_status():
@@ -55,7 +59,7 @@ def get_renardo_status():
     Returns:
         dict: Renardo initialization status
     """
-    return _get_state_manager().get_renardo_status()
+    return get_state_manager().get_renardo_status()
 
 
 def update_renardo_init_status(component, status):
@@ -69,7 +73,7 @@ def update_renardo_init_status(component, status):
     Returns:
         dict: Updated Renardo initialization status
     """
-    return _get_state_manager().update_renardo_init_status(component, status)
+    return get_state_manager().update_renardo_init_status(component, status)
 
 
 def get_runtime_status():
@@ -79,7 +83,7 @@ def get_runtime_status():
     Returns:
         dict: Renardo runtime status
     """
-    return _get_state_manager().get_runtime_status()
+    return get_state_manager().get_runtime_status()
 
 
 def update_runtime_status(component, status):
@@ -93,7 +97,7 @@ def update_runtime_status(component, status):
     Returns:
         dict: Updated Renardo runtime status
     """
-    return _get_state_manager().update_runtime_status(component, status)
+    return get_state_manager().update_runtime_status(component, status)
 
 
 def add_log_message(message, level="INFO"):
@@ -107,7 +111,7 @@ def add_log_message(message, level="INFO"):
     Returns:
         dict: Added log message
     """
-    return _get_state_manager().add_log_message(message, level)
+    return get_state_manager().add_log_message(message, level)
 
 
 def get_log_messages():
@@ -117,7 +121,7 @@ def get_log_messages():
     Returns:
         list: All log messages
     """
-    return _get_state_manager().get_log_messages()
+    return get_state_manager().get_log_messages()
 
 
 # Reset the state (useful for testing)
@@ -128,4 +132,4 @@ def reset_state():
     Returns:
         dict: Reset state
     """
-    return _get_state_manager().reset_state()
+    return get_state_manager().reset_state()

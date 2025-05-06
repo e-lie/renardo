@@ -20,8 +20,17 @@ def create_webapp():
     Returns:
         Flask: Configured Flask application
     """
+    # Import here to avoid circular imports
+    from renardo.renardo_app import get_instance
+    
+    # Get RenardoApp instance
+    app = get_instance()
+    
     # Initialize Flask app
     webapp = Flask(__name__, static_folder=STATIC_FOLDER)
+    
+    # Store RenardoApp reference on the Flask app
+    webapp.config['RENARDO_APP'] = app
     
     # Enable CORS
     CORS(webapp)
