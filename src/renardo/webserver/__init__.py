@@ -11,6 +11,7 @@ from .config import STATIC_FOLDER, PING_INTERVAL, HOST, PORT, DEBUG
 
 # Import route initializers
 from .routes import init_routes
+from .websocket_utils import initialize_log_observer
 
 def create_app():
     """
@@ -35,6 +36,9 @@ def create_app():
     
     # Initialize routes
     init_routes(app, sock)
+    
+    # Initialize log observer for real-time log updates
+    initialize_log_observer()
     
     # Serve Svelte app (catch-all route)
     @app.route('/', defaults={'path': ''})
