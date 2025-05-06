@@ -9,7 +9,7 @@ from renardo.webserver import websocket_utils
 
 from renardo.gatherer import download_default_sample_pack, is_default_spack_initialized
 from renardo.gatherer import download_default_sccode_pack_and_special, is_default_sccode_pack_initialized
-from renardo.tui.supercollider_mgt.sc_classes_files import write_sc_renardo_files_in_user_config, is_renardo_sc_classes_initialized
+from renardo.renardo_app.supercollider_mgt.sc_classes_files import write_sc_renardo_files_in_user_config, is_renardo_sc_classes_initialized
 
 # Try to import the Renardo runtime
 RENARDO_RUNTIME_AVAILABLE = False

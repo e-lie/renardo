@@ -1,6 +1,6 @@
 from textual.app import ComposeResult
 from textual.widgets import TabPane, MarkdownViewer
-from renardo.tui.supercollider_mgt.sc_classes_files import SC_USER_CONFIG_DIR
+from renardo.renardo_app.supercollider_mgt.sc_classes_files import SC_USER_CONFIG_DIR
 import requests
 
 def download_file(url, filepath):

@@ -4,9 +4,9 @@ RenardoApp - Main application class for Renardo
 import argparse
 import time
 
-from renardo.tui import write_sc_renardo_files_in_user_config
-from renardo.tui import SupercolliderInstance
 from renardo.tui import PulsarInstance
+from .supercollider_mgt.sclang_instances_mgt import SupercolliderInstance
+from .supercollider_mgt.sc_classes_files import write_sc_renardo_files_in_user_config
 from renardo.webserver import create_webapp
 from renardo.webserver.config import HOST, PORT, DEBUG
 
