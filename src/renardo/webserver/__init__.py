@@ -13,7 +13,7 @@ from .config import STATIC_FOLDER, PING_INTERVAL, HOST, PORT, DEBUG
 from .routes import init_routes
 from .websocket_utils import initialize_log_observer
 
-def create_app():
+def create_webapp():
     """
     Create and configure the Flask application
     
@@ -21,28 +21,28 @@ def create_app():
         Flask: Configured Flask application
     """
     # Initialize Flask app
-    app = Flask(__name__, static_folder=STATIC_FOLDER)
+    webapp = Flask(__name__, static_folder=STATIC_FOLDER)
     
     # Enable CORS
-    CORS(app)
+    CORS(webapp)
     
     # Initialize WebSocket
-    sock = Sock(app)
+    sock = Sock(webapp)
     
     # Configure WebSocket settings
-    app.config['SOCK_SERVER_OPTIONS'] = {
+    webapp.config['SOCK_SERVER_OPTIONS'] = {
         'ping_interval': PING_INTERVAL,
     }
     
     # Initialize routes
-    init_routes(app, sock)
+    init_routes(webapp, sock)
     
     # Initialize log observer for real-time log updates
     initialize_log_observer()
     
     # Serve Svelte app (catch-all route)
-    @app.route('/', defaults={'path': ''})
-    @app.route('/<path:path>')
+    @webapp.route('/', defaults={'path': ''})
+    @webapp.route('/<path:path>')
     def serve_svelte(path):
         """
         Serve Svelte app or static files
@@ -53,18 +53,18 @@ def create_app():
         Returns:
             Flask response: Static file or index.html
         """
-        if path and os.path.exists(os.path.join(app.static_folder, path)):
-            return send_from_directory(app.static_folder, path)
-        return send_from_directory(app.static_folder, 'index.html')
+        if path and os.path.exists(os.path.join(webapp.static_folder, path)):
+            return send_from_directory(webapp.static_folder, path)
+        return send_from_directory(webapp.static_folder, 'index.html')
     
-    return app
+    return webapp
 
-def run():
+def run_webserver():
     # Create the Flask application
-    app = create_app()
+    web_app = create_webapp()
     
     # Run the application
-    app.run(
+    web_app.run(
         host=HOST,
         port=PORT,
         debug=DEBUG
