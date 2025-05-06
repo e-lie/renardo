@@ -20,11 +20,6 @@ class StateManager:
                 "samples": False,
                 "instruments": False
             },
-            # Renardo runtime status
-            "runtime_status": {
-                "scBackendRunning": False,
-                "renardoRuntimeRunning": False
-            },
             # Log messages
             "log_messages": []
         }
@@ -88,30 +83,7 @@ class StateManager:
         
         return self._state["renardo_init"]
     
-    def get_runtime_status(self):
-        """
-        Get Renardo runtime status
-        
-        Returns:
-            dict: Renardo runtime status
-        """
-        return self._state["runtime_status"]
-    
-    def update_runtime_status(self, component, status):
-        """
-        Update Renardo runtime status
-        
-        Args:
-            component (str): Component to update (scBackendRunning or renardoRuntimeRunning)
-            status (bool): New status
-            
-        Returns:
-            dict: Updated Renardo runtime status
-        """
-        if component in self._state["runtime_status"]:
-            self._state["runtime_status"][component] = status
-        
-        return self._state["runtime_status"]
+
     
     def add_log_message(self, message, level="INFO"):
         """
@@ -166,10 +138,6 @@ class StateManager:
             "superColliderClasses": False,
             "samples": False,
             "instruments": False
-        }
-        self._state["runtime_status"] = {
-            "scBackendRunning": False,
-            "renardoRuntimeRunning": False
         }
         self._state["log_messages"] = []
         return self._state

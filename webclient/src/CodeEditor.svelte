@@ -53,10 +53,6 @@ d2 >> play("  * ").speed(2)
       
       // Subscribe to appState changes
       const unsubscribe = appState.subscribe(state => {
-        if (state.runtimeStatus) {
-          scBackendRunning = state.runtimeStatus.scBackendRunning;
-          renardoRuntimeRunning = state.runtimeStatus.renardoRuntimeRunning;
-        }
         
         if (state.consoleOutput && state.consoleOutput.length > 0) {
           const prevOutputCount = consoleOutput.length;
@@ -89,10 +85,6 @@ d2 >> play("  * ").speed(2)
   
   // Execute code
   function executeCode() {
-    if (!renardoRuntimeRunning) {
-      addConsoleOutput('Error: Renardo runtime is not running. Please start it from the initialization page.', 'error');
-      return;
-    }
     
     // Get current selection or all text if nothing is selected
     let codeToExecute;
@@ -184,16 +176,6 @@ d2 >> play("  * ").speed(2)
             Using HTTP Fallback (WebSockets not supported)
           </div>
         {/if}
-        
-        <!-- Runtime status -->
-        <div class="runtime-status">
-          <div class="status-indicator {scBackendRunning ? 'runtime-running' : 'runtime-stopped'}">
-            SC: {scBackendRunning ? 'Running' : 'Stopped'}
-          </div>
-          <div class="status-indicator {renardoRuntimeRunning ? 'runtime-running' : 'runtime-stopped'}">
-            Renardo: {renardoRuntimeRunning ? 'Running' : 'Stopped'}
-          </div>
-        </div>
       </div>
       
       <!-- Controls -->
@@ -201,7 +183,6 @@ d2 >> play("  * ").speed(2)
         <button 
           class="execute-button" 
           on:click={executeCode} 
-          disabled={!renardoRuntimeRunning}
           title="Run code (Ctrl+Enter)"
         >
           Run Code
@@ -252,12 +233,6 @@ d2 >> play("  * ").speed(2)
         </div>
       </div>
     </div>
-    
-    {#if !renardoRuntimeRunning}
-      <div class="runtime-warning">
-        <p>⚠️ Renardo Runtime is not running. Go to the <a href="#init">Initialization Page</a> to start it.</p>
-      </div>
-    {/if}
     
     <!-- Error messages -->
     {#if $appState.error}
@@ -489,20 +464,6 @@ d2 >> play("  * ").speed(2)
     text-align: center;
     font-style: italic;
     padding: 1rem;
-  }
-  
-  .runtime-warning {
-    background-color: #fff3cd;
-    color: #856404;
-    padding: 0.75rem;
-    text-align: center;
-    border-top: 1px solid #ffeeba;
-  }
-  
-  .runtime-warning a {
-    color: #856404;
-    font-weight: bold;
-    text-decoration: underline;
   }
   
   .error-message {

@@ -18,7 +18,6 @@ def test_get_state(state_manager):
     assert isinstance(state, dict)
     assert "counter" in state
     assert "renardo_init" in state
-    assert "runtime_status" in state
     assert "log_messages" in state
 
 
@@ -63,29 +62,6 @@ def test_update_renardo_init_status(state_manager):
     original_state = state_manager._state["renardo_init"].copy()
     state_manager.update_renardo_init_status("non_existent", True)
     assert state_manager._state["renardo_init"] == original_state
-
-
-def test_get_runtime_status(state_manager):
-    """Test get_runtime_status returns the runtime_status section"""
-    status = state_manager.get_runtime_status()
-    assert "scBackendRunning" in status
-    assert "renardoRuntimeRunning" in status
-
-
-def test_update_runtime_status(state_manager):
-    """Test update_runtime_status updates a component status"""
-    # Set scBackendRunning to True
-    state_manager.update_runtime_status("scBackendRunning", True)
-    assert state_manager._state["runtime_status"]["scBackendRunning"] is True
-    
-    # Set scBackendRunning back to False
-    state_manager.update_runtime_status("scBackendRunning", False)
-    assert state_manager._state["runtime_status"]["scBackendRunning"] is False
-    
-    # Test with a non-existent component (should not change state)
-    original_state = state_manager._state["runtime_status"].copy()
-    state_manager.update_runtime_status("non_existent", True)
-    assert state_manager._state["runtime_status"] == original_state
 
 
 def test_add_log_message(state_manager):
@@ -148,7 +124,6 @@ def test_reset_state(state_manager):
     # Modify the state
     state_manager._state["counter"] = 10
     state_manager._state["renardo_init"]["samples"] = True
-    state_manager._state["runtime_status"]["scBackendRunning"] = True
     state_manager.add_log_message("Test message")
     
     # Reset the state
@@ -157,5 +132,4 @@ def test_reset_state(state_manager):
     # Verify the state was reset
     assert state_manager._state["counter"] == 0
     assert state_manager._state["renardo_init"]["samples"] is False
-    assert state_manager._state["runtime_status"]["scBackendRunning"] is False
     assert state_manager._state["log_messages"] == []
