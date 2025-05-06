@@ -23,4 +23,10 @@
 # les trucs à debug
 
 - spack param not working
-- play has default dur at 1 rather thant .5 (maybe use the default in the .py class)
+- play has default dur at 1 rather than .5 (maybe use the default in the .py class)
+- fix / remove / find something else for startup file
+
+
+# trucs cools pour le futur
+
+- backend pure python avec pyo ?

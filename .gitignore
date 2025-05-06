@@ -6,6 +6,12 @@ dist/
 wheels/
 *.egg-info
 
+# Web client Svelte
+
+node_modules
+dist
+
+
 # Virtual environments
 .venv
 
