@@ -16,7 +16,6 @@ class RenardoApp:
         self.launch()
 
     def launch(self):
-
         # if args.cli:
         # if args.dir:
         #     try:
