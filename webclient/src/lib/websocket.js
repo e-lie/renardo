@@ -12,8 +12,15 @@ export const appState = writable({
     samples: false,
     instruments: false
   },
+  // Add runtime status
+  runtimeStatus: {
+    scBackendRunning: false,
+    renardoRuntimeRunning: false
+  },
   // Add log messages array
-  logMessages: []
+  logMessages: [],
+  // Add console output array
+  consoleOutput: []
 });
 
 // WebSocket connection
@@ -65,6 +72,11 @@ export function initWebSocket() {
     // Request Renardo initialization status
     sendMessage({
       type: 'get_renardo_status'
+    });
+    
+    // Request runtime status
+    sendMessage({
+      type: 'get_runtime_status'
     });
   });
   
@@ -124,7 +136,9 @@ function handleMessage(message) {
         welcomeText: data.welcome_text,
         error: null,
         // Update Renardo initialization status if available
-        renardoInit: data.renardo_init || state.renardoInit
+        renardoInit: data.renardo_init || state.renardoInit,
+        // Update runtime status if available
+        runtimeStatus: data.runtime_status || state.runtimeStatus
       }));
       break;
       
@@ -133,6 +147,15 @@ function handleMessage(message) {
       appState.update(state => ({
         ...state,
         renardoInit: data.initStatus || data.data?.initStatus || state.renardoInit,
+        error: null
+      }));
+      break;
+      
+    case 'runtime_status':
+      // Update runtime status
+      appState.update(state => ({
+        ...state,
+        runtimeStatus: data.runtimeStatus || data.data?.runtimeStatus || state.runtimeStatus,
         error: null
       }));
       break;
@@ -157,6 +180,65 @@ function handleMessage(message) {
       });
       break;
       
+    case 'console_output':
+      // Add new console output to the array
+      appState.update(state => {
+        // Create a new console output array with the new output added
+        const updatedConsoleOutput = [...state.consoleOutput, {
+          timestamp: data.timestamp || new Date().toLocaleTimeString(),
+          level: data.level || 'info',
+          message: data.message
+        }];
+        
+        // Limit console output to the most recent 1000 entries
+        const trimmedConsoleOutput = updatedConsoleOutput.slice(-1000);
+        
+        return {
+          ...state,
+          consoleOutput: trimmedConsoleOutput
+        };
+      });
+      break;
+      
+    case 'code_execution_result':
+      // Handle code execution result
+      if (data.success) {
+        // Add success message to console output
+        appState.update(state => {
+          const updatedConsoleOutput = [...state.consoleOutput, {
+            timestamp: new Date().toLocaleTimeString(),
+            level: 'success',
+            message: data.message || 'Code executed successfully'
+          }];
+          
+          const trimmedConsoleOutput = updatedConsoleOutput.slice(-1000);
+          
+          return {
+            ...state,
+            consoleOutput: trimmedConsoleOutput,
+            error: null
+          };
+        });
+      } else {
+        // Add error message to console output
+        appState.update(state => {
+          const updatedConsoleOutput = [...state.consoleOutput, {
+            timestamp: new Date().toLocaleTimeString(),
+            level: 'error',
+            message: data.message || 'Code execution failed'
+          }];
+          
+          const trimmedConsoleOutput = updatedConsoleOutput.slice(-1000);
+          
+          return {
+            ...state,
+            consoleOutput: trimmedConsoleOutput,
+            error: null
+          };
+        });
+      }
+      break;
+      
     case 'init_complete':
       // Update specific init status flag
       appState.update(state => {
@@ -168,6 +250,31 @@ function handleMessage(message) {
         return {
           ...state,
           renardoInit: updatedRenardoInit
+        };
+      });
+      break;
+    
+    case 'runtime_started':
+      // Update specific runtime status flag
+      appState.update(state => {
+        const updatedRuntimeStatus = {
+          ...state.runtimeStatus,
+          [data.component]: true
+        };
+        
+        // Add console message
+        const updatedConsoleOutput = [...state.consoleOutput, {
+          timestamp: new Date().toLocaleTimeString(),
+          level: 'success',
+          message: `${data.component === 'scBackendRunning' ? 'SuperCollider' : 'Renardo Runtime'} started successfully`
+        }];
+        
+        const trimmedConsoleOutput = updatedConsoleOutput.slice(-1000);
+        
+        return {
+          ...state,
+          runtimeStatus: updatedRuntimeStatus,
+          consoleOutput: trimmedConsoleOutput
         };
       });
       break;
