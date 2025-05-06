@@ -5,14 +5,14 @@ from flask import jsonify
 from renardo.webserver import state_service
 from renardo.webserver import websocket_utils
 
-def register_api_routes(app):
+def register_api_routes(webapp):
     """
     Register REST API routes with the Flask application
     
     Args:
-        app: Flask application instance
+        webapp: Flask application instance
     """
-    @app.route('/api/state', methods=['GET'])
+    @webapp.route('/api/state', methods=['GET'])
     def get_state():
         """
         Get current state
@@ -22,7 +22,7 @@ def register_api_routes(app):
         """
         return jsonify(state_service.get_state())
 
-    @app.route('/api/increment', methods=['POST'])
+    @webapp.route('/api/increment', methods=['POST'])
     def increment_counter():
         """
         Increment counter
@@ -41,7 +41,7 @@ def register_api_routes(app):
         
         return jsonify(state)
     
-    @app.route('/api/stats', methods=['GET'])
+    @webapp.route('/api/stats', methods=['GET'])
     def get_stats():
         """
         Get server statistics

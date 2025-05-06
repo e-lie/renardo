@@ -1,7 +1,7 @@
 from renardo.tui import write_sc_renardo_files_in_user_config
 from renardo.tui import SupercolliderInstance
 from renardo.tui import PulsarInstance
-from renardo.tui import RenardoTUI
+from renardo.webserver import run_webserver
 
 import argparse
 import time
@@ -38,18 +38,18 @@ class RenardoApp:
         if self.args.create_scfiles:
             write_sc_renardo_files_in_user_config()
 
-        if not (self.args.no_tui or self.args.pipe or self.args.foxdot_editor):
-            RenardoTUI(renardo_app=self).run()
+        if not (self.args.pipe or self.args.foxdot_editor):
+            run_webserver()
 
-        if self.args.boot:
-            print("Launching Renardo SC module with SynthDefManagement...")
-            self.sc_instance.start_sclang_subprocess()
-            output_line = self.sc_instance.read_stdout_line()
-            while "Welcome to" not in output_line:
-                print(output_line[:-1])  # remove \n at the end to avoid double newline
-                output_line = self.sc_instance.read_stdout_line()
-            self.sc_instance.evaluate_sclang_code("Renardo.start;")
-            time.sleep(3)
+        # if self.args.boot:
+        #     print("Launching Renardo SC module with SynthDefManagement...")
+        #     self.sc_instance.start_sclang_subprocess()
+        #     output_line = self.sc_instance.read_stdout_line()
+        #     while "Welcome to" not in output_line:
+        #         print(output_line[:-1])  # remove \n at the end to avoid double newline
+        #         output_line = self.sc_instance.read_stdout_line()
+        #     self.sc_instance.evaluate_sclang_code("Renardo.start;")
+        #     time.sleep(3)
 
         if self.args.pipe:
             from renardo.lib.runtime import handle_stdin, FoxDotCode
@@ -71,14 +71,14 @@ class RenardoApp:
             description="Live coding with Python and SuperCollider",
             epilog="More information: https://renardo.org/"
         )
-        parser.add_argument('-N', '--no-tui', action='store_true', help="does start renardo TUI")
+        # parser.add_argument('-N', '--no-tui', action='store_true', help="does start renardo TUI")
         parser.add_argument('-p', '--pipe', action='store_true', help="run Renardo from the command line interface")
         parser.add_argument('-f', '--foxdot-editor', action='store_true', help="run Renardo with the classic FoxDot code editor")
         # parser.add_argument('-d', '--dir', action='store', help="use an alternate directory for looking up samples")
         # parser.add_argument('-s', '--startup', action='store', help="use an alternate startup file")
         # parser.add_argument('-n', '--no-startup', action='store_true', help="does not load startup.py on boot")
         # store_false => boot default value = True WTF
-        parser.add_argument('-b', '--boot', action='store_true', help="Boot SuperCollider Renardo instance automatically")
+        # parser.add_argument('-b', '--boot', action='store_true', help="Boot SuperCollider Renardo instance automatically")
         parser.add_argument('-c', '--create-scfiles', action='store_true', help="Create Renardo class file and startup file in SuperCollider user conf dir.")
 
         return parser.parse_args()
