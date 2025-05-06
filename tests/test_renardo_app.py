@@ -67,3 +67,46 @@ def test_has_state_manager(mock_pulsar, mock_sc, mock_parse_args):
     
     # Import StateManager to check the type
     assert isinstance(app.state_manager, StateManager)
+
+
+@patch('renardo.renardo_app.renardo_app.argparse.ArgumentParser.parse_args')
+@patch('renardo.renardo_app.renardo_app.SupercolliderInstance')
+@patch('renardo.renardo_app.renardo_app.PulsarInstance')
+@patch('renardo.renardo_app.renardo_app.create_webapp')
+def test_webapp_creation(mock_create_webapp, mock_pulsar, mock_sc, mock_parse_args):
+    """Test that RenardoApp creates a webapp instance when requested"""
+    # Set up mocks
+    mock_parse_args.return_value = MagicMock()
+    mock_webapp = MagicMock()
+    mock_create_webapp.return_value = mock_webapp
+    
+    # Import here to avoid loading the class too early
+    from renardo.renardo_app.renardo_app import RenardoApp
+    
+    # Create an instance
+    app = RenardoApp.get_instance()
+    
+    # Verify that webapp is initially None
+    assert app.webapp is None
+    
+    # Call create_webapp_instance
+    result = app.create_webapp_instance()
+    
+    # Verify that create_webapp was called
+    mock_create_webapp.assert_called_once()
+    
+    # Verify that webapp was set
+    assert app.webapp is mock_webapp
+    
+    # Verify that the method returns the webapp
+    assert result is mock_webapp
+    
+    # Call create_webapp_instance again
+    mock_create_webapp.reset_mock()
+    result = app.create_webapp_instance()
+    
+    # Verify that create_webapp was not called again
+    mock_create_webapp.assert_not_called()
+    
+    # Verify that the method still returns the webapp
+    assert result is mock_webapp

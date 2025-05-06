@@ -1,6 +1,5 @@
 from renardo.settings_manager import settings
 from renardo.renardo_app.renardo_app import RenardoApp
-from renardo.webserver import run_webserver
 
 def main() -> None:
    """Entry point for the Renardo application"""
