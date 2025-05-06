@@ -8,14 +8,10 @@ from renardo.webserver import state_service
 from renardo.webserver import websocket_utils
 
 # Import needed functions from gatherer module
-try:
-    from renardo.gatherer import download_default_sample_pack, is_default_spack_initialized
-    from renardo.gatherer import download_default_sccode_pack_and_special, is_default_sccode_pack_initialized
-    from renardo.tui.supercollider_mgt.sc_classes_files import write_sc_renardo_files_in_user_config, is_renardo_sc_classes_initialized
-    GATHERER_AVAILABLE = True
-except Exception as e:
-    print(f"Warning: Gatherer module not fully available: {e}")
-    GATHERER_AVAILABLE = False
+from renardo.gatherer import download_default_sample_pack, is_default_spack_initialized
+from renardo.gatherer import download_default_sccode_pack_and_special, is_default_sccode_pack_initialized
+from renardo.tui.supercollider_mgt.sc_classes_files import write_sc_renardo_files_in_user_config, is_renardo_sc_classes_initialized
+
 
 # Simple logger class for gatherer functions
 class WebsocketLogger:
@@ -113,6 +109,15 @@ def register_websocket_routes(sock):
                             }
                         }))
                     
+                    elif message_type == "get_runtime_status":
+                        # Send runtime status to client
+                        ws.send(json.dumps({
+                            "type": "runtime_status",
+                            "data": {
+                                "runtimeStatus": state_service.get_runtime_status()
+                            }
+                        }))
+                    
                     elif message_type == "init_supercollider_classes":
                         # Start SC files initialization in a separate thread
                         threading.Thread(
@@ -131,6 +136,20 @@ def register_websocket_routes(sock):
                         # Start instruments download in a separate thread
                         threading.Thread(
                             target=download_instruments_task, 
+                            args=(ws,)
+                        ).start()
+                    
+                    elif message_type == "start_supercollider_backend":
+                        # Start SuperCollider backend in a separate thread
+                        threading.Thread(
+                            target=start_supercollider_backend_task, 
+                            args=(ws,)
+                        ).start()
+                    
+                    elif message_type == "start_renardo_runtime":
+                        # Start Renardo runtime in a separate thread
+                        threading.Thread(
+                            target=start_renardo_runtime_task, 
                             args=(ws,)
                         ).start()
                     
@@ -164,15 +183,13 @@ def register_websocket_routes(sock):
 
 def update_renardo_status():
     """Update the current status of Renardo components"""
-    if GATHERER_AVAILABLE:
-        try:
-            state_service.update_renardo_init_status("superColliderClasses", is_renardo_sc_classes_initialized())
-            state_service.update_renardo_init_status("samples", is_default_spack_initialized())
-            state_service.update_renardo_init_status("instruments", is_default_sccode_pack_initialized())
-        except Exception as e:
-            print(f"Error updating Renardo status: {e}")
-    else:
-        # If gatherer module not available, set all to False
+    try:
+        state_service.update_renardo_init_status("superColliderClasses", is_renardo_sc_classes_initialized())
+        state_service.update_renardo_init_status("samples", is_default_spack_initialized())
+        state_service.update_renardo_init_status("instruments", is_default_sccode_pack_initialized())
+    except Exception as e:
+        print(f"Error updating Renardo status: {e}")
+        # If error, set all to False
         state_service.update_renardo_init_status("superColliderClasses", False)
         state_service.update_renardo_init_status("samples", False)
         state_service.update_renardo_init_status("instruments", False)
@@ -186,22 +203,6 @@ def init_supercollider_classes_task(ws):
     """
     # Create logger
     logger = WebsocketLogger(ws)
-    
-    # Check if gatherer module is available
-    if not GATHERER_AVAILABLE:
-        error_msg = "SuperCollider initialization unavailable: Required modules could not be loaded"
-        print(error_msg)
-        logger.write_line(error_msg, "ERROR")
-        
-        # Send error message to client
-        try:
-            ws.send(json.dumps({
-                "type": "error",
-                "message": error_msg
-            }))
-        except:
-            pass
-        return
     
     try:
         logger.write_line("Starting SuperCollider classes initialization...")
@@ -270,22 +271,6 @@ def download_samples_task(ws):
     # Create logger
     logger = WebsocketLogger(ws)
     
-    # Check if gatherer module is available
-    if not GATHERER_AVAILABLE:
-        error_msg = "Sample download unavailable: Required modules could not be loaded"
-        print(error_msg)
-        logger.write_line(error_msg, "ERROR")
-        
-        # Send error message to client
-        try:
-            ws.send(json.dumps({
-                "type": "error",
-                "message": error_msg
-            }))
-        except:
-            pass
-        return
-    
     try:
         # Check if already downloaded
         if is_default_spack_initialized():
@@ -351,22 +336,6 @@ def download_instruments_task(ws):
     # Create logger
     logger = WebsocketLogger(ws)
     
-    # Check if gatherer module is available
-    if not GATHERER_AVAILABLE:
-        error_msg = "Instruments download unavailable: Required modules could not be loaded"
-        print(error_msg)
-        logger.write_line(error_msg, "ERROR")
-        
-        # Send error message to client
-        try:
-            ws.send(json.dumps({
-                "type": "error",
-                "message": error_msg
-            }))
-        except:
-            pass
-        return
-    
     try:
         # Check if already downloaded
         if is_default_sccode_pack_initialized():
@@ -408,6 +377,189 @@ def download_instruments_task(ws):
         })
     except Exception as e:
         error_msg = f"Error downloading instruments and effects: {str(e)}"
+        print(error_msg)
+        
+        # Log error
+        logger.write_line(error_msg, "ERROR")
+        
+        # Send error message to client
+        try:
+            ws.send(json.dumps({
+                "type": "error",
+                "message": error_msg
+            }))
+        except:
+            pass
+
+def start_supercollider_backend_task(ws):
+    """
+    Start SuperCollider backend in a separate thread
+    
+    Args:
+        ws: WebSocket connection
+    """
+    # Create logger
+    logger = WebsocketLogger(ws)
+    
+    # Check if SuperCollider backend module is available
+    if not SC_BACKEND_AVAILABLE:
+        error_msg = "SuperCollider backend unavailable: Required modules could not be loaded"
+        print(error_msg)
+        logger.write_line(error_msg, "ERROR")
+        
+        # Send error message to client
+        try:
+            ws.send(json.dumps({
+                "type": "error",
+                "message": error_msg
+            }))
+        except:
+            pass
+        return
+    
+    try:
+        logger.write_line("Starting SuperCollider backend...")
+        
+        # Check if SC classes are initialized
+        if not is_renardo_sc_classes_initialized():
+            # First initialize SC classes before starting the backend
+            logger.write_line("SuperCollider classes not initialized. Initializing...", "WARN")
+            write_sc_renardo_files_in_user_config()
+            logger.write_line("SuperCollider class files written successfully!", "SUCCESS")
+            
+            # Update status
+            state_service.update_renardo_init_status("superColliderClasses", True)
+        
+        # Create and start server manager
+        server = ServerManager()
+        server.boot()
+        
+        # Wait for server to start
+        max_attempts = 20
+        for attempt in range(max_attempts):
+            if server.running():
+                break
+            time.sleep(0.5)
+            logger.write_line(f"Waiting for SuperCollider to start... ({attempt+1}/{max_attempts})")
+        
+        if server.running():
+            logger.write_line("SuperCollider backend started successfully!", "SUCCESS")
+            
+            # Update runtime status
+            state_service.update_runtime_status("scBackendRunning", True)
+            
+            # Send runtime started message to client
+            ws.send(json.dumps({
+                "type": "runtime_started",
+                "data": {
+                    "component": "scBackendRunning",
+                    "success": True
+                }
+            }))
+            
+            # Broadcast updated status to all clients
+            websocket_utils.broadcast_to_clients({
+                "type": "runtime_status",
+                "data": {
+                    "runtimeStatus": state_service.get_runtime_status()
+                }
+            })
+        else:
+            error_msg = "Failed to start SuperCollider backend: Timeout waiting for server"
+            logger.write_line(error_msg, "ERROR")
+            
+            # Send error message to client
+            ws.send(json.dumps({
+                "type": "error",
+                "message": error_msg
+            }))
+    except Exception as e:
+        error_msg = f"Error starting SuperCollider backend: {str(e)}"
+        print(error_msg)
+        
+        # Log error
+        logger.write_line(error_msg, "ERROR")
+        
+        # Send error message to client
+        try:
+            ws.send(json.dumps({
+                "type": "error",
+                "message": error_msg
+            }))
+        except:
+            pass
+
+def start_renardo_runtime_task(ws):
+    """
+    Start Renardo runtime in a separate thread
+    
+    Args:
+        ws: WebSocket connection
+    """
+    # Create logger
+    logger = WebsocketLogger(ws)
+    
+    # Check if Renardo runtime module is available
+    if not RENARDO_RUNTIME_AVAILABLE:
+        error_msg = "Renardo runtime unavailable: Required modules could not be loaded"
+        print(error_msg)
+        logger.write_line(error_msg, "ERROR")
+        
+        # Send error message to client
+        try:
+            ws.send(json.dumps({
+                "type": "error",
+                "message": error_msg
+            }))
+        except:
+            pass
+        return
+    
+    # Check if SuperCollider backend is running
+    if not state_service.get_runtime_status().get("scBackendRunning", False):
+        error_msg = "SuperCollider backend must be running before starting Renardo runtime"
+        print(error_msg)
+        logger.write_line(error_msg, "ERROR")
+        
+        # Send error message to client
+        try:
+            ws.send(json.dumps({
+                "type": "error",
+                "message": error_msg
+            }))
+        except:
+            pass
+        return
+    
+    try:
+        logger.write_line("Starting Renardo runtime...")
+        
+        # Start FoxDot/Renardo
+        FoxDot.start()
+        
+        logger.write_line("Renardo runtime started successfully!", "SUCCESS")
+        
+        # Update runtime status
+        state_service.update_runtime_status("renardoRuntimeRunning", True)
+        
+        # Send runtime started message to client
+        ws.send(json.dumps({
+            "type": "runtime_started",
+            "data": {
+                "component": "renardoRuntimeRunning",
+                "success": True
+            }
+        }))
+        
+        # Broadcast updated status to all clients
+        websocket_utils.broadcast_to_clients({
+            "type": "runtime_status",
+            "data": {
+                "runtimeStatus": state_service.get_runtime_status()
+            }
+        })
+    except Exception as e:
+        error_msg = f"Error starting Renardo runtime: {str(e)}"
         print(error_msg)
         
         # Log error

@@ -13,6 +13,11 @@ _state = {
         "samples": False,
         "instruments": False
     },
+    # Renardo runtime status
+    "runtime_status": {
+        "scBackendRunning": False,
+        "renardoRuntimeRunning": False
+    },
     # Log messages
     "log_messages": []
 }
@@ -82,6 +87,33 @@ def update_renardo_init_status(component, status):
     return _state["renardo_init"]
 
 
+def get_runtime_status():
+    """
+    Get Renardo runtime status
+    
+    Returns:
+        dict: Renardo runtime status
+    """
+    return _state["runtime_status"]
+
+
+def update_runtime_status(component, status):
+    """
+    Update Renardo runtime status
+    
+    Args:
+        component (str): Component to update (scBackendRunning or renardoRuntimeRunning)
+        status (bool): New status
+        
+    Returns:
+        dict: Updated Renardo runtime status
+    """
+    if component in _state["runtime_status"]:
+        _state["runtime_status"][component] = status
+    
+    return _state["runtime_status"]
+
+
 def add_log_message(message, level="INFO"):
     """
     Add a log message
@@ -138,6 +170,10 @@ def reset_state():
         "superColliderClasses": False,
         "samples": False,
         "instruments": False
+    }
+    _state["runtime_status"] = {
+        "scBackendRunning": False,
+        "renardoRuntimeRunning": False
     }
     _state["log_messages"] = []
     return _state
