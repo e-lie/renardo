@@ -1,5 +1,5 @@
-from renardo.tui.supercollider_mgt.sc_classes_files import write_sc_renardo_files_in_user_config
-from renardo.tui.supercollider_mgt.sclang_instances_mgt import SupercolliderInstance
+from renardo.renardo_app.supercollider_mgt.sc_classes_files import write_sc_renardo_files_in_user_config
+from renardo.renardo_app.supercollider_mgt.sclang_instances_mgt import SupercolliderInstance
 from renardo.tui.pulsar_mgt import PulsarInstance
 from renardo.tui.RenardoTUI import RenardoTUI
 
