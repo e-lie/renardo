@@ -16,7 +16,7 @@ from textual.widgets import (
     TabPane
 )
 
-from renardo.tui.supercollider_mgt.sc_classes_files import is_renardo_sc_classes_initialized, write_sc_renardo_files_in_user_config
+from renardo.renardo_app.supercollider_mgt.sc_classes_files import is_renardo_sc_classes_initialized, write_sc_renardo_files_in_user_config
 from renardo.gatherer import (
     is_default_spack_initialized,
     download_default_sample_pack,
