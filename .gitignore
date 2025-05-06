@@ -114,3 +114,4 @@ Temporary Items
 
 # Pyinstaller
 *.spec
+**/.claude/settings.local.json

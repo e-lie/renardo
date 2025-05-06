@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { appState, initWebSocket, incrementCounter, incrementCounterFallback } from './lib/websocket.js';
   import RenardoInit from './RenardoInit.svelte';
+  import CodeEditor from './CodeEditor.svelte';
   
   // Router state
   let currentRoute = 'home';
@@ -80,6 +81,7 @@
     <div class="nav-links">
       <a href="#home" class:active={currentRoute === 'home'}>Home</a>
       <a href="#init" class:active={currentRoute === 'init'}>Initialize</a>
+      <a href="#editor" class:active={currentRoute === 'editor'}>Code Editor</a>
     </div>
   </nav>
 </header>
@@ -116,14 +118,11 @@
         </div>
         
         <div class="feature-card">
-          <h3>Counter Demo</h3>
-          <p>Try out the WebSocket connection with this counter demo.</p>
-          <div class="counter-section">
-            <h4>Counter: <span class="counter-value">{$appState.counter}</span></h4>
-            <button on:click={handleIncrement}>
-              Increment Counter
-            </button>
-          </div>
+          <h3>Live Coding Editor</h3>
+          <p>Create music with the Renardo live coding environment.</p>
+          <button on:click={() => navigate('editor')} class="editor-button">
+            Open Editor
+          </button>
         </div>
       </div>
       
@@ -136,6 +135,8 @@
     </div>
   {:else if currentRoute === 'init'}
     <RenardoInit />
+  {:else if currentRoute === 'editor'}
+    <CodeEditor />
   {/if}
 </main>
   
@@ -203,7 +204,7 @@
       display: flex;
       justify-content: center;
       align-items: flex-start;
-      padding: 2rem 0;
+      padding: 0;
     }
     
     .container {
@@ -213,6 +214,7 @@
       background-color: white;
       border-radius: 8px;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      margin-top: 2rem;
     }
     
     h1 {
@@ -279,20 +281,6 @@
       color: #2c3e50;
     }
     
-    .counter-section {
-      text-align: center;
-      margin-top: 1rem;
-    }
-    
-    .counter-section h4 {
-      margin-top: 0;
-    }
-    
-    .counter-value {
-      font-size: 1.25em;
-      color: #e74c3c;
-    }
-    
     button {
       background-color: #3498db;
       color: white;
@@ -312,10 +300,12 @@
       transform: translateY(1px);
     }
     
-    .counter-description {
-      margin-top: 1rem;
-      font-size: 0.9rem;
-      color: #7f8c8d;
+    .editor-button {
+      background-color: #2ecc71;
+    }
+    
+    .editor-button:hover {
+      background-color: #27ae60;
     }
     
     .error-message {
