@@ -5,7 +5,15 @@ export const appState = writable({
   counter: 0,
   welcomeText: 'Loading...',
   connected: false,
-  error: null
+  error: null,
+  // Add Renardo initialization state
+  renardoInit: {
+    superColliderClasses: false,
+    samples: false,
+    instruments: false
+  },
+  // Add log messages array
+  logMessages: []
 });
 
 // WebSocket connection
@@ -53,6 +61,11 @@ export function initWebSocket() {
     sendMessage({
       type: 'get_state'
     });
+    
+    // Request Renardo initialization status
+    sendMessage({
+      type: 'get_renardo_status'
+    });
   });
   
   // Connection closed
@@ -99,7 +112,7 @@ export function initWebSocket() {
  * Handle incoming WebSocket messages
  */
 function handleMessage(message) {
-  const { type, data, error } = message;
+  const { type, data, error, message: errorMessage } = message;
   
   switch (type) {
     case 'initial_state':
@@ -109,21 +122,67 @@ function handleMessage(message) {
         ...state,
         counter: data.counter,
         welcomeText: data.welcome_text,
+        error: null,
+        // Update Renardo initialization status if available
+        renardoInit: data.renardo_init || state.renardoInit
+      }));
+      break;
+      
+    case 'renardo_status':
+      // Update Renardo initialization status
+      appState.update(state => ({
+        ...state,
+        renardoInit: data.initStatus || data.data?.initStatus || state.renardoInit,
         error: null
       }));
       break;
       
+    case 'log_message':
+      // Add new log message to the array
+      appState.update(state => {
+        // Create a new log messages array with the new message added
+        const updatedLogMessages = [...state.logMessages, {
+          timestamp: data.timestamp || new Date().toLocaleTimeString(),
+          level: data.level || 'INFO',
+          message: data.message
+        }];
+        
+        // Limit log messages to the most recent 500 (prevent too much memory usage)
+        const trimmedLogMessages = updatedLogMessages.slice(-500);
+        
+        return {
+          ...state,
+          logMessages: trimmedLogMessages
+        };
+      });
+      break;
+      
+    case 'init_complete':
+      // Update specific init status flag
+      appState.update(state => {
+        const updatedRenardoInit = {
+          ...state.renardoInit,
+          [data.component]: data.success
+        };
+        
+        return {
+          ...state,
+          renardoInit: updatedRenardoInit
+        };
+      });
+      break;
+      
     case 'error':
       // Handle error message
-      console.error('Server error:', error);
+      console.error('Server error:', errorMessage || error);
       appState.update(state => ({
         ...state,
-        error: error || 'Unknown server error'
+        error: errorMessage || error || 'Unknown server error'
       }));
       break;
       
     default:
-      console.log('Unhandled message type:', type);
+      console.log('Unhandled message type:', type, message);
   }
 }
 
