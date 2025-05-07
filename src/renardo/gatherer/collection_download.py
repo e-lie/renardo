@@ -6,7 +6,6 @@ from urllib.parse import urlparse, urljoin
 import requests
 
 
-
 def download_file_in_pool(url, dest_path, retries=5, delay=1, logger=None):
     filename = os.path.basename(urlparse(url).path)
     for attempt in range(retries):
@@ -41,7 +40,8 @@ def download_files_from_json_index_concurrent(json_url, download_dir, max_worker
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
-            logger.write_line(f"Error downloading collection JSON index: {e}")
+            if logger:
+                logger.write_line(f"Error downloading collection JSON index: {e}")
             return None
 
     def process_node(node, base_url="", current_dir=""):
@@ -65,22 +65,49 @@ def download_files_from_json_index_concurrent(json_url, download_dir, max_worker
     os.makedirs(download_dir, exist_ok=True)
 
     # Download JSON content from URL
+    if logger:
+        logger.write_line(f"Downloading collection index from {json_url}")
+    
     file_tree = download_json_index_from_url(json_url)
+    if not file_tree:
+        if logger:
+            logger.write_line("Failed to download collection index")
+        return False
 
     # Generate list of all files to download
     download_tasks = process_node(file_tree, json_url)
-
+    total_files = len(download_tasks)
+    
+    if logger:
+        logger.write_line(f"Found {total_files} files to download")
+    
     # Use ThreadPoolExecutor to download files concurrently
+    completed_files = 0
+    success_count = 0
+    
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = [
             executor.submit(download_file_in_pool, url, path, 5, 1, logger)
             for url, path in download_tasks
         ]
         for future in as_completed(futures):
-            # Handle each completed download here if needed (e.g., check for success)
+            # Handle each completed download here
+            completed_files += 1
             result = future.result()
-            if not result:
+            
+            if result:
+                success_count += 1
+            else:
                 if logger:
                     logger.write_line("A download failed.")
-
+            
+            # Log progress periodically
+            if logger and completed_files % 5 == 0:
+                logger.write_line(f"Progress: {completed_files}/{total_files} files downloaded")
+    
+    if logger:
+        logger.write_line(f"Download complete: {success_count}/{total_files} files downloaded successfully")
+    
+    # Return True if all downloads were successful
+    return success_count == total_files
 
