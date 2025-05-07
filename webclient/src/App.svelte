@@ -1,9 +1,37 @@
 <script>
   import { onMount } from 'svelte';
+  import { fade } from 'svelte/transition';
   import { appState, initWebSocket, incrementCounter, incrementCounterFallback } from './lib/websocket.js';
   import RenardoInit from './RenardoInit.svelte';
   import CodeEditor from './CodeEditor.svelte';
   import Collections from './Collections.svelte';
+  
+  // Add CodeMirror CSS links to the document head
+  if (typeof document !== 'undefined') {
+    // Add CodeMirror CSS
+    const cmCss = document.createElement('link');
+    cmCss.rel = 'stylesheet';
+    cmCss.href = 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css';
+    document.head.appendChild(cmCss);
+    
+    // Add CodeMirror theme (you can change the theme as needed)
+    const cmThemeCss = document.createElement('link');
+    cmThemeCss.rel = 'stylesheet';
+    cmThemeCss.href = 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css';
+    document.head.appendChild(cmThemeCss);
+    
+    // Add CodeMirror script (if it's not already imported)
+    if (typeof window.CodeMirror === 'undefined') {
+      const cmJs = document.createElement('script');
+      cmJs.src = 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js';
+      document.head.appendChild(cmJs);
+      
+      // Add Python mode for CodeMirror
+      const cmPythonJs = document.createElement('script');
+      cmPythonJs.src = 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js';
+      document.head.appendChild(cmPythonJs);
+    }
+  }
   
   // Router state
   let currentRoute = 'home';
@@ -169,7 +197,9 @@
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: 1000;
+      width: 100%;
+      left: 0;
     }
     
     nav {
@@ -178,6 +208,7 @@
       align-items: center;
       max-width: 1200px;
       margin: 0 auto;
+      width: 100%;
     }
     
     .nav-logo {

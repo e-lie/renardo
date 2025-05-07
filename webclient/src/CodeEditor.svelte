@@ -1,7 +1,8 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
+  import { fade } from 'svelte/transition';
   import { appState, initWebSocket, sendMessage } from './lib/websocket.js';
-  import CodeMirror from 'svelte-codemirror-editor';
+  // We'll load CodeMirror from CDN instead
   
   // State for editor content
   let editorContent = `# Renardo Live Coding Editor
@@ -46,14 +47,56 @@ d2 >> play("  * ").speed(2)
     }
   }
   
-  // Initialize WebSocket connection on mount
+  // Initialize WebSocket connection and CodeMirror on mount
   onMount(() => {
     if (webSocketSupported) {
       initWebSocket();
       
+      // Wait for CodeMirror to be loaded from CDN 
+      const initEditor = () => {
+        if (typeof window.CodeMirror === 'undefined') {
+          // If CodeMirror isn't loaded yet, try again in 100ms
+          setTimeout(initEditor, 100);
+          return;
+        }
+        
+        // Initialize CodeMirror
+        const codeMirrorOptions = {
+          value: editorContent,
+          lineNumbers: true,
+          mode: 'python',
+          theme: 'monokai',
+          tabSize: 4,
+          indentWithTabs: false,
+          indentUnit: 4,
+          lineWrapping: true,
+          viewportMargin: Infinity
+        };
+        
+        // Make sure we have the CodeMirror textarea element
+        const textarea = document.getElementById('code-editor');
+        if (textarea) {
+          // Initialize CodeMirror
+          editor = window.CodeMirror.fromTextArea(textarea, codeMirrorOptions);
+          
+          // Update local content when editor changes
+          editor.on('change', (instance) => {
+            editorContent = instance.getValue();
+          });
+          
+          // Add key binding for Ctrl+Enter to execute code
+          editor.setOption('extraKeys', {
+            'Ctrl-Enter': executeCode,
+            'Cmd-Enter': executeCode // For Mac
+          });
+        }
+      };
+      
+      // Start the initialization process
+      initEditor();
+      
       // Subscribe to appState changes
       const unsubscribe = appState.subscribe(state => {
-        
         if (state.consoleOutput && state.consoleOutput.length > 0) {
           const prevOutputCount = consoleOutput.length;
           consoleOutput = state.consoleOutput;
@@ -65,7 +108,7 @@ d2 >> play("  * ").speed(2)
         }
       });
       
-      // Set up keyboard shortcut for execution (Ctrl+Enter)
+      // Set up keyboard shortcut for execution (Ctrl+Enter) - fallback for whole document
       const handleKeyDown = (event) => {
         if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
           event.preventDefault();
@@ -79,19 +122,27 @@ d2 >> play("  * ").speed(2)
       return () => {
         unsubscribe();
         document.removeEventListener('keydown', handleKeyDown);
+        if (editor) {
+          editor.toTextArea(); // Clean up CodeMirror instance
+        }
       };
     }
   });
   
   // Execute code
   function executeCode() {
+    // Check if the editor is initialized
+    if (!editor) {
+      console.error("CodeMirror editor not initialized!");
+      return;
+    }
     
     // Get current selection or all text if nothing is selected
     let codeToExecute;
-    if (editor && editor.getSelection().length > 0) {
+    if (editor.somethingSelected()) {
       codeToExecute = editor.getSelection();
     } else {
-      codeToExecute = editorContent;
+      codeToExecute = editor.getValue();
     }
     
     // Don't execute empty code
@@ -168,9 +219,15 @@ d2 >> play("  * ").speed(2)
       <!-- Connection status -->
       <div class="status-bar">
         {#if webSocketSupported}
-          <div class="status-indicator" class:connected={$appState.connected}>
-            {$appState.connected ? 'Connected' : 'Disconnected'}
-          </div>
+          {#if $appState.connected}
+            <div class="status-indicator connected" transition:fade={{ duration: 300 }}>
+              Connected
+            </div>
+          {:else}
+            <div class="status-indicator" transition:fade={{ duration: 300 }}>
+              Disconnected
+            </div>
+          {/if}
         {:else}
           <div class="status-indicator fallback">
             Using HTTP Fallback (WebSockets not supported)
@@ -207,11 +264,7 @@ d2 >> play("  * ").speed(2)
     <div class="editor-workspace">
       <!-- Code editor -->
       <div class="code-editor-wrapper" bind:this={editorContainer}>
-        <CodeMirror
-          bind:value={editorContent}
-          {editorOptions}
-          on:mount={handleEditorMount}
-        />
+        <textarea id="code-editor">{editorContent}</textarea>
       </div>
       
       <!-- Console output -->
@@ -474,12 +527,25 @@ d2 >> play("  * ").speed(2)
   }
   
   /* Make CodeMirror look better */
-  :global(.cm-editor) {
-    height: 100%;
+  :global(.CodeMirror) {
+    height: 100% !important;
+    width: 100%;
+    font-family: 'Fira Code', 'Menlo', 'Monaco', 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.5;
   }
   
-  :global(.cm-scroller) {
-    overflow: auto;
-    font-family: 'Fira Code', 'Menlo', 'Monaco', 'Courier New', monospace;
+  :global(.CodeMirror-gutters) {
+    border-right: 1px solid #ddd;
+    background-color: #f7f7f7;
+  }
+  
+  :global(.CodeMirror-linenumber) {
+    color: #999;
+  }
+  
+  /* Make sure the textarea is hidden properly */
+  #code-editor {
+    display: none;
   }
 </style>
