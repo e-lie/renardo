@@ -20,7 +20,9 @@ export const appState = writable({
   // Add log messages array
   logMessages: [],
   // Add console output array
-  consoleOutput: []
+  consoleOutput: [],
+  // Last received message for event detection
+  _lastMessage: null
 });
 
 // WebSocket connection
@@ -121,6 +123,12 @@ export function initWebSocket() {
  */
 function handleMessage(message) {
   const { type, data, error, message: errorMessage } = message;
+  
+  // Always store the last message in the state for components to detect specific events
+  appState.update(state => ({
+    ...state,
+    _lastMessage: message
+  }));
   
   switch (type) {
     case 'initial_state':
