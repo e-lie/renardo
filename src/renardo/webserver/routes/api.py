@@ -126,11 +126,13 @@ def register_api_routes(webapp):
                 # Start download in a separate thread to avoid blocking
                 def download_task():
                     try:
-                        logger.write_line(f"Starting download of sample pack '{collection_name}'...")
+                        logger.write_line(f"🚀 STARTING DOWNLOAD: Sample pack '{collection_name}'...", "INFO")
+                        logger.write_line(f"Please wait while we prepare and download the files...", "INFO")
                         success = download_sample_pack(collection_name, logger)
                         
                         if success:
-                            logger.write_line(f"Sample pack '{collection_name}' downloaded successfully!", "SUCCESS")
+                            logger.write_line(f"🎉 DOWNLOAD SUCCESSFUL: Sample pack '{collection_name}' has been installed!", "SUCCESS")
+                            logger.write_line(f"You can now use these samples in your compositions.", "SUCCESS")
                             
                             # Broadcast updated status to all WebSocket clients
                             websocket_utils.broadcast_to_clients({
@@ -142,9 +144,11 @@ def register_api_routes(webapp):
                                 }
                             })
                         else:
-                            logger.write_error(f"Failed to download sample pack '{collection_name}'")
+                            logger.write_error(f"❌ DOWNLOAD FAILED: Sample pack '{collection_name}' could not be installed completely.")
+                            logger.write_error(f"Please try again later or contact support if the issue persists.")
                     except Exception as e:
-                        logger.write_error(f"Error downloading sample pack '{collection_name}': {str(e)}")
+                        logger.write_error(f"❌ ERROR DURING DOWNLOAD: Sample pack '{collection_name}': {str(e)}")
+                        logger.write_error(f"Please try again later or check your network connection.")
                 
                 # Start download thread
                 import threading
@@ -173,11 +177,13 @@ def register_api_routes(webapp):
                 # Start download in a separate thread to avoid blocking
                 def download_task():
                     try:
-                        logger.write_line(f"Starting download of SuperCollider code pack '{collection_name}'...")
+                        logger.write_line(f"🚀 STARTING DOWNLOAD: SuperCollider code pack '{collection_name}'...", "INFO")
+                        logger.write_line(f"Please wait while we prepare and download the instruments and effects...", "INFO")
                         success = download_sccode_pack(collection_name, logger)
                         
                         if success:
-                            logger.write_line(f"SuperCollider code pack '{collection_name}' downloaded successfully!", "SUCCESS")
+                            logger.write_line(f"🎉 DOWNLOAD SUCCESSFUL: SuperCollider code pack '{collection_name}' has been installed!", "SUCCESS")
+                            logger.write_line(f"You can now use these instruments and effects in your compositions.", "SUCCESS")
                             
                             # Broadcast updated status to all WebSocket clients
                             websocket_utils.broadcast_to_clients({
@@ -189,9 +195,11 @@ def register_api_routes(webapp):
                                 }
                             })
                         else:
-                            logger.write_error(f"Failed to download SuperCollider code pack '{collection_name}'")
+                            logger.write_error(f"❌ DOWNLOAD FAILED: SuperCollider code pack '{collection_name}' could not be installed completely.")
+                            logger.write_error(f"Please try again later or contact support if the issue persists.")
                     except Exception as e:
-                        logger.write_error(f"Error downloading SuperCollider code pack '{collection_name}': {str(e)}")
+                        logger.write_error(f"❌ ERROR DURING DOWNLOAD: SuperCollider code pack '{collection_name}': {str(e)}")
+                        logger.write_error(f"Please try again later or check your network connection.")
                 
                 # Start download thread
                 import threading
