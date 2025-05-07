@@ -39,6 +39,9 @@ dependencies = [
     "flask-sock>=0.7.0",
     "flask-cors>=3.0.10",
     "websockets>=10.4",
+    "gunicorn",
+    "gevent",
+    "gevent-websocket",
 ]
 
 [project.scripts]
