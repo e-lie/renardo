@@ -14,6 +14,7 @@
   let showLogger = false;
   let logMessages = [];
   let unsubscribeFromLogs;
+  let unsubscribeDownloadComplete;
   
   // WebSocket connection state
   let wsConnected = false;
@@ -93,24 +94,61 @@
       unsubscribeFromLogs = null;
     }
     
-    // Setup subscription for log messages before making the API call
-    unsubscribeFromLogs = appState.subscribe(message => {
-      if (message.type === 'log_message') {
-        // Add the log message to our list
-        logMessages = [...logMessages, message.data];
+    // Setup subscription for the app state to get log messages and download status
+    let previousLogCount = 0;
+    
+    unsubscribeFromLogs = appState.subscribe(state => {
+      // Handle websocket log messages - get any new ones from the store
+      if (state.logMessages && state.logMessages.length > previousLogCount) {
+        // Get only the new messages since our last check
+        const newMessages = state.logMessages.slice(previousLogCount);
+        previousLogCount = state.logMessages.length;
         
-        // Auto-scroll the log container to the bottom
+        // Add new messages to our local log display
+        for (const logMsg of newMessages) {
+          logMessages = [...logMessages, logMsg];
+          
+          console.log('New log message:', logMsg); // Debug logging
+          
+          // If this is a success or error message, make it more prominent
+          if (logMsg.level === 'SUCCESS' || logMsg.level === 'ERROR') {
+            // Schedule this after the DOM has been updated
+            setTimeout(() => {
+              const logContainer = document.getElementById('log-container');
+              if (logContainer) {
+                const lastMessageEl = logContainer.lastElementChild;
+                if (lastMessageEl) {
+                  lastMessageEl.classList.add('log-highlight');
+                  setTimeout(() => {
+                    lastMessageEl.classList.remove('log-highlight');
+                  }, 2000);
+                }
+              }
+            }, 50);
+          }
+        }
+        
+        // Auto-scroll the log container to the bottom after messages are added
         setTimeout(() => {
           const logContainer = document.getElementById('log-container');
           if (logContainer) {
-            logContainer.scrollTop = logContainer.scrollHeight;
+            logContainer.scrollTo({
+              top: logContainer.scrollHeight,
+              behavior: 'smooth'
+            });
           }
-        }, 0);
-      } else if (message.type === 'collection_downloaded' && 
-                message.data.type === type && 
-                message.data.name === name) {
+        }, 50);
+      }
+    });
+    
+    // Separate listener specifically for collection download completion events
+    const unsubscribeDownloadComplete = appState.subscribe(state => {
+      if (state._lastMessage && state._lastMessage.type === 'collection_downloaded' && 
+          state._lastMessage.data && state._lastMessage.data.type === type && 
+          state._lastMessage.data.name === name) {
+          
         // Download complete
-        if (message.data.success) {
+        if (state._lastMessage.data.success) {
           // Update UI to show as installed
           if (collectionsData && collectionsData[type]) {
             const collection = collectionsData[type].find(c => c.name === name);
@@ -134,6 +172,15 @@
         level: 'INFO',
         message: `Initiating download request for ${type}/${name}...`
       }];
+      
+      // Also add a check if we're connected to websocket
+      if (!wsConnected) {
+        logMessages = [...logMessages, {
+          timestamp: new Date().toLocaleTimeString(),
+          level: 'WARN',
+          message: `WebSocket is disconnected. Progress updates may not appear in real-time.`
+        }];
+      }
       
       const response = await fetch(`/api/collections/${type}/${name}/download`, {
         method: 'POST'
@@ -208,6 +255,10 @@
   onDestroy(() => {
     if (unsubscribeFromLogs) {
       unsubscribeFromLogs();
+    }
+    
+    if (unsubscribeDownloadComplete) {
+      unsubscribeDownloadComplete();
     }
     
     if (unsubscribeWS) {
@@ -753,6 +804,17 @@
     background-color: #f0fff0;
   }
   
+  /* Highlight animation for important messages */
+  .log-highlight {
+    animation: log-highlight-pulse 2s ease-in-out;
+  }
+  
+  @keyframes log-highlight-pulse {
+    0% { transform: scale(1); }
+    10% { transform: scale(1.02); box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    20% { transform: scale(1); }
+  }
+  
   .log-timestamp {
     font-size: 0.8rem;
     color: #777;
@@ -762,6 +824,7 @@
   
   .log-text {
     flex-grow: 1;
+    word-break: break-word;  /* Allow long words to break */
   }
   
   @media (max-width: 768px) {
