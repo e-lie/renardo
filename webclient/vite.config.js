@@ -5,7 +5,14 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 export default defineConfig({
   plugins: [svelte()],
   optimizeDeps: {
-    exclude: ["svelte-codemirror-editor", "codemirror", "@codemirror/language-javascript" /* ... */],
+    exclude: [
+      "svelte-codemirror-editor",
+      "codemirror",
+      "@codemirror/language-javascript",
+      "@codemirror/basic-setup",
+      "@codemirror/lang-python",
+      "@codemirror/theme-one-dark",
+      ],
   },
   server: {
     proxy: {
