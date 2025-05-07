@@ -248,6 +248,13 @@ function handleMessage(message) {
       }));
       break;
       
+    case 'collection_downloaded':
+      // Handle collection download notification
+      console.log(`Collection downloaded: ${data.type}/${data.name}`);
+      // If the collections page is open, it will automatically refresh
+      // when the user navigates to it next time
+      break;
+      
     default:
       console.log('Unhandled message type:', type, message);
   }
