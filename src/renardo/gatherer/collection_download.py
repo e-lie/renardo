@@ -101,9 +101,10 @@ def download_files_from_json_index_concurrent(json_url, download_dir, max_worker
                 if logger:
                     logger.write_line("A download failed.")
             
-            # Log progress periodically
-            if logger and completed_files % 5 == 0:
-                logger.write_line(f"Progress: {completed_files}/{total_files} files downloaded")
+            # Log progress for every file to provide more frequent updates
+            if logger:
+                progress_percent = int((completed_files / total_files) * 100)
+                logger.write_line(f"Progress: {completed_files}/{total_files} files downloaded ({progress_percent}%)")
     
     if logger:
         logger.write_line(f"Download complete: {success_count}/{total_files} files downloaded successfully")
