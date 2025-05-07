@@ -7,23 +7,8 @@
   let samplesInitialized = false;
   let instrumentsInitialized = false;
   
-  // Log messages collection
-  let logMessages = [];
-  
-  // Reference to log container for autoscrolling
-  let logContainer;
-  
   // Check if WebSockets are supported
   const webSocketSupported = 'WebSocket' in window;
-  
-  // Function to scroll log container to bottom
-  function scrollToBottom() {
-    if (logContainer) {
-      setTimeout(() => {
-        logContainer.scrollTop = logContainer.scrollHeight;
-      }, 50);
-    }
-  }
   
   // Initialize WebSocket connection on mount
   onMount(() => {
@@ -37,16 +22,6 @@
           samplesInitialized = state.renardoInit.samples;
           instrumentsInitialized = state.renardoInit.instruments;
         }
-        
-        if (state.logMessages && state.logMessages.length > 0) {
-          const prevLogCount = logMessages.length;
-          logMessages = state.logMessages;
-          
-          // If new log messages were added, scroll to bottom
-          if (logMessages.length > prevLogCount) {
-            scrollToBottom();
-          }
-        }
       });
       
       // Clean up subscription on component unmount
@@ -56,7 +31,7 @@
     }
   });
   
-  // Initialization functions
+  // Initialization function for SuperCollider
   function initSuperColliderClasses() {
     // Reset any previous error
     appState.update(state => ({
@@ -69,38 +44,14 @@
     });
   }
   
-  function downloadSamples() {
-    // Reset any previous error
-    appState.update(state => ({
-      ...state,
-      error: null
-    }));
-    
-    return sendMessage({
-      type: 'download_samples'
-    });
-  }
-  
-  function downloadInstruments() {
-    // Reset any previous error
-    appState.update(state => ({
-      ...state,
-      error: null
-    }));
-    
-    return sendMessage({
-      type: 'download_instruments'
-    });
-  }
-  
   // Helper function to get status class
   function getStatusClass(status) {
     return status ? 'status-success' : 'status-pending';
   }
   
-  // Helper function to navigate to editor
-  function goToEditor() {
-    window.location.hash = '#editor';
+  // Navigate to collections
+  function goToCollections() {
+    window.location.hash = '#collections';
   }
 </script>
 
@@ -122,11 +73,10 @@
     </div>
     
     <p class="description">
-      Initialize Renardo components before starting to make music. 
-      Each component must be initialized in order.
+      Initialize Renardo components before starting to make music.
     </p>
     
-    <!-- Initialization buttons -->
+    <!-- Initialization section -->
     <div class="init-section">
       <div class="init-item">
         <div class="init-header">
@@ -146,50 +96,31 @@
       
       <div class="init-item">
         <div class="init-header">
-          <h3>2. Download Sample Packs</h3>
+          <h3>2. Sample Packs</h3>
           <div class="status-badge {getStatusClass(samplesInitialized)}">
-            {samplesInitialized ? 'Downloaded' : 'Pending'}
+            {samplesInitialized ? 'Downloaded' : 'Not Installed'}
           </div>
         </div>
-        <p>Downloads sound samples for your compositions.</p>
-        <button 
-          on:click={downloadSamples} 
-          disabled={!$appState.connected || samplesInitialized || !scFilesInitialized}
-        >
-          Download Samples
-        </button>
+        <p>Sound samples for your compositions.</p>
+        {#if !samplesInitialized}
+          <button class="secondary-button" on:click={goToCollections}>
+            <span class="button-icon">📦</span> Download Default Sample Pack (0_foxdot_default)
+          </button>
+        {/if}
       </div>
       
       <div class="init-item">
         <div class="init-header">
-          <h3>3. Download Instruments &amp; Effects</h3>
+          <h3>3. Instruments &amp; Effects</h3>
           <div class="status-badge {getStatusClass(instrumentsInitialized)}">
-            {instrumentsInitialized ? 'Downloaded' : 'Pending'}
+            {instrumentsInitialized ? 'Downloaded' : 'Not Installed'}
           </div>
         </div>
-        <p>Downloads instruments and effects for your compositions.</p>
-        <button 
-          on:click={downloadInstruments} 
-          disabled={!$appState.connected || instrumentsInitialized || !samplesInitialized}
-        >
-          Download Instruments
-        </button>
-      </div>
-    </div>
-    
-    <!-- Log output -->
-    <div class="log-section">
-      <h3>Initialization Log</h3>
-      <div class="log-container" bind:this={logContainer}>
-        {#if logMessages.length === 0}
-          <p class="log-empty">No log messages yet. Start initialization to see progress.</p>
-        {:else}
-          {#each logMessages as log}
-            <div class="log-entry log-level-{log.level.toLowerCase()}">
-              <span class="log-timestamp">[{log.timestamp}]</span>
-              <span class="log-message">{log.message}</span>
-            </div>
-          {/each}
+        <p>Instruments and effects for your compositions.</p>
+        {#if !instrumentsInitialized}
+          <button class="secondary-button" on:click={goToCollections}>
+            <span class="button-icon">🎹</span> Download Default Instruments & Effects
+          </button>
         {/if}
       </div>
     </div>
@@ -334,75 +265,33 @@
     cursor: not-allowed;
   }
   
-  .editor-link {
-    display: flex;
-    justify-content: center;
-    margin-top: 2rem;
-  }
-  
-  .editor-button {
+  .secondary-button {
     background-color: #2ecc71;
-    font-size: 1.1rem;
-    padding: 1rem 2rem;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
   }
   
-  .editor-button:hover:not(:disabled) {
+  .secondary-button:hover {
     background-color: #27ae60;
   }
   
-  .log-section {
-    margin-top: 2rem;
+  .secondary-button:active {
+    transform: translateY(1px);
   }
   
-  .log-section h3 {
-    margin-bottom: 0.5rem;
-  }
-  
-  .log-container {
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    padding: 0.5rem;
-    background-color: #f5f5f5;
-    font-family: monospace;
-  }
-  
-  .log-entry {
-    padding: 0.25rem 0;
-    border-bottom: 1px solid #eeeeee;
-    font-size: 0.9rem;
-  }
-  
-  .log-entry:last-child {
-    border-bottom: none;
-  }
-  
-  .log-timestamp {
-    color: #757575;
+  .button-icon {
     margin-right: 0.5rem;
-  }
-  
-  .log-level-info {
-    color: #1976d2;
-  }
-  
-  .log-level-warn {
-    color: #ff9800;
-  }
-  
-  .log-level-error {
-    color: #e53935;
-  }
-  
-  .log-level-success {
-    color: #43a047;
-  }
-  
-  .log-empty {
-    color: #9e9e9e;
-    text-align: center;
-    font-style: italic;
+    font-size: 1.2rem;
   }
   
   .success-message {
@@ -419,22 +308,7 @@
   }
   
   .success-message p {
-    margin-bottom: 1.5rem;
-  }
-  
-  .button {
-    background-color: #4caf50;
-    color: white;
-    text-decoration: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 4px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  
-  .button:hover {
-    background-color: #388e3c;
+    margin-bottom: 0;
   }
   
   .error-message {
