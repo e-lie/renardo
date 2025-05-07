@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { appState } from './lib/websocket.js';
   
   // State for collections data
@@ -9,6 +9,11 @@
   
   // State for downloads in progress
   let downloadsInProgress = new Map();
+  
+  // Logger state
+  let showLogger = false;
+  let logMessages = [];
+  let unsubscribeFromLogs;
   
   // Formats file size for display
   function formatFileSize(size) {
@@ -54,6 +59,12 @@
   
   // Download a collection
   async function downloadCollection(type, name) {
+    // Clear previous logs
+    logMessages = [];
+    
+    // Show logger
+    showLogger = true;
+    
     // Set download in progress
     downloadsInProgress.set(`${type}-${name}`, true);
     downloadsInProgress = downloadsInProgress; // trigger reactivity
@@ -69,25 +80,68 @@
         throw new Error(data.message || `Failed to download ${type} "${name}"`);
       }
       
-      // If successful, mark as installed in the UI
-      if (collectionsData && collectionsData[type]) {
-        const collection = collectionsData[type].find(c => c.name === name);
-        if (collection) {
-          collection.installed = true;
-        }
+      // If already installed, no need to keep the UI in loading state
+      if (data.already_installed) {
+        downloadsInProgress.delete(`${type}-${name}`);
+        downloadsInProgress = downloadsInProgress; // trigger reactivity
         
-        // Force UI update
-        collectionsData = { ...collectionsData };
+        // Update UI
+        if (collectionsData && collectionsData[type]) {
+          const collection = collectionsData[type].find(c => c.name === name);
+          if (collection) {
+            collection.installed = true;
+          }
+          collectionsData = { ...collectionsData };
+        }
       }
       
-      // Show success message
-      alert(`Successfully downloaded ${type === 'samples' ? 'sample pack' : 'instrument pack'} "${name}"`);
+      // Subscribe to log messages for download progress updates
+      if (!unsubscribeFromLogs) {
+        unsubscribeFromLogs = appState.subscribe(message => {
+          if (message.type === 'log_message') {
+            // Add the log message to our list
+            logMessages = [...logMessages, message.data];
+            
+            // Auto-scroll the log container to the bottom
+            setTimeout(() => {
+              const logContainer = document.getElementById('log-container');
+              if (logContainer) {
+                logContainer.scrollTop = logContainer.scrollHeight;
+              }
+            }, 0);
+          } else if (message.type === 'collection_downloaded' && 
+                     message.data.type === type && 
+                     message.data.name === name) {
+            // Download complete
+            if (message.data.success) {
+              // Update UI to show as installed
+              if (collectionsData && collectionsData[type]) {
+                const collection = collectionsData[type].find(c => c.name === name);
+                if (collection) {
+                  collection.installed = true;
+                }
+                collectionsData = { ...collectionsData };
+              }
+            }
+            
+            // Remove from downloads in progress
+            downloadsInProgress.delete(`${type}-${name}`);
+            downloadsInProgress = downloadsInProgress; // trigger reactivity
+          }
+        });
+      }
       
     } catch (err) {
       console.error(`Error downloading ${type} "${name}":`, err);
-      alert(`Error downloading ${type === 'samples' ? 'sample pack' : 'instrument pack'} "${name}": ${err.message}`);
-    } finally {
-      // Clear download in progress
+      
+      // Add error to log
+      logMessages = [...logMessages, {
+        timestamp: new Date().toLocaleTimeString(),
+        level: 'ERROR',
+        message: `Error: ${err.message}`
+      }];
+      
+      // Remove from downloads in progress
       downloadsInProgress.delete(`${type}-${name}`);
       downloadsInProgress = downloadsInProgress; // trigger reactivity
     }
@@ -98,9 +152,27 @@
     loadCollections();
   }
   
+  // Close logger panel
+  function closeLogger() {
+    showLogger = false;
+    
+    // Unsubscribe from log messages when closing logger
+    if (unsubscribeFromLogs) {
+      unsubscribeFromLogs();
+      unsubscribeFromLogs = null;
+    }
+  }
+  
   // Load collections on mount
   onMount(() => {
     loadCollections();
+  });
+  
+  // Cleanup on destroy
+  onDestroy(() => {
+    if (unsubscribeFromLogs) {
+      unsubscribeFromLogs();
+    }
   });
 </script>
 
@@ -246,6 +318,30 @@
       </div>
     {/if}
   </div>
+  
+  <!-- Download progress logger -->
+  {#if showLogger}
+    <div class="logger-overlay">
+      <div class="logger-panel">
+        <div class="logger-header">
+          <h3>Download Progress</h3>
+          <button class="close-button" on:click={closeLogger}>×</button>
+        </div>
+        <div id="log-container" class="logger-content">
+          {#if logMessages.length === 0}
+            <p class="log-empty">Waiting for download to start...</p>
+          {:else}
+            {#each logMessages as log}
+              <div class="log-message log-{log.level.toLowerCase()}">
+                <span class="log-timestamp">{log.timestamp}</span>
+                <span class="log-text">{log.message}</span>
+              </div>
+            {/each}
+          {/if}
+        </div>
+      </div>
+    </div>
+  {/if}
 </main>
 
 <style>
@@ -458,9 +554,124 @@
     border-radius: 4px;
   }
   
+  /* Logger Styles */
+  .logger-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .logger-panel {
+    width: 80%;
+    max-width: 800px;
+    height: 70%;
+    max-height: 600px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  .logger-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid #ddd;
+    background-color: #f5f5f5;
+  }
+  
+  .logger-header h3 {
+    margin: 0;
+    color: #2c3e50;
+  }
+  
+  .close-button {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #666;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+  }
+  
+  .close-button:hover {
+    color: #e74c3c;
+  }
+  
+  .logger-content {
+    flex-grow: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 0.9rem;
+    background-color: #f8f8f8;
+  }
+  
+  .log-empty {
+    color: #888;
+    font-style: italic;
+    text-align: center;
+    margin: 2rem 0;
+  }
+  
+  .log-message {
+    margin-bottom: 0.3rem;
+    padding: 0.3rem 0.5rem;
+    border-radius: 4px;
+    background-color: #fff;
+    display: flex;
+    align-items: flex-start;
+  }
+  
+  .log-info {
+    border-left: 3px solid #3498db;
+  }
+  
+  .log-warn {
+    border-left: 3px solid #f39c12;
+    background-color: #fffbf0;
+  }
+  
+  .log-error {
+    border-left: 3px solid #e74c3c;
+    background-color: #fff0f0;
+  }
+  
+  .log-success {
+    border-left: 3px solid #2ecc71;
+    background-color: #f0fff0;
+  }
+  
+  .log-timestamp {
+    font-size: 0.8rem;
+    color: #777;
+    margin-right: 0.5rem;
+    min-width: 70px;
+  }
+  
+  .log-text {
+    flex-grow: 1;
+  }
+  
   @media (max-width: 768px) {
     .collections-grid {
       grid-template-columns: 1fr;
+    }
+    
+    .logger-panel {
+      width: 95%;
+      height: 80%;
     }
   }
 </style>

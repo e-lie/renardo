@@ -73,6 +73,28 @@ def register_api_routes(webapp):
                 "collections_server": settings.get("core.COLLECTIONS_DOWNLOAD_SERVER")
             }), 500
     
+    # Simple logger class for collections API
+    class CollectionLogger:
+        def __init__(self, collection_type, collection_name):
+            self.collection_type = collection_type
+            self.collection_name = collection_name
+            
+        def write_line(self, message, level="INFO"):
+            # Add log message to state service
+            log_entry = state_helper.add_log_message(message, level)
+            
+            # Print to console as well
+            print(f"[{level}] {message}")
+            
+            # Broadcast to WebSocket clients
+            websocket_utils.broadcast_to_clients({
+                "type": "log_message",
+                "data": log_entry
+            })
+            
+        def write_error(self, message):
+            self.write_line(message, "ERROR")
+    
     @webapp.route('/api/collections/<collection_type>/<collection_name>/download', methods=['POST'])
     def download_collection(collection_type, collection_name):
         """
@@ -85,76 +107,103 @@ def register_api_routes(webapp):
         Returns:
             JSON: Download status
         """
+        # Create a logger for this download
+        logger = CollectionLogger(collection_type, collection_name)
+        
         try:
             if collection_type == 'samples':
                 from renardo.gatherer.sample_management.default_samples import download_sample_pack, is_sample_pack_initialized
                 
                 # Check if already installed
                 if is_sample_pack_initialized(collection_name):
+                    logger.write_line(f"Sample pack '{collection_name}' is already installed", "WARN")
                     return jsonify({
                         "success": True,
                         "message": f"Sample pack '{collection_name}' is already installed",
                         "already_installed": True
                     })
                 
-                # Download the sample pack
-                success = download_sample_pack(collection_name)
+                # Start download in a separate thread to avoid blocking
+                def download_task():
+                    try:
+                        logger.write_line(f"Starting download of sample pack '{collection_name}'...")
+                        success = download_sample_pack(collection_name, logger)
+                        
+                        if success:
+                            logger.write_line(f"Sample pack '{collection_name}' downloaded successfully!", "SUCCESS")
+                            
+                            # Broadcast updated status to all WebSocket clients
+                            websocket_utils.broadcast_to_clients({
+                                "type": "collection_downloaded",
+                                "data": {
+                                    "type": "samples",
+                                    "name": collection_name,
+                                    "success": True
+                                }
+                            })
+                        else:
+                            logger.write_error(f"Failed to download sample pack '{collection_name}'")
+                    except Exception as e:
+                        logger.write_error(f"Error downloading sample pack '{collection_name}': {str(e)}")
                 
-                if success:
-                    # Broadcast updated status to all WebSocket clients
-                    websocket_utils.broadcast_to_clients({
-                        "type": "collection_downloaded",
-                        "data": {
-                            "type": "samples",
-                            "name": collection_name,
-                            "success": True
-                        }
-                    })
-                    
-                    return jsonify({
-                        "success": True,
-                        "message": f"Sample pack '{collection_name}' downloaded successfully"
-                    })
-                else:
-                    return jsonify({
-                        "success": False,
-                        "message": f"Failed to download sample pack '{collection_name}'"
-                    }), 500
+                # Start download thread
+                import threading
+                thread = threading.Thread(target=download_task)
+                thread.daemon = True
+                thread.start()
+                
+                return jsonify({
+                    "success": True,
+                    "message": f"Download of sample pack '{collection_name}' started",
+                    "in_progress": True
+                })
                     
             elif collection_type == 'sccode':
                 from renardo.gatherer.sccode_management.default_sccode_pack import download_sccode_pack, is_sccode_pack_initialized
                 
                 # Check if already installed
                 if is_sccode_pack_initialized(collection_name):
+                    logger.write_line(f"SuperCollider code pack '{collection_name}' is already installed", "WARN")
                     return jsonify({
                         "success": True,
                         "message": f"SuperCollider code pack '{collection_name}' is already installed",
                         "already_installed": True
                     })
                 
-                # Download the sccode pack
-                success = download_sccode_pack(collection_name)
+                # Start download in a separate thread to avoid blocking
+                def download_task():
+                    try:
+                        logger.write_line(f"Starting download of SuperCollider code pack '{collection_name}'...")
+                        success = download_sccode_pack(collection_name, logger)
+                        
+                        if success:
+                            logger.write_line(f"SuperCollider code pack '{collection_name}' downloaded successfully!", "SUCCESS")
+                            
+                            # Broadcast updated status to all WebSocket clients
+                            websocket_utils.broadcast_to_clients({
+                                "type": "collection_downloaded",
+                                "data": {
+                                    "type": "sccode",
+                                    "name": collection_name,
+                                    "success": True
+                                }
+                            })
+                        else:
+                            logger.write_error(f"Failed to download SuperCollider code pack '{collection_name}'")
+                    except Exception as e:
+                        logger.write_error(f"Error downloading SuperCollider code pack '{collection_name}': {str(e)}")
                 
-                if success:
-                    # Broadcast updated status to all WebSocket clients
-                    websocket_utils.broadcast_to_clients({
-                        "type": "collection_downloaded",
-                        "data": {
-                            "type": "sccode",
-                            "name": collection_name,
-                            "success": True
-                        }
-                    })
-                    
-                    return jsonify({
-                        "success": True,
-                        "message": f"SuperCollider code pack '{collection_name}' downloaded successfully"
-                    })
-                else:
-                    return jsonify({
-                        "success": False,
-                        "message": f"Failed to download SuperCollider code pack '{collection_name}'"
-                    }), 500
+                # Start download thread
+                import threading
+                thread = threading.Thread(target=download_task)
+                thread.daemon = True
+                thread.start()
+                
+                return jsonify({
+                    "success": True,
+                    "message": f"Download of SuperCollider code pack '{collection_name}' started",
+                    "in_progress": True
+                })
             else:
                 return jsonify({
                     "success": False,
@@ -162,6 +211,7 @@ def register_api_routes(webapp):
                 }), 400
                 
         except Exception as e:
+            logger.write_error(f"Error processing download request: {str(e)}")
             return jsonify({
                 "success": False,
                 "message": f"Error downloading collection: {str(e)}"
