@@ -125,6 +125,58 @@ def register_websocket_routes(sock):
                             args=(ws,)
                         ).start()
                     
+                    elif message_type == "execute_code":
+                        # Handle code execution
+                        try:
+                            code = message.get("data", {}).get("code", "")
+                            is_import = message.get("data", {}).get("is_import", False)
+                            
+                            # Print info for debugging
+                            print(f"Executing code: {code}")
+                            
+                            if is_import and code.strip() == 'from renardo.lib import *':
+                                # This is a special import that we want to run in the main process
+                                print("Executing special import in main process")
+                                try:
+                                    # Run the import directly
+                                    exec('from renardo.lib import *', globals())
+                                    
+                                    # Send success message
+                                    ws.send(json.dumps({
+                                        "type": "code_execution_result",
+                                        "data": {
+                                            "success": True,
+                                            "message": "Successfully imported Renardo library"
+                                        }
+                                    }))
+                                except ImportError as e:
+                                    # Send error message
+                                    ws.send(json.dumps({
+                                        "type": "code_execution_result",
+                                        "data": {
+                                            "success": False,
+                                            "message": f"Import Error: {str(e)}"
+                                        }
+                                    }))
+                            else:
+                                # Regular code execution - this would typically be handled differently
+                                # For now, send a response that code was received
+                                ws.send(json.dumps({
+                                    "type": "code_execution_result",
+                                    "data": {
+                                        "success": True,
+                                        "message": "Code received but execution not implemented yet"
+                                    }
+                                }))
+                        except Exception as e:
+                            # Send error message for any other exception
+                            ws.send(json.dumps({
+                                "type": "code_execution_result",
+                                "data": {
+                                    "success": False,
+                                    "message": f"Error: {str(e)}"
+                                }
+                            }))
                     else:
                         # Unknown message type
                         ws.send(json.dumps({
