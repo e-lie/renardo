@@ -3,6 +3,7 @@
   import { appState, initWebSocket, incrementCounter, incrementCounterFallback } from './lib/websocket.js';
   import RenardoInit from './RenardoInit.svelte';
   import CodeEditor from './CodeEditor.svelte';
+  import Collections from './Collections.svelte';
   
   // Router state
   let currentRoute = 'home';
@@ -82,6 +83,7 @@
       <a href="#home" class:active={currentRoute === 'home'}>Home</a>
       <a href="#init" class:active={currentRoute === 'init'}>Initialize</a>
       <a href="#editor" class:active={currentRoute === 'editor'}>Code Editor</a>
+      <a href="#collections" class:active={currentRoute === 'collections'}>Collections</a>
     </div>
   </nav>
 </header>
@@ -124,6 +126,14 @@
             Open Editor
           </button>
         </div>
+        
+        <div class="feature-card">
+          <h3>Additional Collections</h3>
+          <p>Download additional sample packs and instruments.</p>
+          <button on:click={() => navigate('collections')} class="collections-button">
+            Browse Collections
+          </button>
+        </div>
       </div>
       
       <!-- Error messages -->
@@ -137,6 +147,8 @@
     <RenardoInit />
   {:else if currentRoute === 'editor'}
     <CodeEditor />
+  {:else if currentRoute === 'collections'}
+    <Collections />
   {/if}
 </main>
   
@@ -258,9 +270,15 @@
     
     .main-content {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: 1.5rem;
       margin-bottom: 2rem;
+    }
+    
+    @media (max-width: 992px) {
+      .main-content {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
     
     @media (max-width: 768px) {
@@ -306,6 +324,14 @@
     
     .editor-button:hover {
       background-color: #27ae60;
+    }
+    
+    .collections-button {
+      background-color: #9b59b6;
+    }
+    
+    .collections-button:hover {
+      background-color: #8e44ad;
     }
     
     .error-message {
