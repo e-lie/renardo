@@ -11,6 +11,8 @@ wheels/
 node_modules
 dist
 
+gunicorn.pid
+.claude
 
 # Virtual environments
 .venv

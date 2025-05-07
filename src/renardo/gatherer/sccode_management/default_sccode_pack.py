@@ -1,56 +1,105 @@
 from datetime import datetime
 from pathlib import Path
+import os
 
 from renardo.settings_manager import settings
 from renardo.gatherer.collection_download import download_files_from_json_index_concurrent
 
 def is_default_sccode_pack_initialized():
+    """Check if the default SuperCollider code pack has been downloaded."""
     return (settings.get_path("SCCODE_LIBRARY") / settings.get("sc_backend.DEFAULT_SCCODE_PACK_NAME") / 'downloaded_at.txt').exists()
 
 
-
+def is_sccode_pack_initialized(pack_name):
+    """Check if a specific SuperCollider code pack has been downloaded."""
+    return (settings.get_path("SCCODE_LIBRARY") / pack_name / 'downloaded_at.txt').exists()
 
 
 def download_default_sccode_pack_and_special(logger=None):
-
-    logger.write_line(
-        "Downloading core sccode from {}\n".format(
-            settings.get("core.COLLECTIONS_DOWNLOAD_SERVER")
+    """Download the default SuperCollider code pack and special code files."""
+    success = True
+    
+    # Download special code files first
+    if logger:
+        logger.write_line(
+            "Downloading core sccode from {}\n".format(
+                settings.get("core.COLLECTIONS_DOWNLOAD_SERVER")
+            )
         )
-    )
-    download_files_from_json_index_concurrent(
-        json_url='{}/{}/collection_index.json'.format(
-            settings.get("core.COLLECTIONS_DOWNLOAD_SERVER"),
-            settings.get("sc_backend.SPECIAL_SCCODE_DIR_NAME"),
-        ),
-        download_dir=settings.get_path("SPECIAL_SCCODE_DIR").parent,
-        logger=logger
-    )
-
-    logger.write_line(
-        "Downloading Default Instruments and Effects Pack {} from {}\n".format(
-            settings.get("sc_backend.DEFAULT_SCCODE_PACK_NAME"),
-            settings.get("core.COLLECTIONS_DOWNLOAD_SERVER")
-        )
-    )
-    download_files_from_json_index_concurrent(
-        json_url='{}/{}/{}/collection_index.json'.format(
-            settings.get("core.COLLECTIONS_DOWNLOAD_SERVER"),
-            settings.get("sc_backend.SCCODE_LIBRARY_DIR_NAME"),
-            settings.get("sc_backend.DEFAULT_SCCODE_PACK_NAME")
-        ),
-        download_dir=settings.get_path("SCCODE_LIBRARY"),
-        logger=logger
-    )
-
-    # create a downloaded_at file
+    
     try:
-        with open(
-                settings.get_path("SCCODE_LIBRARY") / settings.get("sc_backend.DEFAULT_SCCODE_PACK_NAME") / 'downloaded_at.txt',
-                mode="w"
-        ) as file:
-            file.write(str(datetime.now()))
-
+        download_files_from_json_index_concurrent(
+            json_url='{}/{}/collection_index.json'.format(
+                settings.get("core.COLLECTIONS_DOWNLOAD_SERVER"),
+                settings.get("sc_backend.SPECIAL_SCCODE_DIR_NAME"),
+            ),
+            download_dir=settings.get_path("SPECIAL_SCCODE_DIR").parent,
+            logger=logger
+        )
     except Exception as e:
-        print(e)
+        error_msg = f"Error downloading special sccode: {str(e)}"
+        print(error_msg)
+        if logger:
+            logger.write_error(error_msg)
+        success = False
+    
+    # Download default sccode pack
+    pack_name = settings.get("sc_backend.DEFAULT_SCCODE_PACK_NAME")
+    pack_success = download_sccode_pack(pack_name, logger)
+    
+    # Return overall success
+    return success and pack_success
+
+
+def download_sccode_pack(pack_name, logger=None):
+    """Download a specific SuperCollider code pack.
+    
+    Args:
+        pack_name (str): The name of the SuperCollider code pack to download
+        logger: Logger instance for output messages
+        
+    Returns:
+        bool: True if the download was successful, False otherwise
+    """
+    if logger:
+        logger.write_line(
+            f"Downloading Instruments and Effects Pack {pack_name} from {settings.get('core.COLLECTIONS_DOWNLOAD_SERVER')}\n"
+        )
+    
+    # Construct SC code pack URL
+    json_url = '{}/{}/{}/collection_index.json'.format(
+        settings.get("core.COLLECTIONS_DOWNLOAD_SERVER"),
+        settings.get("sc_backend.SCCODE_LIBRARY_DIR_NAME"),
+        pack_name
+    )
+    
+    try:
+        # Create the directory if it doesn't exist
+        download_dir = settings.get_path("SCCODE_LIBRARY")
+        os.makedirs(download_dir, exist_ok=True)
+        
+        # Download the SC code pack
+        download_files_from_json_index_concurrent(
+            json_url=json_url,
+            download_dir=download_dir,
+            logger=logger
+        )
+        
+        # Create a downloaded_at file to mark this pack as initialized
+        download_path = settings.get_path("SCCODE_LIBRARY") / pack_name
+        os.makedirs(download_path, exist_ok=True)
+        
+        with open(download_path / 'downloaded_at.txt', mode="w") as file:
+            file.write(str(datetime.now()))
+            
+        if logger:
+            logger.write_line(f"SuperCollider code pack {pack_name} downloaded successfully!")
+            
+        return True
+    except Exception as e:
+        error_msg = f"Error downloading SuperCollider code pack {pack_name}: {str(e)}"
+        print(error_msg)
+        if logger:
+            logger.write_error(error_msg)
+        return False
 
