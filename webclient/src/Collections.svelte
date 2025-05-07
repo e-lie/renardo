@@ -15,6 +15,24 @@
   let logMessages = [];
   let unsubscribeFromLogs;
   
+  // WebSocket connection state
+  let wsConnected = false;
+  
+  // Subscribe to connection status
+  const unsubscribeWS = appState.subscribe(state => {
+    wsConnected = state.connected;
+    
+    // If we just connected and already have a logger open, refresh log messages
+    if (wsConnected && showLogger && logMessages.length === 0) {
+      // Add connection status message to logs
+      logMessages = [...logMessages, {
+        timestamp: new Date().toLocaleTimeString(),
+        level: 'INFO',
+        message: 'WebSocket connection established'
+      }];
+    }
+  });
+  
   // Formats file size for display
   function formatFileSize(size) {
     if (!size || size === 'Unknown') return 'Unknown size';
@@ -69,7 +87,54 @@
     downloadsInProgress.set(`${type}-${name}`, true);
     downloadsInProgress = downloadsInProgress; // trigger reactivity
     
+    // Clean up any existing subscription
+    if (unsubscribeFromLogs) {
+      unsubscribeFromLogs();
+      unsubscribeFromLogs = null;
+    }
+    
+    // Setup subscription for log messages before making the API call
+    unsubscribeFromLogs = appState.subscribe(message => {
+      if (message.type === 'log_message') {
+        // Add the log message to our list
+        logMessages = [...logMessages, message.data];
+        
+        // Auto-scroll the log container to the bottom
+        setTimeout(() => {
+          const logContainer = document.getElementById('log-container');
+          if (logContainer) {
+            logContainer.scrollTop = logContainer.scrollHeight;
+          }
+        }, 0);
+      } else if (message.type === 'collection_downloaded' && 
+                message.data.type === type && 
+                message.data.name === name) {
+        // Download complete
+        if (message.data.success) {
+          // Update UI to show as installed
+          if (collectionsData && collectionsData[type]) {
+            const collection = collectionsData[type].find(c => c.name === name);
+            if (collection) {
+              collection.installed = true;
+            }
+            collectionsData = { ...collectionsData };
+          }
+        }
+        
+        // Remove from downloads in progress
+        downloadsInProgress.delete(`${type}-${name}`);
+        downloadsInProgress = downloadsInProgress; // trigger reactivity
+      }
+    });
+    
     try {
+      // Log the start of the request locally to provide immediate feedback
+      logMessages = [...logMessages, {
+        timestamp: new Date().toLocaleTimeString(),
+        level: 'INFO',
+        message: `Initiating download request for ${type}/${name}...`
+      }];
+      
       const response = await fetch(`/api/collections/${type}/${name}/download`, {
         method: 'POST'
       });
@@ -79,6 +144,13 @@
       if (!response.ok) {
         throw new Error(data.message || `Failed to download ${type} "${name}"`);
       }
+      
+      // Confirm API response in the log for user visibility
+      logMessages = [...logMessages, {
+        timestamp: new Date().toLocaleTimeString(),
+        level: 'INFO',
+        message: `Server responded: ${data.message || 'Download started'}`
+      }];
       
       // If already installed, no need to keep the UI in loading state
       if (data.already_installed) {
@@ -93,42 +165,6 @@
           }
           collectionsData = { ...collectionsData };
         }
-      }
-      
-      // Subscribe to log messages for download progress updates
-      if (!unsubscribeFromLogs) {
-        unsubscribeFromLogs = appState.subscribe(message => {
-          if (message.type === 'log_message') {
-            // Add the log message to our list
-            logMessages = [...logMessages, message.data];
-            
-            // Auto-scroll the log container to the bottom
-            setTimeout(() => {
-              const logContainer = document.getElementById('log-container');
-              if (logContainer) {
-                logContainer.scrollTop = logContainer.scrollHeight;
-              }
-            }, 0);
-          } else if (message.type === 'collection_downloaded' && 
-                     message.data.type === type && 
-                     message.data.name === name) {
-            // Download complete
-            if (message.data.success) {
-              // Update UI to show as installed
-              if (collectionsData && collectionsData[type]) {
-                const collection = collectionsData[type].find(c => c.name === name);
-                if (collection) {
-                  collection.installed = true;
-                }
-                collectionsData = { ...collectionsData };
-              }
-            }
-            
-            // Remove from downloads in progress
-            downloadsInProgress.delete(`${type}-${name}`);
-            downloadsInProgress = downloadsInProgress; // trigger reactivity
-          }
-        });
       }
       
     } catch (err) {
@@ -172,6 +208,10 @@
   onDestroy(() => {
     if (unsubscribeFromLogs) {
       unsubscribeFromLogs();
+    }
+    
+    if (unsubscribeWS) {
+      unsubscribeWS();
     }
   });
 </script>
@@ -325,9 +365,23 @@
       <div class="logger-panel">
         <div class="logger-header">
           <h3>Download Progress</h3>
+          <div class="ws-status">
+            {#if wsConnected}
+              <span class="ws-status-connected">Connected</span>
+            {:else}
+              <span class="ws-status-disconnected">Disconnected</span>
+            {/if}
+          </div>
           <button class="close-button" on:click={closeLogger}>×</button>
         </div>
         <div id="log-container" class="logger-content">
+          {#if !wsConnected}
+            <div class="log-message log-error">
+              <span class="log-timestamp">{new Date().toLocaleTimeString()}</span>
+              <span class="log-text">WebSocket disconnected. Waiting for reconnection...</span>
+            </div>
+          {/if}
+          
           {#if logMessages.length === 0}
             <p class="log-empty">Waiting for download to start...</p>
           {:else}
@@ -593,6 +647,52 @@
   .logger-header h3 {
     margin: 0;
     color: #2c3e50;
+    flex: 1;
+  }
+  
+  .ws-status {
+    display: flex;
+    align-items: center;
+    margin-right: 1rem;
+    font-size: 0.8rem;
+  }
+  
+  .ws-status-connected {
+    color: #27ae60;
+    background-color: #eafaf1;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+  }
+  
+  .ws-status-connected::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: #27ae60;
+    border-radius: 50%;
+    margin-right: 5px;
+  }
+  
+  .ws-status-disconnected {
+    color: #e74c3c;
+    background-color: #fdedec;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+  }
+  
+  .ws-status-disconnected::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: #e74c3c;
+    border-radius: 50%;
+    margin-right: 5px;
   }
   
   .close-button {
