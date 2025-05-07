@@ -84,28 +84,34 @@ def initialize_log_observer():
         nonlocal log_count
         
         while True:
-            # Get current log messages
-            current_logs = state_helper.get_log_messages()
-            current_count = len(current_logs)
-            
-            # If there are new log messages
-            if current_count > log_count:
-                # Get new log messages
-                new_logs = current_logs[log_count:current_count]
+            try:
+                # Get current log messages
+                current_logs = state_helper.get_log_messages()
+                current_count = len(current_logs)
                 
-                # Broadcast each new log message
-                for log in new_logs:
-                    broadcast_to_clients({
-                        "type": "log_message",
-                        "data": log
-                    })
-                
-                # Update log count
-                log_count = current_count
+                # If there are new log messages
+                if current_count > log_count:
+                    # Get new log messages
+                    new_logs = current_logs[log_count:current_count]
+                    
+                    # Broadcast each new log message
+                    for log in new_logs:
+                        broadcast_count = broadcast_to_clients({
+                            "type": "log_message",
+                            "data": log
+                        })
+                        print(f"Broadcasted log message to {broadcast_count} clients: {log.get('message', '')[:50]}...")
+                    
+                    # Update log count
+                    log_count = current_count
+            except Exception as e:
+                print(f"Error in log observer thread: {e}")
             
-            # Sleep for a short time
-            time.sleep(0.1)
+            # Sleep for a short time (shorter interval for more responsive updates)
+            time.sleep(0.05)
     
     # Start log observer in a separate thread
     log_observer_thread = threading.Thread(target=check_for_new_logs, daemon=True)
+    log_observer_thread.daemon = True  # Make sure thread doesn't block process exit
     log_observer_thread.start()
+    print("Log observer thread started")
