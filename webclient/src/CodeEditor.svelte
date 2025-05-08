@@ -153,6 +153,29 @@ d2 >> play("  * ").speed(2)
     // Add to console output
     addConsoleOutput(`> Executing code:\n${codeToExecute}`, 'command');
     
+    // Create a subscription to listen for execution results
+    const unsubscribeExecution = appState.subscribe(state => {
+      if (state._lastMessage && state._lastMessage.type === 'code_execution_result') {
+        const result = state._lastMessage.data;
+        
+        // Log the result
+        if (result.success) {
+          // Add success message to console
+          if (result.message && result.message.trim()) {
+            addConsoleOutput(result.message, 'success');
+          }
+        } else {
+          // Add error message to console
+          if (result.message) {
+            addConsoleOutput(`Error: ${result.message}`, 'error');
+          }
+        }
+        
+        // Unsubscribe after receiving the result
+        unsubscribeExecution();
+      }
+    });
+    
     // Send to server
     sendMessage({
       type: 'execute_code',
@@ -160,6 +183,11 @@ d2 >> play("  * ").speed(2)
         code: codeToExecute
       }
     });
+    
+    // Set a timeout to unsubscribe if no response is received
+    setTimeout(() => {
+      unsubscribeExecution();
+    }, 10000); // 10 seconds timeout
   }
   
   // Add message to console output
