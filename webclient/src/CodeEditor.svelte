@@ -196,6 +196,9 @@ d2 >> blip([_,_,4,_], dur=.5)
       case 'selection':
         executionLabel = 'selection';
         break;
+      case 'all':
+        executionLabel = 'all code';
+        break;
       default:
         executionLabel = 'paragraph';
     }
@@ -338,6 +341,7 @@ d2 >> blip([_,_,4,_], dur=.5)
       <div class="shortcuts-info">
         <span class="shortcut-item">Alt+Enter: Run current line</span>
         <span class="shortcut-item">Ctrl+Enter: Run paragraph or selection</span>
+        <span class="shortcut-item">Run Code button: Run all code</span>
       </div>
       
       <!-- Connection status -->
@@ -363,8 +367,8 @@ d2 >> blip([_,_,4,_], dur=.5)
       <div class="editor-controls">
         <button 
           class="execute-button" 
-          on:click={executeCode} 
-          title="Run paragraph or selection (Ctrl+Enter)"
+          on:click={() => sendCodeToExecute(editor.getValue(), 'all')} 
+          title="Run all code in editor"
         >
           Run Code
         </button>
