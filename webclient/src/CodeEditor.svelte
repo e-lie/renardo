@@ -414,13 +414,6 @@ d2 >> blip([_,_,4,_], dur=.5)
         <span class="shortcut-item">Run Code button: Run all code</span>
       </div>
       
-      <!-- Connection status -->
-      <div class="status-bar">
-        <div class="status-indicator" class:connected={$appState.connected} transition:fade={{ duration: 300 }}>
-          {$appState.connected ? 'Connected' : 'Disconnected'}
-        </div>
-      </div>
-      
       <!-- Controls -->
       <div class="editor-controls">
         <button 
@@ -530,30 +523,6 @@ d2 >> blip([_,_,4,_], dur=.5)
     border-radius: 3px;
   }
   
-  .status-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-  
-  .status-indicator {
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    background-color: #f44336;
-    color: white;
-    margin-right: 0.5rem;
-  }
-  
-  .status-indicator.connected {
-    background-color: #4caf50;
-  }
-  
-  .status-indicator.fallback {
-    background-color: #ff9800;
-  }
   
   .runtime-status {
     display: flex;
