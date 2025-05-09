@@ -10,7 +10,6 @@ object-oriented approach to state management.
 
 from .state_manager import StateManager
 from .renardo_app import RenardoApp
-from . import supercollider_mgt
 
 # Make sure the singleton is easily accessible
 get_instance = RenardoApp.get_instance
