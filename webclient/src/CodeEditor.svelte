@@ -237,38 +237,6 @@ d2 >> play("  * ").speed(2)
   function goToInit() {
     window.location.hash = '#init';
   }
-
-  // Import Renardo library function
-  function importRenardo() {
-    // Add to console output to show we're starting
-    addConsoleOutput("Importing Renardo library...", 'info');
-    
-    // Send the import command to the server
-    sendMessage({
-      type: 'execute_code',
-      data: {
-        code: 'from renardo.lib import *',
-        // Tell the backend this is a special import that should run in the main process
-        is_import: true
-      }
-    });
-    
-    // Also add some helpful information about what was imported
-    addConsoleOutput("Imported Renardo functions and classes from renardo.lib", 'success');
-    
-    // Add example usage information
-    const exampleCode = 
-`# You can now use Renardo directly. Examples:
-# Start a drum pattern:
-d1 >> play("x-o-")
-
-# Sine wave synth with pattern:
-s1 >> sine([0, 1, 2, 3])
-
-# For more examples, check the demo files`;
-    
-    addConsoleOutput(exampleCode, 'info');
-  }
 </script>
 
 <main>
@@ -297,13 +265,6 @@ s1 >> sine([0, 1, 2, 3])
       
       <!-- Controls -->
       <div class="editor-controls">
-        <button 
-          class="import-button" 
-          on:click={importRenardo} 
-          title="Import Renardo library in the current Python environment"
-        >
-          Import Renardo
-        </button>
         <button 
           class="execute-button" 
           on:click={executeCode} 
@@ -463,13 +424,6 @@ s1 >> sine([0, 1, 2, 3])
     cursor: not-allowed;
   }
   
-  .import-button {
-    background-color: #f39c12;
-  }
-  
-  .import-button:hover:not(:disabled) {
-    background-color: #d35400;
-  }
   
   .execute-button {
     background-color: #27ae60;
