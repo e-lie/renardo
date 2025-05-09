@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { fade } from 'svelte/transition';
   import { appState, initWebSocket, sendMessage } from './lib/websocket.js';
-  // We'll load CodeMirror from CDN instead
+  // We'll load CodeMirror and its dependencies from CDN
   
   // State for editor content
   let editorContent = `# Renardo Live Coding Editor
@@ -52,45 +52,120 @@ d2 >> blip([_,_,4,_], dur=.5)
     if (webSocketSupported) {
       initWebSocket();
       
-      // Wait for CodeMirror to be loaded from CDN 
-      const initEditor = () => {
+      // Function to load a script dynamically
+      const loadScript = (src) => {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = src;
+          script.onload = () => resolve();
+          script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+          document.head.appendChild(script);
+        });
+      };
+      
+      // Function to load a CSS file dynamically
+      const loadCSS = (href) => {
+        return new Promise((resolve, reject) => {
+          // Check if the CSS is already loaded
+          const existingLink = document.querySelector(`link[href="${href}"]`);
+          if (existingLink) {
+            resolve();
+            return;
+          }
+          
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = href;
+          link.onload = () => resolve();
+          link.onerror = () => reject(new Error(`Failed to load CSS: ${href}`));
+          document.head.appendChild(link);
+        });
+      };
+      
+      // Wait for CodeMirror to be loaded from CDN and load additional modes
+      const initEditor = async () => {
         if (typeof window.CodeMirror === 'undefined') {
           // If CodeMirror isn't loaded yet, try again in 100ms
           setTimeout(initEditor, 100);
           return;
         }
         
-        // Initialize CodeMirror
-        const codeMirrorOptions = {
-          value: editorContent,
-          lineNumbers: true,
-          mode: 'python',
-          theme: 'monokai',
-          tabSize: 4,
-          indentWithTabs: false,
-          indentUnit: 4,
-          lineWrapping: true,
-          viewportMargin: Infinity
-        };
-        
-        // Make sure we have the CodeMirror textarea element
-        const textarea = document.getElementById('code-editor');
-        if (textarea) {
+        try {
+          // Load CodeMirror core CSS
+          await loadCSS('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/codemirror.min.css');
+          
+          // Load Monokai theme CSS
+          await loadCSS('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/theme/monokai.min.css');
+          
+          // Load CodeMirror addons and modes for better editor experience
+          await Promise.all([
+            // Python mode for syntax highlighting
+            loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/mode/python/python.min.js'),
+            // Matching brackets highlighting
+            loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/addon/edit/matchbrackets.min.js'),
+            // Auto-close brackets
+            loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/addon/edit/closebrackets.min.js'),
+            // Highlight active line
+            loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/addon/selection/active-line.min.js'),
+            // Search/replace functionality
+            loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/addon/search/search.min.js'),
+            loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/addon/search/searchcursor.min.js'),
+            // Highlight selection matches
+            loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/addon/search/match-highlighter.min.js')
+          ]).catch(err => {
+            console.error("Error loading CodeMirror addons:", err);
+          });
+          
           // Initialize CodeMirror
-          editor = window.CodeMirror.fromTextArea(textarea, codeMirrorOptions);
-          
-          // Update local content when editor changes
-          editor.on('change', (instance) => {
-            editorContent = instance.getValue();
-          });
-          
-          // Add key bindings for different execution modes
-          editor.setOption('extraKeys', {
-            'Ctrl-Enter': executeCode,       // Mode 2: Execute paragraph or selection
-            'Cmd-Enter': executeCode,        // For Mac
-            'Alt-Enter': executeCurrentLine, // Mode 1: Execute current line
-            'Alt-Cmd-Enter': executeCurrentLine // For Mac Alt+Enter
-          });
+          const codeMirrorOptions = {
+            value: editorContent,
+            lineNumbers: true,
+            mode: {
+              name: 'python',
+              version: 3,
+              singleLineStringErrors: false
+            },
+            theme: 'monokai',
+            tabSize: 4,
+            indentWithTabs: false,
+            indentUnit: 4,
+            lineWrapping: true,
+            viewportMargin: Infinity,
+            matchBrackets: true,
+            autoCloseBrackets: true,
+            styleActiveLine: true,
+            smartIndent: true,
+            electricChars: true,
+            highlightSelectionMatches: true,
+            autofocus: true
+          };
+        
+          // Make sure we have the CodeMirror textarea element
+          const textarea = document.getElementById('code-editor');
+          if (textarea) {
+            // Initialize CodeMirror
+            editor = window.CodeMirror.fromTextArea(textarea, codeMirrorOptions);
+            
+            // Update local content when editor changes
+            editor.on('change', (instance) => {
+              editorContent = instance.getValue();
+            });
+            
+            // Add key bindings for different execution modes
+            editor.setOption('extraKeys', {
+              'Ctrl-Enter': executeCode,       // Mode 2: Execute paragraph or selection
+              'Cmd-Enter': executeCode,        // For Mac
+              'Alt-Enter': executeCurrentLine, // Mode 1: Execute current line
+              'Alt-Cmd-Enter': executeCurrentLine // For Mac Alt+Enter
+            });
+            
+            // Log successful initialization
+            console.log("CodeMirror editor initialized with Python syntax highlighting");
+          } else {
+            console.error("Could not find code-editor textarea element");
+          }
+        } catch (error) {
+          console.error("Error initializing CodeMirror editor:", error);
         }
       };
       
