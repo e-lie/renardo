@@ -26,12 +26,16 @@
     if (typeof window.CodeMirror === 'undefined') {
       const cmJs = document.createElement('script');
       cmJs.src = 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js';
-      document.head.appendChild(cmJs);
       
-      // Add Python mode for CodeMirror
-      const cmPythonJs = document.createElement('script');
-      cmPythonJs.src = 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js';
-      document.head.appendChild(cmPythonJs);
+      // Wait for main script to load before loading mode
+      cmJs.onload = function() {
+        // Add Python mode for CodeMirror
+        const cmPythonJs = document.createElement('script');
+        cmPythonJs.src = 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js';
+        document.head.appendChild(cmPythonJs);
+      };
+      
+      document.head.appendChild(cmJs);
     }
   }
   
