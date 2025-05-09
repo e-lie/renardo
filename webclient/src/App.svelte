@@ -5,6 +5,7 @@
   import RenardoInit from './RenardoInit.svelte';
   import CodeEditor from './CodeEditor.svelte';
   import Collections from './Collections.svelte';
+  import Configuration from './Configuration.svelte';
   
   // Add CodeMirror CSS links to the document head
   if (typeof document !== 'undefined') {
@@ -128,6 +129,7 @@
         <a href="#init" class:active={currentRoute === 'init'}>Initialize</a>
         <a href="#editor" class:active={currentRoute === 'editor'}>Code Editor</a>
         <a href="#collections" class:active={currentRoute === 'collections'}>Collections</a>
+        <a href="#config" class:active={currentRoute === 'config'}>Settings</a>
       </div>
     </div>
     <div class="connection-status">
@@ -192,6 +194,8 @@
     <CodeEditor />
   {:else if currentRoute === 'collections'}
     <Collections />
+  {:else if currentRoute === 'config'}
+    <Configuration />
   {/if}
 </main>
   

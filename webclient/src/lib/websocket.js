@@ -183,6 +183,18 @@ function handleMessage(message) {
       }));
       break;
       
+    case 'setting_updated':
+      // Update application state with the new setting value
+      console.log('Setting updated via websocket:', data.key, data.value);
+      // We'll let the Configuration component handle this via the _lastMessage property
+      break;
+      
+    case 'settings_reset':
+      // Update application state with all reset settings
+      console.log('Settings reset via websocket');
+      // We'll let the Configuration component handle this via the _lastMessage property
+      break;
+      
     case 'log_message':
       // Add new log message to the array
       appState.update(state => {
