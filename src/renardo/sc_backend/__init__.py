@@ -16,4 +16,6 @@ from renardo.sc_backend.SimpleSynthDefs import SCResourceType, SCInstrument, SCR
 from renardo.sc_backend.SimpleEffectSynthDefs import FileEffect, StartSoundEffect, MakeSoundEffect
 from renardo.sc_backend.PygenEffectSynthDefs import In, Out, PygenEffect
 
+from renardo.sc_backend.supercollider_mgt import write_sc_renardo_files_in_user_config, is_renardo_sc_classes_initialized
+
 
