@@ -8,49 +8,36 @@
   let instrumentsInitialized = false;
   let sclangCodeInitialized = false;
   
-  // Check if WebSockets are supported
-  const webSocketSupported = 'WebSocket' in window;
+  // We'll assume websockets are managed by the parent App component
   
-  // Initialize WebSocket connection on mount
+  // Initialize component on mount
   onMount(() => {
-    if (webSocketSupported) {
-      initWebSocket();
-      
-      // Subscribe to appState changes
-      const unsubscribe = appState.subscribe(state => {
-        if (state.renardoInit) {
-          // Update local state variables from appState
-          scFilesInitialized = state.renardoInit.superColliderClasses;
-          samplesInitialized = state.renardoInit.samples;
-          instrumentsInitialized = state.renardoInit.instruments;
-          
-          // Handle sclangCode field, which might be missing in older state objects
-          sclangCodeInitialized = state.renardoInit.sclangCode === true;
-        }
+    // Subscribe to appState changes
+    const unsubscribe = appState.subscribe(state => {
+      if (state.renardoInit) {
+        // Update local state variables from appState
+        scFilesInitialized = state.renardoInit.superColliderClasses;
+        samplesInitialized = state.renardoInit.samples;
+        instrumentsInitialized = state.renardoInit.instruments;
         
-        // When connection is established, request current status
-        if (state.connected) {
-          // Request the current Renardo initialization status
-          sendMessage({
-            type: 'get_renardo_status'
-          });
-        }
-      });
-      
-      // Force request status after a short delay
-      setTimeout(() => {
-        if ($appState.connected) {
-          sendMessage({
-            type: 'get_renardo_status'
-          });
-        }
-      }, 500);
-      
-      // Clean up subscription on component unmount
-      return () => {
-        unsubscribe();
-      };
-    }
+        // Handle sclangCode field, which might be missing in older state objects
+        sclangCodeInitialized = state.renardoInit.sclangCode === true;
+      }
+    });
+    
+    // Force request status after a short delay
+    setTimeout(() => {
+      if ($appState.connected) {
+        sendMessage({
+          type: 'get_renardo_status'
+        });
+      }
+    }, 500);
+    
+    // Clean up subscription on component unmount
+    return () => {
+      unsubscribe();
+    };
   });
   
   // Initialization function for SuperCollider
@@ -96,15 +83,9 @@
     
     <!-- Connection status -->
     <div class="status-bar">
-      {#if webSocketSupported}
-        <div class="status-indicator" class:connected={$appState.connected}>
-          {$appState.connected ? 'Connected' : 'Disconnected'}
-        </div>
-      {:else}
-        <div class="status-indicator fallback">
-          Using HTTP Fallback (WebSockets not supported)
-        </div>
-      {/if}
+      <div class="status-indicator" class:connected={$appState.connected}>
+        {$appState.connected ? 'Connected' : 'Disconnected'}
+      </div>
     </div>
     
     <p class="description">

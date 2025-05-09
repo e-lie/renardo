@@ -107,8 +107,8 @@ def initialize_log_observer():
             except Exception as e:
                 print(f"Error in log observer thread: {e}")
             
-            # Sleep for a short time (shorter interval for more responsive updates)
-            time.sleep(0.05)
+            # Sleep for a reasonable time (1 second is less intensive than 50ms)
+            time.sleep(1.0)
     
     # Start log observer in a separate thread
     log_observer_thread = threading.Thread(target=check_for_new_logs, daemon=True)
