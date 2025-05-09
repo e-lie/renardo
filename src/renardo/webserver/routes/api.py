@@ -5,6 +5,7 @@ from flask import jsonify, request
 from renardo.webserver import state_helper
 from renardo.webserver import websocket_utils
 from renardo.settings_manager import settings
+import json
 
 def register_api_routes(webapp):
     """
@@ -223,4 +224,148 @@ def register_api_routes(webapp):
             return jsonify({
                 "success": False,
                 "message": f"Error downloading collection: {str(e)}"
+            }), 500
+            
+    @webapp.route('/api/settings', methods=['GET'])
+    def get_settings():
+        """
+        Get all public settings
+        
+        Returns:
+            JSON: All public settings
+        """
+        try:
+            # Return all public settings
+            return jsonify({
+                "success": True,
+                "settings": settings._public_settings
+            })
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "message": f"Error fetching settings: {str(e)}"
+            }), 500
+    
+    @webapp.route('/api/settings/<path:setting_path>', methods=['GET'])
+    def get_specific_setting(setting_path):
+        """
+        Get a specific setting by path
+        
+        Args:
+            setting_path (str): Setting path (e.g., "core.CPU_USAGE")
+            
+        Returns:
+            JSON: Setting value
+        """
+        try:
+            # Replace slashes with dots for nested keys
+            setting_key = setting_path.replace('/', '.')
+            value = settings.get(setting_key, None, internal=False)
+            
+            if value is None:
+                return jsonify({
+                    "success": False,
+                    "message": f"Setting not found: {setting_key}"
+                }), 404
+                
+            return jsonify({
+                "success": True,
+                "key": setting_key,
+                "value": value
+            })
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "message": f"Error fetching setting: {str(e)}"
+            }), 500
+    
+    @webapp.route('/api/settings/<path:setting_path>', methods=['PUT'])
+    def update_setting(setting_path):
+        """
+        Update a specific setting
+        
+        Args:
+            setting_path (str): Setting path (e.g., "core.CPU_USAGE")
+            
+        Request body:
+            {
+                "value": <setting value>
+            }
+            
+        Returns:
+            JSON: Update status
+        """
+        try:
+            # Get request data
+            data = request.get_json()
+            
+            if not data or 'value' not in data:
+                return jsonify({
+                    "success": False,
+                    "message": "Missing 'value' in request data"
+                }), 400
+                
+            # Replace slashes with dots for nested keys
+            setting_key = setting_path.replace('/', '.')
+            value = data['value']
+            
+            # Update the setting
+            settings.set(setting_key, value, internal=False)
+            
+            # Save settings to file
+            settings.save_to_file(save_internal=False)
+            
+            # Broadcast setting change to WebSocket clients
+            websocket_utils.broadcast_to_clients({
+                "type": "setting_updated",
+                "data": {
+                    "key": setting_key,
+                    "value": value
+                }
+            })
+            
+            return jsonify({
+                "success": True,
+                "key": setting_key,
+                "value": value,
+                "message": "Setting updated successfully"
+            })
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "message": f"Error updating setting: {str(e)}"
+            }), 500
+            
+    @webapp.route('/api/settings/reset', methods=['POST'])
+    def reset_settings():
+        """
+        Reset all settings to defaults
+        
+        Returns:
+            JSON: Reset status
+        """
+        try:
+            # Reset all public settings
+            settings.reset(internal=False)
+            
+            # Save settings to file
+            settings.save_to_file(save_internal=False)
+            
+            # Broadcast reset to WebSocket clients
+            websocket_utils.broadcast_to_clients({
+                "type": "settings_reset",
+                "data": {
+                    "settings": settings._public_settings
+                }
+            })
+            
+            return jsonify({
+                "success": True,
+                "message": "Settings reset to defaults",
+                "settings": settings._public_settings
+            })
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "message": f"Error resetting settings: {str(e)}"
             }), 500
