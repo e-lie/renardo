@@ -17,6 +17,7 @@ class StateManager:
             # Renardo initialization status
             "renardo_init": {
                 "superColliderClasses": False,
+                "sclangCode": False,
                 "samples": False,
                 "instruments": False
             },
@@ -136,6 +137,7 @@ class StateManager:
         self._state["counter"] = 0
         self._state["renardo_init"] = {
             "superColliderClasses": False,
+            "sclangCode": False,
             "samples": False,
             "instruments": False
         }
