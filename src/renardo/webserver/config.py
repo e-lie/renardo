@@ -13,4 +13,54 @@ WEBSOCKET_ROUTE = '/ws'
 PING_INTERVAL = 25  # seconds
 
 # Path settings
-STATIC_FOLDER = "../../../webclient/dist"
+# When running from source
+import os
+import importlib.resources
+import sys
+
+# Try multiple approaches to find the static files
+static_folder_found = False
+
+# Approach 1: Try using importlib.resources (Python 3.9+)
+if not static_folder_found and sys.version_info >= (3, 9):
+    try:
+        static_path = importlib.resources.files("renardo.webserver.static")
+        STATIC_FOLDER = str(static_path)
+        if os.path.exists(os.path.join(STATIC_FOLDER, "index.html")):
+            static_folder_found = True
+            print(f"Static folder found using importlib.resources.files: {STATIC_FOLDER}")
+    except (ImportError, ModuleNotFoundError, AttributeError, ValueError) as e:
+        print(f"importlib.resources.files approach failed: {e}")
+
+# Approach 2: Try using pkg_resources
+if not static_folder_found:
+    try:
+        import pkg_resources
+        STATIC_FOLDER = pkg_resources.resource_filename("renardo.webserver.static", "")
+        if os.path.exists(os.path.join(STATIC_FOLDER, "index.html")):
+            static_folder_found = True
+            print(f"Static folder found using pkg_resources: {STATIC_FOLDER}")
+    except (ImportError, ModuleNotFoundError, AttributeError, ValueError) as e:
+        print(f"pkg_resources approach failed: {e}")
+
+# Approach 3: Try using older importlib.resources API
+if not static_folder_found:
+    try:
+        STATIC_FOLDER = os.path.dirname(str(importlib.resources.path("renardo.webserver.static", "index.html")))
+        if os.path.exists(os.path.join(STATIC_FOLDER, "index.html")):
+            static_folder_found = True
+            print(f"Static folder found using importlib.resources.path: {STATIC_FOLDER}")
+    except (ImportError, ModuleNotFoundError, AttributeError, ValueError, FileNotFoundError) as e:
+        print(f"importlib.resources.path approach failed: {e}")
+
+# Fallback to relative path for development
+if not static_folder_found:
+    STATIC_FOLDER = "../../../webclient/dist"
+    print(f"Falling back to development path: {STATIC_FOLDER}")
+    
+    # Check if this path exists
+    abs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), STATIC_FOLDER))
+    if os.path.exists(os.path.join(abs_path, "index.html")):
+        print(f"Development static folder found at: {abs_path}")
+    else:
+        print(f"WARNING: Development static folder not found at: {abs_path}")
