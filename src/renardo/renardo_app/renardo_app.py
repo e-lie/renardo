@@ -4,7 +4,6 @@ RenardoApp - Main application class for Renardo
 import argparse
 import time
 
-from renardo.tui import PulsarInstance
 from .supercollider_mgt.sclang_instances_mgt import SupercolliderInstance
 from .supercollider_mgt.sc_classes_files import write_sc_renardo_files_in_user_config
 from renardo.webserver import create_webapp
@@ -35,19 +34,11 @@ class RenardoApp:
         # Create state manager
         self.state_manager = StateManager()
         
-        # SuperCollider and Pulsar instances
-        self.sc_instance = None
-        self.pulsar_instance = None
-        
         # Flask webapp instance
         self.webapp = None
         
         # Parse arguments
         self.args = self.parse_args()
-        
-        # Initialize components 
-        self.sc_instance = SupercolliderInstance()
-        self.pulsar_instance = PulsarInstance()
         
         # Set singleton instance
         RenardoApp._instance = self

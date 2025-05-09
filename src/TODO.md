@@ -1,13 +1,14 @@
 
 # Les Prios
 
-- finir la gestion des collections
-  - download les scresources banks depuis collections
-  - redebug from scratch
+- [x] finir la gestion des collections
+  - [x] download les scresources banks depuis collections
+  - [x] redebug from scratch
 
 - websocket connection
   - webfoxdot
     - essayer et le prendre comme exemple ?
+  - new web UI instead of TUI
   - pulsardo websocket
   - pour foxdot-editor
 
