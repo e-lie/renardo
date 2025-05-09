@@ -28,8 +28,10 @@ export const appState = writable({
 // WebSocket connection
 let socket;
 let reconnectTimer;
+let pingTimer;
 const MAX_RECONNECT_DELAY = 5000;
 let reconnectAttempts = 0;
+const PING_INTERVAL = 30000; // 30 seconds
 
 /**
  * Initialize WebSocket connection
@@ -40,9 +42,15 @@ export function initWebSocket() {
     socket.close();
   }
 
-  // Clear any reconnect timer
+  // Clear any existing timers
   if (reconnectTimer) {
     clearTimeout(reconnectTimer);
+    reconnectTimer = null;
+  }
+  
+  if (pingTimer) {
+    clearInterval(pingTimer);
+    pingTimer = null;
   }
   
   // Determine WebSocket URL based on current location
@@ -76,17 +84,39 @@ export function initWebSocket() {
       type: 'get_renardo_status'
     });
     
+    // Set up a ping interval to keep the connection alive
+    pingTimer = setInterval(() => {
+      if (socket.readyState === WebSocket.OPEN) {
+        // Send a ping message to prevent the connection from closing
+        sendMessage({
+          type: 'ping',
+          timestamp: Date.now()
+        });
+      }
+    }, PING_INTERVAL);
   });
   
   // Connection closed
   socket.addEventListener('close', (event) => {
     console.log('WebSocket connection closed', event);
     
+    // Clear ping timer if it exists
+    if (pingTimer) {
+      clearInterval(pingTimer);
+      pingTimer = null;
+    }
+    
     // Update store to indicate disconnected status
     appState.update(state => ({
       ...state,
       connected: false
     }));
+    
+    // Don't reconnect for clean closes with certain codes
+    if (event.wasClean && (event.code === 1000 || event.code === 1001)) {
+      console.log('Clean close, not reconnecting automatically');
+      return;
+    }
     
     // Attempt to reconnect with exponential backoff
     const delay = Math.min(1000 * Math.pow(1.5, reconnectAttempts), MAX_RECONNECT_DELAY);
@@ -261,6 +291,13 @@ function handleMessage(message) {
       console.log(`Collection downloaded: ${data.type}/${data.name}`);
       // If the collections page is open, it will automatically refresh
       // when the user navigates to it next time
+      break;
+      
+    case 'pong':
+      // Received pong response from server - connection is healthy
+      // We can optionally measure round-trip time for diagnostics
+      const roundTripTime = Date.now() - (message.timestamp || Date.now());
+      console.debug(`Received pong, RTT: ${roundTripTime}ms`);
       break;
       
     default:
