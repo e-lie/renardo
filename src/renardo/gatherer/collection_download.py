@@ -1,13 +1,13 @@
-import os
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 from urllib.parse import urlparse, urljoin
 
 import requests
 
 
-def download_file_in_pool(url, dest_path, retries=5, delay=1, logger=None):
-    filename = os.path.basename(urlparse(url).path)
+def download_file_in_pool(url, dest_path: Path, retries=5, delay=1, logger=None):
+    filename = Path(urlparse(url).path).name
     for attempt in range(retries):
         try:
             if logger:
@@ -18,7 +18,7 @@ def download_file_in_pool(url, dest_path, retries=5, delay=1, logger=None):
             
             total_size = int(response.headers.get('content-length', 0))
             downloaded_size = 0
-            with open(dest_path, "wb") as f:
+            with dest_path.open("wb") as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     if chunk:
                         f.write(chunk)
@@ -46,7 +46,7 @@ def download_file_in_pool(url, dest_path, retries=5, delay=1, logger=None):
 
 
 def download_files_from_json_index_concurrent(json_url, download_dir, max_workers=3, logger=None):
-    download_dir = str(download_dir)
+    download_dir = Path(download_dir)
 
     def download_json_index_from_url(url, logger=logger):
         try:
@@ -58,25 +58,25 @@ def download_files_from_json_index_concurrent(json_url, download_dir, max_worker
                 logger.write_line(f"Error downloading collection JSON index: {e}")
             return None
 
-    def process_node(node, base_url="", current_dir=""):
+    def process_node(node, base_url="", current_dir=Path()):
         tasks = []
         if "url" in node:
             # Full file download URL
             file_url = urljoin(base_url, node["url"])
             # Full local path including any subdirectory structure
-            file_path = os.path.join(download_dir, current_dir, os.path.basename(node["path"]))
+            file_path = download_dir / current_dir / Path(node["path"]).name
             tasks.append((file_url, file_path))
-            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            file_path.parent.mkdir(parents=True, exist_ok=True)
         if "children" in node:
             for child in node["children"]:
                 # For each child, pass its directory structure down the chain
-                child_dir = os.path.join(current_dir, os.path.basename(node["path"]))
+                child_dir = current_dir / Path(node["path"]).name
                 tasks.extend(process_node(child, base_url, child_dir))
-                os.makedirs(child_dir, exist_ok=True)
+                (download_dir / child_dir).mkdir(parents=True, exist_ok=True)
         return tasks
 
     # Ensure the download directory exists
-    os.makedirs(download_dir, exist_ok=True)
+    download_dir.mkdir(parents=True, exist_ok=True)
 
     # Download JSON content from URL
     if logger:
