@@ -84,10 +84,12 @@ d2 >> blip([_,_,4,_], dur=.5)
             editorContent = instance.getValue();
           });
           
-          // Add key binding for Ctrl+Enter to execute code
+          // Add key bindings for different execution modes
           editor.setOption('extraKeys', {
-            'Ctrl-Enter': executeCode,
-            'Cmd-Enter': executeCode // For Mac
+            'Ctrl-Enter': executeCode,       // Mode 2: Execute paragraph or selection
+            'Cmd-Enter': executeCode,        // For Mac
+            'Alt-Enter': executeCurrentLine, // Mode 1: Execute current line
+            'Alt-Cmd-Enter': executeCurrentLine // For Mac Alt+Enter
           });
         }
       };
@@ -108,11 +110,22 @@ d2 >> blip([_,_,4,_], dur=.5)
         }
       });
       
-      // Set up keyboard shortcut for execution (Ctrl+Enter) - fallback for whole document
+      // Set up keyboard shortcuts for execution - fallback for whole document
       const handleKeyDown = (event) => {
-        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+        // Mode 2: Ctrl+Enter (or Cmd+Enter on Mac) for paragraph or selection
+        if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key === 'Enter') {
           event.preventDefault();
           executeCode();
+        } 
+        // Mode 1: Alt+Enter for single line
+        else if (event.altKey && !event.ctrlKey && !event.metaKey && event.key === 'Enter') {
+          event.preventDefault();
+          executeCurrentLine();
+        }
+        // Mode 1 (Mac): Alt+Cmd+Enter for single line
+        else if (event.altKey && event.metaKey && event.key === 'Enter') {
+          event.preventDefault();
+          executeCurrentLine();
         }
       };
       
@@ -129,29 +142,65 @@ d2 >> blip([_,_,4,_], dur=.5)
     }
   });
   
-  // Execute code
-  function executeCode() {
-    // Check if the editor is initialized
-    if (!editor) {
-      console.error("CodeMirror editor not initialized!");
-      return;
+  // Get current paragraph - text block without blank lines
+  function getCurrentParagraph() {
+    const cursor = editor.getCursor();
+    const line = cursor.line;
+    
+    // Find the start of the paragraph
+    let startLine = line;
+    while (startLine > 0) {
+      const prevLine = editor.getLine(startLine - 1);
+      if (!prevLine || prevLine.trim() === '') {
+        break;
+      }
+      startLine--;
     }
     
-    // Get current selection or all text if nothing is selected
-    let codeToExecute;
-    if (editor.somethingSelected()) {
-      codeToExecute = editor.getSelection();
-    } else {
-      codeToExecute = editor.getValue();
+    // Find the end of the paragraph
+    let endLine = line;
+    const totalLines = editor.lineCount();
+    while (endLine < totalLines - 1) {
+      const nextLine = editor.getLine(endLine + 1);
+      if (!nextLine || nextLine.trim() === '') {
+        break;
+      }
+      endLine++;
     }
     
+    // Extract the paragraph text
+    const from = { line: startLine, ch: 0 };
+    const to = { line: endLine, ch: editor.getLine(endLine).length };
+    return editor.getRange(from, to);
+  }
+  
+  // Get current line of code
+  function getCurrentLine() {
+    const cursor = editor.getCursor();
+    return editor.getLine(cursor.line);
+  }
+  
+  // Send code to server and handle results
+  function sendCodeToExecute(codeToExecute, executionType = 'paragraph') {
     // Don't execute empty code
-    if (!codeToExecute.trim()) {
+    if (!codeToExecute || !codeToExecute.trim()) {
       return;
     }
     
-    // Add to console output
-    addConsoleOutput(`> Executing code:\n${codeToExecute}`, 'command');
+    // Add to console output with execution type indicator
+    let executionLabel;
+    switch (executionType) {
+      case 'line':
+        executionLabel = 'line';
+        break;
+      case 'selection':
+        executionLabel = 'selection';
+        break;
+      default:
+        executionLabel = 'paragraph';
+    }
+    
+    addConsoleOutput(`> Executing ${executionLabel}:\n${codeToExecute}`, 'command');
     
     // Create a subscription to listen for execution results
     const unsubscribeExecution = appState.subscribe(state => {
@@ -188,6 +237,41 @@ d2 >> blip([_,_,4,_], dur=.5)
     setTimeout(() => {
       unsubscribeExecution();
     }, 10000); // 10 seconds timeout
+  }
+  
+  // Execute code - Mode 2 (default): Current paragraph or selection
+  function executeCode() {
+    // Check if the editor is initialized
+    if (!editor) {
+      console.error("CodeMirror editor not initialized!");
+      return;
+    }
+    
+    // Get current selection or current paragraph if nothing is selected
+    let codeToExecute;
+    let executionType;
+    
+    if (editor.somethingSelected()) {
+      codeToExecute = editor.getSelection();
+      executionType = 'selection';
+    } else {
+      codeToExecute = getCurrentParagraph();
+      executionType = 'paragraph';
+    }
+    
+    sendCodeToExecute(codeToExecute, executionType);
+  }
+  
+  // Execute current line - Mode 1: Alt+Enter
+  function executeCurrentLine() {
+    // Check if the editor is initialized
+    if (!editor) {
+      console.error("CodeMirror editor not initialized!");
+      return;
+    }
+    
+    const currentLine = getCurrentLine();
+    sendCodeToExecute(currentLine, 'line');
   }
   
   // Add message to console output
@@ -251,6 +335,10 @@ d2 >> blip([_,_,4,_], dur=.5)
   <div class="editor-container">
     <header class="editor-header">
       <h1>Renardo Live Coding Editor</h1>
+      <div class="shortcuts-info">
+        <span class="shortcut-item">Alt+Enter: Run current line</span>
+        <span class="shortcut-item">Ctrl+Enter: Run paragraph or selection</span>
+      </div>
       
       <!-- Connection status -->
       <div class="status-bar">
@@ -276,7 +364,7 @@ d2 >> blip([_,_,4,_], dur=.5)
         <button 
           class="execute-button" 
           on:click={executeCode} 
-          title="Run code (Ctrl+Enter)"
+          title="Run paragraph or selection (Ctrl+Enter)"
         >
           Run Code
         </button>
@@ -362,7 +450,22 @@ d2 >> blip([_,_,4,_], dur=.5)
   .editor-header h1 {
     margin: 0;
     font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .shortcuts-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
     margin-bottom: 0.5rem;
+    font-size: 0.8rem;
+    color: #e0e0e0;
+  }
+  
+  .shortcut-item {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
   }
   
   .status-bar {
