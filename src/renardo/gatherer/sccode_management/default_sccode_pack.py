@@ -10,12 +10,17 @@ def is_default_sccode_pack_initialized():
     return (settings.get_path("SCCODE_LIBRARY") / settings.get("sc_backend.DEFAULT_SCCODE_PACK_NAME") / 'downloaded_at.txt').exists()
 
 
+def is_special_sccode_initialized():
+    """Check if the special SuperCollider code files have been downloaded."""
+    return (settings.get_path("SPECIAL_SCCODE_DIR") / 'downloaded_at.txt').exists()
+
+
 def is_sccode_pack_initialized(pack_name):
     """Check if a specific SuperCollider code pack has been downloaded."""
     return (settings.get_path("SCCODE_LIBRARY") / pack_name / 'downloaded_at.txt').exists()
 
 
-def download_default_sccode_pack_and_special(logger=None):
+def download_special_sccode_pack(logger=None):
     """Download the default SuperCollider code pack and special code files."""
     success = True
     
@@ -28,7 +33,7 @@ def download_default_sccode_pack_and_special(logger=None):
         )
     
     try:
-        download_files_from_json_index_concurrent(
+        success = download_files_from_json_index_concurrent(
             json_url='{}/{}/collection_index.json'.format(
                 settings.get("core.COLLECTIONS_DOWNLOAD_SERVER"),
                 settings.get("sc_backend.SPECIAL_SCCODE_DIR_NAME"),
@@ -36,6 +41,18 @@ def download_default_sccode_pack_and_special(logger=None):
             download_dir=settings.get_path("SPECIAL_SCCODE_DIR").parent,
             logger=logger
         )
+        
+        if success:
+            # Create a downloaded_at file to mark this as initialized
+            download_path = settings.get_path("SPECIAL_SCCODE_DIR")
+            download_path.mkdir(exist_ok=True)
+            
+            from datetime import datetime
+            with open(download_path / 'downloaded_at.txt', mode="w") as file:
+                file.write(str(datetime.now()))
+                
+            if logger:
+                logger.write_line("Special SCLang code downloaded successfully!")
     except Exception as e:
         error_msg = f"Error downloading special sccode: {str(e)}"
         print(error_msg)
@@ -43,12 +60,8 @@ def download_default_sccode_pack_and_special(logger=None):
             logger.write_error(error_msg)
         success = False
     
-    # Download default sccode pack
-    pack_name = settings.get("sc_backend.DEFAULT_SCCODE_PACK_NAME")
-    pack_success = download_sccode_pack(pack_name, logger)
-    
     # Return overall success
-    return success and pack_success
+    return success
 
 
 def download_sccode_pack(pack_name, logger=None):
@@ -76,7 +89,7 @@ def download_sccode_pack(pack_name, logger=None):
     try:
         # Create the directory if it doesn't exist
         download_dir = settings.get_path("SCCODE_LIBRARY")
-        os.makedirs(download_dir, exist_ok=True)
+        download_dir.mkdir(exist_ok=True)
         
         # Download the SC code pack
         download_files_from_json_index_concurrent(
@@ -87,7 +100,7 @@ def download_sccode_pack(pack_name, logger=None):
         
         # Create a downloaded_at file to mark this pack as initialized
         download_path = settings.get_path("SCCODE_LIBRARY") / pack_name
-        os.makedirs(download_path, exist_ok=True)
+        download_path.mkdir(exist_ok=True)
         
         with open(download_path / 'downloaded_at.txt', mode="w") as file:
             file.write(str(datetime.now()))
