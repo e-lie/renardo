@@ -296,11 +296,6 @@
       color: #2c3e50;
     }
     
-    .status-bar {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 1.5rem;
-    }
     
     .status-indicator {
       padding: 0.25rem 0.75rem;
