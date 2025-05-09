@@ -81,13 +81,6 @@
   <div class="container">
     <h1>Renardo Initialization</h1>
     
-    <!-- Connection status -->
-    <div class="status-bar">
-      <div class="status-indicator" class:connected={$appState.connected}>
-        {$appState.connected ? 'Connected' : 'Disconnected'}
-      </div>
-    </div>
-    
     <p class="description">
       Initialize Renardo components before starting to make music.
     </p>
@@ -202,28 +195,6 @@
     color: #2c3e50;
   }
   
-  .status-bar {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 1rem;
-  }
-  
-  .status-indicator {
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    background-color: #f44336;
-    color: white;
-  }
-  
-  .status-indicator.connected {
-    background-color: #4caf50;
-  }
-  
-  .status-indicator.fallback {
-    background-color: #ff9800;
-  }
   
   .description {
     text-align: center;

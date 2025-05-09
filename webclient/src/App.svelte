@@ -122,11 +122,24 @@
 <header>
   <nav>
     <div class="nav-logo">Renardo Web</div>
-    <div class="nav-links">
-      <a href="#home" class:active={currentRoute === 'home'}>Home</a>
-      <a href="#init" class:active={currentRoute === 'init'}>Initialize</a>
-      <a href="#editor" class:active={currentRoute === 'editor'}>Code Editor</a>
-      <a href="#collections" class:active={currentRoute === 'collections'}>Collections</a>
+    <div class="nav-center">
+      <div class="nav-links">
+        <a href="#home" class:active={currentRoute === 'home'}>Home</a>
+        <a href="#init" class:active={currentRoute === 'init'}>Initialize</a>
+        <a href="#editor" class:active={currentRoute === 'editor'}>Code Editor</a>
+        <a href="#collections" class:active={currentRoute === 'collections'}>Collections</a>
+      </div>
+    </div>
+    <div class="connection-status">
+      {#if webSocketSupported}
+        <div class="status-indicator" class:connected={$appState.connected}>
+          {$appState.connected ? 'Connected' : 'Disconnected'}
+        </div>
+      {:else}
+        <div class="status-indicator fallback">
+          HTTP Fallback
+        </div>
+      {/if}
     </div>
   </nav>
 </header>
@@ -135,19 +148,6 @@
   {#if currentRoute === 'home'}
     <div class="container">
       <h1>Welcome to Renardo Web</h1>
-      
-      <!-- Connection status -->
-      <div class="status-bar">
-        {#if webSocketSupported}
-          <div class="status-indicator" class:connected={$appState.connected}>
-            {$appState.connected ? 'Connected' : 'Disconnected'}
-          </div>
-        {:else}
-          <div class="status-indicator fallback">
-            Using HTTP Fallback (WebSockets not supported)
-          </div>
-        {/if}
-      </div>
       
       <!-- Welcome text from server -->
       <div class="welcome-message">
@@ -230,11 +230,22 @@
       color: white;
       font-size: 1.5rem;
       font-weight: bold;
+      flex: 0 0 auto;
+    }
+    
+    .nav-center {
+      flex: 1;
+      display: flex;
+      justify-content: center;
     }
     
     .nav-links {
       display: flex;
       gap: 1.5rem;
+    }
+    
+    .connection-status {
+      flex: 0 0 auto;
     }
     
     .nav-links a {
@@ -290,10 +301,23 @@
     .status-indicator {
       padding: 0.25rem 0.75rem;
       border-radius: 20px;
-      font-size: 0.875rem;
+      font-size: 0.75rem;
       font-weight: 500;
       background-color: #f44336;
       color: white;
+      display: flex;
+      align-items: center;
+    }
+    
+    .status-indicator::before {
+      content: "";
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: currentColor;
+      margin-right: 5px;
+      animation: pulse 1.5s infinite ease-in-out;
     }
     
     .status-indicator.connected {
@@ -302,6 +326,12 @@
     
     .status-indicator.fallback {
       background-color: #ff9800;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 0.6; }
+      50% { opacity: 1; }
+      100% { opacity: 0.6; }
     }
     
     .welcome-message {
