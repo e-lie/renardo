@@ -9,7 +9,7 @@
 # Type your code here and press Ctrl+Enter to run
 
 d1 >> play("x-o-").every(4, "stutter", 4)
-d2 >> play("  * ").speed(2)
+d2 >> blip([_,_,4,_], dur=.5)
 `;
 
   // CodeMirror options
@@ -231,6 +231,20 @@ d2 >> play("  * ").speed(2)
   // Handle editor mount event
   function handleEditorMount(e) {
     editor = e.detail.editor;
+  }
+  
+  // Stop all music playback
+  function stopMusic() {
+    // Add to console output to show we're stopping music
+    addConsoleOutput("Stopping all music playback...", 'command');
+    
+    // Send the Clock.clear() command to stop all patterns
+    sendMessage({
+      type: 'execute_code',
+      data: {
+        code: 'Clock.clear()'
+      }
+    });
   }</script>
 
 <main>
@@ -265,6 +279,13 @@ d2 >> play("  * ").speed(2)
           title="Run code (Ctrl+Enter)"
         >
           Run Code
+        </button>
+        <button 
+          class="stop-button" 
+          on:click={stopMusic}
+          title="Stop all music playback"
+        >
+          Stop Music
         </button>
         <button 
           class="clear-button" 
@@ -418,6 +439,14 @@ d2 >> play("  * ").speed(2)
   
   .execute-button:hover:not(:disabled) {
     background-color: #219653;
+  }
+  
+  .stop-button {
+    background-color: #e67e22;
+  }
+  
+  .stop-button:hover:not(:disabled) {
+    background-color: #d35400;
   }
   
   .clear-button {
