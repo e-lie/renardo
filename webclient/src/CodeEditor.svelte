@@ -35,8 +35,7 @@ d2 >> blip([_,_,4,_], dur=.5)
   let consoleOutput = [];
   let consoleContainer;
   
-  // WebSocket check
-  const webSocketSupported = 'WebSocket' in window;
+  // We'll assume websockets are managed by the parent App component
   
   // Function to scroll console to bottom
   function scrollToBottom() {
@@ -47,174 +46,170 @@ d2 >> blip([_,_,4,_], dur=.5)
     }
   }
   
-  // Initialize WebSocket connection and CodeMirror on mount
+  // Initialize CodeMirror on mount
   onMount(() => {
-    if (webSocketSupported) {
-      initWebSocket();
-      
-      // Function to load a script dynamically
-      const loadScript = (src) => {
-        return new Promise((resolve, reject) => {
-          const script = document.createElement('script');
-          script.src = src;
-          script.onload = () => resolve();
-          script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
-          document.head.appendChild(script);
-        });
-      };
-      
-      // Function to load a CSS file dynamically
-      const loadCSS = (href) => {
-        return new Promise((resolve, reject) => {
-          // Check if the CSS is already loaded
-          const existingLink = document.querySelector(`link[href="${href}"]`);
-          if (existingLink) {
-            resolve();
-            return;
-          }
-          
-          const link = document.createElement('link');
-          link.rel = 'stylesheet';
-          link.href = href;
-          link.onload = () => resolve();
-          link.onerror = () => reject(new Error(`Failed to load CSS: ${href}`));
-          document.head.appendChild(link);
-        });
-      };
-      
-      // Wait for CodeMirror to be loaded from CDN and load additional modes
-      const initEditor = async () => {
-        if (typeof window.CodeMirror === 'undefined') {
-          // If CodeMirror isn't loaded yet, try again in 100ms
-          setTimeout(initEditor, 100);
+    // Function to load a script dynamically
+    const loadScript = (src) => {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+        document.head.appendChild(script);
+      });
+    };
+    
+    // Function to load a CSS file dynamically
+    const loadCSS = (href) => {
+      return new Promise((resolve, reject) => {
+        // Check if the CSS is already loaded
+        const existingLink = document.querySelector(`link[href="${href}"]`);
+        if (existingLink) {
+          resolve();
           return;
         }
         
-        try {
-          // Load CodeMirror core CSS
-          await loadCSS('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/codemirror.min.css');
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        link.onload = () => resolve();
+        link.onerror = () => reject(new Error(`Failed to load CSS: ${href}`));
+        document.head.appendChild(link);
+      });
+    };
+    
+    // Wait for CodeMirror to be loaded from CDN and load additional modes
+    const initEditor = async () => {
+      if (typeof window.CodeMirror === 'undefined') {
+        // If CodeMirror isn't loaded yet, try again in 100ms
+        setTimeout(initEditor, 100);
+        return;
+      }
+      
+      try {
+        // Load CodeMirror core CSS
+        await loadCSS('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/codemirror.min.css');
+        
+        // Load Monokai theme CSS
+        await loadCSS('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/theme/monokai.min.css');
+        
+        // Load CodeMirror addons and modes for better editor experience
+        await Promise.all([
+          // Python mode for syntax highlighting
+          loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/mode/python/python.min.js'),
+          // Matching brackets highlighting
+          loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/addon/edit/matchbrackets.min.js'),
+          // Auto-close brackets
+          loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/addon/edit/closebrackets.min.js'),
+          // Highlight active line
+          loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/addon/selection/active-line.min.js'),
+          // Search/replace functionality
+          loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/addon/search/search.min.js'),
+          loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/addon/search/searchcursor.min.js'),
+          // Highlight selection matches
+          loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/addon/search/match-highlighter.min.js')
+        ]).catch(err => {
+          console.error("Error loading CodeMirror addons:", err);
+        });
+        
+        // Initialize CodeMirror
+        const codeMirrorOptions = {
+          value: editorContent,
+          lineNumbers: true,
+          mode: {
+            name: 'python',
+            version: 3,
+            singleLineStringErrors: false
+          },
+          theme: 'monokai',
+          tabSize: 4,
+          indentWithTabs: false,
+          indentUnit: 4,
+          lineWrapping: true,
+          viewportMargin: Infinity,
+          matchBrackets: true,
+          autoCloseBrackets: true,
+          styleActiveLine: true,
+          smartIndent: true,
+          electricChars: true,
+          highlightSelectionMatches: true,
+          autofocus: true
+        };
+      
+        // Make sure we have the CodeMirror textarea element
+        const textarea = document.getElementById('code-editor');
+        if (textarea) {
+          // Initialize CodeMirror
+          editor = window.CodeMirror.fromTextArea(textarea, codeMirrorOptions);
           
-          // Load Monokai theme CSS
-          await loadCSS('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/theme/monokai.min.css');
-          
-          // Load CodeMirror addons and modes for better editor experience
-          await Promise.all([
-            // Python mode for syntax highlighting
-            loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/mode/python/python.min.js'),
-            // Matching brackets highlighting
-            loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/addon/edit/matchbrackets.min.js'),
-            // Auto-close brackets
-            loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/addon/edit/closebrackets.min.js'),
-            // Highlight active line
-            loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/addon/selection/active-line.min.js'),
-            // Search/replace functionality
-            loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/addon/search/search.min.js'),
-            loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/addon/search/searchcursor.min.js'),
-            // Highlight selection matches
-            loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/addon/search/match-highlighter.min.js')
-          ]).catch(err => {
-            console.error("Error loading CodeMirror addons:", err);
+          // Update local content when editor changes
+          editor.on('change', (instance) => {
+            editorContent = instance.getValue();
           });
           
-          // Initialize CodeMirror
-          const codeMirrorOptions = {
-            value: editorContent,
-            lineNumbers: true,
-            mode: {
-              name: 'python',
-              version: 3,
-              singleLineStringErrors: false
-            },
-            theme: 'monokai',
-            tabSize: 4,
-            indentWithTabs: false,
-            indentUnit: 4,
-            lineWrapping: true,
-            viewportMargin: Infinity,
-            matchBrackets: true,
-            autoCloseBrackets: true,
-            styleActiveLine: true,
-            smartIndent: true,
-            electricChars: true,
-            highlightSelectionMatches: true,
-            autofocus: true
-          };
-        
-          // Make sure we have the CodeMirror textarea element
-          const textarea = document.getElementById('code-editor');
-          if (textarea) {
-            // Initialize CodeMirror
-            editor = window.CodeMirror.fromTextArea(textarea, codeMirrorOptions);
-            
-            // Update local content when editor changes
-            editor.on('change', (instance) => {
-              editorContent = instance.getValue();
-            });
-            
-            // Add key bindings for different execution modes
-            editor.setOption('extraKeys', {
-              'Ctrl-Enter': executeCode,       // Mode 2: Execute paragraph or selection
-              'Cmd-Enter': executeCode,        // For Mac
-              'Alt-Enter': executeCurrentLine, // Mode 1: Execute current line
-              'Alt-Cmd-Enter': executeCurrentLine // For Mac Alt+Enter
-            });
-            
-            // Log successful initialization
-            console.log("CodeMirror editor initialized with Python syntax highlighting");
-          } else {
-            console.error("Could not find code-editor textarea element");
-          }
-        } catch (error) {
-          console.error("Error initializing CodeMirror editor:", error);
-        }
-      };
-      
-      // Start the initialization process
-      initEditor();
-      
-      // Subscribe to appState changes
-      const unsubscribe = appState.subscribe(state => {
-        if (state.consoleOutput && state.consoleOutput.length > 0) {
-          const prevOutputCount = consoleOutput.length;
-          consoleOutput = state.consoleOutput;
+          // Add key bindings for different execution modes
+          editor.setOption('extraKeys', {
+            'Ctrl-Enter': executeCode,       // Mode 2: Execute paragraph or selection
+            'Cmd-Enter': executeCode,        // For Mac
+            'Alt-Enter': executeCurrentLine, // Mode 1: Execute current line
+            'Alt-Cmd-Enter': executeCurrentLine // For Mac Alt+Enter
+          });
           
-          // If new console output was added, scroll to bottom
-          if (consoleOutput.length > prevOutputCount) {
-            scrollToBottom();
-          }
+          // Log successful initialization
+          console.log("CodeMirror editor initialized with Python syntax highlighting");
+        } else {
+          console.error("Could not find code-editor textarea element");
         }
-      });
-      
-      // Set up keyboard shortcuts for execution - fallback for whole document
-      const handleKeyDown = (event) => {
-        // Mode 2: Ctrl+Enter (or Cmd+Enter on Mac) for paragraph or selection
-        if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key === 'Enter') {
-          event.preventDefault();
-          executeCode();
-        } 
-        // Mode 1: Alt+Enter for single line
-        else if (event.altKey && !event.ctrlKey && !event.metaKey && event.key === 'Enter') {
-          event.preventDefault();
-          executeCurrentLine();
+      } catch (error) {
+        console.error("Error initializing CodeMirror editor:", error);
+      }
+    };
+    
+    // Start the initialization process
+    initEditor();
+    
+    // Subscribe to appState changes
+    const unsubscribe = appState.subscribe(state => {
+      if (state.consoleOutput && state.consoleOutput.length > 0) {
+        const prevOutputCount = consoleOutput.length;
+        consoleOutput = state.consoleOutput;
+        
+        // If new console output was added, scroll to bottom
+        if (consoleOutput.length > prevOutputCount) {
+          scrollToBottom();
         }
-        // Mode 1 (Mac): Alt+Cmd+Enter for single line
-        else if (event.altKey && event.metaKey && event.key === 'Enter') {
-          event.preventDefault();
-          executeCurrentLine();
-        }
-      };
-      
-      document.addEventListener('keydown', handleKeyDown);
-      
-      // Clean up on unmount
-      return () => {
-        unsubscribe();
-        document.removeEventListener('keydown', handleKeyDown);
-        if (editor) {
-          editor.toTextArea(); // Clean up CodeMirror instance
-        }
-      };
-    }
+      }
+    });
+    
+    // Set up keyboard shortcuts for execution - fallback for whole document
+    const handleKeyDown = (event) => {
+      // Mode 2: Ctrl+Enter (or Cmd+Enter on Mac) for paragraph or selection
+      if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key === 'Enter') {
+        event.preventDefault();
+        executeCode();
+      } 
+      // Mode 1: Alt+Enter for single line
+      else if (event.altKey && !event.ctrlKey && !event.metaKey && event.key === 'Enter') {
+        event.preventDefault();
+        executeCurrentLine();
+      }
+      // Mode 1 (Mac): Alt+Cmd+Enter for single line
+      else if (event.altKey && event.metaKey && event.key === 'Enter') {
+        event.preventDefault();
+        executeCurrentLine();
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    
+    // Clean up on unmount
+    return () => {
+      unsubscribe();
+      document.removeEventListener('keydown', handleKeyDown);
+      if (editor) {
+        editor.toTextArea(); // Clean up CodeMirror instance
+      }
+    };
   });
   
   // Get current paragraph - text block without blank lines
@@ -421,21 +416,9 @@ d2 >> blip([_,_,4,_], dur=.5)
       
       <!-- Connection status -->
       <div class="status-bar">
-        {#if webSocketSupported}
-          {#if $appState.connected}
-            <div class="status-indicator connected" transition:fade={{ duration: 300 }}>
-              Connected
-            </div>
-          {:else}
-            <div class="status-indicator" transition:fade={{ duration: 300 }}>
-              Disconnected
-            </div>
-          {/if}
-        {:else}
-          <div class="status-indicator fallback">
-            Using HTTP Fallback (WebSockets not supported)
-          </div>
-        {/if}
+        <div class="status-indicator" class:connected={$appState.connected} transition:fade={{ duration: 300 }}>
+          {$appState.connected ? 'Connected' : 'Disconnected'}
+        </div>
       </div>
       
       <!-- Controls -->

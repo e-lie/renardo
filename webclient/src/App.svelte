@@ -42,12 +42,27 @@
   // Initialize WebSocket connection on mount
   onMount(() => {
     if (webSocketSupported) {
+      // Initialize WebSocket connection once for the entire application
       initWebSocket();
+      
+      // Request status after a short delay
+      setTimeout(() => {
+        if ($appState.connected) {
+          // Get initial state and status
+          sendMessage({ type: 'get_state' });
+          sendMessage({ type: 'get_renardo_status' });
+        }
+      }, 500);
       
       // Simple router based on URL hash
       function handleHashChange() {
         const hash = window.location.hash.replace('#', '');
         currentRoute = hash || 'home';
+        
+        // When changing routes, always request the latest status
+        if ($appState.connected) {
+          sendMessage({ type: 'get_renardo_status' });
+        }
       }
       
       // Initialize route from current hash
@@ -56,10 +71,10 @@
       // Listen for hash changes
       window.addEventListener('hashchange', handleHashChange);
       
-      // Clean up WebSocket and event listeners on component unmount
+      // Clean up event listeners on component unmount, but keep WebSocket connection
       return () => {
         window.removeEventListener('hashchange', handleHashChange);
-        // WebSocket cleanup handled in websocket.js
+        // Do NOT close the WebSocket here - it should stay open for the app's lifetime
       };
     } else {
       // Fallback for browsers without WebSocket support

@@ -170,6 +170,12 @@ def register_websocket_routes(sock):
                                     "message": f"Error executing code: {error_message}"
                                 }
                             }))
+                    elif message_type == "ping":
+                        # Respond to ping with pong to keep connection alive
+                        ws.send(json.dumps({
+                            "type": "pong",
+                            "timestamp": message.get("timestamp", time.time() * 1000)
+                        }))
                     else:
                         # Unknown message type
                         ws.send(json.dumps({
