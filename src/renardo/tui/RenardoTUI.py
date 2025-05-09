@@ -21,7 +21,7 @@ from renardo.gatherer import (
     is_default_spack_initialized,
     download_default_sample_pack,
     is_default_sccode_pack_initialized,
-    download_default_sccode_pack_and_special
+    download_special_sccode_pack
 )
 from renardo.tui.widgets.TutoTabPane import TutoTabPane
 from renardo.tui.widgets.RightPane import RightPane, ResourcesRightPane
@@ -151,7 +151,7 @@ class RenardoTUI(App[None]):
     def dl_sccode_background(self) -> None:
         log_output_widget = self.query_one("#collection-dl-log-output", Log)
         #log_output_widget = None
-        download_default_sccode_pack_and_special(logger=log_output_widget)
+        download_special_sccode_pack(logger=log_output_widget)
         self.update_app_state()
 
     @work(exclusive=True, thread=True)

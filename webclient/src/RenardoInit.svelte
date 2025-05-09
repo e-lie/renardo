@@ -6,6 +6,7 @@
   let scFilesInitialized = false;
   let samplesInitialized = false;
   let instrumentsInitialized = false;
+  let sclangCodeInitialized = false;
   
   // Check if WebSockets are supported
   const webSocketSupported = 'WebSocket' in window;
@@ -21,6 +22,7 @@
           scFilesInitialized = state.renardoInit.superColliderClasses;
           samplesInitialized = state.renardoInit.samples;
           instrumentsInitialized = state.renardoInit.instruments;
+          sclangCodeInitialized = state.renardoInit.sclangCode;
         }
       });
       
@@ -41,6 +43,19 @@
     
     return sendMessage({
       type: 'init_supercollider_classes'
+    });
+  }
+  
+  // Initialization function for SCLang Code
+  function downloadSclangCode() {
+    // Reset any previous error
+    appState.update(state => ({
+      ...state,
+      error: null
+    }));
+    
+    return sendMessage({
+      type: 'download_sclang_code'
     });
   }
   
@@ -96,7 +111,26 @@
       
       <div class="init-item">
         <div class="init-header">
-          <h3>2. Sample Packs</h3>
+          <h3>2. Download SCLang Code</h3>
+          <div class="status-badge {getStatusClass(sclangCodeInitialized)}">
+            {sclangCodeInitialized ? 'Downloaded' : 'Not Installed'}
+          </div>
+        </div>
+        <p>Required SuperCollider language code for special features.</p>
+        {#if !sclangCodeInitialized}
+          <button 
+            class="secondary-button" 
+            on:click={downloadSclangCode}
+            disabled={!$appState.connected || sclangCodeInitialized}
+          >
+            <span class="button-icon">📄</span> Download SuperCollider Language Code
+          </button>
+        {/if}
+      </div>
+      
+      <div class="init-item">
+        <div class="init-header">
+          <h3>3. Sample Packs</h3>
           <div class="status-badge {getStatusClass(samplesInitialized)}">
             {samplesInitialized ? 'Downloaded' : 'Not Installed'}
           </div>
@@ -111,7 +145,7 @@
       
       <div class="init-item">
         <div class="init-header">
-          <h3>3. Instruments &amp; Effects</h3>
+          <h3>4. Instruments &amp; Effects</h3>
           <div class="status-badge {getStatusClass(instrumentsInitialized)}">
             {instrumentsInitialized ? 'Downloaded' : 'Not Installed'}
           </div>
@@ -126,7 +160,7 @@
     </div>
     
     <!-- Success message when all components are initialized -->
-    {#if scFilesInitialized && samplesInitialized && instrumentsInitialized}
+    {#if scFilesInitialized && sclangCodeInitialized && samplesInitialized && instrumentsInitialized}
       <div class="success-message">
         <h3>🎉 All components initialized successfully!</h3>
         <p>You're ready to start making music with Renardo.</p>
