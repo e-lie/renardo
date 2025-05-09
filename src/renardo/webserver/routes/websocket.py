@@ -10,7 +10,7 @@ from renardo.webserver import websocket_utils
 from renardo.gatherer import download_default_sample_pack, is_default_spack_initialized
 from renardo.gatherer import is_default_sccode_pack_initialized
 from renardo.gatherer import is_special_sccode_initialized, download_special_sccode_pack
-from renardo.renardo_app.supercollider_mgt.sc_classes_files import write_sc_renardo_files_in_user_config, is_renardo_sc_classes_initialized
+from renardo.sc_backend import write_sc_renardo_files_in_user_config, is_renardo_sc_classes_initialized
 
 
 # Simple logger class for gatherer functions
