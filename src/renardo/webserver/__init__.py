@@ -26,8 +26,15 @@ def create_webapp():
     # Get RenardoApp instance
     app = get_instance()
     
-    # Initialize Flask app
-    webapp = Flask(__name__, static_folder=STATIC_FOLDER)
+    # Initialize Flask app with proper static folder
+    # Convert to absolute path if it's a relative path
+    static_folder = STATIC_FOLDER
+    if not os.path.isabs(static_folder):
+        static_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), static_folder))
+        print(f"Converting relative path to absolute: {static_folder}")
+    
+    webapp = Flask(__name__, static_folder=static_folder)
+    print(f"Flask app initialized with static_folder: {webapp.static_folder}")
     
     # Store RenardoApp reference on the Flask app
     webapp.config['RENARDO_APP'] = app
@@ -62,6 +69,12 @@ def create_webapp():
         Returns:
             Flask response: Static file or index.html
         """
+        # Check if static folder exists and has index.html
+        if not webapp.static_folder or not os.path.exists(os.path.join(webapp.static_folder, 'index.html')):
+            error_msg = f"Web client files not found. Looking in: {webapp.static_folder}"
+            print(f"ERROR: {error_msg}")
+            return error_msg, 500
+            
         if path and os.path.exists(os.path.join(webapp.static_folder, path)):
             return send_from_directory(webapp.static_folder, path)
         return send_from_directory(webapp.static_folder, 'index.html')
