@@ -231,13 +231,7 @@ d2 >> play("  * ").speed(2)
   // Handle editor mount event
   function handleEditorMount(e) {
     editor = e.detail.editor;
-  }
-  
-  // Go back to init page
-  function goToInit() {
-    window.location.hash = '#init';
-  }
-</script>
+  }</script>
 
 <main>
   <div class="editor-container">
@@ -278,13 +272,6 @@ d2 >> play("  * ").speed(2)
           title="Clear console output"
         >
           Clear Console
-        </button>
-        <button 
-          class="init-button" 
-          on:click={goToInit}
-          title="Go back to initialization page"
-        >
-          Back to Init
         </button>
       </div>
     </header>
@@ -439,14 +426,6 @@ d2 >> play("  * ").speed(2)
   
   .clear-button:hover:not(:disabled) {
     background-color: #c0392b;
-  }
-  
-  .init-button {
-    background-color: #9b59b6;
-  }
-  
-  .init-button:hover:not(:disabled) {
-    background-color: #8e44ad;
   }
   
   .editor-workspace {
