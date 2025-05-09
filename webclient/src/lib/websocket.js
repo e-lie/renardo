@@ -9,12 +9,14 @@ export const appState = writable({
   // Add Renardo initialization state
   renardoInit: {
     superColliderClasses: false,
+    sclangCode: false,
     samples: false,
     instruments: false
   },
   // Add runtime status
   runtimeStatus: {
     scBackendRunning: false,
+    scBackendStartupCode: 'Renardo.start; Renardo.midi;',
     renardoRuntimeRunning: false
   },
   // Add log messages array
@@ -171,6 +173,8 @@ function handleMessage(message) {
         error: null,
         // Update Renardo initialization status if available
         renardoInit: data.renardo_init || state.renardoInit,
+        // Update runtime status if available
+        runtimeStatus: data.runtime_status || state.runtimeStatus,
       }));
       break;
       
@@ -179,6 +183,18 @@ function handleMessage(message) {
       appState.update(state => ({
         ...state,
         renardoInit: data.initStatus || data.data?.initStatus || state.renardoInit,
+        error: null
+      }));
+      break;
+      
+    case 'sc_backend_status':
+      // Update SC backend runtime status
+      appState.update(state => ({
+        ...state,
+        runtimeStatus: {
+          ...state.runtimeStatus,
+          scBackendRunning: data.running || false
+        },
         error: null
       }));
       break;

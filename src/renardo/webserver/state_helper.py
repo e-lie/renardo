@@ -49,7 +49,16 @@ def update_state(key, value):
     Returns:
         dict: Updated state
     """
-    return get_state_manager().update_state(key, value)
+    state_manager = get_state_manager()
+    
+    # If the method exists, use it, otherwise implement behavior directly
+    if hasattr(state_manager, 'update_state'):
+        return state_manager.update_state(key, value)
+    else:
+        # Direct implementation as fallback
+        state = state_manager.get_state()
+        state[key] = value
+        return state
 
 
 def get_renardo_status():

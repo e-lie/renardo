@@ -6,6 +6,7 @@
   import CodeEditor from './CodeEditor.svelte';
   import Collections from './Collections.svelte';
   import Configuration from './Configuration.svelte';
+  import SuperColliderBackend from './SuperColliderBackend.svelte';
   
   // Add CodeMirror CSS links to the document head
   if (typeof document !== 'undefined') {
@@ -129,6 +130,7 @@
         <a href="#init" class:active={currentRoute === 'init'}>Initialize</a>
         <a href="#editor" class:active={currentRoute === 'editor'}>Code Editor</a>
         <a href="#collections" class:active={currentRoute === 'collections'}>Collections</a>
+        <a href="#scbackend" class:active={currentRoute === 'scbackend'}>SuperCollider</a>
         <a href="#config" class:active={currentRoute === 'config'}>Settings</a>
       </div>
     </div>
@@ -173,6 +175,14 @@
         </div>
         
         <div class="feature-card">
+          <h3>SuperCollider Backend</h3>
+          <p>Configure and start the SuperCollider sound synthesis engine.</p>
+          <button on:click={() => navigate('scbackend')} class="sc-button">
+            Manage Backend
+          </button>
+        </div>
+        
+        <div class="feature-card">
           <h3>Additional Collections</h3>
           <p>Download additional sample packs and instruments.</p>
           <button on:click={() => navigate('collections')} class="collections-button">
@@ -196,6 +206,8 @@
     <Collections />
   {:else if currentRoute === 'config'}
     <Configuration />
+  {:else if currentRoute === 'scbackend'}
+    <SuperColliderBackend />
   {/if}
 </main>
   
@@ -407,6 +419,14 @@
     
     .collections-button:hover {
       background-color: #8e44ad;
+    }
+    
+    .sc-button {
+      background-color: #e67e22;
+    }
+    
+    .sc-button:hover {
+      background-color: #d35400;
     }
     
     .error-message {

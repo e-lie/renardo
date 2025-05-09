@@ -170,6 +170,24 @@ def register_websocket_routes(sock):
                                     "message": f"Error executing code: {error_message}"
                                 }
                             }))
+                    elif message_type == "start_sc_backend":
+                        # Handle SuperCollider backend start request
+                        threading.Thread(
+                            target=start_sc_backend_task,
+                            args=(ws, message.get("data", {}).get("customCode", "Renardo.start; Renardo.midi;"))
+                        ).start()
+                    
+                    elif message_type == "stop_sc_backend":
+                        # Handle SuperCollider backend stop request
+                        threading.Thread(
+                            target=stop_sc_backend_task,
+                            args=(ws,)
+                        ).start()
+                    
+                    elif message_type == "get_sc_backend_status":
+                        # Check and send current SC backend status
+                        send_sc_backend_status(ws)
+                    
                     elif message_type == "ping":
                         # Respond to ping with pong to keep connection alive
                         ws.send(json.dumps({
@@ -282,6 +300,248 @@ def init_supercollider_classes_task(ws):
             pass
 
 
+def start_sc_backend_task(ws, custom_code="Renardo.start; Renardo.midi;"):
+    """Start SuperCollider backend in a separate thread"""
+    # Create logger
+    logger = WebsocketLogger(ws)
+    
+    try:
+        # Import SC backend module
+        from renardo.sc_backend.supercollider_mgt.sclang_instances_mgt import SupercolliderInstance
+        
+        # Check if SC backend is already running
+        sc_instance = SupercolliderInstance()
+        
+        if sc_instance.is_sclang_running():
+            logger.write_line("SuperCollider backend is already running", "WARN")
+            
+            # Send status message to client
+            ws.send(json.dumps({
+                "type": "sc_backend_status",
+                "data": {
+                    "running": True,
+                    "message": "SuperCollider backend is already running"
+                }
+            }))
+            return
+        
+        # Update state
+        state_helper.update_state("runtime_status", {
+            "scBackendRunning": False,
+            "scBackendStartupCode": custom_code,
+            "renardoRuntimeRunning": False
+        })
+        
+        # Start the sclang subprocess
+        logger.write_line("Starting SuperCollider backend...", "INFO")
+        success = sc_instance.start_sclang_subprocess()
+        
+        if success:
+            logger.write_line("Launching Renardo SC module with SynthDefManagement...", "INFO")
+            
+            # Wait for sclang to initialize
+            output_line = sc_instance.read_stdout_line()
+            while output_line and "Welcome to" not in output_line:
+                logger.write_line(output_line)
+                output_line = sc_instance.read_stdout_line()
+            
+            # Execute custom code
+            logger.write_line(f"Executing SuperCollider startup code...", "INFO")
+            for line in custom_code.strip().split(';'):
+                if line.strip():
+                    sc_instance.evaluate_sclang_code(f"{line.strip()};")
+                    logger.write_line(f"Executed: {line.strip()};", "INFO")
+            
+            # Read output lines (asynchronously in a thread to avoid blocking)
+            def read_output():
+                try:
+                    while sc_instance.is_sclang_running():
+                        output = sc_instance.read_stdout_line()
+                        if output:
+                            logger.write_line(output)
+                        else:
+                            time.sleep(0.1)
+                except Exception as e:
+                    logger.write_error(f"Error reading SuperCollider output: {e}")
+            
+            # Start output reader thread
+            threading.Thread(target=read_output, daemon=True).start()
+            
+            # Update state to reflect backend running
+            state_helper.update_state("runtime_status", {
+                "scBackendRunning": True,
+                "scBackendStartupCode": custom_code,
+                "renardoRuntimeRunning": True
+            })
+            
+            # Send status message to client
+            ws.send(json.dumps({
+                "type": "sc_backend_status",
+                "data": {
+                    "running": True,
+                    "message": "SuperCollider backend started successfully"
+                }
+            }))
+            
+            # Broadcast updated status to all clients
+            websocket_utils.broadcast_to_clients({
+                "type": "sc_backend_status",
+                "data": {
+                    "running": True
+                }
+            })
+            
+            logger.write_line("SuperCollider backend started successfully!", "SUCCESS")
+            
+        else:
+            error_msg = "Failed to start SuperCollider backend"
+            logger.write_error(error_msg)
+            
+            # Send error message to client
+            ws.send(json.dumps({
+                "type": "error",
+                "message": error_msg
+            }))
+    
+    except Exception as e:
+        error_msg = f"Error starting SuperCollider backend: {str(e)}"
+        logger.write_error(error_msg)
+        
+        # Send error message to client
+        try:
+            ws.send(json.dumps({
+                "type": "error",
+                "message": error_msg
+            }))
+        except:
+            pass
+
+
+def stop_sc_backend_task(ws):
+    """Stop SuperCollider backend in a separate thread"""
+    # Create logger
+    logger = WebsocketLogger(ws)
+    
+    try:
+        # Import SC backend module
+        from renardo.sc_backend.supercollider_mgt.sclang_instances_mgt import SupercolliderInstance
+        import psutil
+        
+        # Create SC instance
+        sc_instance = SupercolliderInstance()
+        
+        if not sc_instance.is_sclang_running():
+            logger.write_line("SuperCollider backend is not running", "WARN")
+            
+            # Send status message to client
+            ws.send(json.dumps({
+                "type": "sc_backend_status",
+                "data": {
+                    "running": False,
+                    "message": "SuperCollider backend is not running"
+                }
+            }))
+            return
+        
+        logger.write_line("Stopping SuperCollider backend...", "INFO")
+        
+        # Stop all SuperCollider processes
+        for proc in psutil.process_iter():
+            try:
+                if 'sclang' in proc.name() or 'scsynth' in proc.name():
+                    logger.write_line(f"Terminating SuperCollider process: {proc.name()} (PID: {proc.pid})", "INFO")
+                    proc.terminate()
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                pass
+        
+        # Wait for processes to terminate (with timeout)
+        gone, still_alive = psutil.wait_procs([p for p in psutil.process_iter() 
+                                              if 'sclang' in p.name() or 'scsynth' in p.name()], 
+                                              timeout=3)
+        
+        # Force kill any remaining processes
+        for p in still_alive:
+            try:
+                logger.write_line(f"Force killing SuperCollider process: {p.name()} (PID: {p.pid})", "WARN")
+                p.kill()
+            except:
+                pass
+        
+        # Update state to reflect backend stopped
+        state_helper.update_state("runtime_status", {
+            "scBackendRunning": False,
+            "renardoRuntimeRunning": False
+        })
+        
+        # Send status message to client
+        ws.send(json.dumps({
+            "type": "sc_backend_status",
+            "data": {
+                "running": False,
+                "message": "SuperCollider backend stopped successfully"
+            }
+        }))
+        
+        # Broadcast updated status to all clients
+        websocket_utils.broadcast_to_clients({
+            "type": "sc_backend_status",
+            "data": {
+                "running": False
+            }
+        })
+        
+        logger.write_line("SuperCollider backend stopped successfully!", "SUCCESS")
+    
+    except Exception as e:
+        error_msg = f"Error stopping SuperCollider backend: {str(e)}"
+        logger.write_error(error_msg)
+        
+        # Send error message to client
+        try:
+            ws.send(json.dumps({
+                "type": "error",
+                "message": error_msg
+            }))
+        except:
+            pass
+
+
+def send_sc_backend_status(ws):
+    """Send current SC backend status to client"""
+    try:
+        # Import SC backend module
+        from renardo.sc_backend.supercollider_mgt.sclang_instances_mgt import SupercolliderInstance
+        
+        # Check if SC backend is running
+        sc_instance = SupercolliderInstance()
+        is_running = sc_instance.is_sclang_running()
+        
+        # Update state
+        state_helper.update_state("runtime_status", {
+            "scBackendRunning": is_running,
+            "renardoRuntimeRunning": is_running
+        })
+        
+        # Send status message to client
+        ws.send(json.dumps({
+            "type": "sc_backend_status",
+            "data": {
+                "running": is_running,
+                "message": "SuperCollider backend status checked"
+            }
+        }))
+    
+    except Exception as e:
+        # Send error message to client
+        try:
+            ws.send(json.dumps({
+                "type": "error",
+                "message": f"Error checking SuperCollider backend status: {str(e)}"
+            }))
+        except:
+            pass
+
+
 def download_special_sccode_task(ws):
     """Download SCLang code in a separate thread"""
     # Create logger
@@ -349,6 +609,248 @@ def download_special_sccode_task(ws):
             ws.send(json.dumps({
                 "type": "error",
                 "message": error_msg
+            }))
+        except:
+            pass
+
+
+def start_sc_backend_task(ws, custom_code="Renardo.start; Renardo.midi;"):
+    """Start SuperCollider backend in a separate thread"""
+    # Create logger
+    logger = WebsocketLogger(ws)
+    
+    try:
+        # Import SC backend module
+        from renardo.sc_backend.supercollider_mgt.sclang_instances_mgt import SupercolliderInstance
+        
+        # Check if SC backend is already running
+        sc_instance = SupercolliderInstance()
+        
+        if sc_instance.is_sclang_running():
+            logger.write_line("SuperCollider backend is already running", "WARN")
+            
+            # Send status message to client
+            ws.send(json.dumps({
+                "type": "sc_backend_status",
+                "data": {
+                    "running": True,
+                    "message": "SuperCollider backend is already running"
+                }
+            }))
+            return
+        
+        # Update state
+        state_helper.update_state("runtime_status", {
+            "scBackendRunning": False,
+            "scBackendStartupCode": custom_code,
+            "renardoRuntimeRunning": False
+        })
+        
+        # Start the sclang subprocess
+        logger.write_line("Starting SuperCollider backend...", "INFO")
+        success = sc_instance.start_sclang_subprocess()
+        
+        if success:
+            logger.write_line("Launching Renardo SC module with SynthDefManagement...", "INFO")
+            
+            # Wait for sclang to initialize
+            output_line = sc_instance.read_stdout_line()
+            while output_line and "Welcome to" not in output_line:
+                logger.write_line(output_line)
+                output_line = sc_instance.read_stdout_line()
+            
+            # Execute custom code
+            logger.write_line(f"Executing SuperCollider startup code...", "INFO")
+            for line in custom_code.strip().split(';'):
+                if line.strip():
+                    sc_instance.evaluate_sclang_code(f"{line.strip()};")
+                    logger.write_line(f"Executed: {line.strip()};", "INFO")
+            
+            # Read output lines (asynchronously in a thread to avoid blocking)
+            def read_output():
+                try:
+                    while sc_instance.is_sclang_running():
+                        output = sc_instance.read_stdout_line()
+                        if output:
+                            logger.write_line(output)
+                        else:
+                            time.sleep(0.1)
+                except Exception as e:
+                    logger.write_error(f"Error reading SuperCollider output: {e}")
+            
+            # Start output reader thread
+            threading.Thread(target=read_output, daemon=True).start()
+            
+            # Update state to reflect backend running
+            state_helper.update_state("runtime_status", {
+                "scBackendRunning": True,
+                "scBackendStartupCode": custom_code,
+                "renardoRuntimeRunning": True
+            })
+            
+            # Send status message to client
+            ws.send(json.dumps({
+                "type": "sc_backend_status",
+                "data": {
+                    "running": True,
+                    "message": "SuperCollider backend started successfully"
+                }
+            }))
+            
+            # Broadcast updated status to all clients
+            websocket_utils.broadcast_to_clients({
+                "type": "sc_backend_status",
+                "data": {
+                    "running": True
+                }
+            })
+            
+            logger.write_line("SuperCollider backend started successfully!", "SUCCESS")
+            
+        else:
+            error_msg = "Failed to start SuperCollider backend"
+            logger.write_error(error_msg)
+            
+            # Send error message to client
+            ws.send(json.dumps({
+                "type": "error",
+                "message": error_msg
+            }))
+    
+    except Exception as e:
+        error_msg = f"Error starting SuperCollider backend: {str(e)}"
+        logger.write_error(error_msg)
+        
+        # Send error message to client
+        try:
+            ws.send(json.dumps({
+                "type": "error",
+                "message": error_msg
+            }))
+        except:
+            pass
+
+
+def stop_sc_backend_task(ws):
+    """Stop SuperCollider backend in a separate thread"""
+    # Create logger
+    logger = WebsocketLogger(ws)
+    
+    try:
+        # Import SC backend module
+        from renardo.sc_backend.supercollider_mgt.sclang_instances_mgt import SupercolliderInstance
+        import psutil
+        
+        # Create SC instance
+        sc_instance = SupercolliderInstance()
+        
+        if not sc_instance.is_sclang_running():
+            logger.write_line("SuperCollider backend is not running", "WARN")
+            
+            # Send status message to client
+            ws.send(json.dumps({
+                "type": "sc_backend_status",
+                "data": {
+                    "running": False,
+                    "message": "SuperCollider backend is not running"
+                }
+            }))
+            return
+        
+        logger.write_line("Stopping SuperCollider backend...", "INFO")
+        
+        # Stop all SuperCollider processes
+        for proc in psutil.process_iter():
+            try:
+                if 'sclang' in proc.name() or 'scsynth' in proc.name():
+                    logger.write_line(f"Terminating SuperCollider process: {proc.name()} (PID: {proc.pid})", "INFO")
+                    proc.terminate()
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                pass
+        
+        # Wait for processes to terminate (with timeout)
+        gone, still_alive = psutil.wait_procs([p for p in psutil.process_iter() 
+                                              if 'sclang' in p.name() or 'scsynth' in p.name()], 
+                                              timeout=3)
+        
+        # Force kill any remaining processes
+        for p in still_alive:
+            try:
+                logger.write_line(f"Force killing SuperCollider process: {p.name()} (PID: {p.pid})", "WARN")
+                p.kill()
+            except:
+                pass
+        
+        # Update state to reflect backend stopped
+        state_helper.update_state("runtime_status", {
+            "scBackendRunning": False,
+            "renardoRuntimeRunning": False
+        })
+        
+        # Send status message to client
+        ws.send(json.dumps({
+            "type": "sc_backend_status",
+            "data": {
+                "running": False,
+                "message": "SuperCollider backend stopped successfully"
+            }
+        }))
+        
+        # Broadcast updated status to all clients
+        websocket_utils.broadcast_to_clients({
+            "type": "sc_backend_status",
+            "data": {
+                "running": False
+            }
+        })
+        
+        logger.write_line("SuperCollider backend stopped successfully!", "SUCCESS")
+    
+    except Exception as e:
+        error_msg = f"Error stopping SuperCollider backend: {str(e)}"
+        logger.write_error(error_msg)
+        
+        # Send error message to client
+        try:
+            ws.send(json.dumps({
+                "type": "error",
+                "message": error_msg
+            }))
+        except:
+            pass
+
+
+def send_sc_backend_status(ws):
+    """Send current SC backend status to client"""
+    try:
+        # Import SC backend module
+        from renardo.sc_backend.supercollider_mgt.sclang_instances_mgt import SupercolliderInstance
+        
+        # Check if SC backend is running
+        sc_instance = SupercolliderInstance()
+        is_running = sc_instance.is_sclang_running()
+        
+        # Update state
+        state_helper.update_state("runtime_status", {
+            "scBackendRunning": is_running,
+            "renardoRuntimeRunning": is_running
+        })
+        
+        # Send status message to client
+        ws.send(json.dumps({
+            "type": "sc_backend_status",
+            "data": {
+                "running": is_running,
+                "message": "SuperCollider backend status checked"
+            }
+        }))
+    
+    except Exception as e:
+        # Send error message to client
+        try:
+            ws.send(json.dumps({
+                "type": "error",
+                "message": f"Error checking SuperCollider backend status: {str(e)}"
             }))
         except:
             pass
