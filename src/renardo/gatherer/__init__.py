@@ -9,7 +9,12 @@
 from renardo.gatherer.sample_management import SamplePackLibrary, ensure_renardo_samples_directory
 from renardo.gatherer.sample_management.sample_file import SampleFile
 from renardo.gatherer.sample_management.default_samples import is_default_spack_initialized, download_default_sample_pack
-from renardo.gatherer.sccode_management.default_sccode_pack import is_default_sccode_pack_initialized, download_default_sccode_pack_and_special
+from renardo.gatherer.sccode_management.default_sccode_pack import (
+    is_default_sccode_pack_initialized,
+    download_special_sccode_pack,
+    is_special_sccode_initialized,
+    download_special_sccode_pack
+)
 
 from renardo.gatherer.sccode_management import SCResourceLibrary, SCResourceFile, ensure_sccode_directories
 
