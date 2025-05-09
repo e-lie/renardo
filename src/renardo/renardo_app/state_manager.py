@@ -56,6 +56,13 @@ class StateManager:
             dict: Updated state
         """
         if key in self._state:
+            # If nested dictionary, merge instead of replace
+            if isinstance(self._state[key], dict) and isinstance(value, dict):
+                self._state[key].update(value)
+            else:
+                self._state[key] = value
+        else:
+            # If key doesn't exist, add it
             self._state[key] = value
         return self._state
     
