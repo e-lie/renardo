@@ -1,4 +1,4 @@
-export RENARDO_VERSION="1.0.0.dev17"
+export RENARDO_VERSION="1.0.0.dev18"
 
 echo '######## creating venv'
 rm -Rf /tmp/venv_pyinstaller
