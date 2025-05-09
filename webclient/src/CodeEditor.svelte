@@ -152,7 +152,9 @@ d2 >> blip([_,_,4,_], dur=.5)
             'Ctrl-Enter': executeCode,       // Mode 2: Execute paragraph or selection
             'Cmd-Enter': executeCode,        // For Mac
             'Alt-Enter': executeCurrentLine, // Mode 1: Execute current line
-            'Alt-Cmd-Enter': executeCurrentLine // For Mac Alt+Enter
+            'Alt-Cmd-Enter': executeCurrentLine, // For Mac Alt+Enter
+            'Ctrl-.': stopMusic,            // Stop all music
+            'Cmd-.': stopMusic              // For Mac
           });
           
           // Log successful initialization
@@ -197,6 +199,11 @@ d2 >> blip([_,_,4,_], dur=.5)
       else if (event.altKey && event.metaKey && event.key === 'Enter') {
         event.preventDefault();
         executeCurrentLine();
+      }
+      // Stop music: Ctrl+. or Cmd+. (period)
+      else if ((event.ctrlKey || event.metaKey) && event.key === '.') {
+        event.preventDefault();
+        stopMusic();
       }
     };
     
@@ -411,6 +418,7 @@ d2 >> blip([_,_,4,_], dur=.5)
       <div class="shortcuts-info">
         <span class="shortcut-item">Alt+Enter: Run current line</span>
         <span class="shortcut-item">Ctrl+Enter: Run paragraph or selection</span>
+        <span class="shortcut-item">Ctrl+.: Stop all music</span>
         <span class="shortcut-item">Run Code button: Run all code</span>
       </div>
       
