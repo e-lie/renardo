@@ -425,7 +425,8 @@ def stop_sc_backend_task(ws):
     try:
         # Import SC backend module
         from renardo.sc_backend.supercollider_mgt.sclang_instances_mgt import SupercolliderInstance
-        import psutil
+        # Import our specialized SC utilities
+        from renardo.webserver.routes.sc_utils import kill_supercollider_processes
         
         # Create SC instance
         sc_instance = SupercolliderInstance()
@@ -443,29 +444,8 @@ def stop_sc_backend_task(ws):
             }))
             return
         
-        logger.write_line("Stopping SuperCollider backend...", "INFO")
-        
-        # Stop all SuperCollider processes
-        for proc in psutil.process_iter():
-            try:
-                if 'sclang' in proc.name() or 'scsynth' in proc.name():
-                    logger.write_line(f"Terminating SuperCollider process: {proc.name()} (PID: {proc.pid})", "INFO")
-                    proc.terminate()
-            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                pass
-        
-        # Wait for processes to terminate (with timeout)
-        gone, still_alive = psutil.wait_procs([p for p in psutil.process_iter() 
-                                              if 'sclang' in p.name() or 'scsynth' in p.name()], 
-                                              timeout=3)
-        
-        # Force kill any remaining processes
-        for p in still_alive:
-            try:
-                logger.write_line(f"Force killing SuperCollider process: {p.name()} (PID: {p.pid})", "WARN")
-                p.kill()
-            except:
-                pass
+        # Use platform-specific commands to reliably kill SC processes
+        success = kill_supercollider_processes(logger)
         
         # Update state to reflect backend stopped
         state_helper.update_state("runtime_status", {
@@ -474,23 +454,30 @@ def stop_sc_backend_task(ws):
         })
         
         # Send status message to client
+        result_message = "SuperCollider backend stopped successfully"
+        if not success:
+            result_message += " (some processes may still be running)"
+            
         ws.send(json.dumps({
             "type": "sc_backend_status",
             "data": {
                 "running": False,
-                "message": "SuperCollider backend stopped successfully"
+                "message": result_message
             }
         }))
         
         # Broadcast updated status to all clients
         websocket_utils.broadcast_to_clients({
-            "type": "sc_backend_status",
+            "type": "sc_backend_status", 
             "data": {
                 "running": False
             }
         })
         
-        logger.write_line("SuperCollider backend stopped successfully!", "SUCCESS")
+        if success:
+            logger.write_line("SuperCollider backend stopped successfully!", "SUCCESS")
+        else:
+            logger.write_line("SuperCollider backend stopped with some issues.", "WARN")
     
     except Exception as e:
         error_msg = f"Error stopping SuperCollider backend: {str(e)}"
@@ -739,7 +726,8 @@ def stop_sc_backend_task(ws):
     try:
         # Import SC backend module
         from renardo.sc_backend.supercollider_mgt.sclang_instances_mgt import SupercolliderInstance
-        import psutil
+        # Import our specialized SC utilities
+        from renardo.webserver.routes.sc_utils import kill_supercollider_processes
         
         # Create SC instance
         sc_instance = SupercolliderInstance()
@@ -757,29 +745,8 @@ def stop_sc_backend_task(ws):
             }))
             return
         
-        logger.write_line("Stopping SuperCollider backend...", "INFO")
-        
-        # Stop all SuperCollider processes
-        for proc in psutil.process_iter():
-            try:
-                if 'sclang' in proc.name() or 'scsynth' in proc.name():
-                    logger.write_line(f"Terminating SuperCollider process: {proc.name()} (PID: {proc.pid})", "INFO")
-                    proc.terminate()
-            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                pass
-        
-        # Wait for processes to terminate (with timeout)
-        gone, still_alive = psutil.wait_procs([p for p in psutil.process_iter() 
-                                              if 'sclang' in p.name() or 'scsynth' in p.name()], 
-                                              timeout=3)
-        
-        # Force kill any remaining processes
-        for p in still_alive:
-            try:
-                logger.write_line(f"Force killing SuperCollider process: {p.name()} (PID: {p.pid})", "WARN")
-                p.kill()
-            except:
-                pass
+        # Use platform-specific commands to reliably kill SC processes
+        success = kill_supercollider_processes(logger)
         
         # Update state to reflect backend stopped
         state_helper.update_state("runtime_status", {
@@ -788,23 +755,30 @@ def stop_sc_backend_task(ws):
         })
         
         # Send status message to client
+        result_message = "SuperCollider backend stopped successfully"
+        if not success:
+            result_message += " (some processes may still be running)"
+            
         ws.send(json.dumps({
             "type": "sc_backend_status",
             "data": {
                 "running": False,
-                "message": "SuperCollider backend stopped successfully"
+                "message": result_message
             }
         }))
         
         # Broadcast updated status to all clients
         websocket_utils.broadcast_to_clients({
-            "type": "sc_backend_status",
+            "type": "sc_backend_status", 
             "data": {
                 "running": False
             }
         })
         
-        logger.write_line("SuperCollider backend stopped successfully!", "SUCCESS")
+        if success:
+            logger.write_line("SuperCollider backend stopped successfully!", "SUCCESS")
+        else:
+            logger.write_line("SuperCollider backend stopped with some issues.", "WARN")
     
     except Exception as e:
         error_msg = f"Error stopping SuperCollider backend: {str(e)}"
