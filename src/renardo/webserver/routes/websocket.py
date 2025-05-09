@@ -8,7 +8,7 @@ from renardo.webserver import state_helper
 from renardo.webserver import websocket_utils
 
 from renardo.gatherer import download_default_sample_pack, is_default_spack_initialized
-from renardo.gatherer import download_special_sccode_pack, is_default_sccode_pack_initialized
+from renardo.gatherer import is_default_sccode_pack_initialized
 from renardo.gatherer import is_special_sccode_initialized, download_special_sccode_pack
 from renardo.renardo_app.supercollider_mgt.sc_classes_files import write_sc_renardo_files_in_user_config, is_renardo_sc_classes_initialized
 
@@ -115,7 +115,7 @@ def register_websocket_routes(sock):
                     elif message_type == "download_sclang_code":
                         # Start SCLang code download in a separate thread
                         threading.Thread(
-                            target=download_sclang_code_task, 
+                            target=download_special_sccode_task,
                             args=(ws,)
                         ).start()
                     
@@ -275,67 +275,8 @@ def init_supercollider_classes_task(ws):
         except:
             pass
 
-def download_samples_task(ws):
-    """Download samples in a separate thread"""
-    # Create logger
-    logger = WebsocketLogger(ws)
-    
-    try:
-        # Check if already downloaded
-        if is_default_spack_initialized():
-            logger.write_line("Default sample pack already downloaded", "WARN")
-            
-            # Send completion message to client
-            ws.send(json.dumps({
-                "type": "init_complete",
-                "data": {
-                    "component": "samples",
-                    "success": True
-                }
-            }))
-            return
-        
-        # Download samples
-        logger.write_line("Starting download of default sample pack...")
-        download_default_sample_pack(logger)
-        logger.write_line("Default sample pack downloaded successfully!", "SUCCESS")
-        
-        # Update status
-        state_helper.update_renardo_init_status("samples", True)
-        
-        # Send completion message to client
-        ws.send(json.dumps({
-            "type": "init_complete",
-            "data": {
-                "component": "samples",
-                "success": True
-            }
-        }))
-        
-        # Broadcast updated status to all clients
-        websocket_utils.broadcast_to_clients({
-            "type": "renardo_status",
-            "data": {
-                "initStatus": state_helper.get_renardo_status()
-            }
-        })
-    except Exception as e:
-        error_msg = f"Error downloading samples: {str(e)}"
-        print(error_msg)
-        
-        # Log error
-        logger.write_line(error_msg, "ERROR")
-        
-        # Send error message to client
-        try:
-            ws.send(json.dumps({
-                "type": "error",
-                "message": error_msg
-            }))
-        except:
-            pass
 
-def download_sclang_code_task(ws):
+def download_special_sccode_task(ws):
     """Download SCLang code in a separate thread"""
     # Create logger
     logger = WebsocketLogger(ws)
@@ -392,67 +333,6 @@ def download_sclang_code_task(ws):
             }))
     except Exception as e:
         error_msg = f"Error downloading SuperCollider language code: {str(e)}"
-        print(error_msg)
-        
-        # Log error
-        logger.write_line(error_msg, "ERROR")
-        
-        # Send error message to client
-        try:
-            ws.send(json.dumps({
-                "type": "error",
-                "message": error_msg
-            }))
-        except:
-            pass
-
-
-def download_instruments_task(ws):
-    """Download instruments and effects in a separate thread"""
-    # Create logger
-    logger = WebsocketLogger(ws)
-    
-    try:
-        # Check if already downloaded
-        if is_default_sccode_pack_initialized():
-            logger.write_line("Default instruments and effects already downloaded", "WARN")
-            
-            # Send completion message to client
-            ws.send(json.dumps({
-                "type": "init_complete",
-                "data": {
-                    "component": "instruments",
-                    "success": True
-                }
-            }))
-            return
-        
-        # Download instruments and effects
-        logger.write_line("Starting download of instruments and effects...")
-        download_default_sccode_pack_and_special(logger)
-        logger.write_line("Default instruments and effects downloaded successfully!", "SUCCESS")
-        
-        # Update status
-        state_helper.update_renardo_init_status("instruments", True)
-        
-        # Send completion message to client
-        ws.send(json.dumps({
-            "type": "init_complete",
-            "data": {
-                "component": "instruments",
-                "success": True
-            }
-        }))
-        
-        # Broadcast updated status to all clients
-        websocket_utils.broadcast_to_clients({
-            "type": "renardo_status",
-            "data": {
-                "initStatus": state_helper.get_renardo_status()
-            }
-        })
-    except Exception as e:
-        error_msg = f"Error downloading instruments and effects: {str(e)}"
         print(error_msg)
         
         # Log error

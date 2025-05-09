@@ -24,6 +24,14 @@
           instrumentsInitialized = state.renardoInit.instruments;
           sclangCodeInitialized = state.renardoInit.sclangCode;
         }
+        
+        // When connection is established, request current status
+        if (state.connected) {
+          // Request the current Renardo initialization status
+          sendMessage({
+            type: 'get_renardo_status'
+          });
+        }
       });
       
       // Clean up subscription on component unmount
