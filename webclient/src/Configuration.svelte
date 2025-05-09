@@ -8,20 +8,13 @@
   let isLoading = true;
   let error = null;
   let successMessage = '';
+  let showAdvancedView = false;
   
   // Track settings that have been modified but not saved
   let modifiedSettings = {};
   
   // Settings schema - provides metadata for each setting
   const settingsSchema = {
-    'core.CPU_USAGE': {
-      type: 'number', 
-      label: 'CPU Usage', 
-      description: 'Number of CPU cores to allocate to Renardo processes',
-      group: 'Performance',
-      min: 1,
-      max: 16
-    },
     'core.CLOCK_LATENCY': { 
       type: 'number', 
       label: 'Clock Latency', 
@@ -30,59 +23,13 @@
       min: 0,
       max: 500
     },
-    'core.COLLECTIONS_DOWNLOAD_SERVER': { 
-      type: 'string', 
-      label: 'Collections Server', 
-      description: 'URL for the collections download server',
-      group: 'Network'
-    },
-    'sc_backend.PORT': { 
+    'samples.SAMPLES_PACK_NUMBER': { 
       type: 'number', 
-      label: 'SuperCollider Port', 
-      description: 'Network port for SuperCollider communication',
-      group: 'SuperCollider',
-      min: 1024,
-      max: 65535
-    },
-    'sc_backend.PORT2': { 
-      type: 'number', 
-      label: 'SuperCollider Secondary Port', 
-      description: 'Secondary network port for SuperCollider',
-      group: 'SuperCollider',
-      min: 1024,
-      max: 65535
-    },
-    'sc_backend.FORWARD_PORT': { 
-      type: 'number', 
-      label: 'Forward Port', 
-      description: 'Port for forwarding SuperCollider messages (0 to disable)',
-      group: 'SuperCollider',
+      label: 'Samples Pack Number', 
+      description: 'Number of sample packs to load',
+      group: 'Samples',
       min: 0,
-      max: 65535
-    },
-    'sc_backend.FORWARD_ADDRESS': { 
-      type: 'string', 
-      label: 'Forward Address', 
-      description: 'Address for forwarding SuperCollider messages',
-      group: 'SuperCollider'
-    },
-    'sc_backend.ADDRESS': { 
-      type: 'string', 
-      label: 'SuperCollider Address', 
-      description: 'Network address for SuperCollider server',
-      group: 'SuperCollider'
-    },
-    'sc_backend.BOOT_SCLANG_ON_STARTUP': { 
-      type: 'boolean', 
-      label: 'Boot SCLang on Startup', 
-      description: 'Automatically start SuperCollider when Renardo starts',
-      group: 'SuperCollider'
-    },
-    'sc_backend.SC3_PLUGINS': { 
-      type: 'boolean', 
-      label: 'Use SC3 Plugins', 
-      description: 'Enable SuperCollider SC3 plugins',
-      group: 'SuperCollider'
+      max: 100
     },
     'sc_backend.ACTIVATED_SCCODE_BANKS': { 
       type: 'array', 
@@ -352,23 +299,35 @@
         <p>Loading settings...</p>
       </div>
     {:else}
-      <!-- Reset and save buttons -->
-      <div class="settings-actions">
-        <button 
-          class="reset-button" 
-          on:click={resetSettings}
-          disabled={isLoading}
-        >
-          Reset All Settings
-        </button>
+      <!-- View toggle and actions -->
+      <div class="settings-header">
+        <div class="view-toggle">
+          <label class="toggle-label">
+            <input 
+              type="checkbox" 
+              bind:checked={showAdvancedView}
+            />
+            Show All Settings (Advanced)
+          </label>
+        </div>
         
-        <button 
-          class="save-button" 
-          on:click={saveAllChanges}
-          disabled={isLoading || !hasUnsavedChanges()}
-        >
-          Save Changes {hasUnsavedChanges() ? `(${Object.keys(modifiedSettings).length})` : ''}
-        </button>
+        <div class="settings-actions">
+          <button 
+            class="reset-button" 
+            on:click={resetSettings}
+            disabled={isLoading}
+          >
+            Reset All Settings
+          </button>
+          
+          <button 
+            class="save-button" 
+            on:click={saveAllChanges}
+            disabled={isLoading || !hasUnsavedChanges()}
+          >
+            Save Changes {hasUnsavedChanges() ? `(${Object.keys(modifiedSettings).length})` : ''}
+          </button>
+        </div>
       </div>
       
       <!-- Status messages -->
@@ -384,70 +343,84 @@
         </div>
       {/if}
       
-      <!-- Settings panels organized by group -->
-      {#each settingsGroups as group}
-        <div class="settings-group">
-          <h2>{group}</h2>
-          <div class="settings-items">
-            {#each Object.entries(settingsSchema).filter(([_, schema]) => schema.group === group) as [key, schema]}
-              {@const value = getCurrentValue(key)}
-              <div class="setting-item" class:modified={isSettingModified(key)}>
-                <div class="setting-info">
-                  <label for={key}>{schema.label}</label>
-                  <p class="description">{schema.description}</p>
-                </div>
-                
-                <div class="setting-control">
-                  {#if schema.type === 'boolean'}
-                    <label class="switch">
-                      <input 
-                        type="checkbox"
-                        id={key}
-                        checked={value} 
-                        on:change={(e) => handleSettingChange(key, e.target.checked)}
-                      />
-                      <span class="slider"></span>
-                    </label>
-                  {:else if schema.type === 'number'}
-                    <input 
-                      type="number"
-                      id={key}
-                      value={value}
-                      min={schema.min}
-                      max={schema.max}
-                      on:input={(e) => handleSettingChange(key, Number(e.target.value))}
-                    />
-                  {:else if schema.type === 'string'}
-                    <input 
-                      type="text"
-                      id={key}
-                      value={value}
-                      on:input={(e) => handleSettingChange(key, e.target.value)}
-                    />
-                  {:else if schema.type === 'array'}
-                    <textarea 
-                      id={key}
-                      value={Array.isArray(value) ? value.join(', ') : ''} 
-                      on:input={(e) => handleSettingChange(key, e.target.value.split(',').map(item => item.trim()))}
-                    ></textarea>
-                  {/if}
+      {#if !showAdvancedView}
+        <!-- Standard settings view - organized by group -->
+        {#each settingsGroups as group}
+          <div class="settings-group">
+            <h2>{group}</h2>
+            <div class="settings-items">
+              {#each Object.entries(settingsSchema).filter(([_, schema]) => schema.group === group) as [key, schema]}
+                {@const value = getCurrentValue(key)}
+                <div class="setting-item" class:modified={isSettingModified(key)}>
+                  <div class="setting-info">
+                    <label for={key}>{schema.label}</label>
+                    <p class="description">{schema.description}</p>
+                  </div>
                   
-                  {#if isSettingModified(key)}
-                    <div class="setting-actions">
-                      <button class="save-item-button" on:click={() => saveSetting(key, modifiedSettings[key])}>
-                        Save
-                      </button>
-                      <button class="cancel-button" on:click={() => delete modifiedSettings[key]}>
-                        Cancel
-                      </button>
-                    </div>
-                  {/if}
+                  <div class="setting-control">
+                    {#if schema.type === 'boolean'}
+                      <label class="switch">
+                        <input 
+                          type="checkbox"
+                          id={key}
+                          checked={value} 
+                          on:change={(e) => handleSettingChange(key, e.target.checked)}
+                        />
+                        <span class="slider"></span>
+                      </label>
+                    {:else if schema.type === 'number'}
+                      <input 
+                        type="number"
+                        id={key}
+                        value={value}
+                        min={schema.min}
+                        max={schema.max}
+                        on:input={(e) => handleSettingChange(key, Number(e.target.value))}
+                      />
+                    {:else if schema.type === 'string'}
+                      <input 
+                        type="text"
+                        id={key}
+                        value={value}
+                        on:input={(e) => handleSettingChange(key, e.target.value)}
+                      />
+                    {:else if schema.type === 'array'}
+                      <div class="array-input">
+                        <p class="help-text">Enter values separated by commas</p>
+                        <textarea 
+                          id={key}
+                          value={Array.isArray(value) ? value.join(', ') : ''} 
+                          on:input={(e) => handleSettingChange(key, e.target.value.split(',').map(item => item.trim()).filter(item => item !== ''))}
+                          placeholder="e.g. value1, value2, value3"
+                        ></textarea>
+                      </div>
+                    {/if}
+                    
+                    {#if isSettingModified(key)}
+                      <div class="setting-actions">
+                        <button class="save-item-button" on:click={() => saveSetting(key, modifiedSettings[key])}>
+                          Save
+                        </button>
+                        <button class="cancel-button" on:click={() => delete modifiedSettings[key]}>
+                          Cancel
+                        </button>
+                      </div>
+                    {/if}
+                  </div>
                 </div>
-              </div>
-            {/each}
+              {/each}
+            </div>
+          </div>
+        {/each}
+      {:else}
+        <!-- Advanced view - raw JSON display -->
+        <div class="settings-group advanced-view">
+          <h2>All Settings (Read Only)</h2>
+          <div class="json-display">
+            <pre>{JSON.stringify(settingsData, null, 2)}</pre>
           </div>
         </div>
-      {/each}
+      {/if}
     {/if}
   </div>
 </main>
@@ -484,13 +457,36 @@
     color: #666;
   }
   
-  .settings-actions {
+  .settings-header {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     margin-bottom: 1rem;
     padding: 1rem;
     background-color: #f8f9fa;
     border-radius: 6px;
+  }
+  
+  .view-toggle {
+    display: flex;
+    align-items: center;
+  }
+  
+  .toggle-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    color: #2c3e50;
+  }
+  
+  .toggle-label input {
+    margin-right: 0.5rem;
+  }
+  
+  .settings-actions {
+    display: flex;
+    gap: 1rem;
   }
   
   .reset-button {
@@ -626,6 +622,16 @@
     resize: vertical;
   }
   
+  .array-input {
+    width: 100%;
+  }
+  
+  .help-text {
+    font-size: 0.8rem;
+    color: #666;
+    margin: 0 0 0.3rem 0;
+  }
+  
   /* Toggle switch for booleans */
   .switch {
     position: relative;
@@ -710,7 +716,32 @@
     background-color: #7f8c8d;
   }
   
+  .advanced-view {
+    padding-bottom: 2rem;
+  }
+  
+  .json-display {
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    padding: 1rem;
+    overflow: auto;
+    max-height: 600px;
+  }
+  
+  .json-display pre {
+    margin: 0;
+    font-family: 'Fira Code', Consolas, monospace;
+    font-size: 0.9rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  
   @media (max-width: 768px) {
+    .settings-header {
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
     .setting-item {
       flex-direction: column;
     }
