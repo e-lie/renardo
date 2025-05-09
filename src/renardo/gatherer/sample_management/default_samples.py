@@ -48,7 +48,7 @@ def download_sample_pack(pack_name, logger=None):
     try:
         # Create the directory if it doesn't exist
         download_dir = settings.get_path("SAMPLES_DIR")
-        os.makedirs(download_dir, exist_ok=True)
+        download_dir.mkdir(parents=True, exist_ok=True)
         
         # Download the sample pack
         download_files_from_json_index_concurrent(
@@ -59,7 +59,7 @@ def download_sample_pack(pack_name, logger=None):
         
         # Create a downloaded_at file to mark this pack as initialized
         download_path = settings.get_path("SAMPLES_DIR") / pack_name
-        os.makedirs(download_path, exist_ok=True)
+        download_path.mkdir(exist_ok=True)
         
         with open(download_path / 'downloaded_at.txt', mode="w") as file:
             file.write(str(datetime.now()))
