@@ -19,10 +19,13 @@
       // Subscribe to appState changes
       const unsubscribe = appState.subscribe(state => {
         if (state.renardoInit) {
+          // Update local state variables from appState
           scFilesInitialized = state.renardoInit.superColliderClasses;
           samplesInitialized = state.renardoInit.samples;
           instrumentsInitialized = state.renardoInit.instruments;
-          sclangCodeInitialized = state.renardoInit.sclangCode;
+          
+          // Handle sclangCode field, which might be missing in older state objects
+          sclangCodeInitialized = state.renardoInit.sclangCode === true;
         }
         
         // When connection is established, request current status
@@ -33,6 +36,15 @@
           });
         }
       });
+      
+      // Force request status after a short delay
+      setTimeout(() => {
+        if ($appState.connected) {
+          sendMessage({
+            type: 'get_renardo_status'
+          });
+        }
+      }, 500);
       
       // Clean up subscription on component unmount
       return () => {
