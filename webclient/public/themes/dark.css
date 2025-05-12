@@ -1,0 +1,34 @@
+[data-theme="dark"] {
+  color-scheme: dark;
+  --primary: #661AE6;
+  --primary-focus: #4406cb;
+  --primary-content: #ffffff;
+  --secondary: #D926AA;
+  --secondary-focus: #af1d89;
+  --secondary-content: #ffffff;
+  --accent: #1FB2A5;
+  --accent-focus: #1a9588;
+  --accent-content: #ffffff;
+  --neutral: #191D24;
+  --neutral-focus: #111318;
+  --neutral-content: #A6ADBB;
+  --base-100: #2A303C;
+  --base-200: #242933;
+  --base-300: #20252E;
+  --base-content: #A6ADBB;
+  --info: #2094f3;
+  --success: #009485;
+  --warning: #ff9900;
+  --error: #ff5724;
+  
+  /* Custom Renardo variables */
+  --background-color: var(--base-100);
+  --text-color: var(--base-content);
+  --header-background: var(--base-200);
+  --header-text: var(--base-content);
+  --accent-color: var(--accent);
+  --code-background: var(--base-300);
+  --button-background: var(--primary);
+  --button-text: var(--primary-content);
+  --border-color: var(--neutral-focus);
+}
