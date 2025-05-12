@@ -105,8 +105,8 @@ Master().fadeout(dur=24)
         // Load CodeMirror core CSS
         await loadCSS('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/codemirror.min.css');
 
-        // Load our local Monokai theme CSS
-        await loadCSS('/codemirror-themes/monokai.css');
+        // Load our local Dracula theme CSS
+        await loadCSS('/codemirror-themes/dracula.css');
         
         // Load CodeMirror addons and modes for better editor experience
         await Promise.all([
@@ -136,7 +136,7 @@ Master().fadeout(dur=24)
             version: 3,
             singleLineStringErrors: false
           },
-          theme: 'monokai',
+          theme: 'dracula',
           tabSize: 4,
           indentWithTabs: false,
           indentUnit: 4,
@@ -174,7 +174,7 @@ Master().fadeout(dur=24)
 
           // For the editor to be properly initialized with the theme and settings,
           // we need to make sure we're using the right settings from local storage
-          const savedTheme = localStorage.getItem('editor-theme') || 'monokai';
+          const savedTheme = localStorage.getItem('editor-theme') || 'dracula';
           const showLineNumbers = localStorage.getItem('editor-show-line-numbers') !== 'false';
           const vimModeEnabled = localStorage.getItem('editor-vim-mode') === 'true';
 
