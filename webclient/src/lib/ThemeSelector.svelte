@@ -3,15 +3,15 @@
 
   // Available themes - these should match the themes in your tailwind.config.js
   const themes = [
+    { name: "Default", value: "default", color: "#ff00ff" },
     { name: "Synthwave", value: "synthwave", color: "#e779c1" },
     { name: "Coffee", value: "coffee", color: "#6f4e37" },
     { name: "Pastel", value: "pastel", color: "#bbdefb" },
-    { name: "Cyberpunk", value: "cyberpunk", color: "#5fff4f" },
-    { name: "Default", value: "default", color: "#ff00ff" }
+    { name: "Cyberpunk", value: "cyberpunk", color: "#5fff4f" }
   ];
 
   // Default theme
-  let currentTheme = "cyberpunk";
+  let currentTheme = "default";
 
   onMount(() => {
     // Check for theme in localStorage
@@ -75,6 +75,9 @@
         <div class="collapse-content">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
+              <h4 class="font-bold title-font mb-2">Default</h4>
+              <p class="mb-4">A bold, high-contrast theme with vibrant neon colors on dark backgrounds. Inspired by cyberpunk fiction and perfect for creating futuristic music.</p>
+
               <h4 class="font-bold title-font mb-2">Synthwave</h4>
               <p class="mb-4">A retro-futuristic theme inspired by 80s electronic music and neon aesthetics. Features deep purples with neon pink accents, perfect for nighttime coding sessions.</p>
 
@@ -87,9 +90,6 @@
 
               <h4 class="font-bold title-font mb-2">Cyberpunk</h4>
               <p class="mb-4">A bright, retro-futuristic theme with neon greens, blues and pinks on a light background. Sharp edges and grid patterns create a digital aesthetic.</p>
-
-              <h4 class="font-bold title-font mb-2">Default</h4>
-              <p class="mb-4">A bold, high-contrast theme with vibrant neon colors on dark backgrounds. Inspired by cyberpunk fiction and perfect for creating futuristic music.</p>
             </div>
           </div>
         </div>
