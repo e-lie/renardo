@@ -426,17 +426,17 @@
       <!-- Mobile Theme Options -->
       <li class="menu-title title-font">Choose Theme</li>
       <div class="grid grid-cols-2 gap-2 p-2">
+        <button class="btn btn-sm {currentTheme === 'synthwave' ? 'btn-primary' : 'btn-outline'}" on:click={() => setTheme('synthwave')}>
+          🎸 Synthwave
+        </button>
+        <button class="btn btn-sm {currentTheme === 'coffee' ? 'btn-primary' : 'btn-outline'}" on:click={() => setTheme('coffee')}>
+          ☕ Coffee
+        </button>
+        <button class="btn btn-sm {currentTheme === 'pastel' ? 'btn-primary' : 'btn-outline'}" on:click={() => setTheme('pastel')}>
+          🎨 Pastel
+        </button>
         <button class="btn btn-sm {currentTheme === 'cyberpunk' ? 'btn-primary' : 'btn-outline'}" on:click={() => setTheme('cyberpunk')}>
           🦄 Cyberpunk
-        </button>
-        <button class="btn btn-sm {currentTheme === 'dark' ? 'btn-primary' : 'btn-outline'}" on:click={() => setTheme('dark')}>
-          🌙 Dark
-        </button>
-        <button class="btn btn-sm {currentTheme === 'light' ? 'btn-primary' : 'btn-outline'}" on:click={() => setTheme('light')}>
-          ☀️ Light
-        </button>
-        <button class="btn btn-sm {currentTheme === 'cupcake' ? 'btn-primary' : 'btn-outline'}" on:click={() => setTheme('cupcake')}>
-          🧁 Cupcake
         </button>
       </div>
     </ul>
