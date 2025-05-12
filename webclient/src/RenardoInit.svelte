@@ -74,7 +74,7 @@
 
 <div class="container mx-auto px-4 py-8 max-w-4xl">
   <div class="text-center mb-8">
-    <h1 class="text-3xl font-bold mb-2">Renardo Initialization</h1>
+    <h1 class="text-3xl font-bold mb-2 title-font">Renardo Initialization</h1>
     <p class="text-base-content/70">
       Initialize Renardo components before starting to make music.
     </p>
@@ -83,7 +83,7 @@
   <!-- Progress Overview Card -->
   <div class="card bg-base-100 shadow-xl mb-8">
     <div class="card-body">
-      <h2 class="card-title">Initialization Progress</h2>
+      <h2 class="card-title title-font">Initialization Progress >></h2>
       <div class="flex flex-col md:flex-row items-center gap-6 mb-4">
         <div class="stats shadow flex-1">
           <div class="stat">
@@ -132,7 +132,7 @@
         <div class="flex justify-between items-center mb-4">
           <div class="flex items-center gap-3">
             <div class="bg-primary text-primary-content rounded-full w-8 h-8 flex items-center justify-center">1</div>
-            <h2 class="card-title">SuperCollider Classes</h2>
+            <h2 class="card-title title-font">SuperCollider Classes</h2>
           </div>
           {#if scFilesInitialized}
             <div class="badge badge-success gap-1">
@@ -176,7 +176,7 @@
         <div class="flex justify-between items-center mb-4">
           <div class="flex items-center gap-3">
             <div class="bg-secondary text-secondary-content rounded-full w-8 h-8 flex items-center justify-center">2</div>
-            <h2 class="card-title">SCLang Code</h2>
+            <h2 class="card-title title-font">SCLang Code</h2>
           </div>
           {#if sclangCodeInitialized}
             <div class="badge badge-success gap-1">
@@ -227,7 +227,7 @@
         <div class="flex justify-between items-center mb-4">
           <div class="flex items-center gap-3">
             <div class="bg-accent text-accent-content rounded-full w-8 h-8 flex items-center justify-center">3</div>
-            <h2 class="card-title">Sample Packs</h2>
+            <h2 class="card-title title-font">Sample Packs</h2>
           </div>
           {#if samplesInitialized}
             <div class="badge badge-success gap-1">
@@ -277,7 +277,7 @@
         <div class="flex justify-between items-center mb-4">
           <div class="flex items-center gap-3">
             <div class="bg-warning text-warning-content rounded-full w-8 h-8 flex items-center justify-center">4</div>
-            <h2 class="card-title">Instruments &amp; Effects</h2>
+            <h2 class="card-title title-font">Instruments &amp; Effects</h2>
           </div>
           {#if instrumentsInitialized}
             <div class="badge badge-success gap-1">
