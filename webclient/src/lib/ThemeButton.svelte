@@ -6,7 +6,8 @@
     { name: "Synthwave", value: "synthwave", icon: "🎸" },
     { name: "Coffee", value: "coffee", icon: "☕" },
     { name: "Pastel", value: "pastel", icon: "🎨" },
-    { name: "Cyberpunk", value: "cyberpunk", icon: "🦄" }
+    { name: "Cyberpunk", value: "cyberpunk", icon: "🤖" },
+    { name: "Default", value: "default", icon: "🦄" }
   ];
 
   // Current theme

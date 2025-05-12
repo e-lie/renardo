@@ -6,7 +6,8 @@
     { name: "Synthwave", value: "synthwave", color: "#e779c1" },
     { name: "Coffee", value: "coffee", color: "#6f4e37" },
     { name: "Pastel", value: "pastel", color: "#bbdefb" },
-    { name: "Cyberpunk", value: "cyberpunk", color: "#ff00ff" }
+    { name: "Cyberpunk", value: "cyberpunk", color: "#5fff4f" },
+    { name: "Default", value: "default", color: "#ff00ff" }
   ];
 
   // Default theme
@@ -85,6 +86,9 @@
               <p class="mb-4">A gentle, soft theme with low-saturation colors that create a calm and soothing environment. Excellent for reducing eye strain.</p>
 
               <h4 class="font-bold title-font mb-2">Cyberpunk</h4>
+              <p class="mb-4">A bright, retro-futuristic theme with neon greens, blues and pinks on a light background. Sharp edges and grid patterns create a digital aesthetic.</p>
+
+              <h4 class="font-bold title-font mb-2">Default</h4>
               <p class="mb-4">A bold, high-contrast theme with vibrant neon colors on dark backgrounds. Inspired by cyberpunk fiction and perfect for creating futuristic music.</p>
             </div>
           </div>
