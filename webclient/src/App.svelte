@@ -176,7 +176,7 @@
       {#if currentRoute === 'home'}
         <div class="container mx-auto px-4 py-8 max-w-4xl">
           <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold mb-2">Renardo ฅ^•ﻌ•^ฅ</h1>
+            <h1 class="text-3xl font-bold mb-2 title-font">Renardo (Web)</h1>
             <p class="text-base-content/70">
               {$appState.welcomeText || 'Create music with the Renardo live coding environment'}
             </p>
@@ -185,7 +185,7 @@
           <!-- Getting Started Tutorial Card -->
           <div class="card bg-base-100 shadow-xl mb-8">
             <div class="card-body">
-              <h2 class="card-title text-xl">Getting Started</h2>
+              <h2 class="card-title text-xl title-font">Getting Started >></h2>
               <p class="text-base-content/70 mb-4">
                 Follow these steps to setup and use Renardo for live music coding.
               </p>
@@ -198,7 +198,7 @@
                       <div class="bg-primary text-primary-content rounded-full w-8 h-8 flex items-center justify-center">
                         <span class="font-bold">1</span>
                       </div>
-                      <h3 class="text-lg font-medium">Initialize Renardo</h3>
+                      <h3 class="text-lg font-medium title-font">Initialize Renardo</h3>
                     </div>
                     <p class="text-sm mb-4">Set up SuperCollider, download samples, and install instruments.</p>
                     <div class="card-actions justify-end">
@@ -219,7 +219,7 @@
                       <div class="bg-success text-success-content rounded-full w-8 h-8 flex items-center justify-center">
                         <span class="font-bold">2</span>
                       </div>
-                      <h3 class="text-lg font-medium">Live Coding Editor</h3>
+                      <h3 class="text-lg font-medium title-font">Live Coding Editor</h3>
                     </div>
                     <p class="text-sm mb-4">Create music with the Renardo live coding environment.</p>
                     <div class="card-actions justify-end">
@@ -240,7 +240,7 @@
                       <div class="bg-warning text-warning-content rounded-full w-8 h-8 flex items-center justify-center">
                         <span class="font-bold">3</span>
                       </div>
-                      <h3 class="text-lg font-medium">SuperCollider Backend</h3>
+                      <h3 class="text-lg font-medium title-font">SuperCollider Backend</h3>
                     </div>
                     <p class="text-sm mb-4">Configure and start the SuperCollider sound synthesis engine.</p>
                     <div class="card-actions justify-end">
@@ -261,7 +261,7 @@
                       <div class="bg-accent text-accent-content rounded-full w-8 h-8 flex items-center justify-center">
                         <span class="font-bold">4</span>
                       </div>
-                      <h3 class="text-lg font-medium">Additional Collections</h3>
+                      <h3 class="text-lg font-medium title-font">Additional Collections</h3>
                     </div>
                     <p class="text-sm mb-4">Download additional sample packs and instruments.</p>
                     <div class="card-actions justify-end">
@@ -282,7 +282,7 @@
                       <div class="bg-neutral text-neutral-content rounded-full w-8 h-8 flex items-center justify-center">
                         <span class="font-bold">5</span>
                       </div>
-                      <h3 class="text-lg font-medium">Configuration</h3>
+                      <h3 class="text-lg font-medium title-font">Configuration</h3>
                     </div>
                     <p class="text-sm mb-4">Manage application settings and preferences.</p>
                     <div class="card-actions justify-end">
@@ -304,7 +304,7 @@
           {#if webSocketSupported}
             <div class="card bg-base-100 shadow-xl mb-8">
               <div class="card-body">
-                <h2 class="card-title">System Status</h2>
+                <h2 class="card-title title-font">System Status >></h2>
                 <div class="overflow-x-auto">
                   <table class="table table-zebra">
                     <tbody>

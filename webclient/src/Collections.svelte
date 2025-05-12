@@ -269,7 +269,7 @@
 
 <div class="container mx-auto px-4 py-8 max-w-4xl">
   <div class="text-center mb-8">
-    <h1 class="text-3xl font-bold mb-2">Additional Collections</h1>
+    <h1 class="text-3xl font-bold mb-2 title-font">Additional Collections</h1>
     <p class="text-base-content/70">
       Download additional sample packs and instruments from the Renardo collections server.
     </p>
@@ -282,7 +282,7 @@
         <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
           <div class="flex items-center gap-2">
             <div>
-              <h2 class="card-title">Collection Server</h2>
+              <h2 class="card-title title-font">Collection Server</h2>
               <div class="badge badge-neutral font-mono">{collectionsData.collections_server}</div>
             </div>
           </div>
@@ -325,7 +325,7 @@
     <div class="card bg-base-100 shadow-xl mb-8">
       <div class="card-body p-0">
         <div class="bg-base p-4">
-          <h2 class="card-title text-primary">Sample Packs</h2>
+          <h2 class="card-title text-primary title-font">Sample Packs >></h2>
         </div>
 
         <div class="p-4">
@@ -335,7 +335,7 @@
                 <div class="card bg-base-200 {sample.installed ? 'border-l-4 border-success' : ''}">
                   <div class="card-body">
                     <div class="flex justify-between items-center">
-                      <h4 class="card-title text-lg">{sample.name}</h4>
+                      <h4 class="card-title text-lg title-font">{sample.name}</h4>
                       {#if sample.is_default}
                         <div class="badge badge-primary">Default</div>
                       {/if}
@@ -401,7 +401,7 @@
     <div class="card bg-base-100 shadow-xl mb-8">
       <div class="card-body p-0">
         <div class="bg-base p-4">
-          <h2 class="card-title text-accent">Instrument Packs</h2>
+          <h2 class="card-title text-accent title-font">Instrument Packs >></h2>
         </div>
 
         <div class="p-4">
@@ -411,7 +411,7 @@
                 <div class="card bg-base-200 {sccode.installed ? 'border-l-4 border-success' : ''}">
                   <div class="card-body">
                     <div class="flex justify-between items-center">
-                      <h4 class="card-title text-lg">{sccode.name}</h4>
+                      <h4 class="card-title text-lg title-font">{sccode.name}</h4>
                       {#if sccode.is_default}
                         <div class="badge badge-accent">Default</div>
                       {/if}
@@ -479,7 +479,7 @@
     <div class="modal modal-open">
       <div class="modal-box w-11/12 max-w-6xl h-auto max-h-[90vh]">
         <div class="flex justify-between items-center mb-4">
-          <h3 class="font-bold text-2xl">Download Progress</h3>
+          <h3 class="font-bold text-2xl title-font">Download Progress</h3>
 
           {#if wsConnected}
             <div class="badge badge-success gap-2">
