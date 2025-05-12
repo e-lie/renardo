@@ -436,7 +436,10 @@
           🎨 Pastel
         </button>
         <button class="btn btn-sm {currentTheme === 'cyberpunk' ? 'btn-primary' : 'btn-outline'}" on:click={() => setTheme('cyberpunk')}>
-          🦄 Cyberpunk
+          🤖 Cyberpunk
+        </button>
+        <button class="btn btn-sm {currentTheme === 'default' ? 'btn-primary' : 'btn-outline'}" on:click={() => setTheme('default')}>
+          🦄 Default
         </button>
       </div>
     </ul>
