@@ -1,5 +1,6 @@
 
-from renardo.sc_backend import SCResourceType, SCInstrument, SCEffect
+from renardo.lib.music_resource import ResourceType
+from renardo.sc_backend import SCInstrument, SCEffect
 from renardo.sc_backend import FileEffect, StartSoundEffect, MakeSoundEffect
 
 from pathlib import Path
@@ -31,14 +32,14 @@ settings.get_path("SPECIAL_SCCODE_DIR").mkdir(parents=True, exist_ok=True)
 # The 1 or 2 channels buffer strategy of play (which is currently sending a channel error in SC so broken strategry) implies a specific setup with two players
 play1_resource_file = SCResourceFile(
     path=settings.get_path("SPECIAL_SCCODE_DIR") / 'play1.py',
-    resource_type=SCResourceType.INSTRUMENT,
+    resource_type=ResourceType.INSTRUMENT,
     category="sampler"
 )
 play = play1_resource_file.load_resource_from_python()
 
 play2_resource_file = SCResourceFile(
     path=settings.get_path("SPECIAL_SCCODE_DIR") / 'play2.py',
-    resource_type=SCResourceType.INSTRUMENT,
+    resource_type=ResourceType.INSTRUMENT,
     category="sampler"
 )
 play = play2_resource_file.load_resource_from_python()

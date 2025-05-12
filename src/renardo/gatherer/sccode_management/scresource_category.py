@@ -3,12 +3,11 @@ from typing import Dict, Optional, List, Iterator
 
 from renardo.gatherer.sccode_management.scresource_type_and_file import SCResourceFile
 from renardo.lib.music_resource import ResourceType
-from renardo.sc_backend.SimpleSynthDefs import SCResourceType
 
 
 class SCResourceCategory:
     """Represents a collection of synthdefs in a category (e.g., 'bass', 'lead' or 'reverb', 'delay')."""
-    def __init__(self, directory: Path, category: str, resource_type: SCResourceType):
+    def __init__(self, directory: Path, category: str, resource_type: ResourceType):
         self.directory = directory
         self.category = category
         self.type = resource_type

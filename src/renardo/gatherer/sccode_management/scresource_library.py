@@ -5,7 +5,7 @@ import re
 
 from renardo.gatherer.sccode_management.scresource_bank import SCResourceBank
 from renardo.gatherer.sccode_management.sc_resource import SCInstrument, SCEffect
-from renardo.gatherer.sccode_management.scresource_type_and_file import SCResourceType
+from renardo.lib.music_resource import ResourceType
 from renardo.settings_manager import settings
 
 
@@ -68,7 +68,7 @@ class SCResourceLibrary:
                 return bank
         return None
     
-    def get_resource(self, bank_index: int, section_type: SCResourceType, category: str, name: str):
+    def get_resource(self, bank_index: int, section_type: ResourceType, category: str, name: str):
         """Get a specific resource by its bank, section, category and name."""
         bank = self.get_bank(bank_index)
         if bank:
@@ -85,7 +85,7 @@ class SCResourceLibrary:
     def __iter__(self) -> Iterator[SCResourceBank]:
         return iter(self._banks.values())
         
-    def find_resources(self, query: str, section_type: Optional[SCResourceType] = None) -> List[Dict[str, Any]]:
+    def find_resources(self, query: str, section_type: Optional[ResourceType] = None) -> List[Dict[str, Any]]:
         """
         Search for resources by name or description.
         
