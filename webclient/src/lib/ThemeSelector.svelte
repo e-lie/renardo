@@ -3,9 +3,9 @@
 
   // Available themes - these should match the themes in your tailwind.config.js
   const themes = [
+    { name: "Renardo", value: "default", color: "#ff00ff" },
     { name: "Light", value: "light", color: "#ffffff" },
     { name: "Dark", value: "dark", color: "#2A303C" },
-    { name: "Default", value: "default", color: "#ff00ff" },
     { name: "Synthwave", value: "synthwave", color: "#e779c1" },
     { name: "Coffee", value: "coffee", color: "#6f4e37" },
     { name: "Pastel", value: "pastel", color: "#bbdefb" },
