@@ -216,16 +216,16 @@ Master().fadeout(dur=24)
     // Start the initialization process
     initEditor();
     
-    // Subscribe to appState changes
+    // Subscribe to appState changes to update UI
     const unsubscribe = appState.subscribe(state => {
       if (state.consoleOutput && state.consoleOutput.length > 0) {
-        const prevOutputCount = consoleOutput.length;
+        // We're just using the store's version of the console output
         consoleOutput = state.consoleOutput;
-        
-        // If new console output was added, scroll to bottom
-        if (consoleOutput.length > prevOutputCount) {
-          scrollToBottom();
-        }
+
+        // Check if we should scroll
+        // With this approach, we'll scroll when anything changes
+        // If more fine-grained control is needed, we could store a timestamp
+        scrollToBottom();
       }
     });
     
@@ -309,7 +309,7 @@ Master().fadeout(dur=24)
     if (!codeToExecute || !codeToExecute.trim()) {
       return;
     }
-    
+
     // Add to console output with execution type indicator
     let executionLabel;
     switch (executionType) {
@@ -325,44 +325,34 @@ Master().fadeout(dur=24)
       default:
         executionLabel = 'paragraph';
     }
-    
-    addConsoleOutput(`> Executing ${executionLabel}:\n${codeToExecute}`, 'command');
-    
-    // Create a subscription to listen for execution results
-    const unsubscribeExecution = appState.subscribe(state => {
-      if (state._lastMessage && state._lastMessage.type === 'code_execution_result') {
-        const result = state._lastMessage.data;
-        
-        // Log the result
-        if (result.success) {
-          // Add success message to console
-          if (result.message && result.message.trim()) {
-            addConsoleOutput(result.message, 'success');
-          }
-        } else {
-          // Add error message to console
-          if (result.message) {
-            addConsoleOutput(`Error: ${result.message}`, 'error');
-          }
-        }
-        
-        // Unsubscribe after receiving the result
-        unsubscribeExecution();
-      }
+
+    // Only add the command to the console - we'll let the websocket handler
+    // manage the response to avoid duplicate entries
+    const timestamp = new Date().toLocaleTimeString();
+    const commandEntry = {
+      timestamp,
+      level: 'command',
+      message: `> Executing ${executionLabel}:\n${codeToExecute}`
+    };
+
+    // Update the store directly instead of using addConsoleOutput to avoid duplication
+    appState.update(state => {
+      const updatedConsoleOutput = [...state.consoleOutput, commandEntry];
+      const trimmedConsoleOutput = updatedConsoleOutput.slice(-1000);
+      return {
+        ...state,
+        consoleOutput: trimmedConsoleOutput
+      };
     });
-    
-    // Send to server
+
+    // Send to server with unique request ID to prevent duplicate execution
     sendMessage({
       type: 'execute_code',
       data: {
-        code: codeToExecute
+        code: codeToExecute,
+        requestId: Date.now() // Add unique ID to prevent duplicates
       }
     });
-    
-    // Set a timeout to unsubscribe if no response is received
-    setTimeout(() => {
-      unsubscribeExecution();
-    }, 10000); // 10 seconds timeout
   }
   
   // Execute code - Mode 2 (default): Current paragraph or selection
@@ -400,38 +390,37 @@ Master().fadeout(dur=24)
     sendCodeToExecute(currentLine, 'line');
   }
   
-  // Add message to console output
+  // This is now a local helper function for UI-only actions (not for code execution)
+  // Used for things like clearing the console, not for adding execution output
   function addConsoleOutput(message, level = 'info') {
     const timestamp = new Date().toLocaleTimeString();
-    
-    // Update local console output
-    consoleOutput = [
-      ...consoleOutput,
-      {
+
+    // Log the operation but don't update local state AND global state to avoid duplication
+    // Update the store only
+    appState.update(state => {
+      const entry = {
         timestamp,
         level,
         message
-      }
-    ];
-    
-    // Limit console output to 1000 entries
-    if (consoleOutput.length > 1000) {
-      consoleOutput = consoleOutput.slice(consoleOutput.length - 1000);
-    }
-    
-    // Update store
-    appState.update(state => ({
-      ...state,
-      consoleOutput
-    }));
-    
+      };
+
+      const updatedConsoleOutput = [...state.consoleOutput, entry];
+      // Limit console output to 1000 entries
+      const trimmedConsoleOutput = updatedConsoleOutput.slice(-1000);
+
+      return {
+        ...state,
+        consoleOutput: trimmedConsoleOutput
+      };
+    });
+
     // Scroll to bottom
     scrollToBottom();
   }
   
   // Clear console
   function clearConsole() {
-    consoleOutput = [];
+    // Only need to update the store
     appState.update(state => ({
       ...state,
       consoleOutput: []
@@ -445,14 +434,30 @@ Master().fadeout(dur=24)
   
   // Stop all music playback
   function stopMusic() {
-    // Add to console output to show we're stopping music
-    addConsoleOutput("Stopping all music playback...", 'command');
-    
-    // Send the Clock.clear() command to stop all patterns
+    // We'll use the same pattern as sendCodeToExecute to avoid duplication
+    const timestamp = new Date().toLocaleTimeString();
+    const commandEntry = {
+      timestamp,
+      level: 'command',
+      message: '> Stopping all music playback with Clock.clear()'
+    };
+
+    // Update the store directly
+    appState.update(state => {
+      const updatedConsoleOutput = [...state.consoleOutput, commandEntry];
+      const trimmedConsoleOutput = updatedConsoleOutput.slice(-1000);
+      return {
+        ...state,
+        consoleOutput: trimmedConsoleOutput
+      };
+    });
+
+    // Send the Clock.clear() command to stop all patterns with a unique request ID
     sendMessage({
       type: 'execute_code',
       data: {
-        code: 'Clock.clear()'
+        code: 'Clock.clear()',
+        requestId: Date.now() // Add unique ID to prevent duplicates
       }
     });
   }</script>
