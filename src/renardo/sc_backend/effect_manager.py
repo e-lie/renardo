@@ -1,4 +1,4 @@
-from renardo.sc_backend.SimpleSynthDefs import SCEffect
+from renardo.sc_backend.sc_music_resource import SCEffect
 from renardo.sc_backend.SimpleEffectSynthDefs import StartSoundEffect, MakeSoundEffect
 
 class EffectManager(dict):

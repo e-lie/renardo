@@ -34,7 +34,7 @@ from renardo.lib.runtime.managers_instanciation import (
     scresource_library, SynthDefs
 )
 
-from renardo.sc_backend.SimpleSynthDefs import SCInstrument
+from renardo.sc_backend.sc_music_resource import SCInstrument
 SCInstrument.set_instrument_dict(SynthDefs)
 SCInstrument.set_buffer_manager(buffer_manager)
 SCInstrument.set_server(Server)
