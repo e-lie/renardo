@@ -287,473 +287,165 @@
   });
 </script>
 
-<main>
-  <div class="settings-container">
-    <header>
-      <h1>Renardo Configuration</h1>
-      <p>Manage application settings and preferences</p>
-    </header>
-    
-    {#if isLoading}
-      <div class="loading">
-        <p>Loading settings...</p>
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+  <div class="text-center mb-8">
+    <h1 class="text-3xl font-bold mb-2">Renardo Configuration</h1>
+    <p class="text-base-content/70">Manage application settings and preferences</p>
+  </div>
+
+  {#if isLoading}
+    <div class="flex justify-center py-8">
+      <span class="loading loading-spinner loading-lg text-primary"></span>
+    </div>
+  {:else}
+    <!-- View toggle and actions -->
+    <div class="card bg-base-200 mb-6">
+      <div class="card-body p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row justify-between gap-4">
+          <div class="form-control">
+            <label class="label cursor-pointer justify-start gap-2">
+              <input
+                type="checkbox"
+                class="toggle toggle-primary"
+                bind:checked={showAdvancedView}
+              />
+              <span class="label-text">Show All Settings (Advanced)</span>
+            </label>
+          </div>
+
+          <div class="flex flex-wrap gap-2">
+            <button
+              class="btn btn-error btn-sm"
+              on:click={resetSettings}
+              disabled={isLoading}
+            >
+              Reset All Settings
+            </button>
+
+            <button
+              class="btn btn-success btn-sm"
+              on:click={saveAllChanges}
+              disabled={isLoading || !hasUnsavedChanges()}
+            >
+              {#if hasUnsavedChanges()}
+                <div class="badge badge-sm">{Object.keys(modifiedSettings).length}</div>
+              {/if}
+              Save Changes
+            </button>
+          </div>
+        </div>
       </div>
-    {:else}
-      <!-- View toggle and actions -->
-      <div class="settings-header">
-        <div class="view-toggle">
-          <label class="toggle-label">
-            <input 
-              type="checkbox" 
-              bind:checked={showAdvancedView}
-            />
-            Show All Settings (Advanced)
-          </label>
-        </div>
-        
-        <div class="settings-actions">
-          <button 
-            class="reset-button" 
-            on:click={resetSettings}
-            disabled={isLoading}
-          >
-            Reset All Settings
-          </button>
-          
-          <button 
-            class="save-button" 
-            on:click={saveAllChanges}
-            disabled={isLoading || !hasUnsavedChanges()}
-          >
-            Save Changes {hasUnsavedChanges() ? `(${Object.keys(modifiedSettings).length})` : ''}
-          </button>
-        </div>
+    </div>
+
+    <!-- Status messages -->
+    {#if error}
+      <div class="alert alert-error mb-6" transition:fade={{ duration: 300 }}>
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <span>{error}</span>
       </div>
-      
-      <!-- Status messages -->
-      {#if error}
-        <div class="error-message" transition:fade={{ duration: 300 }}>
-          <p>{error}</p>
-        </div>
-      {/if}
-      
-      {#if successMessage}
-        <div class="success-message" transition:fade={{ duration: 300 }}>
-          <p>{successMessage}</p>
-        </div>
-      {/if}
-      
-      {#if !showAdvancedView}
-        <!-- Standard settings view - organized by group -->
-        {#each settingsGroups as group}
-          <div class="settings-group">
-            <h2>{group}</h2>
-            <div class="settings-items">
+    {/if}
+
+    {#if successMessage}
+      <div class="alert alert-success mb-6" transition:fade={{ duration: 300 }}>
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <span>{successMessage}</span>
+      </div>
+    {/if}
+
+    {#if !showAdvancedView}
+      <!-- Standard settings view - organized by group -->
+      {#each settingsGroups as group}
+        <div class="card bg-base-100 shadow-xl mb-6">
+          <div class="card-body p-0">
+            <div class="bg-base-200 p-4">
+              <h2 class="card-title text-lg">{group}</h2>
+            </div>
+
+            <div class="divide-y divide-base-200">
               {#each Object.entries(settingsSchema).filter(([_, schema]) => schema.group === group) as [key, schema]}
                 {@const value = getCurrentValue(key)}
-                <div class="setting-item" class:modified={isSettingModified(key)}>
-                  <div class="setting-info">
-                    <label for={key}>{schema.label}</label>
-                    <p class="description">{schema.description}</p>
-                  </div>
-                  
-                  <div class="setting-control">
-                    {#if schema.type === 'boolean'}
-                      <label class="switch">
-                        <input 
+                <div class="p-4 {isSettingModified(key) ? 'bg-warning bg-opacity-10' : ''}">
+                  <div class="flex flex-col md:flex-row md:items-start gap-4">
+                    <div class="flex-1">
+                      <label for={key} class="font-medium">{schema.label}</label>
+                      <p class="text-sm text-base-content/70 mt-1">{schema.description}</p>
+                    </div>
+
+                    <div class="w-full md:w-64 space-y-2">
+                      {#if schema.type === 'boolean'}
+                        <input
                           type="checkbox"
                           id={key}
-                          checked={value} 
+                          class="toggle toggle-primary"
+                          checked={value}
                           on:change={(e) => handleSettingChange(key, e.target.checked)}
                         />
-                        <span class="slider"></span>
-                      </label>
-                    {:else if schema.type === 'number'}
-                      <input 
-                        type="number"
-                        id={key}
-                        value={value}
-                        min={schema.min}
-                        max={schema.max}
-                        on:input={(e) => handleSettingChange(key, Number(e.target.value))}
-                      />
-                    {:else if schema.type === 'string'}
-                      <input 
-                        type="text"
-                        id={key}
-                        value={value}
-                        on:input={(e) => handleSettingChange(key, e.target.value)}
-                      />
-                    {:else if schema.type === 'array'}
-                      <div class="array-input">
-                        <p class="help-text">Enter values separated by commas</p>
-                        <textarea 
+                      {:else if schema.type === 'number'}
+                        <input
+                          type="range"
                           id={key}
-                          value={Array.isArray(value) ? value.join(', ') : ''} 
-                          on:input={(e) => handleSettingChange(key, e.target.value.split(',').map(item => item.trim()).filter(item => item !== ''))}
-                          placeholder="e.g. value1, value2, value3"
-                        ></textarea>
-                      </div>
-                    {/if}
-                    
-                    {#if isSettingModified(key)}
-                      <div class="setting-actions">
-                        <button class="save-item-button" on:click={() => saveSetting(key, modifiedSettings[key])}>
-                          Save
-                        </button>
-                        <button class="cancel-button" on:click={() => delete modifiedSettings[key]}>
-                          Cancel
-                        </button>
-                      </div>
-                    {/if}
+                          class="range range-primary"
+                          value={value}
+                          min={schema.min}
+                          max={schema.max}
+                          on:input={(e) => handleSettingChange(key, Number(e.target.value))}
+                        />
+                        <div class="flex justify-between text-xs px-1">
+                          <span>{schema.min}</span>
+                          <span class="font-medium">{value}</span>
+                          <span>{schema.max}</span>
+                        </div>
+                      {:else if schema.type === 'string'}
+                        <input
+                          type="text"
+                          id={key}
+                          class="input input-bordered w-full"
+                          value={value}
+                          on:input={(e) => handleSettingChange(key, e.target.value)}
+                        />
+                      {:else if schema.type === 'array'}
+                        <div class="w-full">
+                          <label class="label pt-0">
+                            <span class="label-text-alt">Enter values separated by commas</span>
+                          </label>
+                          <textarea
+                            id={key}
+                            class="textarea textarea-bordered w-full"
+                            value={Array.isArray(value) ? value.join(', ') : ''}
+                            on:input={(e) => handleSettingChange(key, e.target.value.split(',').map(item => item.trim()).filter(item => item !== ''))}
+                            placeholder="e.g. value1, value2, value3"
+                          ></textarea>
+                        </div>
+                      {/if}
+
+                      {#if isSettingModified(key)}
+                        <div class="flex justify-end gap-2 mt-2">
+                          <button class="btn btn-xs btn-outline" on:click={() => delete modifiedSettings[key]}>
+                            Cancel
+                          </button>
+                          <button class="btn btn-xs btn-primary" on:click={() => saveSetting(key, modifiedSettings[key])}>
+                            Save
+                          </button>
+                        </div>
+                      {/if}
+                    </div>
                   </div>
                 </div>
               {/each}
             </div>
           </div>
-        {/each}
-      {:else}
-        <!-- Advanced view - raw JSON display -->
-        <div class="settings-group advanced-view">
-          <h2>All Settings (Read Only)</h2>
-          <div class="json-display">
-            <pre>{JSON.stringify(settingsData, null, 2)}</pre>
+        </div>
+      {/each}
+    {:else}
+      <!-- Advanced view - raw JSON display -->
+      <div class="card bg-base-100 shadow-xl mb-6">
+        <div class="card-body">
+          <h2 class="card-title">All Settings (Read Only)</h2>
+          <div class="mockup-code bg-base-300 text-base-content overflow-x-auto max-h-[600px]">
+            <pre><code>{JSON.stringify(settingsData, null, 2)}</code></pre>
           </div>
         </div>
-      {/if}
+      </div>
     {/if}
-  </div>
-</main>
-
-<style>
-  main {
-    width: 100%;
-    padding: 1rem;
-  }
-  
-  .settings-container {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 1rem;
-  }
-  
-  header {
-    margin-bottom: 2rem;
-  }
-  
-  h1 {
-    color: #2c3e50;
-    margin-bottom: 0.5rem;
-  }
-  
-  header p {
-    color: #7f8c8d;
-    margin-bottom: 1rem;
-  }
-  
-  .loading {
-    text-align: center;
-    padding: 2rem;
-    color: #666;
-  }
-  
-  .settings-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-    padding: 1rem;
-    background-color: #f8f9fa;
-    border-radius: 6px;
-  }
-  
-  .view-toggle {
-    display: flex;
-    align-items: center;
-  }
-  
-  .toggle-label {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-    color: #2c3e50;
-  }
-  
-  .toggle-label input {
-    margin-right: 0.5rem;
-  }
-  
-  .settings-actions {
-    display: flex;
-    gap: 1rem;
-  }
-  
-  .reset-button {
-    background-color: #e74c3c;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .reset-button:hover:not(:disabled) {
-    background-color: #c0392b;
-  }
-  
-  .save-button {
-    background-color: #2ecc71;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .save-button:hover:not(:disabled) {
-    background-color: #27ae60;
-  }
-  
-  button:disabled {
-    background-color: #95a5a6;
-    cursor: not-allowed;
-  }
-  
-  .error-message {
-    background-color: #f8d7da;
-    color: #721c24;
-    padding: 1rem;
-    border-radius: 4px;
-    margin-bottom: 1rem;
-  }
-  
-  .success-message {
-    background-color: #d4edda;
-    color: #155724;
-    padding: 1rem;
-    border-radius: 4px;
-    margin-bottom: 1rem;
-  }
-  
-  .settings-group {
-    margin-bottom: 2rem;
-    background-color: white;
-    border-radius: 6px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-  }
-  
-  .settings-group h2 {
-    font-size: 1.2rem;
-    padding: 1rem;
-    margin: 0;
-    background-color: #f1f2f6;
-    border-bottom: 1px solid #ddd;
-    color: #2c3e50;
-  }
-  
-  .settings-items {
-    padding: 0.5rem;
-  }
-  
-  .setting-item {
-    display: flex;
-    padding: 1rem;
-    border-bottom: 1px solid #eee;
-    transition: background-color 0.2s;
-  }
-  
-  .setting-item:last-child {
-    border-bottom: none;
-  }
-  
-  .setting-item.modified {
-    background-color: #fff8e1;
-  }
-  
-  .setting-info {
-    flex: 1;
-    padding-right: 1rem;
-  }
-  
-  .setting-info label {
-    display: block;
-    font-weight: 500;
-    margin-bottom: 0.25rem;
-    color: #34495e;
-  }
-  
-  .description {
-    color: #7f8c8d;
-    font-size: 0.9rem;
-    margin: 0;
-  }
-  
-  .setting-control {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.5rem;
-  }
-  
-  input[type="text"],
-  input[type="number"],
-  textarea {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 0.95rem;
-    font-family: inherit;
-  }
-  
-  input[type="text"]:focus,
-  input[type="number"]:focus,
-  textarea:focus {
-    border-color: #3498db;
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-  }
-  
-  textarea {
-    min-height: 80px;
-    resize: vertical;
-  }
-  
-  .array-input {
-    width: 100%;
-  }
-  
-  .help-text {
-    font-size: 0.8rem;
-    color: #666;
-    margin: 0 0 0.3rem 0;
-  }
-  
-  /* Toggle switch for booleans */
-  .switch {
-    position: relative;
-    display: inline-block;
-    width: 60px;
-    height: 30px;
-  }
-  
-  .switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-  
-  .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    transition: .4s;
-    border-radius: 34px;
-  }
-  
-  .slider:before {
-    position: absolute;
-    content: "";
-    height: 22px;
-    width: 22px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    transition: .4s;
-    border-radius: 50%;
-  }
-  
-  input:checked + .slider {
-    background-color: #2196F3;
-  }
-  
-  input:focus + .slider {
-    box-shadow: 0 0 1px #2196F3;
-  }
-  
-  input:checked + .slider:before {
-    transform: translateX(30px);
-  }
-  
-  .setting-actions {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-  }
-  
-  .save-item-button {
-    background-color: #3498db;
-    color: white;
-    border: none;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    cursor: pointer;
-  }
-  
-  .save-item-button:hover {
-    background-color: #2980b9;
-  }
-  
-  .cancel-button {
-    background-color: #95a5a6;
-    color: white;
-    border: none;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    cursor: pointer;
-  }
-  
-  .cancel-button:hover {
-    background-color: #7f8c8d;
-  }
-  
-  .advanced-view {
-    padding-bottom: 2rem;
-  }
-  
-  .json-display {
-    background-color: #f5f5f5;
-    border-radius: 4px;
-    padding: 1rem;
-    overflow: auto;
-    max-height: 600px;
-  }
-  
-  .json-display pre {
-    margin: 0;
-    font-family: 'Fira Code', Consolas, monospace;
-    font-size: 0.9rem;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-  
-  @media (max-width: 768px) {
-    .settings-header {
-      flex-direction: column;
-      gap: 1rem;
-    }
-    
-    .setting-item {
-      flex-direction: column;
-    }
-    
-    .setting-info {
-      padding-right: 0;
-      margin-bottom: 1rem;
-    }
-    
-    .setting-control {
-      width: 100%;
-      align-items: flex-start;
-    }
-  }
-</style>
+  {/if}
+</div>
