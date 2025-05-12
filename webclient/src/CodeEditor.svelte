@@ -415,8 +415,6 @@ d2 >> blip([_,_,4,_], dur=.5)
   <!-- Header with controls -->
   <div class="bg-base-300 p-4">
     <div class="flex flex-col gap-2">
-      <h2 class="text-xl font-bold">Renardo Live Coding Editor</h2>
-
       <div class="flex flex-wrap gap-2 text-xs mb-2">
         <span class="badge badge-sm">Alt+Enter: Run current line</span>
         <span class="badge badge-sm">Ctrl+Enter: Run paragraph or selection</span>
@@ -469,10 +467,7 @@ d2 >> blip([_,_,4,_], dur=.5)
     </div>
 
     <!-- Console output -->
-    <div class="flex flex-col flex-1 min-h-[200px] lg:h-full mockup-code bg-neutral text-neutral-content overflow-hidden">
-      <div class="flex justify-between items-center bg-neutral-900 p-2 border-b border-neutral-800">
-        <h3 class="font-bold">Console Output</h3>
-      </div>
+    <div class="flex flex-col flex-1 min-h-[200px] lg:h-full bg-neutral text-neutral-content overflow-hidden">
       <div class="overflow-y-auto flex-1 p-2 font-mono text-sm" bind:this={consoleContainer}>
         {#if consoleOutput.length === 0}
           <div class="flex items-center justify-center h-full opacity-50 italic">
