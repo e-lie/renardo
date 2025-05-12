@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { fade } from 'svelte/transition';
   import { appState, initWebSocket, sendMessage } from './lib/websocket.js';
+  import CodeMirrorThemeSelector from './lib/CodeMirrorThemeSelector.svelte';
   // We'll load CodeMirror and its dependencies from CDN
   
   // State for editor content
@@ -141,12 +142,12 @@ d2 >> blip([_,_,4,_], dur=.5)
         if (textarea) {
           // Initialize CodeMirror
           editor = window.CodeMirror.fromTextArea(textarea, codeMirrorOptions);
-          
+
           // Update local content when editor changes
           editor.on('change', (instance) => {
             editorContent = instance.getValue();
           });
-          
+
           // Add key bindings for different execution modes
           editor.setOption('extraKeys', {
             'Ctrl-Enter': executeCode,       // Mode 2: Execute paragraph or selection
@@ -156,6 +157,9 @@ d2 >> blip([_,_,4,_], dur=.5)
             'Ctrl-.': stopMusic,            // Stop all music
             'Cmd-.': stopMusic              // For Mac
           });
+
+          // Initialize theme in the theme selector component
+          // This will also apply any previously saved theme preference
           
           // Log successful initialization
           console.log("CodeMirror editor initialized with Python syntax highlighting");
@@ -457,6 +461,9 @@ d2 >> blip([_,_,4,_], dur=.5)
         </button>
       </div>
     </div>
+
+    <!-- Editor Theme Selector -->
+    <CodeMirrorThemeSelector bind:editor={editor} />
   </div>
 
   <!-- Main workspace -->
@@ -523,13 +530,14 @@ d2 >> blip([_,_,4,_], dur=.5)
     line-height: 1.5;
   }
 
+  /* Let themes handle gutter colors - default theme fallback */
   :global(.CodeMirror-gutters) {
-    border-right: 1px solid #ddd;
-    background-color: #f7f7f7;
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
   }
 
   :global(.CodeMirror-linenumber) {
-    color: #999;
+    color: inherit;
+    opacity: 0.6;
   }
 
   /* Make sure the textarea is hidden properly */
