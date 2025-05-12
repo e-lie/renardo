@@ -1,15 +1,15 @@
 <script>
   import { onMount } from 'svelte';
   import { appState, initWebSocket, sendMessage } from './lib/websocket.js';
-  
+
   // Local state for initialization status
   let scFilesInitialized = false;
   let samplesInitialized = false;
   let instrumentsInitialized = false;
   let sclangCodeInitialized = false;
-  
+
   // We'll assume websockets are managed by the parent App component
-  
+
   // Initialize component on mount
   onMount(() => {
     // Subscribe to appState changes
@@ -19,12 +19,12 @@
         scFilesInitialized = state.renardoInit.superColliderClasses;
         samplesInitialized = state.renardoInit.samples;
         instrumentsInitialized = state.renardoInit.instruments;
-        
+
         // Handle sclangCode field, which might be missing in older state objects
         sclangCodeInitialized = state.renardoInit.sclangCode === true;
       }
     });
-    
+
     // Force request status after a short delay
     setTimeout(() => {
       if ($appState.connected) {
@@ -33,13 +33,13 @@
         });
       }
     }, 500);
-    
+
     // Clean up subscription on component unmount
     return () => {
       unsubscribe();
     };
   });
-  
+
   // Initialization function for SuperCollider
   function initSuperColliderClasses() {
     // Reset any previous error
@@ -47,12 +47,12 @@
       ...state,
       error: null
     }));
-    
+
     return sendMessage({
       type: 'init_supercollider_classes'
     });
   }
-  
+
   // Initialization function for SCLang Code
   function downloadSclangCode() {
     // Reset any previous error
@@ -60,268 +60,229 @@
       ...state,
       error: null
     }));
-    
+
     return sendMessage({
       type: 'download_sclang_code'
     });
   }
-  
-  // Helper function to get status class
-  function getStatusClass(status) {
-    return status ? 'status-success' : 'status-pending';
-  }
-  
+
   // Navigate to collections
   function goToCollections() {
     window.location.hash = '#collections';
   }
 </script>
 
-<main>
-  <div class="container">
-    <h1>Renardo Initialization</h1>
-    
-    <p class="description">
-      Initialize Renardo components before starting to make music.
-    </p>
-    
-    <!-- Initialization section -->
-    <div class="init-section">
-      <div class="init-item">
-        <div class="init-header">
-          <h3>1. Initialize SuperCollider Classes</h3>
-          <div class="status-badge {getStatusClass(scFilesInitialized)}">
-            {scFilesInitialized ? 'Initialized' : 'Pending'}
-          </div>
-        </div>
-        <p>Sets up SuperCollider configuration in your user directory.</p>
-        <button 
-          on:click={initSuperColliderClasses} 
-          disabled={!$appState.connected || scFilesInitialized}
-        >
-          Initialize SuperCollider
-        </button>
-      </div>
-      
-      <div class="init-item">
-        <div class="init-header">
-          <h3>2. Download SCLang Code</h3>
-          <div class="status-badge {getStatusClass(sclangCodeInitialized)}">
-            {sclangCodeInitialized ? 'Downloaded' : 'Not Installed'}
-          </div>
-        </div>
-        <p>Required SuperCollider language code for special features.</p>
-        {#if !sclangCodeInitialized}
-          <button 
-            class="secondary-button" 
-            on:click={downloadSclangCode}
-            disabled={!$appState.connected || sclangCodeInitialized}
-          >
-            <span class="button-icon">📄</span> Download SuperCollider Language Code
-          </button>
-        {/if}
-      </div>
-      
-      <div class="init-item">
-        <div class="init-header">
-          <h3>3. Sample Packs</h3>
-          <div class="status-badge {getStatusClass(samplesInitialized)}">
-            {samplesInitialized ? 'Downloaded' : 'Not Installed'}
-          </div>
-        </div>
-        <p>Sound samples for your compositions.</p>
-        {#if !samplesInitialized}
-          <button class="secondary-button" on:click={goToCollections}>
-            <span class="button-icon">📦</span> Download Default Sample Pack (0_foxdot_default)
-          </button>
-        {/if}
-      </div>
-      
-      <div class="init-item">
-        <div class="init-header">
-          <h3>4. Instruments &amp; Effects</h3>
-          <div class="status-badge {getStatusClass(instrumentsInitialized)}">
-            {instrumentsInitialized ? 'Downloaded' : 'Not Installed'}
-          </div>
-        </div>
-        <p>Instruments and effects for your compositions.</p>
-        {#if !instrumentsInitialized}
-          <button class="secondary-button" on:click={goToCollections}>
-            <span class="button-icon">🎹</span> Download Default Instruments & Effects
-          </button>
-        {/if}
-      </div>
-    </div>
-    
-    <!-- Success message when all components are initialized -->
-    {#if scFilesInitialized && sclangCodeInitialized && samplesInitialized && instrumentsInitialized}
-      <div class="success-message">
-        <h3>🎉 All components initialized successfully!</h3>
-        <p>You're ready to start making music with Renardo.</p>
-      </div>
-    {/if}
-    
-    <!-- Error messages -->
-    {#if $appState.error}
-      <div class="error-message">
-        Error: {$appState.error}
-      </div>
-    {/if}
-  </div>
-</main>
+<div class="min-h-screen bg-base-100 flex justify-center items-center p-4">
+  <div class="max-w-3xl w-full card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <h1 class="card-title text-3xl font-bold text-center justify-center">
+        Renardo Initialization
+      </h1>
 
-<style>
-  main {
-    width: 100%;
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 2rem 0;
-  }
-  
-  .container {
-    max-width: 800px;
-    width: 100%;
-    padding: 2rem;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  h1{
-    text-align: center;
-    margin-top: 0;
-    color: #2c3e50;
-  }
-  
-  
-  .description {
-    text-align: center;
-    margin-bottom: 2rem;
-    color: #7f8c8d;
-  }
-  
-  .init-section {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-  }
-  
-  .init-item {
-    border: 1px solid #e0e0e0;
-    border-radius: 6px;
-    padding: 1.25rem;
-    background-color: #fafafa;
-  }
-  
-  .init-header{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-  }
-  
-  .init-header h3{
-    margin: 0;
-    color: #2c3e50;
-  }
-  
-  .status-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 500;
-  }
-  
-  .status-pending {
-    background-color: #f5f5f5;
-    color: #757575;
-  }
-  
-  .status-success {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-  }
-  
-  button {
-    background-color: #3498db;
-    color: white;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 4px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    margin-top: 0.5rem;
-  }
-  
-  button:hover:not(:disabled) {
-    background-color: #2980b9;
-  }
-  
-  button:active:not(:disabled) {
-    transform: translateY(1px);
-  }
-  
-  button:disabled {
-    background-color: #e0e0e0;
-    color: #9e9e9e;
-    cursor: not-allowed;
-  }
-  
-  .secondary-button {
-    background-color: #2ecc71;
-    color: white;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 4px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    margin-top: 0.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-  }
-  
-  .secondary-button:hover {
-    background-color: #27ae60;
-  }
-  
-  .secondary-button:active {
-    transform: translateY(1px);
-  }
-  
-  .button-icon {
-    margin-right: 0.5rem;
-    font-size: 1.2rem;
-  }
-  
-  .success-message {
-    margin-top: 2rem;
-    padding: 1.5rem;
-    background-color: #e8f5e9;
-    border-radius: 6px;
-    text-align: center;
-  }
-  
-  .success-message h3 {
-    margin-top: 0;
-    color: #2e7d32;
-  }
-  
-  .success-message p {
-    margin-bottom: 0;
-  }
-  
-  .error-message {
-    background-color: #ffebee;
-    color: #c62828;
-    padding: 1rem;
-    border-radius: 4px;
-    margin-top: 1.5rem;
-  }
-</style>
+      <p class="text-center text-base-content/70 mb-6">
+        Initialize Renardo components before starting to make music.
+      </p>
+
+      <!-- Initialization steps -->
+      <div class="space-y-4">
+        <!-- SuperCollider Classes -->
+        <div class="collapse collapse-arrow bg-base-200">
+          <input type="radio" name="init-accordion" checked="checked"/>
+          <div class="collapse-title flex justify-between items-center">
+            <div class="font-medium">
+              <span class="badge badge-sm mr-2">1</span>
+              Initialize SuperCollider Classes
+            </div>
+            {#if scFilesInitialized}
+              <div class="badge badge-success gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Initialized
+              </div>
+            {:else}
+              <div class="badge badge-outline gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Pending
+              </div>
+            {/if}
+          </div>
+          <div class="collapse-content">
+            <p class="py-2">Sets up SuperCollider configuration in your user directory.</p>
+            <button
+              class="btn btn-primary"
+              on:click={initSuperColliderClasses}
+              disabled={!$appState.connected || scFilesInitialized}
+            >
+              {#if !scFilesInitialized}
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+                </svg>
+              {/if}
+              Initialize SuperCollider
+            </button>
+          </div>
+        </div>
+
+        <!-- SCLang Code -->
+        <div class="collapse collapse-arrow bg-base-200">
+          <input type="radio" name="init-accordion"/>
+          <div class="collapse-title flex justify-between items-center">
+            <div class="font-medium">
+              <span class="badge badge-sm mr-2">2</span>
+              Download SCLang Code
+            </div>
+            {#if sclangCodeInitialized}
+              <div class="badge badge-success gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Downloaded
+              </div>
+            {:else}
+              <div class="badge badge-outline gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Not Installed
+              </div>
+            {/if}
+          </div>
+          <div class="collapse-content">
+            <p class="py-2">Required SuperCollider language code for special features.</p>
+            {#if !sclangCodeInitialized}
+              <button
+                class="btn btn-accent"
+                on:click={downloadSclangCode}
+                disabled={!$appState.connected || sclangCodeInitialized}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+                Download SuperCollider Language Code
+              </button>
+            {/if}
+          </div>
+        </div>
+
+        <!-- Sample Packs -->
+        <div class="collapse collapse-arrow bg-base-200">
+          <input type="radio" name="init-accordion"/>
+          <div class="collapse-title flex justify-between items-center">
+            <div class="font-medium">
+              <span class="badge badge-sm mr-2">3</span>
+              Sample Packs
+            </div>
+            {#if samplesInitialized}
+              <div class="badge badge-success gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Downloaded
+              </div>
+            {:else}
+              <div class="badge badge-outline gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Not Installed
+              </div>
+            {/if}
+          </div>
+          <div class="collapse-content">
+            <p class="py-2">Sound samples for your compositions.</p>
+            {#if !samplesInitialized}
+              <button
+                class="btn btn-accent"
+                on:click={goToCollections}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0l-3-3m3 3l3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                </svg>
+                Download Default Sample Pack (0_foxdot_default)
+              </button>
+            {/if}
+          </div>
+        </div>
+
+        <!-- Instruments & Effects -->
+        <div class="collapse collapse-arrow bg-base-200">
+          <input type="radio" name="init-accordion"/>
+          <div class="collapse-title flex justify-between items-center">
+            <div class="font-medium">
+              <span class="badge badge-sm mr-2">4</span>
+              Instruments &amp; Effects
+            </div>
+            {#if instrumentsInitialized}
+              <div class="badge badge-success gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Downloaded
+              </div>
+            {:else}
+              <div class="badge badge-outline gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Not Installed
+              </div>
+            {/if}
+          </div>
+          <div class="collapse-content">
+            <p class="py-2">Instruments and effects for your compositions.</p>
+            {#if !instrumentsInitialized}
+              <button
+                class="btn btn-accent"
+                on:click={goToCollections}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z" />
+                </svg>
+                Download Default Instruments & Effects
+              </button>
+            {/if}
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress indicator -->
+      <div class="mt-8">
+        <div class="flex justify-between mb-2 text-sm">
+          <span>Initialization Progress</span>
+          <span>
+            {[scFilesInitialized, sclangCodeInitialized, samplesInitialized, instrumentsInitialized]
+              .filter(Boolean).length} / 4
+          </span>
+        </div>
+        <progress
+          class="progress progress-primary w-full"
+          value={[scFilesInitialized, sclangCodeInitialized, samplesInitialized, instrumentsInitialized]
+            .filter(Boolean).length}
+          max="4"
+        ></progress>
+      </div>
+
+      <!-- Success message when all components are initialized -->
+      {#if scFilesInitialized && sclangCodeInitialized && samplesInitialized && instrumentsInitialized}
+        <div class="alert alert-success mt-6">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <div>
+            <h3 class="font-bold">All components initialized successfully!</h3>
+            <div class="text-xs">You're ready to start making music with Renardo.</div>
+          </div>
+        </div>
+      {/if}
+
+      <!-- Error messages -->
+      {#if $appState.error}
+        <div class="alert alert-error mt-6">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <span>Error: {$appState.error}</span>
+        </div>
+      {/if}
+    </div>
+  </div>
+</div>
