@@ -1,5 +1,4 @@
 import tempfile
-from enum import Enum
 from pathlib import Path
 from typing import Dict, Any
 
@@ -7,10 +6,8 @@ from renardo.lib.InstrumentProxy import InstrumentProxy
 from renardo.lib.music_resource import Instrument, Effect, ResourceType
 from renardo.settings_manager import settings
 
-# Legacy enum for backward compatibility
-class SCResourceType(Enum):
-    INSTRUMENT = "instrument"
-    EFFECT = "effect"
+# For backward compatibility
+from renardo.lib.music_resource import ResourceType as SCResourceType
 
 class SCEffect(Effect):
     """Represents a SuperCollider effect processor."""
