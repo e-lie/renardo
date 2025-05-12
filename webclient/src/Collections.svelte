@@ -458,10 +458,10 @@
 
   <!-- Download progress logger modal -->
   {#if showLogger}
-    <div class="modal modal-open modal-bottom sm:modal-middle">
-      <div class="modal-box w-11/12 max-w-4xl">
+    <div class="modal modal-open">
+      <div class="modal-box w-11/12 max-w-6xl h-auto max-h-[90vh]">
         <div class="flex justify-between items-center mb-4">
-          <h3 class="font-bold text-lg">Download Progress</h3>
+          <h3 class="font-bold text-2xl">Download Progress</h3>
 
           {#if wsConnected}
             <div class="badge badge-success gap-2">
@@ -482,28 +482,36 @@
           {/if}
         </div>
 
-        <div id="log-container" class="bg-base-300 p-4 rounded-lg font-mono text-sm h-[300px] overflow-y-auto mb-4">
+        <div id="log-container" class="bg-base-300 p-6 rounded-lg font-mono text-sm h-[600px] overflow-y-auto mb-4 shadow-inner">
           {#if !wsConnected}
-            <div class="text-error mb-2 flex gap-2">
+            <div class="text-error p-2 mb-2 flex gap-2 bg-error bg-opacity-5 rounded border-l-4 border-error">
               <span class="text-xs opacity-70">{new Date().toLocaleTimeString()}</span>
               <span>WebSocket disconnected. Waiting for reconnection...</span>
             </div>
           {/if}
 
           {#if logMessages.length === 0}
-            <p class="text-center opacity-50 italic my-8">Waiting for download to start...</p>
+            <div class="flex flex-col items-center justify-center h-full">
+              <span class="loading loading-dots loading-md text-primary"></span>
+              <p class="text-center opacity-50 italic mt-4">Waiting for download to start...</p>
+            </div>
           {:else}
             {#each logMessages as log}
-              <div class="mb-1 {log.level.toLowerCase() === 'error' ? 'text-error' : log.level.toLowerCase() === 'warn' ? 'text-warning' : log.level.toLowerCase() === 'success' ? 'text-success' : ''}">
-                <span class="text-xs opacity-70 inline-block w-20">{log.timestamp}</span>
-                <span>{log.message}</span>
+              <div class="mb-2 pb-2 border-b border-base-200 border-opacity-30 {log.level.toLowerCase() === 'error' ? 'text-error bg-error bg-opacity-5 p-2 rounded' : log.level.toLowerCase() === 'warn' ? 'text-warning' : log.level.toLowerCase() === 'success' ? 'text-success bg-success bg-opacity-5 p-2 rounded' : ''}">
+                <span class="text-xs opacity-70 inline-block w-24 mr-2">{log.timestamp}</span>
+                <span class="font-medium">{log.message}</span>
               </div>
             {/each}
           {/if}
         </div>
 
         <div class="modal-action">
-          <button class="btn" on:click={closeLogger}>Close</button>
+          <button class="btn btn-primary btn-lg" on:click={closeLogger}>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 mr-1">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Close
+          </button>
         </div>
       </div>
     </div>
