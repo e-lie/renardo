@@ -3,15 +3,15 @@
 
   // Available themes - these should match the themes in your tailwind.config.js
   const themes = [
+    { name: "Default", value: "default", icon: "🦄" },
     { name: "Synthwave", value: "synthwave", icon: "🎸" },
     { name: "Coffee", value: "coffee", icon: "☕" },
     { name: "Pastel", value: "pastel", icon: "🎨" },
-    { name: "Cyberpunk", value: "cyberpunk", icon: "🤖" },
-    { name: "Default", value: "default", icon: "🦄" }
+    { name: "Cyberpunk", value: "cyberpunk", icon: "🤖" }
   ];
 
   // Current theme
-  let currentTheme = "cyberpunk";
+  let currentTheme = "default";
   let dropdownOpen = false;
 
   onMount(() => {
