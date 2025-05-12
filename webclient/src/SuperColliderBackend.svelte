@@ -170,20 +170,19 @@
       <p class="text-base-content/70 mb-4">
         Customize the code that will be executed when starting the SuperCollider backend.
         Default code includes starting Renardo and enabling MIDI support.
+        <span class="label-text-alt">Default code: <code class="bg-base-300 p-1 rounded text-xs">Renardo.start; Renardo.midi;</code></span>
       </p>
+      
 
       <div class="form-control">
         <label for="sclangCode" class="form-control w-full">
           <textarea
             id="sclangCode"
-            class="textarea textarea-bordered font-mono h-32"
+            class="textarea textarea-bordered font-mono h-32 w-full"
             bind:value={customSclangCode}
             placeholder="Enter SuperCollider initialization code..."
             disabled={isScBackendRunning || isLoading}
           ></textarea>
-          <div class="label">
-            <span class="label-text-alt">Default code: <code class="bg-base-300 p-1 rounded text-xs">Renardo.start; Renardo.midi;</code></span>
-          </div>
         </label>
       </div>
     </div>

@@ -136,7 +136,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
           </svg>
         </label>
-        <a href="#home" class="btn btn-ghost text-xl">Renardo Web</a>
+        <a href="#home" class="btn btn-ghost text-xl">Renardo ฅ^•ﻌ•^ฅ</a>
       </div>
       
       <div class="navbar-center hidden lg:flex">
@@ -178,7 +178,7 @@
           <div class="max-w-3xl w-full card bg-base-100 shadow-xl">
             <div class="card-body">
               <h1 class="card-title text-3xl font-bold text-center justify-center">
-                Renardo Web
+                Renardo ฅ^•ﻌ•^ฅ
               </h1>
               
               <p class="text-center text-base-content/70 mb-6">
@@ -317,7 +317,7 @@
   <div class="drawer-side z-50">
     <label for="drawer-toggle" aria-label="close sidebar" class="drawer-overlay"></label>
     <ul class="menu p-4 w-64 min-h-full bg-base-200 text-base-content">
-      <li class="menu-title">Renardo Web</li>
+      <li class="menu-title">Renardo ฅ^•ﻌ•^ฅ</li>
       <li><a href="#home" class:active={currentRoute === 'home'}>Home</a></li>
       <li><a href="#init" class:active={currentRoute === 'init'}>Initialize</a></li>
       <li><a href="#editor" class:active={currentRoute === 'editor'}>Code Editor</a></li>
