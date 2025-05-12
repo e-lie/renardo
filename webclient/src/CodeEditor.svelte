@@ -9,8 +9,15 @@
   let editorContent = `# Renardo Live Coding Editor
 # Type your code here and press Ctrl+Enter to run
 
-d1 >> play("x-o-").every(4, "stutter", 4)
-d2 >> blip([_,_,4,_], dur=.5)
+Root.default = var([0,2,4], [2,4,6])
+d1 >> play("<x-(-[--])><*....><..(ooo(oO)).>")
+d2 >> blip([2,_,[4,4,4,P*(5,2)],_], dur=.5, sus=linvar([.2,.5,3],16), pan=[-.8,0,.8]).eclipse(4,16)
+d3 >> pluck(dur=.25, oct=3, sus=linvar([.2,.5,3],16), amp=[.7,.7,1,2], lpf=linvar([400,600,3000],16)).eclipse(16,96)
+k2 >> play("V.", lpf=400).eclipse(64,128)
+
+d2.dur=var([.25,1/3,1/2], 16)
+
+Master().fadeout(dur=24)
 `;
 
   // CodeMirror options
@@ -52,6 +59,13 @@ d2 >> blip([_,_,4,_], dur=.5)
     // Function to load a script dynamically
     const loadScript = (src) => {
       return new Promise((resolve, reject) => {
+        // Check if the script is already loaded
+        const existingScript = document.querySelector(`script[src="${src}"]`);
+        if (existingScript) {
+          resolve();
+          return;
+        }
+
         const script = document.createElement('script');
         script.src = src;
         script.onload = () => resolve();
@@ -158,14 +172,31 @@ d2 >> blip([_,_,4,_], dur=.5)
             'Cmd-.': stopMusic              // For Mac
           });
 
-          // For the editor to be properly initialized with the theme,
+          // For the editor to be properly initialized with the theme and settings,
           // we need to make sure we're using the right settings from local storage
           const savedTheme = localStorage.getItem('editor-theme') || 'monokai';
           const showLineNumbers = localStorage.getItem('editor-show-line-numbers') !== 'false';
+          const vimModeEnabled = localStorage.getItem('editor-vim-mode') === 'true';
 
-          // Apply settings
+          // Apply basic settings
           editor.setOption('theme', savedTheme);
           editor.setOption('lineNumbers', showLineNumbers);
+
+          // Handle Vim mode if enabled
+          if (vimModeEnabled) {
+            // Load Vim mode script
+            loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/keymap/vim.min.js').then(() => {
+              if (window.CodeMirror.Vim) {
+                // Add a common escape mapping
+                window.CodeMirror.Vim.map('jk', '<Esc>', 'insert');
+                // Set the keymap to Vim
+                editor.setOption('keyMap', 'vim');
+              }
+            }).catch(err => {
+              console.error('Failed to load Vim mode:', err);
+              localStorage.setItem('editor-vim-mode', 'false');
+            });
+          }
 
           // Refresh the editor to apply all settings
           setTimeout(() => {
