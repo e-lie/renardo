@@ -326,24 +326,9 @@ Master().fadeout(dur=24)
         executionLabel = 'paragraph';
     }
 
-    // Only add the command to the console - we'll let the websocket handler
-    // manage the response to avoid duplicate entries
-    const timestamp = new Date().toLocaleTimeString();
-    const commandEntry = {
-      timestamp,
-      level: 'command',
-      message: `> Executing ${executionLabel}:\n${codeToExecute}`
-    };
-
-    // Update the store directly instead of using addConsoleOutput to avoid duplication
-    appState.update(state => {
-      const updatedConsoleOutput = [...state.consoleOutput, commandEntry];
-      const trimmedConsoleOutput = updatedConsoleOutput.slice(-1000);
-      return {
-        ...state,
-        consoleOutput: trimmedConsoleOutput
-      };
-    });
+    // Don't add the command to the console output
+    // Just send the command to the server for execution
+    // The server will return the result which will be displayed
 
     // Send to server with unique request ID to prevent duplicate execution
     sendMessage({
@@ -434,23 +419,7 @@ Master().fadeout(dur=24)
   
   // Stop all music playback
   function stopMusic() {
-    // We'll use the same pattern as sendCodeToExecute to avoid duplication
-    const timestamp = new Date().toLocaleTimeString();
-    const commandEntry = {
-      timestamp,
-      level: 'command',
-      message: '> Stopping all music playback with Clock.clear()'
-    };
-
-    // Update the store directly
-    appState.update(state => {
-      const updatedConsoleOutput = [...state.consoleOutput, commandEntry];
-      const trimmedConsoleOutput = updatedConsoleOutput.slice(-1000);
-      return {
-        ...state,
-        consoleOutput: trimmedConsoleOutput
-      };
-    });
+    // Don't add a console message, just send the command
 
     // Send the Clock.clear() command to stop all patterns with a unique request ID
     sendMessage({
@@ -545,11 +514,10 @@ Master().fadeout(dur=24)
         {:else}
           {#each consoleOutput as output}
             <div class="mb-1 border-b border-base-300 border-opacity-20 pb-1">
-              <span class="opacity-50 text-xs mr-2">[{output.timestamp}]</span>
               <span class="{
                 output.level.toLowerCase() === 'info' ? 'text-info' :
-                output.level.toLowerCase() === 'command' ? 'text-accent' :
-                output.level.toLowerCase() === 'error' ? 'text-error' :
+                output.level.toLowerCase() === 'command' ? 'text-accent font-bold' :
+                output.level.toLowerCase() === 'error' ? 'text-error font-bold' :
                 output.level.toLowerCase() === 'success' ? 'text-success' :
                 output.level.toLowerCase() === 'warn' ? 'text-warning' : ''
               } whitespace-pre-wrap">{output.message}</span>
