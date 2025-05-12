@@ -91,13 +91,13 @@ effect = SCEffect(
 # Example usage
 from pathlib import Path
 from renardo.gatherer.sccode_management.sccode_library import SCCodeLibrary
-from renardo.gatherer.sccode_management.sc_resource import SCResourceType
+from renardo.lib.music_resource import ResourceType
 
 # Load the entire library
 library = SCCodeLibrary(Path("/path/to/library"))
 
 # Get a specific synth
-synth = library.get_resource(0, SCResourceType.INSTRUMENT, "bass", "simple_bass")
+synth = library.get_resource(0, ResourceType.INSTRUMENT, "bass", "simple_bass")
 if synth:
     print(f"Loaded synth: {synth.fullname}")
     print(f"Description: {synth.description}")
@@ -111,7 +111,7 @@ if synth:
     print(custom_code)
 
 # Get a specific effect
-effect = library.get_resource(0, SCResourceType.EFFECT, "reverb", "plate_reverb")
+effect = library.get_resource(0, ResourceType.EFFECT, "reverb", "plate_reverb")
 if effect:
     print(f"Loaded effect: {effect.fullname}")
     print(f"Description: {effect.description}")
@@ -129,7 +129,7 @@ for resource in bass_resources:
 # Get all resources in a category
 bank = library.get_bank(0)
 if bank:
-    bass_category = bank.get_category(SCResourceType.INSTRUMENT, "bass")
+    bass_category = bank.get_category(ResourceType.INSTRUMENT, "bass")
     if bass_category:
         print("\nAll bass instruments:")
         for details in bass_category.get_resource_details():

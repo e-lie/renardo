@@ -129,8 +129,8 @@ class Player(Repeatable):
 
         # Used for checking clock updates
         self.current_dur = None
-        #self.old_pattern_dur = None
-        #self.old_dur = None
+        self.old_pattern_dur = None
+        self.old_dur = None
 
         self.isplaying = False
         #self.isAlive = True
