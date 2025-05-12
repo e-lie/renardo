@@ -1,0 +1,108 @@
+/* Renardo Theme (previously called Default) */
+:root[data-theme="default"] {
+  /* Using the original cyberpunk theme colors from daisyUI with orange accents */
+  --color-base-100: #1a103d;
+  --color-base-200: #150d30;
+  --color-base-300: #100a24;
+  --color-base-content: #f0ecff;
+
+  /* Primary colors - Updated to orange-yellow */
+  --color-primary: #ffae00;
+  --color-primary-content: #000000;
+
+  /* Secondary colors */
+  --color-secondary: #00ffff;
+  --color-secondary-content: #000000;
+
+  /* Accent colors */
+  --color-accent: #ff6b00; /* Orange accent */
+  --color-accent-content: #000000;
+
+  /* Neutral colors */
+  --color-neutral: #400068;
+  --color-neutral-content: #ffffff;
+
+  /* State colors */
+  --color-info: #00ffff;
+  --color-info-content: #000000;
+  --color-success: #00ff66;
+  --color-success-content: #000000;
+  --color-warning: #ffae00; /* Orange-yellow */
+  --color-warning-content: #000000;
+  --color-error: #ff3270;
+  --color-error-content: #ffffff;
+  
+  color-scheme: dark;
+}
+
+/* Additional Renardo styling */
+[data-theme="default"] {
+  background-color: var(--color-base-100);
+  background-image:
+    radial-gradient(circle, rgba(255, 174, 0, 0.15) 1px, transparent 1px),
+    radial-gradient(circle, rgba(0, 255, 255, 0.15) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: 0 0, 20px 20px;
+}
+
+[data-theme="default"] .title-font {
+  color: #ffae00; /* Orange-yellow color */
+  text-shadow: 0 0 10px rgba(255, 174, 0, 0.8);
+  background: linear-gradient(90deg, #ffae00, #ff6b00);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+[data-theme="default"] .btn-primary {
+  box-shadow: 0 0 10px #ffae00;
+  border: 1px solid #ffae00;
+  background-color: rgba(255, 174, 0, 0.8);
+  color: #000;
+}
+
+[data-theme="default"] .btn-primary:hover {
+  background-color: #ffae00;
+  box-shadow: 0 0 15px rgba(255, 174, 0, 0.8);
+}
+
+[data-theme="default"] .btn-secondary {
+  box-shadow: 0 0 10px var(--color-secondary);
+  border: 1px solid var(--color-secondary);
+}
+
+[data-theme="default"] .card {
+  border: 1px solid rgba(255, 174, 0, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 174, 0, 0.1);
+  background-color: rgba(26, 16, 61, 0.8);
+  backdrop-filter: blur(5px);
+}
+
+/* Add orange accents to various elements */
+[data-theme="default"] .badge-warning {
+  background-color: #ffae00;
+  border-color: #ffae00;
+  color: #000000;
+}
+
+[data-theme="default"] h1.title-font,
+[data-theme="default"] h2.title-font,
+[data-theme="default"] .card-title.title-font {
+  background: linear-gradient(90deg, #ffae00, #ff6b00);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  font-weight: bold;
+}
+
+[data-theme="default"] .collapse-title.title-font {
+  color: #ffae00;
+  text-shadow: 0 0 5px rgba(255, 174, 0, 0.5);
+}
+
+/* Add subtle orange glow to active navigation items */
+[data-theme="default"] .menu .active {
+  background-color: rgba(255, 174, 0, 0.1);
+  border-left: 2px solid #ffae00;
+}
