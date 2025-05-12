@@ -55,7 +55,11 @@
     <div class="dropdown-content z-[1] menu p-2 shadow bg-base-200 rounded-box w-52 absolute right-0 mt-2">
       <div class="menu-title text-center title-font">Change Theme</div>
       {#each themes as theme}
-        <div class="p-2 hover:bg-base-300 rounded cursor-pointer {currentTheme === theme.value ? 'bg-base-300' : ''}" on:click={() => setTheme(theme.value)}>
+        <button
+          class="w-full text-left p-2 hover:bg-base-300 rounded cursor-pointer {currentTheme === theme.value ? 'bg-base-300' : ''}"
+          on:click={() => setTheme(theme.value)}
+          on:keydown={(e) => e.key === 'Enter' && setTheme(theme.value)}
+        >
           <div class="flex items-center gap-2">
             <span>{theme.icon}</span>
             <span class="title-font">{theme.name}</span>
@@ -65,7 +69,7 @@
               </svg>
             {/if}
           </div>
-        </div>
+        </button>
       {/each}
     </div>
   {/if}
