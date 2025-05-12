@@ -1,66 +1,18 @@
+"""
+DEPRECATED MODULE - FOR BACKWARD COMPATIBILITY ONLY
+
+This module is maintained for backward compatibility. New code should use:
+- MusicResource, Instrument, Effect from renardo.lib.music_resource
+- SCInstrument, SCEffect from renardo.sc_backend.SimpleSynthDefs
+"""
+
 from typing import Dict, Any
 
+# Import the new classes
+from renardo.lib.music_resource import MusicResource, Instrument, Effect, ResourceType
+from renardo.sc_backend.SimpleSynthDefs import SCInstrument, SCEffect, SCResourceType
 
+# For backward compatibility - SCResource is now just an alias for MusicResource
+SCResource = MusicResource
 
-
-
-class SCResource:
-    """Base class for SuperCollider resources (synths and effects)."""
-    
-    def __init__(
-        self,
-        shortname: str,
-        fullname: str,
-        description: str,
-        code: str,
-        arguments: Dict[str, Any] = None
-    ):
-        self.shortname = shortname
-        self.fullname = fullname
-        self.description = description
-        self.code = code  # SuperCollider language code as a multiline string
-        self.arguments = arguments or {}
-    
-    def __str__(self) -> str:
-        return f"{self.__class__.__name__}({self.shortname}, {len(self.arguments)} args)"
-    
-    def __repr__(self) -> str:
-        return self.__str__()
-
-
-class SCInstrument(SCResource):
-    """Represents a SuperCollider synthesizer instrument."""
-    
-    def __init__(
-        self,
-        shortname: str,
-        fullname: str,
-        description: str,
-        code: str,
-        arguments: Dict[str, Any] = None,
-        category: str = None
-    ):
-        super().__init__(shortname, fullname, description, code, arguments)
-        self.category = category
-    
-    def __str__(self) -> str:
-        return f"SCSynth({self.shortname}, {len(self.arguments)} args)"
-
-
-class SCEffect(SCResource):
-    """Represents a SuperCollider effect processor."""
-    
-    def __init__(
-        self,
-        shortname: str,
-        fullname: str,
-        description: str,
-        code: str,
-        arguments: Dict[str, Any] = None,
-        category: str = None
-    ):
-        super().__init__(shortname, fullname, description, code, arguments)
-        self.category = category
-    
-    def __str__(self) -> str:
-        return f"SCEffect({self.shortname}, {len(self.arguments)} args)"
+# Legacy class names are already provided by SimpleSynthDefs.py

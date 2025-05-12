@@ -7,32 +7,10 @@ from renardo.lib.InstrumentProxy import InstrumentProxy
 from renardo.lib.music_resource import Instrument, Effect, ResourceType
 from renardo.settings_manager import settings
 
+# Legacy enum for backward compatibility
 class SCResourceType(Enum):
     INSTRUMENT = "instrument"
     EFFECT = "effect"
-
-class SCResource:
-    """Base class for SuperCollider resources (synths and effects)."""
-
-    def __init__(
-            self,
-            shortname: str,
-            fullname: str,
-            description: str,
-            code: str,
-            arguments: Dict[str, Any] = None
-    ):
-        self.shortname = shortname
-        self.fullname = fullname
-        self.description = description
-        self.code = code  # SuperCollider language code as a multiline string
-        self.arguments = arguments or {}
-
-    def __str__(self) -> str:
-        return f"{self.__class__.__name__}({self.shortname}, {len(self.arguments)} args)"
-
-    def __repr__(self) -> str:
-        return self.__str__()
 
 class SCEffect(Effect):
     """Represents a SuperCollider effect processor."""
@@ -157,6 +135,7 @@ class SCInstrument(Instrument):
         But if you want to code it completely with Synthdef.new and ReplaceOut
         it will leave it as is
         """
+        self.sccode = self.code  # Initialize sccode with code content
         if not "SynthDef.new" in self.code:
             self.sccode = f"SynthDef.new(\\{self.shortname},{{\n{self.code}"
         if not "ReplaceOut.ar" in self.sccode:
