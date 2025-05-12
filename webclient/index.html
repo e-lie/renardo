@@ -5,6 +5,9 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="/fonts/fonts.css">
+    <link rel="stylesheet" href="/themes/synthwave.css">
+    <link rel="stylesheet" href="/themes/coffee.css">
+    <link rel="stylesheet" href="/themes/pastel.css">
     <title>Renardo ฅ^•ﻌ•^ฅ</title>
     <script>
       // Initialize theme from localStorage on page load
@@ -13,8 +16,8 @@
         if (savedTheme) {
           document.documentElement.setAttribute('data-theme', savedTheme);
         } else {
-          document.documentElement.setAttribute('data-theme', 'cyberpunk');
-          localStorage.setItem('theme', 'cyberpunk');
+          document.documentElement.setAttribute('data-theme', 'synthwave');
+          localStorage.setItem('theme', 'synthwave');
         }
       })();
     </script>

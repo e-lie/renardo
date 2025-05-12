@@ -1,0 +1,77 @@
+/* Custom Pastel Theme for Renardo */
+:root[data-theme="pastel"] {
+  /* Base colors */
+  --color-base-100: #f6f8fa;
+  --color-base-200: #ecf0f3;
+  --color-base-300: #e2e8ec;
+  --color-base-content: #4a5568;
+  
+  /* Primary colors */
+  --color-primary: #a6c1ee;
+  --color-primary-content: #2d3748;
+  
+  /* Secondary colors */
+  --color-secondary: #fbc2eb;
+  --color-secondary-content: #4a2b4a;
+  
+  /* Accent colors */
+  --color-accent: #c1eea6;
+  --color-accent-content: #2b4a30;
+  
+  /* Neutral colors */
+  --color-neutral: #d8e3f0;
+  --color-neutral-content: #4a5568;
+  
+  /* State colors */
+  --color-info: #a6d9ee;
+  --color-info-content: #2b4a4a;
+  --color-success: #b8eeb8;
+  --color-success-content: #2b4a36;
+  --color-warning: #f8e2a2;
+  --color-warning-content: #4a3f2b;
+  --color-error: #eeaca6;
+  --color-error-content: #4a2b2b;
+  
+  /* UI elements */
+  --radius-selector: 1.5rem;
+  --radius-field: 1rem;
+  --radius-box: 1.5rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  
+  color-scheme: light;
+}
+
+/* Additional Pastel styling */
+[data-theme="pastel"] {
+  background-image: linear-gradient(120deg, rgba(166, 193, 238, 0.1), rgba(251, 194, 235, 0.1));
+}
+
+[data-theme="pastel"] .card {
+  border: 1px solid rgba(166, 193, 238, 0.3);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(3px);
+}
+
+[data-theme="pastel"] .title-font {
+  background: linear-gradient(120deg, #a6c1ee, #fbc2eb);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.1));
+}
+
+[data-theme="pastel"] .btn {
+  transition: all 0.3s ease;
+}
+
+[data-theme="pastel"] .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(166, 193, 238, 0.3);
+}
+
+[data-theme="pastel"] .navbar {
+  background-color: rgba(246, 248, 250, 0.8);
+  backdrop-filter: blur(10px);
+}
