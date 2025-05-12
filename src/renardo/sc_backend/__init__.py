@@ -12,8 +12,8 @@ from renardo.sc_backend.server_manager import ServerManager, TempoServer, TempoC
 from renardo.sc_backend.effect_manager import EffectManager
 
 from renardo.sc_backend.SpecialSynthDefs import SamplePlayer, LoopPlayer
-from renardo.lib.music_resource import ResourceType
-from renardo.sc_backend.SimpleSynthDefs import SCInstrument, SCResource, SCEffect
+from renardo.lib.music_resource import ResourceType, MusicResource
+from renardo.sc_backend.SimpleSynthDefs import SCInstrument, SCEffect
 # Legacy support - SCResourceType will be deprecated
 from renardo.sc_backend.SimpleSynthDefs import SCResourceType
 from renardo.sc_backend.SimpleEffectSynthDefs import FileEffect, StartSoundEffect, MakeSoundEffect
