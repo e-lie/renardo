@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Dict, Optional, List, Iterator
 
 from renardo.gatherer.sccode_management.scresource_type_and_file import SCResourceFile
+from renardo.lib.music_resource import ResourceType
 from renardo.sc_backend.SimpleSynthDefs import SCResourceType
 
 

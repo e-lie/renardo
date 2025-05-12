@@ -61,7 +61,7 @@ class TestSessionManager:
         """Initialize the Renardo runtime."""
         print("Initializing Renardo runtime...")
         # Import runtime
-        self.runtime = importlib.import_module('renardo.lib.runtime')
+        self.runtime = importlib.import_module('renardo.runtime')
         # Make runtime objects available in global namespace
         globals().update({name: getattr(self.runtime, name) 
                          for name in dir(self.runtime) 
