@@ -1,8 +1,9 @@
 import itertools
 
 from renardo.sc_backend import (
-    SamplePlayer, LoopPlayer, InstrumentProxy,
+    SamplePlayer, LoopPlayer
 )
+from renardo.lib.InstrumentProxy import InstrumentProxy
 
 
 from renardo.lib.Key import PlayerKey, NumberKey
