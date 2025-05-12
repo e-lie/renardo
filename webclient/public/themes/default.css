@@ -1,0 +1,68 @@
+/* Default Theme for Renardo (previously called Cyberpunk) */
+:root[data-theme="default"] {
+  /* Using the original cyberpunk theme colors from daisyUI */
+  --color-base-100: #1a103d;
+  --color-base-200: #150d30;
+  --color-base-300: #100a24;
+  --color-base-content: #f0ecff;
+  
+  /* Primary colors */
+  --color-primary: #ff00ff;
+  --color-primary-content: #ffffff;
+  
+  /* Secondary colors */
+  --color-secondary: #00ffff;
+  --color-secondary-content: #ffffff;
+  
+  /* Accent colors */
+  --color-accent: #8400ff;
+  --color-accent-content: #ffffff;
+  
+  /* Neutral colors */
+  --color-neutral: #400068;
+  --color-neutral-content: #ffffff;
+  
+  /* State colors */
+  --color-info: #00ffff;
+  --color-info-content: #000000;
+  --color-success: #00ff66;
+  --color-success-content: #000000;
+  --color-warning: #ffae00;
+  --color-warning-content: #000000;
+  --color-error: #ff3270;
+  --color-error-content: #ffffff;
+  
+  color-scheme: dark;
+}
+
+/* Additional Default styling */
+[data-theme="default"] {
+  background-color: var(--color-base-100);
+  background-image: 
+    radial-gradient(circle, rgba(255, 0, 255, 0.2) 1px, transparent 1px),
+    radial-gradient(circle, rgba(0, 255, 255, 0.2) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: 0 0, 20px 20px;
+}
+
+[data-theme="default"] .title-font {
+  color: var(--color-primary);
+  text-shadow: 0 0 10px var(--color-primary);
+}
+
+[data-theme="default"] .btn-primary {
+  box-shadow: 0 0 10px var(--color-primary);
+  border: 1px solid var(--color-primary);
+}
+
+[data-theme="default"] .btn-secondary {
+  box-shadow: 0 0 10px var(--color-secondary);
+  border: 1px solid var(--color-secondary);
+}
+
+[data-theme="default"] .card {
+  border: 1px solid rgba(255, 0, 255, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  background-color: rgba(26, 16, 61, 0.8);
+  backdrop-filter: blur(5px);
+}
