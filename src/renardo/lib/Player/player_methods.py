@@ -34,7 +34,7 @@ def pause(self: Player):
 def play(self: Player):
     self.isplaying = True
     self.stopping = False
-    self.isAlive = True
+    #self.isAlive = True
 
     self.__call__()
 

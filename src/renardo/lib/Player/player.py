@@ -112,12 +112,12 @@ class Player(Repeatable):
         # self.condition = lambda: True
         # self.sent_messages = []
 
-        # Visual feedback information
-        self.envelope = None
-        self.line_number = None
-        self.whitespace = None
-        self.do_bang = False
-        self.bang_kwargs = {}
+        # Visual feedback information (Bangs)
+        #self.envelope = None
+        #self.line_number = None
+        #self.whitespace = None
+        #self.do_bang = False
+        #self.bang_kwargs = {} # bang are for visual feedback
 
         # Keeps track of which note to play etc
         self.event_index = 0
@@ -128,11 +128,11 @@ class Player(Repeatable):
 
         # Used for checking clock updates
         self.current_dur = None
-        self.old_pattern_dur = None
-        self.old_dur = None
+        #self.old_pattern_dur = None
+        #self.old_dur = None
 
         self.isplaying = False
-        self.isAlive = True
+        #self.isAlive = True
 
         # These dicts contain the attribute and modifier values that are sent to SuperCollider     
 
@@ -165,7 +165,7 @@ class Player(Repeatable):
 
         # Keyword arguments that are used internally
         self.scale = None
-        self.offset = 0
+        #self.offset = 0
         self.following = None
 
         # List the internal variables we don't want to send to SuperCollider
