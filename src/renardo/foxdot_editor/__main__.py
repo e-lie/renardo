@@ -7,7 +7,7 @@
     installed and Python on your path.
 
 """
-from renardo.lib.runtime import FoxDotCode, handle_stdin
+from renardo.runtime import FoxDotCode, handle_stdin
 from renardo.foxdot_editor.Editor import workspace
 import argparse
 

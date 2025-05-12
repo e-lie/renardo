@@ -1,1 +1,1 @@
-from renardo.lib.runtime import *
+from renardo.runtime import *

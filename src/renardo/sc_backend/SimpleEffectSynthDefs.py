@@ -62,50 +62,62 @@
 import os.path
 from pathlib import Path
 
+from renardo.lib.music_resource import Effect
 from renardo.settings_manager import settings
 
 
-class FileEffect:
+class FileEffect(Effect):
+    """Represents a SuperCollider effect loaded from a file."""
 
     def __init__(self, short_name, sccode_path, args={}):
-        self.short_name_for_arg = short_name
+        fullname = os.path.basename(sccode_path)
+        super().__init__(
+            shortname=short_name, 
+            fullname=fullname, 
+            description=f"Effect loaded from {fullname}",
+            arguments=args
+        )
         self.synthdef_fullname = sccode_path.name
         self.sccode_path = str(sccode_path)
-        self.args = args.keys()
-        self.defaults = args
 
     @classmethod
     def set_server(cls, server):
         cls.server = server
 
-    def __repr__(self):
-        # return "<Fx '{}' -- args: {}>".format(self.synthdef, ", ".join(self.args))
-        other_args = ['{}'.format(arg)
-                      for arg in self.args if arg != self.short_name_for_arg]
-        other_args = ", other args={}".format(other_args) if other_args else ""
-        return "<'{}': keyword='{}'{}>".format(self.synthdef_fullname, self.short_name_for_arg, other_args)
-
-    def doc(self, string):
-        """ Set a docstring for the effects"""
-        return
+    def load(self):
+        """Load the effect into the SuperCollider server."""
+        return self.load_in_server()
 
     def load_in_server(self):
-        """ Load the Effect """
+        """Load the effect from a file path."""
         if self.server is not None:
             self.server.loadSynthDef(self.sccode_path)
         return
 
 
 class StartSoundEffect(FileEffect):
+    """Special effect for starting sounds."""
+    
     def __init__(self):
-        FileEffect.__init__(self, 'startSound', sccode_path=Path(settings.get_path("PLAY_SCCODE_DIR"))/'startSound.scd')
-        self.load_in_server()
+        FileEffect.__init__(
+            self, 
+            'startSound', 
+            sccode_path=Path(settings.get_path("PLAY_SCCODE_DIR"))/'startSound.scd'
+        )
+        self.load()
+
 
 class MakeSoundEffect(FileEffect):
+    """Special effect for making sounds."""
+    
     def __init__(self):
         self.max_duration = 8
-        FileEffect.__init__(self, 'makeSound', sccode_path=Path(settings.get_path("PLAY_SCCODE_DIR"))/'makeSound.scd')
-        self.load_in_server()
+        FileEffect.__init__(
+            self, 
+            'makeSound', 
+            sccode_path=Path(settings.get_path("PLAY_SCCODE_DIR"))/'makeSound.scd'
+        )
+        self.load()
 
 # -- TODO
 
@@ -114,4 +126,3 @@ class MakeSoundEffect(FileEffect):
 # 1. Before envelope
 # 2. Adding the envelope
 # 3. After envelope
-

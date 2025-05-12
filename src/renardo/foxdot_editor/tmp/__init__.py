@@ -11,7 +11,7 @@ Copyright Ryan Kirkbride 2015
 """
 
 import sys
-from renardo.lib.runtime import *
+from renardo.runtime import *
 
 
 def boot_supercollider():

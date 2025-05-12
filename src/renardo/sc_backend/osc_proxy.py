@@ -69,7 +69,7 @@ class OSCProxy:
         """Handle received OSC messages."""
 
         # ignore message at start of session
-        # ie sent when executing (from renardo.lib.runtime import *)
+        # ie sent when executing (from renardo.runtime import *)
         if address in self.ignored_addresses:
             return None
 

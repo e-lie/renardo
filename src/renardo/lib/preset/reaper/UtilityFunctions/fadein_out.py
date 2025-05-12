@@ -1,5 +1,5 @@
 
-from renardo.lib.runtime import Clock, linvar, sinvar, PWhite, PRand, inf, player_method, nextBar
+from renardo.runtime import Clock, linvar, sinvar, PWhite, PRand, inf, player_method, nextBar
 from renardo.reaper_backend.ReaperIntegrationLib.ReaTrack import ReaTrack
 
 @player_method
