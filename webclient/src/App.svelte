@@ -174,7 +174,7 @@
       
       <div class="navbar-end">
         <!-- Theme Button -->
-        <ThemeButton />
+        <!-- <ThemeButton /> To fix ! -->
 
         {#if webSocketSupported}
           <div class="badge {$appState.connected ? 'badge-success' : 'badge-error'} gap-2 ml-2">
