@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  
+
   // Available themes - these are commonly used CodeMirror themes
   const themes = [
     { name: "Monokai", value: "monokai" },
@@ -12,16 +12,18 @@
     { name: "Darcula", value: "darcula" },
     { name: "Eclipse", value: "eclipse" }
   ];
-  
-  // Storage key for the editor theme
+
+  // Storage keys
   const EDITOR_THEME_KEY = 'editor-theme';
-  
-  // Default theme
+  const SHOW_LINE_NUMBERS_KEY = 'editor-show-line-numbers';
+
+  // Default settings
   let currentTheme = "monokai";
-  
+  let showLineNumbers = true;
+
   // Reference to the CodeMirror editor instance
   export let editor = null;
-  
+
   onMount(() => {
     // Check for theme in localStorage
     const savedTheme = localStorage.getItem(EDITOR_THEME_KEY);
@@ -29,40 +31,67 @@
       currentTheme = savedTheme;
       setThemeIfEditorReady(savedTheme);
     }
+
+    // Check for line numbers setting in localStorage
+    const showLineNumbersSetting = localStorage.getItem(SHOW_LINE_NUMBERS_KEY);
+    if (showLineNumbersSetting !== null) {
+      showLineNumbers = showLineNumbersSetting === 'true';
+      toggleLineNumbersIfEditorReady(showLineNumbers);
+    }
   });
-  
+
   // This function checks if the editor is ready before setting the theme
   function setThemeIfEditorReady(theme) {
     if (editor) {
       editor.setOption("theme", theme);
     }
   }
-  
+
+  // This function checks if the editor is ready before toggling line numbers
+  function toggleLineNumbersIfEditorReady(show) {
+    if (editor) {
+      editor.setOption("lineNumbers", show);
+    }
+  }
+
   // This function should be called when the editor is initialized
   export function initEditor(editorInstance) {
     editor = editorInstance;
     setThemeIfEditorReady(currentTheme);
+    toggleLineNumbersIfEditorReady(showLineNumbers);
   }
-  
+
   // Function to change theme
   function setTheme(theme) {
     if (!theme) return;
-    
+
     // First load the CSS file for the theme if it's not already loaded
     loadThemeCSS(theme).then(() => {
       // Set the theme in the editor
       if (editor) {
         editor.setOption("theme", theme);
       }
-      
+
       // Update the current theme
       currentTheme = theme;
-      
+
       // Save to localStorage
       localStorage.setItem(EDITOR_THEME_KEY, theme);
     });
   }
-  
+
+  // Function to toggle line numbers
+  function toggleLineNumbers(show) {
+    showLineNumbers = show;
+
+    if (editor) {
+      editor.setOption("lineNumbers", show);
+    }
+
+    // Save to localStorage
+    localStorage.setItem(SHOW_LINE_NUMBERS_KEY, show.toString());
+  }
+
   // Function to load a theme's CSS file from our local theme directory
   function loadThemeCSS(theme) {
     return new Promise((resolve, reject) => {
@@ -91,26 +120,35 @@
       document.head.appendChild(link);
     });
   }
+
+  // Handle theme dropdown change
+  function handleThemeChange(event) {
+    const selectedTheme = event.target.value;
+    setTheme(selectedTheme);
+  }
 </script>
 
-<div class="card bg-base-100 shadow-xl mb-4">
-  <div class="card-body">
-    <h2 class="card-title title-font">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 mr-2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
-      </svg>
-      Editor Theme
-    </h2>
-    
-    <div class="flex flex-wrap gap-2 mt-2">
+<div class="flex items-center gap-3 my-1">
+  <div class="flex items-center">
+    <span class="text-sm font-medium mr-2">Theme:</span>
+    <select
+      class="select select-bordered select-sm w-40"
+      bind:value={currentTheme}
+      on:change={handleThemeChange}
+    >
       {#each themes as theme}
-        <button 
-          class="btn btn-sm {currentTheme === theme.value ? 'btn-primary' : 'btn-outline'}"
-          on:click={() => setTheme(theme.value)}
-        >
-          {theme.name}
-        </button>
+        <option value={theme.value}>{theme.name}</option>
       {/each}
-    </div>
+    </select>
   </div>
+
+  <label class="flex items-center cursor-pointer">
+    <input
+      type="checkbox"
+      class="checkbox checkbox-sm mr-2"
+      bind:checked={showLineNumbers}
+      on:change={() => toggleLineNumbers(showLineNumbers)}
+    />
+    <span class="text-sm font-medium">Show line numbers</span>
+  </label>
 </div>
