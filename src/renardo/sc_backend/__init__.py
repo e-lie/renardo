@@ -13,7 +13,9 @@ from renardo.sc_backend.effect_manager import EffectManager
 
 from renardo.sc_backend.SpecialSynthDefs import SamplePlayer, LoopPlayer
 from renardo.lib.music_resource import ResourceType
-from renardo.sc_backend.SimpleSynthDefs import SCResourceType, SCInstrument, SCResource, SCEffect
+from renardo.sc_backend.SimpleSynthDefs import SCInstrument, SCResource, SCEffect
+# Legacy support - SCResourceType will be deprecated
+from renardo.sc_backend.SimpleSynthDefs import SCResourceType
 from renardo.sc_backend.SimpleEffectSynthDefs import FileEffect, StartSoundEffect, MakeSoundEffect
 from renardo.sc_backend.PygenEffectSynthDefs import In, Out, PygenEffect
 

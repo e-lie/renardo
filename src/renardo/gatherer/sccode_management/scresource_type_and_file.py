@@ -1,13 +1,14 @@
 from enum import Enum
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any
+import importlib
+import sys
 
-from renardo.sc_backend.SimpleSynthDefs import SCInstrument, SCEffect, SCResourceType
-import importlib, sys
+from renardo.lib.music_resource import ResourceType
 
 class SCResourceFile:
     """Represents a single SuperCollider synthdef file."""
-    def __init__(self, path: Path, resource_type: SCResourceType, category: str):
+    def __init__(self, path: Path, resource_type: ResourceType, category: str):
         self.path = path
         self.name = path.stem
         self.extension = path.suffix
@@ -34,6 +35,9 @@ class SCResourceFile:
             if spec is None or spec.loader is None:
                 return None
 
+            # Import here to avoid circular imports
+            from renardo.sc_backend.SimpleSynthDefs import SCInstrument, SCEffect
+
             module = importlib.util.module_from_spec(spec)
             # Inject the necessary classes into the module namespace
             module.SCInstrument = SCInstrument
@@ -43,9 +47,9 @@ class SCResourceFile:
 
             # Look for a resource instance in the module
             resource = None
-            if self.type == SCResourceType.INSTRUMENT and hasattr(module, 'synth'):
+            if self.type == ResourceType.INSTRUMENT and hasattr(module, 'synth'):
                 resource = module.synth
-            elif self.type == SCResourceType.EFFECT and hasattr(module, 'effect'):
+            elif self.type == ResourceType.EFFECT and hasattr(module, 'effect'):
                 resource = module.effect
 
             # Apply default arguments if they don't exist in the resource
@@ -59,4 +63,3 @@ class SCResourceFile:
         except Exception as e:
             print(f"Error importing {self.path}: {e}")
             return None
-
