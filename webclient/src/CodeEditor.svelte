@@ -411,300 +411,101 @@ d2 >> blip([_,_,4,_], dur=.5)
     });
   }</script>
 
-<main>
-  <div class="editor-container">
-    <header class="editor-header">
-      <h1>Renardo Live Coding Editor</h1>
-      <div class="shortcuts-info">
-        <span class="shortcut-item">Alt+Enter: Run current line</span>
-        <span class="shortcut-item">Ctrl+Enter: Run paragraph or selection</span>
-        <span class="shortcut-item">Ctrl+.: Stop all music</span>
-        <span class="shortcut-item">Run Code button: Run all code</span>
+<div class="flex flex-col h-screen w-full overflow-hidden">
+  <!-- Header with controls -->
+  <div class="bg-base-300 p-4">
+    <div class="flex flex-col gap-2">
+      <h2 class="text-xl font-bold">Renardo Live Coding Editor</h2>
+
+      <div class="flex flex-wrap gap-2 text-xs mb-2">
+        <span class="badge badge-sm">Alt+Enter: Run current line</span>
+        <span class="badge badge-sm">Ctrl+Enter: Run paragraph or selection</span>
+        <span class="badge badge-sm">Ctrl+.: Stop all music</span>
+        <span class="badge badge-sm">Run Code button: Run all code</span>
       </div>
-      
-      <!-- Controls -->
-      <div class="editor-controls">
-        <button 
-          class="execute-button" 
-          on:click={() => sendCodeToExecute(editor.getValue(), 'all')} 
+
+      <div class="flex flex-wrap gap-2">
+        <button
+          class="btn btn-sm btn-success"
+          on:click={() => sendCodeToExecute(editor.getValue(), 'all')}
           title="Run all code in editor"
         >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+          </svg>
           Run Code
         </button>
-        <button 
-          class="stop-button" 
+
+        <button
+          class="btn btn-sm btn-warning"
           on:click={stopMusic}
           title="Stop all music playback"
         >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clip-rule="evenodd" />
+          </svg>
           Stop Music
         </button>
-        <button 
-          class="clear-button" 
+
+        <button
+          class="btn btn-sm btn-error"
           on:click={clearConsole}
           title="Clear console output"
         >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
           Clear Console
         </button>
       </div>
-    </header>
-    
-    <div class="editor-workspace">
-      <!-- Code editor -->
-      <div class="code-editor-wrapper" bind:this={editorContainer}>
-        <textarea id="code-editor">{editorContent}</textarea>
+    </div>
+  </div>
+
+  <!-- Main workspace -->
+  <div class="flex flex-col lg:flex-row flex-1 overflow-hidden">
+    <!-- Code editor -->
+    <div class="flex-1 min-h-[300px] lg:h-full border border-base-300" bind:this={editorContainer}>
+      <textarea id="code-editor">{editorContent}</textarea>
+    </div>
+
+    <!-- Console output -->
+    <div class="flex flex-col flex-1 min-h-[200px] lg:h-full mockup-code bg-neutral text-neutral-content overflow-hidden">
+      <div class="flex justify-between items-center bg-neutral-900 p-2 border-b border-neutral-800">
+        <h3 class="font-bold">Console Output</h3>
       </div>
-      
-      <!-- Console output -->
-      <div class="console-wrapper">
-        <div class="console-header">
-          <h3>Console Output</h3>
-        </div>
-        <div class="console-output" bind:this={consoleContainer}>
-          {#if consoleOutput.length === 0}
-            <p class="console-empty">No output yet. Run some code to see results here.</p>
-          {:else}
-            {#each consoleOutput as output}
-              <div class="console-entry console-level-{output.level.toLowerCase()}">
-                <span class="console-timestamp">[{output.timestamp}]</span>
-                <span class="console-message">{output.message}</span>
-              </div>
-            {/each}
-          {/if}
-        </div>
+      <div class="overflow-y-auto flex-1 p-2 font-mono text-sm" bind:this={consoleContainer}>
+        {#if consoleOutput.length === 0}
+          <div class="flex items-center justify-center h-full opacity-50 italic">
+            No output yet. Run some code to see results here.
+          </div>
+        {:else}
+          {#each consoleOutput as output}
+            <div class="mb-1 border-b border-base-300 border-opacity-20 pb-1">
+              <span class="opacity-50 text-xs mr-2">[{output.timestamp}]</span>
+              <span class="{
+                output.level.toLowerCase() === 'info' ? 'text-info' :
+                output.level.toLowerCase() === 'command' ? 'text-accent' :
+                output.level.toLowerCase() === 'error' ? 'text-error' :
+                output.level.toLowerCase() === 'success' ? 'text-success' :
+                output.level.toLowerCase() === 'warn' ? 'text-warning' : ''
+              } whitespace-pre-wrap">{output.message}</span>
+            </div>
+          {/each}
+        {/if}
       </div>
     </div>
-    
-    <!-- Error messages -->
-    {#if $appState.error}
-      <div class="error-message">
-        Error: {$appState.error}
-      </div>
-    {/if}
   </div>
-</main>
+
+  <!-- Error messages -->
+  {#if $appState.error}
+    <div class="alert alert-error rounded-none">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <span>Error: {$appState.error}</span>
+    </div>
+  {/if}
+</div>
 
 <style>
-  main {
-    width: 100%;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    padding: 0;
-    margin: 0;
-    overflow: hidden;
-  }
-  
-  .editor-container {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
-    background-color: #f5f5f5;
-  }
-  
-  .editor-header {
-    background-color: #2c3e50;
-    color: white;
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .editor-header h1 {
-    margin: 0;
-    font-size: 1.5rem;
-    margin-bottom: 0.25rem;
-  }
-  
-  .shortcuts-info {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 0.5rem;
-    font-size: 0.8rem;
-    color: #e0e0e0;
-  }
-  
-  .shortcut-item {
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 0.2rem 0.5rem;
-    border-radius: 3px;
-  }
-  
-  
-  .runtime-status {
-    display: flex;
-  }
-  
-  .runtime-running {
-    background-color: #4caf50;
-  }
-  
-  .runtime-stopped {
-    background-color: #f44336;
-  }
-  
-  .editor-controls {
-    display: flex;
-    gap: 0.5rem;
-  }
-  
-  button {
-    background-color: #3498db;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  
-  button:hover:not(:disabled) {
-    background-color: #2980b9;
-  }
-  
-  button:active:not(:disabled) {
-    transform: translateY(1px);
-  }
-  
-  button:disabled {
-    background-color: #e0e0e0;
-    color: #9e9e9e;
-    cursor: not-allowed;
-  }
-  
-  
-  .execute-button {
-    background-color: #27ae60;
-  }
-  
-  .execute-button:hover:not(:disabled) {
-    background-color: #219653;
-  }
-  
-  .stop-button {
-    background-color: #e67e22;
-  }
-  
-  .stop-button:hover:not(:disabled) {
-    background-color: #d35400;
-  }
-  
-  .clear-button {
-    background-color: #e74c3c;
-  }
-  
-  .clear-button:hover:not(:disabled) {
-    background-color: #c0392b;
-  }
-  
-  .editor-workspace {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    overflow: hidden;
-  }
-  
-  @media (min-width: 992px) {
-    .editor-workspace {
-      flex-direction: row;
-    }
-  }
-  
-  .code-editor-wrapper {
-    flex: 1;
-    height: 100%;
-    min-height: 300px;
-    border: 1px solid #e0e0e0;
-    overflow: hidden;
-  }
-  
-  .console-wrapper {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: 200px;
-    max-height: 100%;
-    border: 1px solid #e0e0e0;
-    background-color: #1e1e1e;
-    color: #f0f0f0;
-  }
-  
-  @media (min-width: 992px) {
-    .code-editor-wrapper, .console-wrapper {
-      max-width: 50%;
-    }
-  }
-  
-  .console-header {
-    background-color: #333;
-    padding: 0.5rem;
-    border-bottom: 1px solid #444;
-  }
-  
-  .console-header h3 {
-    margin: 0;
-    font-size: 1rem;
-  }
-  
-  .console-output {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0.5rem;
-    font-family: monospace;
-    font-size: 0.9rem;
-  }
-  
-  .console-entry {
-    padding: 0.25rem 0;
-    border-bottom: 1px solid #333;
-    white-space: pre-wrap;
-  }
-  
-  .console-entry:last-child {
-    border-bottom: none;
-  }
-  
-  .console-timestamp {
-    color: #888;
-    margin-right: 0.5rem;
-  }
-  
-  .console-level-info {
-    color: #64b5f6;
-  }
-  
-  .console-level-command {
-    color: #80cbc4;
-  }
-  
-  .console-level-error {
-    color: #ef5350;
-  }
-  
-  .console-level-success {
-    color: #81c784;
-  }
-  
-  .console-level-warn {
-    color: #ffb74d;
-  }
-  
-  .console-empty {
-    color: #888;
-    text-align: center;
-    font-style: italic;
-    padding: 1rem;
-  }
-  
-  .error-message {
-    background-color: #ffebee;
-    color: #c62828;
-    padding: 0.75rem;
-    border-top: 1px solid #ffcdd2;
-  }
-  
   /* Make CodeMirror look better */
   :global(.CodeMirror) {
     height: 100% !important;
@@ -713,16 +514,16 @@ d2 >> blip([_,_,4,_], dur=.5)
     font-size: 14px;
     line-height: 1.5;
   }
-  
+
   :global(.CodeMirror-gutters) {
     border-right: 1px solid #ddd;
     background-color: #f7f7f7;
   }
-  
+
   :global(.CodeMirror-linenumber) {
     color: #999;
   }
-  
+
   /* Make sure the textarea is hidden properly */
   #code-editor {
     display: none;
