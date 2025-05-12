@@ -234,16 +234,29 @@ function handleMessage(message) {
     case 'console_output':
       // Add new console output to the array
       appState.update(state => {
+        // Check if this is a duplicate message
+        const lastMessage = state.consoleOutput.length > 0
+          ? state.consoleOutput[state.consoleOutput.length - 1]
+          : null;
+
+        // Skip if this is a duplicate of the last message
+        if (lastMessage &&
+            lastMessage.level === (data.level || 'info') &&
+            lastMessage.message === data.message) {
+          // It's a duplicate, don't add it
+          return state;
+        }
+
         // Create a new console output array with the new output added
         const updatedConsoleOutput = [...state.consoleOutput, {
           // No timestamp needed
           level: data.level || 'info',
           message: data.message
         }];
-        
+
         // Limit console output to the most recent 1000 entries
         const trimmedConsoleOutput = updatedConsoleOutput.slice(-1000);
-        
+
         return {
           ...state,
           consoleOutput: trimmedConsoleOutput
@@ -257,7 +270,22 @@ function handleMessage(message) {
         // Only add the message if there's actual content to show
         if (data.message && data.message.trim()) {
           // Add success message to console output
+          // Check if this is a duplicate message
           appState.update(state => {
+            // Check if the last message is identical to avoid duplicates
+            const lastMessage = state.consoleOutput.length > 0
+              ? state.consoleOutput[state.consoleOutput.length - 1]
+              : null;
+
+            // Skip if this is a duplicate of the last message
+            if (lastMessage &&
+                lastMessage.level === 'success' &&
+                lastMessage.message === data.message) {
+              // It's a duplicate, don't add it
+              return state;
+            }
+
+            // It's not a duplicate, so add it
             const updatedConsoleOutput = [...state.consoleOutput, {
               // No timestamp needed
               level: 'success',
@@ -276,6 +304,19 @@ function handleMessage(message) {
       } else {
         // Add error message to console output (errors always show)
         appState.update(state => {
+          // Check if this is a duplicate message
+          const lastMessage = state.consoleOutput.length > 0
+            ? state.consoleOutput[state.consoleOutput.length - 1]
+            : null;
+
+          // Skip if this is a duplicate of the last message
+          if (lastMessage &&
+              lastMessage.level === 'error' &&
+              lastMessage.message === (data.message || 'Code execution failed')) {
+            // It's a duplicate, don't add it
+            return state;
+          }
+
           const updatedConsoleOutput = [...state.consoleOutput, {
             // No timestamp needed
             level: 'error',
