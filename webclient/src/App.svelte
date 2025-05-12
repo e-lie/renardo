@@ -7,6 +7,8 @@
   import Collections from './Collections.svelte';
   import Configuration from './Configuration.svelte';
   import SuperColliderBackend from './SuperColliderBackend.svelte';
+  import ThemeSelector from './lib/ThemeSelector.svelte';
+  import ThemeButton from './lib/ThemeButton.svelte';
   
   // Add CodeMirror CSS links to the document head
   if (typeof document !== 'undefined') {
@@ -41,16 +43,29 @@
   
   // Router state
   let currentRoute = 'home';
-  
+
+  // Theme state
+  let currentTheme = 'cyberpunk';
+
   // Check if WebSockets are supported
   const webSocketSupported = 'WebSocket' in window;
   
   // Initialize WebSocket connection on mount
   onMount(() => {
+    // Initialize theme from localStorage
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      currentTheme = savedTheme;
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    } else {
+      document.documentElement.setAttribute('data-theme', currentTheme);
+      localStorage.setItem('theme', currentTheme);
+    }
+
     if (webSocketSupported) {
       // Initialize WebSocket connection once for the entire application
       initWebSocket();
-      
+
       // Request status after a short delay
       setTimeout(() => {
         if ($appState.connected) {
@@ -59,24 +74,24 @@
           sendMessage({ type: 'get_renardo_status' });
         }
       }, 500);
-      
+
       // Simple router based on URL hash
       function handleHashChange() {
         const hash = window.location.hash.replace('#', '');
         currentRoute = hash || 'home';
-        
+
         // When changing routes, always request the latest status
         if ($appState.connected) {
           sendMessage({ type: 'get_renardo_status' });
         }
       }
-      
+
       // Initialize route from current hash
       handleHashChange();
-      
+
       // Listen for hash changes
       window.addEventListener('hashchange', handleHashChange);
-      
+
       // Clean up event listeners on component unmount, but keep WebSocket connection
       return () => {
         window.removeEventListener('hashchange', handleHashChange);
@@ -123,6 +138,13 @@
     window.location.hash = `#${route}`;
     currentRoute = route;
   }
+
+  // Set theme
+  function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    currentTheme = theme;
+  }
 </script>
 
 <div class="drawer">
@@ -151,8 +173,11 @@
       </div>
       
       <div class="navbar-end">
+        <!-- Theme Button -->
+        <ThemeButton />
+
         {#if webSocketSupported}
-          <div class="badge {$appState.connected ? 'badge-success' : 'badge-error'} gap-2">
+          <div class="badge {$appState.connected ? 'badge-success' : 'badge-error'} gap-2 ml-2">
             <span class="relative flex h-2 w-2">
               <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 {$appState.connected ? 'bg-success' : 'bg-error'}"></span>
               <span class="relative inline-flex rounded-full h-2 w-2 {$appState.connected ? 'bg-success' : 'bg-error'}"></span>
@@ -160,7 +185,7 @@
             {$appState.connected ? 'Connected' : 'Disconnected'}
           </div>
         {:else}
-          <div class="badge badge-warning gap-2">
+          <div class="badge badge-warning gap-2 ml-2">
             <span class="relative flex h-2 w-2">
               <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-warning"></span>
               <span class="relative inline-flex rounded-full h-2 w-2 bg-warning"></span>
@@ -300,6 +325,9 @@
             </div>
           </div>
 
+          <!-- Theme Selector -->
+          <ThemeSelector />
+
           <!-- Status Card -->
           {#if webSocketSupported}
             <div class="card bg-base-100 shadow-xl mb-8">
@@ -391,6 +419,26 @@
       <li><a href="#collections" class:active={currentRoute === 'collections'}>Collections</a></li>
       <li><a href="#scbackend" class:active={currentRoute === 'scbackend'}>SuperCollider</a></li>
       <li><a href="#config" class:active={currentRoute === 'config'}>Settings</a></li>
+
+      <!-- Divider -->
+      <div class="divider my-2"></div>
+
+      <!-- Mobile Theme Options -->
+      <li class="menu-title title-font">Choose Theme</li>
+      <div class="grid grid-cols-2 gap-2 p-2">
+        <button class="btn btn-sm {currentTheme === 'cyberpunk' ? 'btn-primary' : 'btn-outline'}" on:click={() => setTheme('cyberpunk')}>
+          🦄 Cyberpunk
+        </button>
+        <button class="btn btn-sm {currentTheme === 'dark' ? 'btn-primary' : 'btn-outline'}" on:click={() => setTheme('dark')}>
+          🌙 Dark
+        </button>
+        <button class="btn btn-sm {currentTheme === 'light' ? 'btn-primary' : 'btn-outline'}" on:click={() => setTheme('light')}>
+          ☀️ Light
+        </button>
+        <button class="btn btn-sm {currentTheme === 'cupcake' ? 'btn-primary' : 'btn-outline'}" on:click={() => setTheme('cupcake')}>
+          🧁 Cupcake
+        </button>
+      </div>
     </ul>
   </div>
 </div>

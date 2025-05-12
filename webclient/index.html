@@ -6,6 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="/fonts/fonts.css">
     <title>Renardo ฅ^•ﻌ•^ฅ</title>
+    <script>
+      // Initialize theme from localStorage on page load
+      (function() {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+          document.documentElement.setAttribute('data-theme', savedTheme);
+        } else {
+          document.documentElement.setAttribute('data-theme', 'cyberpunk');
+          localStorage.setItem('theme', 'cyberpunk');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="app"></div>
