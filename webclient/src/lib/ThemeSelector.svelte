@@ -64,36 +64,5 @@
         </div>
       {/each}
     </div>
-
-    <!-- Theme Descriptions -->
-    <div class="mt-8">
-      <div class="collapse collapse-arrow bg-base-200">
-        <input type="checkbox" />
-        <div class="collapse-title text-lg font-medium title-font">
-          About the Themes
-        </div>
-        <div class="collapse-content">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h4 class="font-bold title-font mb-2">Default</h4>
-              <p class="mb-4">A bold, high-contrast theme with vibrant neon colors on dark backgrounds. Inspired by cyberpunk fiction and perfect for creating futuristic music.</p>
-
-              <h4 class="font-bold title-font mb-2">Synthwave</h4>
-              <p class="mb-4">A retro-futuristic theme inspired by 80s electronic music and neon aesthetics. Features deep purples with neon pink accents, perfect for nighttime coding sessions.</p>
-
-              <h4 class="font-bold title-font mb-2">Coffee</h4>
-              <p class="mb-4">A warm, earthy theme with rich browns and tans reminiscent of your favorite coffee shop. Easy on the eyes for extended coding sessions.</p>
-            </div>
-            <div>
-              <h4 class="font-bold title-font mb-2">Pastel</h4>
-              <p class="mb-4">A gentle, soft theme with low-saturation colors that create a calm and soothing environment. Excellent for reducing eye strain.</p>
-
-              <h4 class="font-bold title-font mb-2">Cyberpunk</h4>
-              <p class="mb-4">A bright, retro-futuristic theme with neon greens, blues and pinks on a light background. Sharp edges and grid patterns create a digital aesthetic.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </div>
