@@ -173,14 +173,17 @@
       </p>
 
       <div class="form-control">
-        <textarea
-          class="textarea textarea-bordered font-mono h-32"
-          bind:value={customSclangCode}
-          placeholder="Enter SuperCollider initialization code..."
-          disabled={isScBackendRunning || isLoading}
-        ></textarea>
-        <label class="label">
-          <span class="label-text-alt">Default code: <code class="bg-base-300 p-1 rounded text-xs">Renardo.start; Renardo.midi;</code></span>
+        <label for="sclangCode" class="form-control w-full">
+          <textarea
+            id="sclangCode"
+            class="textarea textarea-bordered font-mono h-32"
+            bind:value={customSclangCode}
+            placeholder="Enter SuperCollider initialization code..."
+            disabled={isScBackendRunning || isLoading}
+          ></textarea>
+          <div class="label">
+            <span class="label-text-alt">Default code: <code class="bg-base-300 p-1 rounded text-xs">Renardo.start; Renardo.midi;</code></span>
+          </div>
         </label>
       </div>
     </div>
