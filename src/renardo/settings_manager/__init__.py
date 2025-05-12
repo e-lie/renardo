@@ -6,4 +6,5 @@ from .foxdot_editor_settings import Colours, conf
 
 from .sc_backend_settings import settings
 from .samples_pack_settings import settings
+from .webserver_settings import settings
 

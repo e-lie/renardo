@@ -32,9 +32,20 @@ def create_webapp():
     if not os.path.isabs(static_folder):
         static_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), static_folder))
         print(f"Converting relative path to absolute: {static_folder}")
-    
+
     webapp = Flask(__name__, static_folder=static_folder)
-    print(f"Flask app initialized with static_folder: {webapp.static_folder}")
+
+    # Set debug mode according to the settings
+    webapp.config['DEBUG'] = DEBUG
+
+    # Limit Flask output in non-debug mode
+    if DEBUG:
+        print(f"Flask app initialized with static_folder: {webapp.static_folder}")
+    else:
+        # In production, only show warnings and errors
+        import logging
+        log = logging.getLogger('werkzeug')
+        log.setLevel(logging.WARNING)
     
     # Store RenardoApp reference on the Flask app
     webapp.config['RENARDO_APP'] = app

@@ -2,9 +2,21 @@
 """
 Gunicorn configuration for Renardo Web Server
 """
+import os
+import renardo.settings_manager
+
+# Import the settings for webserver
+from renardo.settings_manager import settings
+
+# Determine the debug mode
+debug_mode = settings.get("webserver.FLASK_DEBUG", False)
+
+# Get port and host from settings with fallback to environment variables
+port = int(os.environ.get("PORT", settings.get("webserver.PORT", 5000)))
+host = os.environ.get("HOST", settings.get("webserver.HOST", "0.0.0.0"))
 
 # Bind to a socket
-bind = "0.0.0.0:5000"  # Same port as the default Flask app
+bind = f"{host}:{port}"
 
 # Worker configuration
 workers = 1  # Using 1 process as requested
@@ -19,10 +31,10 @@ keepalive = 5  # How long to wait for requests on a Keep-Alive connection
 daemon = False
 pidfile = "gunicorn.pid"
 
-# Logging
-accesslog = "-"  # Log to stdout
-errorlog = "-"   # Log to stderr
-loglevel = "info"
+# Logging based on debug mode
+accesslog = "-" if debug_mode else None  # Only log access in debug mode
+errorlog = "-"  # Always log errors to stderr
+loglevel = "debug" if debug_mode else "warning"
 
 # Process naming
 proc_name = "renardo_gunicorn"
@@ -30,16 +42,20 @@ proc_name = "renardo_gunicorn"
 # Server hooks
 def on_starting(server):
     """Called just before the master process is initialized."""
-    print("Starting Renardo with Gunicorn")
+    if debug_mode:
+        print("Starting Renardo with Gunicorn")
 
 def on_exit(server):
     """Called just before exiting."""
-    print("Shutting down Renardo Gunicorn server")
+    if debug_mode:
+        print("Shutting down Renardo Gunicorn server")
 
 def post_fork(server, worker):
     """Called just after a worker has been forked."""
-    print(f"Worker spawned (pid: {worker.pid})")
+    if debug_mode:
+        print(f"Worker spawned (pid: {worker.pid})")
 
 def post_worker_init(worker):
     """Called just after a worker has initialized the application."""
-    print("Worker initialized")
+    if debug_mode:
+        print("Worker initialized")
