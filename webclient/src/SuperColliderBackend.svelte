@@ -87,352 +87,140 @@
   }
 </script>
 
-<main>
-  <div class="container">
-    <h1>SuperCollider Backend</h1>
-    
-    <p class="description">
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+  <div class="text-center mb-8">
+    <h1 class="text-3xl font-bold mb-2">SuperCollider Backend</h1>
+    <p class="text-base-content/70">
       Manage the SuperCollider backend for sound synthesis. This backend is required for producing sounds in Renardo.
     </p>
-    
-    <!-- Backend status -->
-    <div class="status-section">
-      <div class="status-header">
-        <h2>SuperCollider Backend Status</h2>
-        <div class="status-indicator {isScBackendRunning ? 'status-running' : 'status-stopped'}">
-          {isScBackendRunning ? 'Running' : 'Stopped'}
-        </div>
+  </div>
+
+  <!-- Backend status card -->
+  <div class="card bg-base-100 shadow-xl mb-8">
+    <div class="card-body">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="card-title">SuperCollider Backend Status</h2>
+        {#if isScBackendRunning}
+          <div class="badge badge-success gap-2">
+            <span class="relative flex h-3 w-3">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-success"></span>
+            </span>
+            Running
+          </div>
+        {:else}
+          <div class="badge badge-error gap-2">
+            <span class="relative flex h-3 w-3">
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-error"></span>
+            </span>
+            Stopped
+          </div>
+        {/if}
       </div>
-      
-      <div class="status-actions">
-        <button 
-          class="primary-button" 
-          on:click={startScBackend} 
+
+      <div class="flex flex-wrap gap-2">
+        <button
+          class="btn btn-primary"
+          on:click={startScBackend}
           disabled={isLoading || isScBackendRunning || !$appState.connected}
         >
-          <span class="button-icon">▶️</span> Start SuperCollider Backend
+          {#if isLoading && !isScBackendRunning}
+            <span class="loading loading-spinner loading-xs"></span>
+          {:else}
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+            </svg>
+          {/if}
+          Start SuperCollider Backend
         </button>
-        
-        <button 
-          class="stop-button" 
-          on:click={stopScBackend} 
+
+        <button
+          class="btn btn-error"
+          on:click={stopScBackend}
           disabled={isLoading || !isScBackendRunning || !$appState.connected}
         >
-          <span class="button-icon">⏹️</span> Stop SuperCollider Backend
+          {#if isLoading && isScBackendRunning}
+            <span class="loading loading-spinner loading-xs"></span>
+          {:else}
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clip-rule="evenodd" />
+            </svg>
+          {/if}
+          Stop SuperCollider Backend
         </button>
-        
-        <button 
-          class="refresh-button" 
-          on:click={checkBackendStatus} 
+
+        <button
+          class="btn btn-outline"
+          on:click={checkBackendStatus}
           disabled={isLoading || !$appState.connected}
         >
-          <span class="button-icon">🔄</span> Refresh Status
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+          </svg>
+          Refresh Status
         </button>
       </div>
     </div>
-    
-    <!-- Custom initialization code -->
-    <div class="code-section">
-      <h2>Initialization Code</h2>
-      <p class="description">
+  </div>
+
+  <!-- Custom initialization code card -->
+  <div class="card bg-base-100 shadow-xl mb-8">
+    <div class="card-body">
+      <h2 class="card-title">Initialization Code</h2>
+      <p class="text-base-content/70 mb-4">
         Customize the code that will be executed when starting the SuperCollider backend.
         Default code includes starting Renardo and enabling MIDI support.
       </p>
-      
-      <div class="code-editor">
-        <textarea 
-          bind:value={customSclangCode} 
-          placeholder="Enter SuperCollider initialization code..." 
+
+      <div class="form-control">
+        <textarea
+          class="textarea textarea-bordered font-mono h-32"
+          bind:value={customSclangCode}
+          placeholder="Enter SuperCollider initialization code..."
           disabled={isScBackendRunning || isLoading}
         ></textarea>
-      </div>
-      
-      <div class="code-info">
-        <p>Default code: <code>Renardo.start; Renardo.midi;</code></p>
+        <label class="label">
+          <span class="label-text-alt">Default code: <code class="bg-base-300 p-1 rounded text-xs">Renardo.start; Renardo.midi;</code></span>
+        </label>
       </div>
     </div>
-    
-    <!-- Log output -->
-    <div class="log-section">
-      <h2>SuperCollider Log Output</h2>
-      <div class="log-container">
-        {#if logMessages.length === 0}
-          <p class="empty-log">No log messages yet. Start the SuperCollider backend to see output.</p>
+  </div>
+
+  <!-- Log output card -->
+  <div class="card bg-base-100 shadow-xl mb-8">
+    <div class="card-body">
+      <h2 class="card-title">SuperCollider Log Output</h2>
+
+      <div class="bg-base-300 rounded-lg p-4 h-[300px] overflow-y-auto font-mono text-sm">
+        {#if logMessages.length === 0 || !logMessages.some(msg => msg.message.includes('SC') || msg.message.includes('SuperCollider') || msg.message.includes('sclang'))}
+          <div class="flex justify-center items-center h-full">
+            <p class="opacity-50 italic">No log messages yet. Start the SuperCollider backend to see output.</p>
+          </div>
         {:else}
           {#each logMessages.filter(msg => msg.message.includes('SC') || msg.message.includes('SuperCollider') || msg.message.includes('sclang')) as log}
-            <div class="log-entry log-level-{log.level.toLowerCase()}">
-              <span class="log-timestamp">[{log.timestamp}]</span>
-              <span class="log-level">[{log.level}]</span>
-              <span class="log-message">{log.message}</span>
+            <div class="mb-1 {log.level.toLowerCase() === 'error' ? 'text-error' : log.level.toLowerCase() === 'warn' ? 'text-warning' : log.level.toLowerCase() === 'success' ? 'text-success' : 'text-info'}">
+              <span class="opacity-70 mr-2">[{log.timestamp}]</span>
+              <span class="font-bold mr-2">[{log.level}]</span>
+              <span>{log.message}</span>
             </div>
           {/each}
         {/if}
       </div>
     </div>
-    
-    <!-- Status messages -->
-    {#if successMessage}
-      <div class="success-message" transition:fade={{ duration: 300 }}>
-        <p>{successMessage}</p>
-      </div>
-    {/if}
-    
-    {#if error}
-      <div class="error-message" transition:fade={{ duration: 300 }}>
-        <p>{error}</p>
-      </div>
-    {/if}
   </div>
-</main>
 
-<style>
-  main {
-    width: 100%;
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    padding: 2rem 0;
-  }
-  
-  .container {
-    max-width: 1000px;
-    width: 100%;
-    padding: 2rem;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  h1 {
-    text-align: center;
-    margin-top: 0;
-    color: #2c3e50;
-  }
-  
-  h2 {
-    color: #2c3e50;
-    margin-bottom: 0.5rem;
-  }
-  
-  .description {
-    color: #7f8c8d;
-    margin-bottom: 2rem;
-  }
-  
-  /* Status section */
-  .status-section {
-    margin-bottom: 2rem;
-    padding: 1.25rem;
-    border: 1px solid #e0e0e0;
-    border-radius: 6px;
-    background-color: #fafafa;
-  }
-  
-  .status-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-  
-  .status-header h2 {
-    margin: 0;
-  }
-  
-  .status-indicator {
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 500;
-  }
-  
-  .status-running {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-  }
-  
-  .status-stopped {
-    background-color: #ffebee;
-    color: #c62828;
-  }
-  
-  .status-actions {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-  
-  /* Code section */
-  .code-section {
-    margin-bottom: 2rem;
-    padding: 1.25rem;
-    border: 1px solid #e0e0e0;
-    border-radius: 6px;
-    background-color: #fafafa;
-  }
-  
-  .code-editor {
-    margin-bottom: 1rem;
-  }
-  
-  textarea {
-    width: 100%;
-    min-height: 120px;
-    padding: 0.75rem;
-    font-family: 'Fira Code', Consolas, monospace;
-    font-size: 0.9rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    resize: vertical;
-  }
-  
-  textarea:focus {
-    outline: none;
-    border-color: #3498db;
-    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-  }
-  
-  .code-info {
-    color: #666;
-    font-size: 0.9rem;
-  }
-  
-  .code-info code {
-    background-color: #f0f0f0;
-    padding: 0.2rem 0.4rem;
-    border-radius: 3px;
-    font-size: 0.85rem;
-  }
-  
-  /* Log section */
-  .log-section {
-    margin-bottom: 2rem;
-  }
-  
-  .log-container {
-    height: 300px;
-    overflow-y: auto;
-    padding: 0.75rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background-color: #f8f9fa;
-    font-family: 'Fira Code', Consolas, monospace;
-    font-size: 0.9rem;
-  }
-  
-  .log-entry {
-    margin-bottom: 0.25rem;
-    line-height: 1.5;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-  
-  .log-timestamp {
-    color: #666;
-    margin-right: 0.5rem;
-  }
-  
-  .log-level {
-    font-weight: 500;
-    margin-right: 0.5rem;
-  }
-  
-  .log-level-info {
-    color: #2196f3;
-  }
-  
-  .log-level-warn {
-    color: #ff9800;
-  }
-  
-  .log-level-error {
-    color: #f44336;
-  }
-  
-  .log-level-success {
-    color: #4caf50;
-  }
-  
-  .empty-log {
-    color: #999;
-    text-align: center;
-    padding: 1rem 0;
-  }
-  
-  /* Buttons */
-  button {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 4px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-  
-  .primary-button {
-    background-color: #3498db;
-    color: white;
-  }
-  
-  .primary-button:hover:not(:disabled) {
-    background-color: #2980b9;
-  }
-  
-  .stop-button {
-    background-color: #e74c3c;
-    color: white;
-  }
-  
-  .stop-button:hover:not(:disabled) {
-    background-color: #c0392b;
-  }
-  
-  .refresh-button {
-    background-color: #95a5a6;
-    color: white;
-  }
-  
-  .refresh-button:hover:not(:disabled) {
-    background-color: #7f8c8d;
-  }
-  
-  .button-icon {
-    margin-right: 0.5rem;
-  }
-  
-  /* Status messages */
-  .success-message {
-    background-color: #d4edda;
-    color: #155724;
-    padding: 1rem;
-    border-radius: 4px;
-    margin-top: 1rem;
-  }
-  
-  .error-message {
-    background-color: #f8d7da;
-    color: #721c24;
-    padding: 1rem;
-    border-radius: 4px;
-    margin-top: 1rem;
-  }
-  
-  /* Responsive layout */
-  @media (max-width: 768px) {
-    .status-actions {
-      flex-direction: column;
-    }
-    
-    button {
-      width: 100%;
-    }
-  }
-</style>
+  <!-- Status messages -->
+  {#if successMessage}
+    <div class="alert alert-success mb-4" transition:fade={{ duration: 300 }}>
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <span>{successMessage}</span>
+    </div>
+  {/if}
+
+  {#if error}
+    <div class="alert alert-error mb-4" transition:fade={{ duration: 300 }}>
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <span>{error}</span>
+    </div>
+  {/if}
+</div>
