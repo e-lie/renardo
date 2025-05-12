@@ -37,11 +37,16 @@ class SCResourceFile:
 
             # Import here to avoid circular imports
             from renardo.sc_backend.SimpleSynthDefs import SCInstrument, SCEffect
+            from renardo.lib.music_resource import MusicResource, Instrument, Effect
 
             module = importlib.util.module_from_spec(spec)
             # Inject the necessary classes into the module namespace
             module.SCInstrument = SCInstrument
             module.SCEffect = SCEffect
+            # Also provide the base classes in case they're needed
+            module.MusicResource = MusicResource
+            module.Instrument = Instrument
+            module.Effect = Effect
             sys.modules[module_name] = module
             spec.loader.exec_module(module)
 
