@@ -2,7 +2,7 @@ import tempfile
 from enum import Enum
 from pathlib import Path
 from typing import Dict, Any
-from renardo.sc_backend.InstrumentProxy import InstrumentProxy
+from renardo.lib.InstrumentProxy import InstrumentProxy
 from renardo.settings_manager import settings
 
 class SCResourceType(Enum):
