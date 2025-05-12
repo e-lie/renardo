@@ -10,7 +10,9 @@ from typing import Dict, Any
 
 # Import the new classes
 from renardo.lib.music_resource import MusicResource, Instrument, Effect, ResourceType
-from renardo.sc_backend.SimpleSynthDefs import SCInstrument, SCEffect, SCResourceType
+from renardo.sc_backend.SimpleSynthDefs import SCInstrument, SCEffect
+# For backward compatibility
+from renardo.lib.music_resource import ResourceType as SCResourceType
 
 # For backward compatibility - SCResource is now just an alias for MusicResource
 SCResource = MusicResource
