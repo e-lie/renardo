@@ -46,11 +46,14 @@
     </h2>
     <p class="text-base-content/70 mb-4">Customize your Renardo experience with different visual themes.</p>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" role="radiogroup" aria-label="Select a theme">
       {#each themes as theme}
-        <div
-          class="card overflow-hidden cursor-pointer border-4 transition-all {currentTheme === theme.value ? 'border-primary' : 'border-transparent hover:border-base-300'}"
+        <button
+          class="card overflow-hidden cursor-pointer border-4 transition-all w-full text-left {currentTheme === theme.value ? 'border-primary' : 'border-transparent hover:border-base-300'}"
           on:click={() => setTheme(theme.value)}
+          on:keydown={(e) => e.key === 'Enter' && setTheme(theme.value)}
+          role="radio"
+          aria-checked={currentTheme === theme.value}
         >
           <div class="card-body p-4 text-center" data-theme={theme.value} style="min-height: 120px;">
             <h3 class="card-title justify-center mb-2 title-font">{theme.name}</h3>
@@ -63,7 +66,7 @@
               <span class="badge badge-neutral">Neutral</span>
             </div>
           </div>
-        </div>
+        </button>
       {/each}
     </div>
   </div>
