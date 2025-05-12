@@ -1,0 +1,75 @@
+/* Custom Synthwave Theme for Renardo */
+:root[data-theme="synthwave"] {
+  /* Base colors */
+  --color-base-100: oklch(15% 0.09 281.288);
+  --color-base-200: oklch(20% 0.09 281.288);
+  --color-base-300: oklch(25% 0.09 281.288);
+  --color-base-content: oklch(78% 0.115 274.713);
+  
+  /* Primary colors */
+  --color-primary: oklch(71% 0.202 349.761);
+  --color-primary-content: oklch(28% 0.109 3.907);
+  
+  /* Secondary colors */
+  --color-secondary: oklch(82% 0.111 230.318);
+  --color-secondary-content: oklch(29% 0.066 243.157);
+  
+  /* Accent colors */
+  --color-accent: oklch(75% 0.183 55.934);
+  --color-accent-content: oklch(26% 0.079 36.259);
+  
+  /* Neutral colors */
+  --color-neutral: oklch(45% 0.24 277.023);
+  --color-neutral-content: oklch(87% 0.065 274.039);
+  
+  /* State colors */
+  --color-info: oklch(74% 0.16 232.661);
+  --color-info-content: oklch(29% 0.066 243.157);
+  --color-success: oklch(77% 0.152 181.912);
+  --color-success-content: oklch(27% 0.046 192.524);
+  --color-warning: oklch(90% 0.182 98.111);
+  --color-warning-content: oklch(42% 0.095 57.708);
+  --color-error: oklch(73.7% 0.121 32.639);
+  --color-error-content: oklch(23.501% 0.096 290.329);
+  
+  /* UI elements */
+  --radius-selector: 1rem;
+  --radius-field: 0.5rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+  
+  /* Theme-specific additional customizations */
+  --synthwave-glow: 0 0 10px var(--color-primary);
+  color-scheme: dark;
+}
+
+/* Additional Synthwave styling */
+[data-theme="synthwave"] .btn-primary,
+[data-theme="synthwave"] .badge-primary {
+  text-shadow: 0 0 5px var(--color-primary);
+  box-shadow: var(--synthwave-glow);
+}
+
+[data-theme="synthwave"] .card {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Synthwave grid background effect */
+[data-theme="synthwave"] .drawer-content {
+  background-image: 
+    radial-gradient(
+      rgba(var(--color-primary), 0.15) 1px, 
+      transparent 1px
+    );
+  background-size: 30px 30px;
+}
+
+/* Text glow for headings */
+[data-theme="synthwave"] .title-font {
+  text-shadow: 0 0 5px var(--color-primary);
+}
