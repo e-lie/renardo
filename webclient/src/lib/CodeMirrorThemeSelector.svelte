@@ -19,7 +19,7 @@
   const VIM_MODE_KEY = 'editor-vim-mode';
   
   // Default settings
-  let currentTheme = "monokai";
+  let currentTheme = "dracula";
   let showLineNumbers = true;
   let vimModeEnabled = false;
   
