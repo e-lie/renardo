@@ -3,10 +3,10 @@
 
   // Available themes - these should match the themes in your tailwind.config.js
   const themes = [
-    { name: "Cyberpunk", value: "cyberpunk", icon: "🦄" },
-    { name: "Dark", value: "dark", icon: "🌙" },
-    { name: "Light", value: "light", icon: "☀️" },
-    { name: "Cupcake", value: "cupcake", icon: "🧁" }
+    { name: "Synthwave", value: "synthwave", icon: "🎸" },
+    { name: "Coffee", value: "coffee", icon: "☕" },
+    { name: "Pastel", value: "pastel", icon: "🎨" },
+    { name: "Cyberpunk", value: "cyberpunk", icon: "🦄" }
   ];
 
   // Current theme
