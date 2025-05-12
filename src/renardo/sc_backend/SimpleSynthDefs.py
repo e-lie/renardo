@@ -6,9 +6,6 @@ from renardo.lib.InstrumentProxy import InstrumentProxy
 from renardo.lib.music_resource import Instrument, Effect, ResourceType
 from renardo.settings_manager import settings
 
-# For backward compatibility
-from renardo.lib.music_resource import ResourceType as SCResourceType
-
 class SCEffect(Effect):
     """Represents a SuperCollider effect processor."""
 
