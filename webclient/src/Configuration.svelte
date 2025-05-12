@@ -405,10 +405,11 @@
                         />
                       {:else if schema.type === 'array'}
                         <div class="w-full">
-                          <label class="label pt-0">
-                            <span class="label-text-alt">Enter values separated by commas</span>
-                          </label>
-                          <textarea
+                          <label for={key} class="form-control w-full">
+                            <div class="label pt-0">
+                              <span class="label-text-alt">Enter values separated by commas</span>
+                            </div>
+                            <textarea
                             id={key}
                             class="textarea textarea-bordered w-full"
                             value={Array.isArray(value) ? value.join(', ') : ''}
