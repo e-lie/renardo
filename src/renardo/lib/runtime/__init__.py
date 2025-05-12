@@ -101,11 +101,12 @@ from renardo.lib.Player import (
     Pattern,
     PlayerKey, PlayerKeyException,
     Repeatable, Root,
-    SamplePlayer, Scale, InstrumentProxy,
+    SamplePlayer, Scale,
     copy,
     get_first_item, get_freq_and_midi, inf,
     rest,
 )
+from renardo.lib.InstrumentProxy import InstrumentProxy
 
 from renardo.lib.TimeVar import (
     ChildPvar, ChildTimeVar, PATTERN_METHODS, Pvar, PvarGenerator, PvarGeneratorEx,
