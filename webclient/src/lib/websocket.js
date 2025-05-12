@@ -236,7 +236,7 @@ function handleMessage(message) {
       appState.update(state => {
         // Create a new console output array with the new output added
         const updatedConsoleOutput = [...state.consoleOutput, {
-          timestamp: data.timestamp || new Date().toLocaleTimeString(),
+          // No timestamp needed
           level: data.level || 'info',
           message: data.message
         }];
@@ -254,33 +254,36 @@ function handleMessage(message) {
     case 'code_execution_result':
       // Handle code execution result
       if (data.success) {
-        // Add success message to console output
-        appState.update(state => {
-          const updatedConsoleOutput = [...state.consoleOutput, {
-            timestamp: new Date().toLocaleTimeString(),
-            level: 'success',
-            message: data.message || 'Code executed successfully'
-          }];
-          
-          const trimmedConsoleOutput = updatedConsoleOutput.slice(-1000);
-          
-          return {
-            ...state,
-            consoleOutput: trimmedConsoleOutput,
-            error: null
-          };
-        });
+        // Only add the message if there's actual content to show
+        if (data.message && data.message.trim()) {
+          // Add success message to console output
+          appState.update(state => {
+            const updatedConsoleOutput = [...state.consoleOutput, {
+              // No timestamp needed
+              level: 'success',
+              message: data.message
+            }];
+
+            const trimmedConsoleOutput = updatedConsoleOutput.slice(-1000);
+
+            return {
+              ...state,
+              consoleOutput: trimmedConsoleOutput,
+              error: null
+            };
+          });
+        }
       } else {
-        // Add error message to console output
+        // Add error message to console output (errors always show)
         appState.update(state => {
           const updatedConsoleOutput = [...state.consoleOutput, {
-            timestamp: new Date().toLocaleTimeString(),
+            // No timestamp needed
             level: 'error',
             message: data.message || 'Code execution failed'
           }];
-          
+
           const trimmedConsoleOutput = updatedConsoleOutput.slice(-1000);
-          
+
           return {
             ...state,
             consoleOutput: trimmedConsoleOutput,
