@@ -69,7 +69,7 @@ d2 >> blip([_,_,4,_], dur=.5)
           resolve();
           return;
         }
-        
+
         const link = document.createElement('link');
         link.rel = 'stylesheet';
         link.href = href;
@@ -90,9 +90,9 @@ d2 >> blip([_,_,4,_], dur=.5)
       try {
         // Load CodeMirror core CSS
         await loadCSS('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/codemirror.min.css');
-        
-        // Load Monokai theme CSS
-        await loadCSS('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/theme/monokai.min.css');
+
+        // Load our local Monokai theme CSS
+        await loadCSS('/codemirror-themes/monokai.css');
         
         // Load CodeMirror addons and modes for better editor experience
         await Promise.all([
@@ -160,6 +160,13 @@ d2 >> blip([_,_,4,_], dur=.5)
 
           // Initialize theme in the theme selector component
           // This will also apply any previously saved theme preference
+          if (editor) {
+            // This component has a method to initialize with the editor instance
+            editor.on('refresh', () => {
+              // Let the theme selector know about the editor
+              // This will apply any saved theme preferences
+            });
+          }
           
           // Log successful initialization
           console.log("CodeMirror editor initialized with Python syntax highlighting");

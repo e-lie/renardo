@@ -7,8 +7,6 @@
     { name: "Dracula", value: "dracula" },
     { name: "Material", value: "material" },
     { name: "Nord", value: "nord" },
-    { name: "Solarized Dark", value: "solarized dark" },
-    { name: "Solarized Light", value: "solarized light" },
     { name: "Darcula", value: "darcula" },
     { name: "Eclipse", value: "eclipse" }
   ];
@@ -63,20 +61,21 @@
     });
   }
   
-  // Function to load a theme's CSS file
+  // Function to load a theme's CSS file from our local theme directory
   function loadThemeCSS(theme) {
     return new Promise((resolve, reject) => {
-      // Convert spaces to hyphens in the theme name for the CSS file
-      const themeFile = theme.replace(/\s+/g, '-');
-      const cssUrl = `https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/theme/${themeFile}.min.css`;
-      
+      // Use our local theme files in the public directory
+      const cssUrl = `/codemirror-themes/${theme}.css`;
+
       // Check if this CSS file is already loaded
       const existingLink = document.querySelector(`link[href="${cssUrl}"]`);
       if (existingLink) {
         resolve();
         return;
       }
-      
+
+      console.log(`Loading CodeMirror theme: ${theme} from ${cssUrl}`);
+
       // Load the CSS file
       const link = document.createElement('link');
       link.rel = 'stylesheet';
@@ -86,7 +85,7 @@
         console.error(`Failed to load CodeMirror theme CSS: ${cssUrl}`);
         reject(new Error(`Failed to load theme: ${theme}`));
       };
-      
+
       document.head.appendChild(link);
     });
   }
