@@ -267,36 +267,46 @@
   });
 </script>
 
-<div class="min-h-screen container mx-auto p-4">
-  <div class="text-center py-4">
-    <h2 class="text-3xl font-bold">Additional Collections</h2>
-    <p class="text-base-content/70 mb-4">
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+  <div class="text-center mb-8">
+    <h1 class="text-3xl font-bold mb-2">Additional Collections</h1>
+    <p class="text-base-content/70">
       Download additional sample packs and instruments from the Renardo collections server.
     </p>
-
-    {#if collectionsData}
-      <div class="max-w-lg mx-auto">
-        <div class="alert alert-info mb-6">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-          <span>Collection Server: <code class="badge badge-neutral font-mono">{collectionsData.collections_server}</code></span>
-        </div>
-      </div>
-    {/if}
-
-    <button
-      class="btn btn-primary mb-8"
-      on:click={refreshCollections}
-      disabled={isLoading}
-    >
-      {#if isLoading}
-        <span class="loading loading-spinner loading-xs"></span>
-      {/if}
-      {isLoading ? 'Loading...' : 'Refresh Collections'}
-    </button>
   </div>
 
+  <!-- Server Information Card -->
+  {#if collectionsData}
+    <div class="card bg-base-100 shadow-xl mb-8">
+      <div class="card-body">
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div class="flex items-center gap-2">
+            <div>
+              <h2 class="card-title">Collection Server</h2>
+              <div class="badge badge-neutral font-mono">{collectionsData.collections_server}</div>
+            </div>
+          </div>
+
+          <div>
+            <button
+              class="btn btn-primary"
+              on:click={refreshCollections}
+              disabled={isLoading}
+            >
+              {#if isLoading}
+                <span class="loading loading-spinner loading-xs"></span>
+              {/if}
+              {isLoading ? 'Loading...' : 'Refresh Collections'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  {/if}
+
+  <!-- Error messages -->
   {#if error}
-    <div class="alert alert-error max-w-xl mx-auto mb-8">
+    <div class="alert alert-error mb-8">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
       <div>
         <div class="font-medium">Error loading collections</div>
@@ -312,147 +322,155 @@
     </div>
   {:else if collectionsData}
     <!-- Sample Packs Section -->
-    <div class="mb-12">
-      <div class="divider divider-primary text-primary font-bold">
-        <h3 class="text-xl">Sample Packs</h3>
-      </div>
+    <div class="card bg-base-100 shadow-xl mb-8">
+      <div class="card-body p-0">
+        <div class="bg-base p-4">
+          <h2 class="card-title text-primary">Sample Packs</h2>
+        </div>
 
-      {#if collectionsData.samples && collectionsData.samples.length > 0}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {#each collectionsData.samples as sample}
-            <div class="card bg-base-100 shadow-xl {sample.installed ? 'border-l-4 border-success' : ''}">
-              <div class="card-body">
-                <div class="flex justify-between items-center">
-                  <h4 class="card-title">{sample.name}</h4>
-                  {#if sample.is_default}
-                    <div class="badge badge-primary">Default</div>
-                  {/if}
-                </div>
-
-                <p class="text-base-content/70">{sample.description || 'No description available'}</p>
-
-                <div class="flex flex-wrap gap-2 my-2">
-                  <div class="badge badge-outline badge-sm">By {sample.author || 'Unknown'}</div>
-                  <div class="badge badge-outline badge-sm">v{sample.version || '1.0'}</div>
-                  <div class="badge badge-outline badge-sm">{formatFileSize(sample.size)}</div>
-                </div>
-
-                {#if sample.tags && sample.tags.length > 0}
-                  <div class="flex flex-wrap gap-1 mt-1">
-                    {#each sample.tags as tag}
-                      <div class="badge badge-ghost badge-sm">{tag}</div>
-                    {/each}
-                  </div>
-                {/if}
-
-                <div class="card-actions justify-end mt-4">
-                  {#if sample.installed}
-                    <div class="badge badge-success gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Installed
+        <div class="p-4">
+          {#if collectionsData.samples && collectionsData.samples.length > 0}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {#each collectionsData.samples as sample}
+                <div class="card bg-base-200 {sample.installed ? 'border-l-4 border-success' : ''}">
+                  <div class="card-body">
+                    <div class="flex justify-between items-center">
+                      <h4 class="card-title text-lg">{sample.name}</h4>
+                      {#if sample.is_default}
+                        <div class="badge badge-primary">Default</div>
+                      {/if}
                     </div>
-                  {:else if downloadsInProgress.has(`samples-${sample.name}`)}
-                    <button class="btn btn-success btn-sm" disabled>
-                      <span class="loading loading-spinner loading-xs"></span>
-                      Downloading...
-                    </button>
-                  {:else}
-                    <button
-                      class="btn btn-success btn-sm"
-                      on:click={() => downloadCollection('samples', sample.name)}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                      </svg>
-                      Download
-                    </button>
-                  {/if}
+
+                    <p class="text-base-content/70 text-sm">{sample.description || 'No description available'}</p>
+
+                    <div class="flex flex-wrap gap-2 my-2">
+                      <div class="badge badge-outline badge-sm">By {sample.author || 'Unknown'}</div>
+                      <div class="badge badge-outline badge-sm">v{sample.version || '1.0'}</div>
+                      <div class="badge badge-outline badge-sm">{formatFileSize(sample.size)}</div>
+                    </div>
+
+                    {#if sample.tags && sample.tags.length > 0}
+                      <div class="flex flex-wrap gap-1 mt-1">
+                        {#each sample.tags as tag}
+                          <div class="badge badge-ghost badge-sm">{tag}</div>
+                        {/each}
+                      </div>
+                    {/if}
+
+                    <div class="card-actions justify-end mt-4">
+                      {#if sample.installed}
+                        <div class="badge badge-success gap-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Installed
+                        </div>
+                      {:else if downloadsInProgress.has(`samples-${sample.name}`)}
+                        <button class="btn btn-primary btn-sm" disabled>
+                          <span class="loading loading-spinner loading-xs"></span>
+                          Downloading...
+                        </button>
+                      {:else}
+                        <button
+                          class="btn btn-primary btn-sm"
+                          on:click={() => downloadCollection('samples', sample.name)}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                          </svg>
+                          Download
+                        </button>
+                      {/if}
+                    </div>
+                  </div>
                 </div>
+              {/each}
+            </div>
+          {:else}
+            <div class="card bg-base-200 my-4">
+              <div class="card-body items-center text-center">
+                <p class="text-base-content/50 italic">No sample packs available.</p>
               </div>
             </div>
-          {/each}
+          {/if}
         </div>
-      {:else}
-        <div class="card bg-base-200 my-8">
-          <div class="card-body items-center text-center">
-            <p class="text-base-content/50 italic">No sample packs available.</p>
-          </div>
-        </div>
-      {/if}
+      </div>
     </div>
 
     <!-- Instrument Packs Section -->
-    <div class="mb-12">
-      <div class="divider divider-accent text-accent font-bold">
-        <h3 class="text-xl">Instrument Packs</h3>
-      </div>
+    <div class="card bg-base-100 shadow-xl mb-8">
+      <div class="card-body p-0">
+        <div class="bg-base p-4">
+          <h2 class="card-title text-accent">Instrument Packs</h2>
+        </div>
 
-      {#if collectionsData.sccode && collectionsData.sccode.length > 0}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {#each collectionsData.sccode as sccode}
-            <div class="card bg-base-100 shadow-xl {sccode.installed ? 'border-l-4 border-success' : ''}">
-              <div class="card-body">
-                <div class="flex justify-between items-center">
-                  <h4 class="card-title">{sccode.name}</h4>
-                  {#if sccode.is_default}
-                    <div class="badge badge-accent">Default</div>
-                  {/if}
-                </div>
-
-                <p class="text-base-content/70">{sccode.description || 'No description available'}</p>
-
-                <div class="flex flex-wrap gap-2 my-2">
-                  <div class="badge badge-outline badge-sm">By {sccode.author || 'Unknown'}</div>
-                  <div class="badge badge-outline badge-sm">v{sccode.version || '1.0'}</div>
-                  <div class="badge badge-outline badge-sm">{formatFileSize(sccode.size)}</div>
-                </div>
-
-                {#if sccode.tags && sccode.tags.length > 0}
-                  <div class="flex flex-wrap gap-1 mt-1">
-                    {#each sccode.tags as tag}
-                      <div class="badge badge-ghost badge-sm">{tag}</div>
-                    {/each}
-                  </div>
-                {/if}
-
-                <div class="card-actions justify-end mt-4">
-                  {#if sccode.installed}
-                    <div class="badge badge-success gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Installed
+        <div class="p-4">
+          {#if collectionsData.sccode && collectionsData.sccode.length > 0}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {#each collectionsData.sccode as sccode}
+                <div class="card bg-base-200 {sccode.installed ? 'border-l-4 border-success' : ''}">
+                  <div class="card-body">
+                    <div class="flex justify-between items-center">
+                      <h4 class="card-title text-lg">{sccode.name}</h4>
+                      {#if sccode.is_default}
+                        <div class="badge badge-accent">Default</div>
+                      {/if}
                     </div>
-                  {:else if downloadsInProgress.has(`sccode-${sccode.name}`)}
-                    <button class="btn btn-accent btn-sm" disabled>
-                      <span class="loading loading-spinner loading-xs"></span>
-                      Downloading...
-                    </button>
-                  {:else}
-                    <button
-                      class="btn btn-accent btn-sm"
-                      on:click={() => downloadCollection('sccode', sccode.name)}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                      </svg>
-                      Download
-                    </button>
-                  {/if}
+
+                    <p class="text-base-content/70 text-sm">{sccode.description || 'No description available'}</p>
+
+                    <div class="flex flex-wrap gap-2 my-2">
+                      <div class="badge badge-outline badge-sm">By {sccode.author || 'Unknown'}</div>
+                      <div class="badge badge-outline badge-sm">v{sccode.version || '1.0'}</div>
+                      <div class="badge badge-outline badge-sm">{formatFileSize(sccode.size)}</div>
+                    </div>
+
+                    {#if sccode.tags && sccode.tags.length > 0}
+                      <div class="flex flex-wrap gap-1 mt-1">
+                        {#each sccode.tags as tag}
+                          <div class="badge badge-ghost badge-sm">{tag}</div>
+                        {/each}
+                      </div>
+                    {/if}
+
+                    <div class="card-actions justify-end mt-4">
+                      {#if sccode.installed}
+                        <div class="badge badge-success gap-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Installed
+                        </div>
+                      {:else if downloadsInProgress.has(`sccode-${sccode.name}`)}
+                        <button class="btn btn-accent btn-sm" disabled>
+                          <span class="loading loading-spinner loading-xs"></span>
+                          Downloading...
+                        </button>
+                      {:else}
+                        <button
+                          class="btn btn-accent btn-sm"
+                          on:click={() => downloadCollection('sccode', sccode.name)}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                          </svg>
+                          Download
+                        </button>
+                      {/if}
+                    </div>
+                  </div>
                 </div>
+              {/each}
+            </div>
+          {:else}
+            <div class="card bg-base-200 my-4">
+              <div class="card-body items-center text-center">
+                <p class="text-base-content/50 italic">No instrument packs available.</p>
               </div>
             </div>
-          {/each}
+          {/if}
         </div>
-      {:else}
-        <div class="card bg-base-200 my-8">
-          <div class="card-body items-center text-center">
-            <p class="text-base-content/50 italic">No instrument packs available.</p>
-          </div>
-        </div>
-      {/if}
+      </div>
     </div>
   {/if}
 

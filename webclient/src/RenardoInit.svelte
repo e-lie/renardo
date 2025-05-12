@@ -97,21 +97,6 @@
             <div class="stat-desc">Components initialized and ready to use</div>
           </div>
         </div>
-
-        <div class="w-full md:w-2/3">
-          <progress
-            class="progress progress-primary w-full h-6"
-            value={[scFilesInitialized, sclangCodeInitialized, samplesInitialized, instrumentsInitialized].filter(Boolean).length}
-            max="4"
-          ></progress>
-
-          <div class="grid grid-cols-4 text-xs text-center mt-1">
-            <div class={scFilesInitialized ? "text-success" : "text-base-content/50"}>SC Classes</div>
-            <div class={sclangCodeInitialized ? "text-success" : "text-base-content/50"}>SC Lang</div>
-            <div class={samplesInitialized ? "text-success" : "text-base-content/50"}>Samples</div>
-            <div class={instrumentsInitialized ? "text-success" : "text-base-content/50"}>Instruments</div>
-          </div>
-        </div>
       </div>
 
       <!-- Success message when all components are initialized -->
