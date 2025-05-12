@@ -267,574 +267,245 @@
   });
 </script>
 
-<main>
-  <div class="collections-container">
-    <header>
-      <h1>Additional Collections</h1>
-      <p>
-        Download additional sample packs and instruments from the Renardo collections server.
-      </p>
-      
-      {#if collectionsData}
-        <div class="server-info">
-          <p>Collection Server: <code>{collectionsData.collections_server}</code></p>
+<div class="min-h-screen container mx-auto p-4">
+  <div class="text-center py-4">
+    <h2 class="text-3xl font-bold">Additional Collections</h2>
+    <p class="text-base-content/70 mb-4">
+      Download additional sample packs and instruments from the Renardo collections server.
+    </p>
+
+    {#if collectionsData}
+      <div class="max-w-lg mx-auto">
+        <div class="alert alert-info mb-6">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span>Collection Server: <code class="badge badge-neutral font-mono">{collectionsData.collections_server}</code></span>
         </div>
-      {/if}
-      
-      <div class="collections-actions">
-        <button 
-          class="refresh-button" 
-          on:click={refreshCollections} 
-          disabled={isLoading}
-        >
-          {isLoading ? 'Loading...' : 'Refresh Collections'}
-        </button>
-      </div>
-    </header>
-    
-    {#if error}
-      <div class="error-message">
-        <p>Error loading collections: {error}</p>
-        <p>Please check your internet connection and try again.</p>
       </div>
     {/if}
-    
-    {#if isLoading}
-      <div class="loading">
-        <p>Loading collections data...</p>
+
+    <button
+      class="btn btn-primary mb-8"
+      on:click={refreshCollections}
+      disabled={isLoading}
+    >
+      {#if isLoading}
+        <span class="loading loading-spinner loading-xs"></span>
+      {/if}
+      {isLoading ? 'Loading...' : 'Refresh Collections'}
+    </button>
+  </div>
+
+  {#if error}
+    <div class="alert alert-error max-w-xl mx-auto mb-8">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <div>
+        <div class="font-medium">Error loading collections</div>
+        <div class="text-sm">{error}</div>
+        <div class="text-sm">Please check your internet connection and try again.</div>
       </div>
-    {:else if collectionsData}
-      <div class="collections-section">
-        <h2>Sample Packs</h2>
-        
-        {#if collectionsData.samples && collectionsData.samples.length > 0}
-          <div class="collections-grid">
-            {#each collectionsData.samples as sample}
-              <div class="collection-card {sample.installed ? 'installed' : ''}">
-                <div class="collection-header">
-                  <h3>{sample.name}</h3>
+    </div>
+  {/if}
+
+  {#if isLoading}
+    <div class="flex justify-center py-12">
+      <span class="loading loading-dots loading-lg text-primary"></span>
+    </div>
+  {:else if collectionsData}
+    <!-- Sample Packs Section -->
+    <div class="mb-12">
+      <div class="divider divider-primary text-primary font-bold">
+        <h3 class="text-xl">Sample Packs</h3>
+      </div>
+
+      {#if collectionsData.samples && collectionsData.samples.length > 0}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {#each collectionsData.samples as sample}
+            <div class="card bg-base-100 shadow-xl {sample.installed ? 'border-l-4 border-success' : ''}">
+              <div class="card-body">
+                <div class="flex justify-between items-center">
+                  <h4 class="card-title">{sample.name}</h4>
                   {#if sample.is_default}
-                    <span class="default-badge">Default</span>
+                    <div class="badge badge-primary">Default</div>
                   {/if}
                 </div>
-                
-                <div class="collection-info">
-                  <p class="description">{sample.description || 'No description available'}</p>
-                  <p class="meta">
-                    <span class="author">By {sample.author || 'Unknown'}</span>
-                    <span class="version">v{sample.version || '1.0'}</span>
-                    <span class="size">{formatFileSize(sample.size)}</span>
-                  </p>
-                  {#if sample.tags && sample.tags.length > 0}
-                    <div class="tags">
-                      {#each sample.tags as tag}
-                        <span class="tag">{tag}</span>
-                      {/each}
-                    </div>
-                  {/if}
+
+                <p class="text-base-content/70">{sample.description || 'No description available'}</p>
+
+                <div class="flex flex-wrap gap-2 my-2">
+                  <div class="badge badge-outline badge-sm">By {sample.author || 'Unknown'}</div>
+                  <div class="badge badge-outline badge-sm">v{sample.version || '1.0'}</div>
+                  <div class="badge badge-outline badge-sm">{formatFileSize(sample.size)}</div>
                 </div>
-                
-                <div class="collection-actions">
+
+                {#if sample.tags && sample.tags.length > 0}
+                  <div class="flex flex-wrap gap-1 mt-1">
+                    {#each sample.tags as tag}
+                      <div class="badge badge-ghost badge-sm">{tag}</div>
+                    {/each}
+                  </div>
+                {/if}
+
+                <div class="card-actions justify-end mt-4">
                   {#if sample.installed}
-                    <span class="status-installed">Installed</span>
+                    <div class="badge badge-success gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Installed
+                    </div>
                   {:else if downloadsInProgress.has(`samples-${sample.name}`)}
-                    <button class="download-button" disabled>Downloading...</button>
+                    <button class="btn btn-success btn-sm" disabled>
+                      <span class="loading loading-spinner loading-xs"></span>
+                      Downloading...
+                    </button>
                   {:else}
-                    <button 
-                      class="download-button" 
+                    <button
+                      class="btn btn-success btn-sm"
                       on:click={() => downloadCollection('samples', sample.name)}
                     >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                      </svg>
                       Download
                     </button>
                   {/if}
                 </div>
               </div>
-            {/each}
+            </div>
+          {/each}
+        </div>
+      {:else}
+        <div class="card bg-base-200 my-8">
+          <div class="card-body items-center text-center">
+            <p class="text-base-content/50 italic">No sample packs available.</p>
           </div>
-        {:else}
-          <p class="no-collections">No sample packs available.</p>
-        {/if}
+        </div>
+      {/if}
+    </div>
+
+    <!-- Instrument Packs Section -->
+    <div class="mb-12">
+      <div class="divider divider-accent text-accent font-bold">
+        <h3 class="text-xl">Instrument Packs</h3>
       </div>
-      
-      <div class="collections-section">
-        <h2>Instrument Packs</h2>
-        
-        {#if collectionsData.sccode && collectionsData.sccode.length > 0}
-          <div class="collections-grid">
-            {#each collectionsData.sccode as sccode}
-              <div class="collection-card {sccode.installed ? 'installed' : ''}">
-                <div class="collection-header">
-                  <h3>{sccode.name}</h3>
+
+      {#if collectionsData.sccode && collectionsData.sccode.length > 0}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {#each collectionsData.sccode as sccode}
+            <div class="card bg-base-100 shadow-xl {sccode.installed ? 'border-l-4 border-success' : ''}">
+              <div class="card-body">
+                <div class="flex justify-between items-center">
+                  <h4 class="card-title">{sccode.name}</h4>
                   {#if sccode.is_default}
-                    <span class="default-badge">Default</span>
+                    <div class="badge badge-accent">Default</div>
                   {/if}
                 </div>
-                
-                <div class="collection-info">
-                  <p class="description">{sccode.description || 'No description available'}</p>
-                  <p class="meta">
-                    <span class="author">By {sccode.author || 'Unknown'}</span>
-                    <span class="version">v{sccode.version || '1.0'}</span>
-                    <span class="size">{formatFileSize(sccode.size)}</span>
-                  </p>
-                  {#if sccode.tags && sccode.tags.length > 0}
-                    <div class="tags">
-                      {#each sccode.tags as tag}
-                        <span class="tag">{tag}</span>
-                      {/each}
-                    </div>
-                  {/if}
+
+                <p class="text-base-content/70">{sccode.description || 'No description available'}</p>
+
+                <div class="flex flex-wrap gap-2 my-2">
+                  <div class="badge badge-outline badge-sm">By {sccode.author || 'Unknown'}</div>
+                  <div class="badge badge-outline badge-sm">v{sccode.version || '1.0'}</div>
+                  <div class="badge badge-outline badge-sm">{formatFileSize(sccode.size)}</div>
                 </div>
-                
-                <div class="collection-actions">
+
+                {#if sccode.tags && sccode.tags.length > 0}
+                  <div class="flex flex-wrap gap-1 mt-1">
+                    {#each sccode.tags as tag}
+                      <div class="badge badge-ghost badge-sm">{tag}</div>
+                    {/each}
+                  </div>
+                {/if}
+
+                <div class="card-actions justify-end mt-4">
                   {#if sccode.installed}
-                    <span class="status-installed">Installed</span>
+                    <div class="badge badge-success gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Installed
+                    </div>
                   {:else if downloadsInProgress.has(`sccode-${sccode.name}`)}
-                    <button class="download-button" disabled>Downloading...</button>
+                    <button class="btn btn-accent btn-sm" disabled>
+                      <span class="loading loading-spinner loading-xs"></span>
+                      Downloading...
+                    </button>
                   {:else}
-                    <button 
-                      class="download-button" 
+                    <button
+                      class="btn btn-accent btn-sm"
                       on:click={() => downloadCollection('sccode', sccode.name)}
                     >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                      </svg>
                       Download
                     </button>
                   {/if}
                 </div>
               </div>
-            {/each}
-          </div>
-        {:else}
-          <p class="no-collections">No instrument packs available.</p>
-        {/if}
-      </div>
-    {/if}
-  </div>
-  
-  <!-- Download progress logger -->
-  {#if showLogger}
-    <div class="logger-overlay">
-      <div class="logger-panel">
-        <div class="logger-header">
-          <h3>Download Progress</h3>
-          <div class="ws-status">
-            {#if wsConnected}
-              <span class="ws-status-connected">Connected</span>
-            {:else}
-              <span class="ws-status-disconnected">Disconnected</span>
-            {/if}
-          </div>
-          <button class="close-button" on:click={closeLogger}>×</button>
+            </div>
+          {/each}
         </div>
-        <div id="log-container" class="logger-content">
-          {#if !wsConnected}
-            <div class="log-message log-error">
-              <span class="log-timestamp">{new Date().toLocaleTimeString()}</span>
-              <span class="log-text">WebSocket disconnected. Waiting for reconnection...</span>
+      {:else}
+        <div class="card bg-base-200 my-8">
+          <div class="card-body items-center text-center">
+            <p class="text-base-content/50 italic">No instrument packs available.</p>
+          </div>
+        </div>
+      {/if}
+    </div>
+  {/if}
+
+  <!-- Download progress logger modal -->
+  {#if showLogger}
+    <div class="modal modal-open modal-bottom sm:modal-middle">
+      <div class="modal-box w-11/12 max-w-4xl">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="font-bold text-lg">Download Progress</h3>
+
+          {#if wsConnected}
+            <div class="badge badge-success gap-2">
+              <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-success"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
+              </span>
+              Connected
+            </div>
+          {:else}
+            <div class="badge badge-error gap-2">
+              <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-error"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-error"></span>
+              </span>
+              Disconnected
             </div>
           {/if}
-          
+        </div>
+
+        <div id="log-container" class="bg-base-300 p-4 rounded-lg font-mono text-sm h-[300px] overflow-y-auto mb-4">
+          {#if !wsConnected}
+            <div class="text-error mb-2 flex gap-2">
+              <span class="text-xs opacity-70">{new Date().toLocaleTimeString()}</span>
+              <span>WebSocket disconnected. Waiting for reconnection...</span>
+            </div>
+          {/if}
+
           {#if logMessages.length === 0}
-            <p class="log-empty">Waiting for download to start...</p>
+            <p class="text-center opacity-50 italic my-8">Waiting for download to start...</p>
           {:else}
             {#each logMessages as log}
-              <div class="log-message log-{log.level.toLowerCase()}">
-                <span class="log-timestamp">{log.timestamp}</span>
-                <span class="log-text">{log.message}</span>
+              <div class="mb-1 {log.level.toLowerCase() === 'error' ? 'text-error' : log.level.toLowerCase() === 'warn' ? 'text-warning' : log.level.toLowerCase() === 'success' ? 'text-success' : ''}">
+                <span class="text-xs opacity-70 inline-block w-20">{log.timestamp}</span>
+                <span>{log.message}</span>
               </div>
             {/each}
           {/if}
+        </div>
+
+        <div class="modal-action">
+          <button class="btn" on:click={closeLogger}>Close</button>
         </div>
       </div>
     </div>
   {/if}
-</main>
-
-<style>
-  main {
-    width: 100%;
-    height: 100%;
-    padding: 1rem;
-    overflow-y: auto;
-  }
-  
-  .collections-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 1rem;
-  }
-  
-  header {
-    margin-bottom: 2rem;
-  }
-  
-  h1 {
-    margin-bottom: 0.5rem;
-    color: #333;
-  }
-  
-  header p {
-    margin-bottom: 1rem;
-    color: #666;
-  }
-  
-  .server-info {
-    background-color: #f5f5f5;
-    padding: 0.5rem;
-    border-radius: 4px;
-    margin-bottom: 1rem;
-  }
-  
-  .server-info code {
-    font-family: monospace;
-    background-color: #e5e5e5;
-    padding: 0.2rem 0.4rem;
-    border-radius: 2px;
-  }
-  
-  .collections-actions {
-    margin-bottom: 1rem;
-  }
-  
-  .refresh-button {
-    background-color: #2c3e50;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .refresh-button:hover:not(:disabled) {
-    background-color: #34495e;
-  }
-  
-  .refresh-button:disabled {
-    background-color: #95a5a6;
-    cursor: not-allowed;
-  }
-  
-  .error-message {
-    background-color: #f8d7da;
-    color: #721c24;
-    padding: 1rem;
-    border-radius: 4px;
-    margin-bottom: 1rem;
-  }
-  
-  .loading {
-    text-align: center;
-    padding: 2rem;
-    color: #666;
-  }
-  
-  .collections-section {
-    margin-bottom: 2rem;
-  }
-  
-  h2 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    color: #2c3e50;
-    border-bottom: 1px solid #ddd;
-    padding-bottom: 0.5rem;
-  }
-  
-  .collections-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1rem;
-  }
-  
-  .collection-card {
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 1rem;
-    background-color: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .collection-card.installed {
-    border-color: #2ecc71;
-    background-color: #f8fff8;
-  }
-  
-  .collection-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-  }
-  
-  .collection-header h3 {
-    margin: 0;
-    font-size: 1.2rem;
-    color: #2c3e50;
-  }
-  
-  .default-badge {
-    background-color: #3498db;
-    color: white;
-    font-size: 0.7rem;
-    padding: 0.2rem 0.4rem;
-    border-radius: 4px;
-  }
-  
-  .collection-info {
-    flex-grow: 1;
-    margin-bottom: 1rem;
-  }
-  
-  .description {
-    color: #666;
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
-  }
-  
-  .meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    font-size: 0.8rem;
-    color: #777;
-    margin-bottom: 0.5rem;
-  }
-  
-  .author, .version, .size {
-    display: inline-block;
-    background-color: #f5f5f5;
-    padding: 0.2rem 0.4rem;
-    border-radius: 4px;
-  }
-  
-  .tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-  }
-  
-  .tag {
-    background-color: #e5e5e5;
-    font-size: 0.7rem;
-    padding: 0.1rem 0.3rem;
-    border-radius: 4px;
-    color: #666;
-  }
-  
-  .collection-actions {
-    margin-top: auto;
-    text-align: right;
-  }
-  
-  .download-button {
-    background-color: #27ae60;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .download-button:hover:not(:disabled) {
-    background-color: #2ecc71;
-  }
-  
-  .download-button:disabled {
-    background-color: #95a5a6;
-    cursor: not-allowed;
-  }
-  
-  .status-installed {
-    color: #27ae60;
-    font-weight: bold;
-  }
-  
-  .no-collections {
-    color: #777;
-    font-style: italic;
-    padding: 1rem;
-    text-align: center;
-    border: 1px dashed #ddd;
-    border-radius: 4px;
-  }
-  
-  /* Logger Styles */
-  .logger-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-  }
-  
-  .logger-panel {
-    width: 80%;
-    max-width: 800px;
-    height: 70%;
-    max-height: 600px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-  
-  .logger-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.8rem 1rem;
-    border-bottom: 1px solid #ddd;
-    background-color: #f5f5f5;
-  }
-  
-  .logger-header h3 {
-    margin: 0;
-    color: #2c3e50;
-    flex: 1;
-  }
-  
-  .ws-status {
-    display: flex;
-    align-items: center;
-    margin-right: 1rem;
-    font-size: 0.8rem;
-  }
-  
-  .ws-status-connected {
-    color: #27ae60;
-    background-color: #eafaf1;
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
-    display: inline-flex;
-    align-items: center;
-  }
-  
-  .ws-status-connected::before {
-    content: "";
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    background-color: #27ae60;
-    border-radius: 50%;
-    margin-right: 5px;
-  }
-  
-  .ws-status-disconnected {
-    color: #e74c3c;
-    background-color: #fdedec;
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
-    display: inline-flex;
-    align-items: center;
-  }
-  
-  .ws-status-disconnected::before {
-    content: "";
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    background-color: #e74c3c;
-    border-radius: 50%;
-    margin-right: 5px;
-  }
-  
-  .close-button {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: #666;
-    cursor: pointer;
-    padding: 0;
-    line-height: 1;
-  }
-  
-  .close-button:hover {
-    color: #e74c3c;
-  }
-  
-  .logger-content {
-    flex-grow: 1;
-    padding: 1rem;
-    overflow-y: auto;
-    font-family: monospace;
-    font-size: 0.9rem;
-    background-color: #f8f8f8;
-  }
-  
-  .log-empty {
-    color: #888;
-    font-style: italic;
-    text-align: center;
-    margin: 2rem 0;
-  }
-  
-  .log-message {
-    margin-bottom: 0.3rem;
-    padding: 0.3rem 0.5rem;
-    border-radius: 4px;
-    background-color: #fff;
-    display: flex;
-    align-items: flex-start;
-  }
-  
-  .log-info {
-    border-left: 3px solid #3498db;
-  }
-  
-  .log-warn {
-    border-left: 3px solid #f39c12;
-    background-color: #fffbf0;
-  }
-  
-  .log-error {
-    border-left: 3px solid #e74c3c;
-    background-color: #fff0f0;
-  }
-  
-  .log-success {
-    border-left: 3px solid #2ecc71;
-    background-color: #f0fff0;
-  }
-  
-  /* Highlight animation for important messages */
-  .log-highlight {
-    animation: log-highlight-pulse 2s ease-in-out;
-  }
-  
-  @keyframes log-highlight-pulse {
-    0% { transform: scale(1); }
-    10% { transform: scale(1.02); box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    20% { transform: scale(1); }
-  }
-  
-  .log-timestamp {
-    font-size: 0.8rem;
-    color: #777;
-    margin-right: 0.5rem;
-    min-width: 70px;
-  }
-  
-  .log-text {
-    flex-grow: 1;
-    word-break: break-word;  /* Allow long words to break */
-  }
-  
-  @media (max-width: 768px) {
-    .collections-grid {
-      grid-template-columns: 1fr;
-    }
-    
-    .logger-panel {
-      width: 95%;
-      height: 80%;
-    }
-  }
-</style>
+</div>
