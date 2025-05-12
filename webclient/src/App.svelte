@@ -45,7 +45,7 @@
   let currentRoute = 'home';
 
   // Theme state
-  let currentTheme = 'cyberpunk';
+  let currentTheme = 'default';
 
   // Check if WebSockets are supported
   const webSocketSupported = 'WebSocket' in window;
@@ -426,6 +426,9 @@
       <!-- Mobile Theme Options -->
       <li class="menu-title title-font">Choose Theme</li>
       <div class="grid grid-cols-2 gap-2 p-2">
+        <button class="btn btn-sm {currentTheme === 'default' ? 'btn-primary' : 'btn-outline'}" on:click={() => setTheme('default')}>
+          🦄 Default
+        </button>
         <button class="btn btn-sm {currentTheme === 'synthwave' ? 'btn-primary' : 'btn-outline'}" on:click={() => setTheme('synthwave')}>
           🎸 Synthwave
         </button>
@@ -437,9 +440,6 @@
         </button>
         <button class="btn btn-sm {currentTheme === 'cyberpunk' ? 'btn-primary' : 'btn-outline'}" on:click={() => setTheme('cyberpunk')}>
           🤖 Cyberpunk
-        </button>
-        <button class="btn btn-sm {currentTheme === 'default' ? 'btn-primary' : 'btn-outline'}" on:click={() => setTheme('default')}>
-          🦄 Default
         </button>
       </div>
     </ul>
