@@ -68,11 +68,11 @@ class RenardoApp:
                 )
         # Handle different run modes
         elif self.args.pipe:
-            from renardo.lib.runtime import handle_stdin, FoxDotCode
+            from renardo.runtime import handle_stdin, FoxDotCode
             # Just take commands from the CLI
             handle_stdin()
         elif self.args.foxdot_editor:
-            from renardo.lib.runtime import FoxDotCode
+            from renardo.runtime import FoxDotCode
             # Open the GUI
             from renardo.foxdot_editor.Editor import workspace
             FoxDot = workspace(FoxDotCode).run()

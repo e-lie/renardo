@@ -2,7 +2,7 @@ from typing import Dict, List
 from renardo.reaper_backend.ReaperIntegration import init_reapy_project, ReaperInstrumentFactory
 
 #from .Presets import presets
-from renardo.lib.runtime import Clock, Scale
+from renardo.runtime import Clock, Scale
 from functools import partial
 
 Clock.midi_nudge = 0
