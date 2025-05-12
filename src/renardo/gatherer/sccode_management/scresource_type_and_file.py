@@ -36,7 +36,7 @@ class SCResourceFile:
                 return None
 
             # Import here to avoid circular imports
-            from renardo.sc_backend.SimpleSynthDefs import SCInstrument, SCEffect
+            from renardo.sc_backend.sc_music_resource import SCInstrument, SCEffect
             from renardo.lib.music_resource import MusicResource, Instrument, Effect
 
             module = importlib.util.module_from_spec(spec)
