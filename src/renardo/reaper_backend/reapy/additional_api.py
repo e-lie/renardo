@@ -8,8 +8,8 @@ internally and should not be directly used by end-users.
 import ctypes as ct
 import re
 
-import reapy
-from reapy.reascript_api import _RPR
+import renardo.reaper_backend.reapy as reapy
+from renardo.reaper_backend.reapy.reascript_api import _RPR
 
 
 MAX_STRBUF = 4 * 1024 * 1024

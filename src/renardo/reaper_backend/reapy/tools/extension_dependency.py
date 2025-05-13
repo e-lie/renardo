@@ -1,6 +1,6 @@
 import functools
 
-from reapy.errors import ExtensionNotFoundError
+from renardo.reaper_backend.reapy.errors import ExtensionNotFoundError
 
 
 def depends_on_extension(extension, url):

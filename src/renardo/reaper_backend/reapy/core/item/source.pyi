@@ -1,7 +1,7 @@
 import typing as ty
 
-from reapy import reascript_api as RPR
-from reapy.core import ReapyObject
+from renardo.reaper_backend.reapy import reascript_api as RPR
+from renardo.reaper_backend.reapy.core import ReapyObject
 
 
 class Source(ReapyObject):

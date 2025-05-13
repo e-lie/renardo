@@ -1,4 +1,4 @@
-from reapy import *
+from renardo.reaper_backend.reapy import configure_reaper
 
 
 # Source of that procedure : https://forum.cockos.com/showthread.php?t=256152 : LUA "add fx chain" is inserting to first slot instead of last

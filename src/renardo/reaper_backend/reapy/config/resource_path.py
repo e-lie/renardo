@@ -3,7 +3,7 @@
 import os
 import sys
 
-import reapy
+import renardo.reaper_backend.reapy as reapy
 from .shared_library import is_windows, is_apple
 
 if not reapy.is_inside_reaper():

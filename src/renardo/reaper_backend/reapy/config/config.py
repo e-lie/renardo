@@ -9,9 +9,9 @@ import shutil
 import string
 import warnings
 
-import reapy
-from reapy.errors import OutsideREAPERError
-from reapy.reascripts import activate_reapy_server
+import renardo.reaper_backend.reapy
+from renardo.reaper_backend.reapy.errors import OutsideREAPERError
+from renardo.reaper_backend.reapy.reascripts import activate_reapy_server
 from .resource_path import get_resource_path
 from .shared_library import get_python_shared_library
 

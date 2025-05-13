@@ -2,9 +2,9 @@ import contextlib
 import functools
 import typing as ty
 
-import reapy
+import renardo.reaper_backend.reapy as reapy
 import reapy.config
-from reapy.errors import DisabledDistAPIError, DisabledDistAPIWarning
+from renardo.reaper_backend.reapy.errors import DisabledDistAPIError, DisabledDistAPIWarning
 if not reapy.is_inside_reaper():
     try:
         from .network import Client, WebInterface

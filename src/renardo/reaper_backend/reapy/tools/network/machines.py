@@ -2,9 +2,9 @@ import importlib
 import sys
 import warnings
 
-import reapy
-import reapy.config
-from reapy import errors
+import renardo.reaper_backend.reapy as reapy
+import renardo.reaper_backend.reapy.config
+from renardo.reaper_backend.reapy import errors
 from . import client, web_interface
 
 

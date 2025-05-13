@@ -1,10 +1,10 @@
-from reapy.errors import DisabledDistAPIError, UndefinedExtStateError
-from reapy.tools import json
+from renardo.reaper_backend.reapy.errors import DisabledDistAPIError, UndefinedExtStateError
+from renardo.reaper_backend.reapy.tools import json
 from urllib import request
 from urllib.error import URLError
 from socket import timeout
 
-import reapy
+import renardo.reaper_backend.reapy
 
 
 class WebInterface:

@@ -2,9 +2,9 @@ import contextlib
 import functools
 import importlib
 
-import reapy
-import reapy.config
-from reapy.errors import DisabledDistAPIError, DisabledDistAPIWarning
+import renardo.reaper_backend.reapy as reapy
+import renardo.reaper_backend.reapy.config
+from renardo.reaper_backend.reapy.errors import DisabledDistAPIError, DisabledDistAPIWarning
 from .network import machines
 
 # if not reapy.is_inside_reaper():

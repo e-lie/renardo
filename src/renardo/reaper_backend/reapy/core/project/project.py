@@ -4,10 +4,10 @@ import pickle
 import codecs
 import os
 
-import reapy
-from reapy import reascript_api as RPR
-from reapy.core import ReapyObject
-from reapy.errors import RedoError, UndoError
+import renardo.reaper_backend.reapy as reapy
+from renardo.reaper_backend.reapy import reascript_api as RPR
+from renardo.reaper_backend.reapy.core import ReapyObject
+from renardo.reaper_backend.reapy.errors import RedoError, UndoError
 
 
 class Project(ReapyObject):

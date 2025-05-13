@@ -1,7 +1,7 @@
 """Define Server class."""
 
-import reapy
-from reapy.tools import json
+import renardo.reaper_backend.reapy
+from renardo.reaper_backend.reapy.tools import json
 from .socket import Socket
 
 import socket

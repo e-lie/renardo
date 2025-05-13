@@ -5,9 +5,9 @@ import typing as ty
 from builtins import BaseException
 from types import TracebackType
 
-import reapy
+import renardo.reaper_backend.reapy as reapy
 import reapy.config
-from reapy import errors
+from renardo.reaper_backend.reapy import errors
 from . import client, web_interface
 
 

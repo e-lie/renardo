@@ -1,6 +1,6 @@
-import reapy
-from reapy.errors import OutsideREAPERError
-from reapy.reascripts import activate_reapy_server
+import renardo.reaper_backend.reapy as reapy
+from renardo.reaper_backend.reapy.errors import OutsideREAPERError
+from renardo.reaper_backend.reapy.reascripts import activate_reapy_server
 
 from configparser import ConfigParser
 from collections import OrderedDict

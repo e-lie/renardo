@@ -7,12 +7,12 @@ automatically be run when importing ``reapy`` from outside, if it is
 enabled.
 """
 
-import reapy
+import renardo.reaper_backend.reapy as reapy
 
 import os
 import site
 
-from reapy.tools.network import Server
+from renardo.reaper_backend.reapy.tools.network import Server
 
 SERVER: Server
 
