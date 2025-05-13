@@ -1,7 +1,7 @@
 import builtins
 import functools
 
-import reapy
+import renardo.reaper_backend.reapy as reapy
 
 
 @reapy.inside_reaper()

@@ -1,5 +1,5 @@
-import reapy
-import reapy.reascript_api as RPR
+import renardo.reaper_backend.reapy as reapy
+import renardo.reaper_backend.reapy.reascript_api as RPR
 
 
 def get_active_editor():

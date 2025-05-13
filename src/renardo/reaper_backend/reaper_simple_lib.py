@@ -1,5 +1,5 @@
 
-from reapy import Project, RPR
+from renardo.reaper_backend.reapy import Project, RPR
 
 
 def calculate_track_idx(track_num):
