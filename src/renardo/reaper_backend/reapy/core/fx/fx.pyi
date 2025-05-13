@@ -1,9 +1,9 @@
 """Define FX and FXParam classes."""
 
-import reapy
-from reapy import reascript_api as RPR
-from reapy.core import ReapyObject, ReapyObjectList
-from reapy.errors import DistError, UndefinedFXParamError
+import renardo.reaper_backend.reapy as reapy
+from renardo.reaper_backend.reapy import reascript_api as RPR
+from renardo.reaper_backend.reapy.core import ReapyObject, ReapyObjectList
+from renardo.reaper_backend.reapy.errors import DistError, UndefinedFXParamError
 import typing as ty
 
 

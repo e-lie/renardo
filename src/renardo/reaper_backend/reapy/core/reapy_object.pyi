@@ -1,4 +1,4 @@
-import reapy
+import renardo.reaper_backend.reapy as reapy
 import typing as ty
 from typing_extensions import TypedDict
 

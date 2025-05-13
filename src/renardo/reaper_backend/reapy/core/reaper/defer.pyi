@@ -1,6 +1,6 @@
 """Define reapy.defer and reapy.at_exit."""
 
-import reapy
+import renardo.reaper_backend.reapy as reapy
 
 import os
 import sys

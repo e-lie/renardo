@@ -16,9 +16,9 @@ try:
 except ImportError:
     reapy_path = pathlib.Path(sys.path[0]).resolve().parent.parent
     sys.path.append(str(reapy_path))
-    import reapy
+    import renardo.reaper_backend.reapy
 
-from reapy.tools.network import Server
+from renardo.reaper_backend.reapy.tools.network import Server
 
 
 def run_main_loop():
