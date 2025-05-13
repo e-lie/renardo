@@ -1,4 +1,4 @@
-from renardo import settings
+from renardo.settings_manager import settings
 from renardo.gatherer.sccode_management.scresource_library import SCResourceLibrary, ensure_sccode_directories
 from renardo.gatherer.sccode_management.scresource_type_and_file import SCResourceType, SCResourceFile
 from pathlib import Path
