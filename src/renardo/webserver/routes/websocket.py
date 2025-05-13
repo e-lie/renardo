@@ -129,7 +129,7 @@ def register_websocket_routes(sock):
                             # Import FoxDotCode if not already imported
                             if 'execute' not in globals():
                                 # Run the import directly
-                                exec('from renardo.lib import *', globals())
+                                exec('from renardo.runtime import *', globals())
 
                             # Capture standard output
                             import io
