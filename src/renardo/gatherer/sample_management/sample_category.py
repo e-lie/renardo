@@ -51,7 +51,8 @@ class SampleCategory:
         return f"<SampleCategory {self.category}>"
 
     def __str__(self) -> str:
-        result = f"Category {self.category} :\b{str([f"{sample.name}{sample.extension}" for sample in self._samples.values()])}"
+        list_of_samples = str([f"{sample.name}{sample.extension}" for sample in self._samples.values()])
+        result = f"Category {self.category} :\b{list_of_samples}"
         # remove string limiters and backspace from resulting string
         result = result.replace("\"", "").replace("\'", "").replace('\x08', '')
         return result
