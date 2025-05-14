@@ -135,6 +135,11 @@ export function initWebSocket() {
     }
     
     console.log(`Attempting to reconnect (attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}) in ${delay}ms...`);
+    
+    // Notify the app about reconnection attempt if the function is available
+    if (window.renardoApp && typeof window.renardoApp.updateReconnectAttempts === 'function') {
+      window.renardoApp.updateReconnectAttempts();
+    }
     reconnectTimer = setTimeout(initWebSocket, delay);
   });
   
