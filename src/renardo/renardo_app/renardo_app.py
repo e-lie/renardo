@@ -50,6 +50,19 @@ class RenardoApp:
             
             # Update the state
             self.state_manager.update_renardo_init_status("superColliderClasses", True)
+            
+        # Handle Reapy integration if requested
+        if self.args.reapy:
+            try:
+                import renardo_reapy
+                renardo_reapy.configure_reaper()
+                print("Reaper integration enabled successfully")
+                # Update the state
+                self.state_manager.update_renardo_init_status("reaperIntegration", True)
+            except ImportError:
+                print("Error: renardo_reapy module not found. Please install it to use Reaper integration.")
+            except Exception as e:
+                print(f"Error configuring Reaper integration: {e}")
 
         # Create and launch web server if not using pipe or foxdot editor
         if not (self.args.pipe or self.args.foxdot_editor):
@@ -207,5 +220,6 @@ class RenardoApp:
         parser.add_argument('-c', '--create-scfiles', action='store_true', help="Create Renardo class file and startup file in SuperCollider user conf dir.")
         parser.add_argument('-N', '--no-tui', action='store_true', help="Don't start Renardo TUI")
         parser.add_argument('-g', '--use-gunicorn', action='store_true', help="Use Gunicorn to serve the web application (1 process, 10 threads)")
+        parser.add_argument('-r', '--reapy', action='store_true', help="Enable Reaper integration with Reapy")
 
         return parser.parse_args()
