@@ -12,6 +12,9 @@ from renardo.gatherer import is_default_sccode_pack_initialized
 from renardo.gatherer import is_special_sccode_initialized, download_special_sccode_pack
 from renardo.sc_backend import write_sc_renardo_files_in_user_config, is_renardo_sc_classes_initialized
 
+# Import REAPER routes
+from renardo.webserver.routes.reaper_routes import start_reaper_initialization_task, confirm_reaper_action_task
+
 
 # Simple logger class for gatherer functions
 class WebsocketLogger:
@@ -187,6 +190,20 @@ def register_websocket_routes(sock):
                     elif message_type == "get_sc_backend_status":
                         # Check and send current SC backend status
                         send_sc_backend_status(ws)
+                    
+                    elif message_type == "start_reaper_initialization":
+                        # Start REAPER initialization process in a separate thread
+                        threading.Thread(
+                            target=start_reaper_initialization_task,
+                            args=(ws,)
+                        ).start()
+                    
+                    elif message_type == "confirm_reaper_action":
+                        # Handle user confirmation for REAPER initialization steps
+                        threading.Thread(
+                            target=confirm_reaper_action_task,
+                            args=(ws,)
+                        ).start()
                     
                     elif message_type == "ping":
                         # Respond to ping with pong to keep connection alive
