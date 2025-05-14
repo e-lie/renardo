@@ -9,7 +9,7 @@ import time
 from pathlib import Path
 
 from renardo.webserver import state_helper
-from renardo.webserver.routes.websocket import WebsocketLogger
+from renardo.webserver.routes.ws_utils import WebsocketLogger
 
 
 # REAPER integration state
