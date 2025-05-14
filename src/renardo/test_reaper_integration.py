@@ -77,10 +77,10 @@ def launch_reaper_with_pythonhome():
 
 def initialize_reapy():
     """
-    Performs a full Reapy initialization procedure:
+    Performs a full Reapy initialization procedure with user confirmations:
     
     1. Starts REAPER with the correct PYTHONHOME
-    2. Waits for REAPER to fully load (5 seconds)
+    2. Waits for user confirmation when REAPER is fully loaded
     3. Executes basic Reapy configuration twice to ensure initialization
     4. Restarts REAPER to ensure changes take effect
     5. Creates a new project with a test track
@@ -90,80 +90,97 @@ def initialize_reapy():
     """
     try:
         # Step 1: Launch REAPER with correct PYTHONHOME
-        print("Step 1: Launching REAPER with correct PYTHONHOME...")
+        print("\n===== Step 1: Launching REAPER with correct PYTHONHOME =====")
         if not launch_reaper_with_pythonhome():
             print("Failed to launch REAPER")
             return False
         
-        # Step 2: Wait for REAPER to fully load
-        print("Step 2: Waiting for REAPER to initialize (5 seconds)...")
-        time.sleep(5)
+        # Step 2: Wait for user confirmation that REAPER is loaded
+        input("\nREAPER has been launched. Please wait until REAPER is fully loaded, then press Enter to continue...")
         
-        # Step 3: Execute Reapy configuration twice
-        print("Step 3: Configuring Reapy (first attempt)...")
+        # Step 3: Execute Reapy configuration
+        print("\n===== Step 2: Configuring Reapy =====")
         try:
             import reapy
-            # reapy.configure_reaper()
-            # print("First Reapy configuration successful")
-            #
-            # print("Configuring Reapy (second attempt)...")
-            # reapy.configure_reaper()
-            # print("Second Reapy configuration successful")
+            
+            response = input("Would you like to run reapy.configure_reaper()? (y/n): ")
+            if response.lower() in ['y', 'yes']:
+                print("Configuring Reapy (first attempt)...")
+                reapy.configure_reaper()
+                print("First Reapy configuration successful")
+                
+                response = input("Would you like to run reapy.configure_reaper() a second time? (y/n): ")
+                if response.lower() in ['y', 'yes']:
+                    print("Configuring Reapy (second attempt)...")
+                    reapy.configure_reaper()
+                    print("Second Reapy configuration successful")
         except Exception as e:
             print(f"Error during Reapy configuration: {e}")
             return False
         
         # Step 4: Close and restart REAPER
-        print("Step 4: Closing REAPER...")
-        try:
-            reapy.Project.close_all_projects()
-            time.sleep(1)  # Give REAPER time to close projects
-            current_project = reapy.Project()
-            current_project.close()
-        except Exception as e:
-            print(f"Warning: Error closing projects: {e}")
+        print("\n===== Step 3: Restarting REAPER =====")
+        response = input("Would you like to close and restart REAPER? (y/n): ")
+        if response.lower() in ['y', 'yes']:
+            print("Closing REAPER...")
+            try:
+                reapy.Project.close_all_projects()
+                current_project = reapy.Project()
+                current_project.close()
+            except Exception as e:
+                print(f"Warning: Error closing projects: {e}")
+                print("Please close REAPER manually.")
+                input("Press Enter once REAPER is closed...")
+            
+            print("Restarting REAPER...")
+            if not launch_reaper_with_pythonhome():
+                print("Failed to restart REAPER")
+                return False
+            
+            input("REAPER has been restarted. Please wait until REAPER is fully loaded, then press Enter to continue...")
         
-        print("Restarting REAPER...")
-        if not launch_reaper_with_pythonhome():
-            print("Failed to restart REAPER")
-            return False
+        # Step 5: Test Reapy functionality
+        print("\n===== Step 4: Testing Reapy functionality =====")
+        response = input("Would you like to test Reapy by creating a new project and track? (y/n): ")
+        if response.lower() in ['y', 'yes']:
+            try:
+                import reapy
+                
+                # Create a new project
+                print("Creating a new project...")
+                reapy.perform_action(40023)  # New project action
+                input("Press Enter once the new project is open...")
+                
+                # Get the current project
+                project = reapy.Project()
+                
+                # Add a new track
+                print("Adding a test track...")
+                track = project.add_track(index=0, name="Test Track")
+                print(f"Successfully created track: {track.name}")
+                
+                # Test basic Reapy commands
+                print(f"Project sample rate: {project.sample_rate}")
+                print(f"Number of tracks: {len(project.tracks)}")
+                
+                # Import from renardo_reapy
+                response = input("Would you like to test renardo_reapy import? (y/n): ")
+                if response.lower() in ['y', 'yes']:
+                    try:
+                        import renardo_reapy.runtime as runtime
+                        import renardo_reapy.reascript_api as RPR
+                        RPR.ShowConsoleMsg("Renardo Reapy integration initialized successfully!")
+                        print("Renardo Reapy import successful")
+                    except Exception as e:
+                        print(f"Warning: Error importing renardo_reapy: {e}")
+            
+            except Exception as e:
+                print(f"Error testing Reapy functionality: {e}")
+                return False
         
-        time.sleep(5)  # Wait for REAPER to restart
-        
-        # Step 5: Test Reapy functionality by creating a project and adding a track
-        print("Step 5: Testing Reapy by creating a new project with a track...")
-        try:
-            import reapy
-            
-            # Create a new project
-            reapy.perform_action(40023)  # New project action
-            time.sleep(1)  # Give REAPER time to create the project
-            
-            # Get the current project
-            project = reapy.Project()
-            
-            # Add a new track
-            track = project.add_track(index=0, name="Test Track")
-            print(f"Successfully created track: {track.name}")
-            
-            # Test basic Reapy commands
-            print(f"Project sample rate: {project.sample_rate}")
-            print(f"Number of tracks: {len(project.tracks)}")
-            
-            # # Import from renardo_reapy
-            # try:
-            #     import renardo_reapy.runtime as runtime
-            #     import renardo_reapy.reascript_api as RPR
-            #     RPR.ShowConsoleMsg("Renardo Reapy integration initialized successfully!")
-            #     print("Renardo Reapy import successful")
-            # except Exception as e:
-            #     print(f"Warning: Error importing renardo_reapy: {e}")
-            
-            return True
-            
-        except Exception as e:
-            print(f"Error testing Reapy functionality: {e}")
-            return False
+        print("\n===== Reapy initialization completed =====")
+        print("You can now use Reapy to control REAPER.")
+        return True
     
     except Exception as e:
         print(f"Error during Reapy initialization process: {e}")
@@ -233,16 +250,16 @@ if __name__ == "__main__":
     # Uncomment one of these lines to run the corresponding function
     
     # Backup and reinitialize REAPER
-    # reinit_reaper_with_backup()
+    #reinit_reaper_with_backup()
     
     # Launch REAPER with correct PYTHONHOME
     # launch_reaper_with_pythonhome()
     
-    # Full initialization process
+    #Full initialization process
     # success = initialize_reapy()
     # print(f"Reapy initialization {'successful' if success else 'failed'}")
     
-    # Test reapy directly
+    # # Test reapy directly
     import reapy
     #reapy.configure_reaper()
 
