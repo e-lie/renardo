@@ -5,6 +5,16 @@
   import CodeMirrorThemeSelector from './lib/CodeMirrorThemeSelector.svelte';
   // We'll load CodeMirror and its dependencies from CDN
   
+  // Initialization check
+  let showInitModal = false;
+  let initStatus = {
+    superColliderClasses: false,
+    sclangCode: false,
+    samples: false,
+    instruments: false
+  };
+  let modalDismissed = false;
+  
   // State for editor content
   let editorContent = `# Renardo Live Coding Editor
 # Type your code here and press Ctrl+Enter to run
@@ -218,6 +228,7 @@ Master().fadeout(dur=24)
     
     // Subscribe to appState changes to update UI
     const unsubscribe = appState.subscribe(state => {
+      // Update console output
       if (state.consoleOutput && state.consoleOutput.length > 0) {
         // We're just using the store's version of the console output
         consoleOutput = state.consoleOutput;
@@ -226,6 +237,26 @@ Master().fadeout(dur=24)
         // With this approach, we'll scroll when anything changes
         // If more fine-grained control is needed, we could store a timestamp
         scrollToBottom();
+      }
+      
+      // Check initialization status
+      if (state.renardoInit) {
+        initStatus = {
+          superColliderClasses: state.renardoInit.superColliderClasses === true,
+          sclangCode: state.renardoInit.sclangCode === true,
+          samples: state.renardoInit.samples === true,
+          instruments: state.renardoInit.instruments === true
+        };
+        
+        // Check if any initialization steps are incomplete
+        const atLeastOneIncomplete = Object.values(initStatus).some(status => status === false);
+        
+        // Only show the modal if at least one step is incomplete and the modal hasn't been dismissed
+        if (atLeastOneIncomplete && !modalDismissed) {
+          showInitModal = true;
+        } else {
+          showInitModal = false;
+        }
       }
     });
     
@@ -429,6 +460,31 @@ Master().fadeout(dur=24)
         requestId: Date.now() // Add unique ID to prevent duplicates
       }
     });
+  }
+  
+  // Initialize helper functions
+  function dismissInitModal() {
+    showInitModal = false;
+    modalDismissed = true;
+    
+    // Add a warning message to the console if initialization steps are incomplete
+    const missingSteps = [];
+    if (!initStatus.superColliderClasses) missingSteps.push("SuperCollider Classes");
+    if (!initStatus.sclangCode) missingSteps.push("SCLang Code");
+    if (!initStatus.samples) missingSteps.push("Sample Packs");
+    if (!initStatus.instruments) missingSteps.push("Instruments & Effects");
+    
+    if (missingSteps.length > 0) {
+      // Add console output for warning about incomplete initialization
+      addConsoleOutput(
+        `⚠️ Warning: Some initialization steps are incomplete (${missingSteps.join(", ")}). Some features may not work properly.`,
+        'warn'
+      );
+    }
+  }
+  
+  function goToInitializePage() {
+    window.location.hash = 'init';
   }</script>
 
 <div class="flex flex-col h-screen w-full overflow-hidden">
@@ -536,6 +592,89 @@ Master().fadeout(dur=24)
     </div>
   {/if}
 </div>
+
+<!-- Initialization Modal -->
+{#if showInitModal}
+  <div class="modal modal-open" transition:fade={{ duration: 200 }}>
+    <div class="modal-box">
+      <h3 class="font-bold text-lg mb-4">Setup Required</h3>
+      <div class="flex flex-col items-center mb-6">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-warning mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p class="text-center mb-4">Some initialization steps are not complete.</p>
+        
+        <div class="w-full space-y-2 mb-4">
+          <div class="flex items-center">
+            <div class="w-6 h-6 mr-2">
+              {#if initStatus.superColliderClasses}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              {:else}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              {/if}
+            </div>
+            <span class="{initStatus.superColliderClasses ? 'text-success' : 'text-error'}">SuperCollider Classes</span>
+          </div>
+          
+          <div class="flex items-center">
+            <div class="w-6 h-6 mr-2">
+              {#if initStatus.sclangCode}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              {:else}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              {/if}
+            </div>
+            <span class="{initStatus.sclangCode ? 'text-success' : 'text-error'}">SCLang Code</span>
+          </div>
+          
+          <div class="flex items-center">
+            <div class="w-6 h-6 mr-2">
+              {#if initStatus.samples}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              {:else}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              {/if}
+            </div>
+            <span class="{initStatus.samples ? 'text-success' : 'text-error'}">Sample Packs</span>
+          </div>
+          
+          <div class="flex items-center">
+            <div class="w-6 h-6 mr-2">
+              {#if initStatus.instruments}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              {:else}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              {/if}
+            </div>
+            <span class="{initStatus.instruments ? 'text-success' : 'text-error'}">Instruments & Effects</span>
+          </div>
+        </div>
+        
+        <p class="text-center text-sm opacity-75">Complete the initialization steps to ensure Renardo works properly.</p>
+      </div>
+      <div class="flex flex-col gap-2">
+        <button class="btn btn-primary" on:click={goToInitializePage}>Go to Initialize Page</button>
+        <button class="btn btn-outline" on:click={dismissInitModal}>Continue Anyway</button>
+      </div>
+    </div>
+  </div>
+{/if}
 
 <style>
   /* Make CodeMirror look better */
