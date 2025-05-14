@@ -12,35 +12,11 @@ from renardo.gatherer import is_default_sccode_pack_initialized
 from renardo.gatherer import is_special_sccode_initialized, download_special_sccode_pack
 from renardo.sc_backend import write_sc_renardo_files_in_user_config, is_renardo_sc_classes_initialized
 
+# Import shared WebSocket utilities
+from renardo.webserver.routes.ws_utils import WebsocketLogger
+
 # Import REAPER routes
 from renardo.webserver.routes.reaper_routes import start_reaper_initialization_task, confirm_reaper_action_task
-
-
-# Simple logger class for gatherer functions
-class WebsocketLogger:
-    def __init__(self, ws):
-        self.ws = ws
-    
-    def write_line(self, message, level="INFO"):
-        try:
-            # Add log message to state service
-            log_entry = state_helper.add_log_message(message, level)
-            
-            # Print to console as well
-            print(f"[{level}] {message}")
-            
-            # Send log message to client if WebSocket is still open
-            if hasattr(self.ws, 'closed') and not self.ws.closed:
-                self.ws.send(json.dumps({
-                    "type": "log_message",
-                    "data": log_entry
-                }))
-        except Exception as e:
-            print(f"Error sending log message: {e}")
-            
-    # Method for convenience to log errors
-    def write_error(self, message):
-        self.write_line(message, "ERROR")
 
 def register_websocket_routes(sock):
     """
