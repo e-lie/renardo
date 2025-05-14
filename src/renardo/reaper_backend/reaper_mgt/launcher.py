@@ -3,6 +3,7 @@ REAPER launching and configuration utilities for Renardo.
 
 This module provides functions for launching REAPER with the correct environment,
 initializing Reapy integration, and managing REAPER configuration.
+Cross-platform support for macOS, Windows, and Linux.
 """
 import os
 import subprocess
@@ -11,20 +12,26 @@ import os.path
 import time
 import datetime
 import shutil
+import platform
 from pathlib import Path
 
-from .shared_library import get_python_shared_library
+from .shared_library import get_python_shared_library, is_windows, is_apple
 
 
 def launch_reaper_with_pythonhome():
     """
-    Launch REAPER.app on macOS with the correct PYTHONHOME environment variable.
+    Launch REAPER with the correct PYTHONHOME environment variable.
+    
+    Cross-platform implementation supporting:
+    - macOS: Launches from /Applications/REAPER.app
+    - Windows: Launches from standard Program Files location or registry path
+    - Linux: Launches from standard locations or PATH
     
     This function:
     1. Uses get_python_shared_library to find the current Python library path
     2. Extracts the Python home directory from the library path
     3. Sets PYTHONHOME environment variable to point to the current Python installation
-    4. Launches the REAPER application from /Applications/REAPER.app
+    4. Detects platform and launches REAPER from the appropriate location
     5. Detaches the REAPER process from the Python script
     
     Returns:
@@ -36,12 +43,18 @@ def launch_reaper_with_pythonhome():
         print(f"Python shared library found at: {python_lib_path}")
         
         # Extract the Python home directory from the library path
-        # Typical path would be something like /path/to/python/lib/libpython3.x.dylib
-        # We need to remove the /lib/libpython3.x.dylib part
-        if "lib/libpython" in python_lib_path:
+        if is_windows():
+            if "\\lib\\python" in python_lib_path or "\\DLLs\\" in python_lib_path:
+                # Windows paths may have python under lib or DLLs
+                python_home = python_lib_path.split("\\lib\\python")[0] if "\\lib\\python" in python_lib_path else python_lib_path.split("\\DLLs\\")[0]
+            else:
+                # Fallback to a reasonable guess if the expected pattern isn't found
+                python_home = str(Path(sys.executable).parent)
+        elif is_apple() or "lib/libpython" in python_lib_path:
+            # macOS or Linux with standard lib pattern
             python_home = python_lib_path.split("lib/libpython")[0]
         else:
-            # Fallback to a reasonable guess if the expected pattern isn't found
+            # Generic fallback for other platforms
             python_home = str(Path(sys.executable).parent.parent)
         
         print(f"Setting PYTHONHOME to: {python_home}")
@@ -50,30 +63,171 @@ def launch_reaper_with_pythonhome():
         env = os.environ.copy()
         env["PYTHONHOME"] = python_home
         
-        # Path to REAPER application on macOS
-        reaper_path = "/Applications/REAPER.app/Contents/MacOS/REAPER"
+        # Find REAPER path based on platform
+        reaper_path = None
         
-        if not os.path.exists(reaper_path):
-            print(f"Error: REAPER application not found at {reaper_path}")
+        if is_windows():
+            # Try standard Program Files locations for 64-bit and 32-bit Windows
+            program_files = os.environ.get("ProgramFiles", "C:\\Program Files")
+            program_files_x86 = os.environ.get("ProgramFiles(x86)", "C:\\Program Files (x86)")
+            
+            possible_paths = [
+                os.path.join(program_files, "REAPER (x64)", "reaper.exe"),
+                os.path.join(program_files, "REAPER", "reaper.exe"),
+                os.path.join(program_files_x86, "REAPER", "reaper.exe")
+            ]
+            
+            # Try to import winreg to detect REAPER path from registry
+            try:
+                import winreg
+                try:
+                    with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\REAPER") as key:
+                        reaper_path = winreg.QueryValueEx(key, "InstallPath")[0]
+                        if reaper_path:
+                            possible_paths.insert(0, os.path.join(reaper_path, "reaper.exe"))
+                except FileNotFoundError:
+                    # Try 64-bit specific registry key
+                    try:
+                        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\REAPER") as key:
+                            reaper_path = winreg.QueryValueEx(key, "InstallPath")[0]
+                            if reaper_path:
+                                possible_paths.insert(0, os.path.join(reaper_path, "reaper.exe"))
+                    except FileNotFoundError:
+                        pass
+            except ImportError:
+                print("winreg module not available, skipping registry check")
+            
+            # Find first existing path
+            for path in possible_paths:
+                if os.path.exists(path):
+                    reaper_path = path
+                    break
+                    
+        elif is_apple():
+            # macOS path
+            reaper_path = "/Applications/REAPER.app/Contents/MacOS/REAPER"
+            
+            # Check for alternate locations if the standard one doesn't exist
+            if not os.path.exists(reaper_path):
+                alt_paths = [
+                    os.path.expanduser("~/Applications/REAPER.app/Contents/MacOS/REAPER"),
+                    "/Applications/REAPER64.app/Contents/MacOS/REAPER",
+                    os.path.expanduser("~/Applications/REAPER64.app/Contents/MacOS/REAPER")
+                ]
+                for path in alt_paths:
+                    if os.path.exists(path):
+                        reaper_path = path
+                        break
+        else:
+            # Linux - try standard locations and PATH
+            possible_paths = [
+                "/usr/local/bin/reaper",
+                "/usr/bin/reaper",
+                os.path.expanduser("~/bin/reaper"),
+                "/opt/REAPER/reaper"
+            ]
+            
+            # Find first existing path
+            for path in possible_paths:
+                if os.path.exists(path):
+                    reaper_path = path
+                    break
+                    
+            # If not found in standard locations, try to find in PATH
+            if not reaper_path:
+                try:
+                    reaper_path = shutil.which("reaper")
+                except Exception:
+                    pass
+        
+        if not reaper_path or not os.path.exists(reaper_path):
+            print("Error: REAPER application not found. Checked locations:")
+            if is_windows():
+                for path in possible_paths:
+                    print(f"  - {path}")
+            elif is_apple():
+                print(f"  - /Applications/REAPER.app")
+                print(f"  - ~/Applications/REAPER.app")
+            else:
+                for path in possible_paths:
+                    print(f"  - {path}")
+                print("  - PATH environment variable")
             return False
         
         # Launch REAPER with the modified environment in a detached process
         print(f"Launching REAPER from: {reaper_path} (detached)")
         
-        # Method 1: Use subprocess.DEVNULL to detach standard file descriptors
-        process = subprocess.Popen(
-            [reaper_path], 
-            env=env, 
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            stdin=subprocess.DEVNULL,
-            start_new_session=True  # Create a new session
-        )
-        
-        # Alternative macOS-specific approach using open command:
-        # subprocess.Popen([
-        #     "open", "-a", "REAPER", "--env", f"PYTHONHOME={python_home}"
-        # ])
+        # Platform-specific launch methods
+        if is_windows():
+            # Windows-specific launch
+            startupinfo = None
+            try:
+                # Import subprocess specific modules for Windows
+                import subprocess
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                startupinfo.wShowWindow = 1  # SW_SHOWNORMAL
+                
+                process = subprocess.Popen(
+                    [reaper_path], 
+                    env=env,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    stdin=subprocess.DEVNULL,
+                    startupinfo=startupinfo,
+                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS
+                )
+            except Exception as e:
+                print(f"Error with Windows-specific launch: {e}, falling back to basic launch")
+                process = subprocess.Popen(
+                    [reaper_path], 
+                    env=env,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    stdin=subprocess.DEVNULL
+                )
+                
+        elif is_apple():
+            # macOS-specific launch options
+            try:
+                # Try using 'open' command first which is more reliable on macOS
+                open_command = ["open", "-a", "REAPER"]
+                
+                # Convert PYTHONHOME to an env parameter for the open command
+                env_params = [f"PYTHONHOME={python_home}"]
+                for env_var in ["PYTHONPATH", "DYLD_LIBRARY_PATH", "DYLD_FRAMEWORK_PATH"]:
+                    if env_var in env:
+                        env_params.append(f"{env_var}={env[env_var]}")
+                
+                if env_params:
+                    open_command.extend(["--env", ",".join(env_params)])
+                
+                process = subprocess.Popen(
+                    open_command,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    stdin=subprocess.DEVNULL
+                )
+            except Exception as e:
+                print(f"Error with macOS 'open' command: {e}, falling back to direct launch")
+                process = subprocess.Popen(
+                    [reaper_path], 
+                    env=env,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    stdin=subprocess.DEVNULL,
+                    start_new_session=True  # Create a new session
+                )
+        else:
+            # Linux launch
+            process = subprocess.Popen(
+                [reaper_path], 
+                env=env,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                stdin=subprocess.DEVNULL,
+                start_new_session=True  # Create a new session
+            )
         
         print("REAPER process started. PID:", process.pid)
         return True
@@ -199,8 +353,13 @@ def reinit_reaper_with_backup():
     """
     Reinitialize REAPER by backing up the current user configuration directory.
     
+    Cross-platform implementation supporting:
+    - macOS: ~/Library/Application Support/REAPER
+    - Windows: %APPDATA%\REAPER
+    - Linux: ~/.config/REAPER
+    
     This function:
-    1. Locates the REAPER user configuration directory in ~/Library/Application Support/REAPER
+    1. Locates the platform-specific REAPER user configuration directory
     2. Creates a backup with a timestamp suffix
     3. The original config will be recreated by REAPER when it's next launched
     
@@ -208,14 +367,67 @@ def reinit_reaper_with_backup():
         bool: True if successful, False otherwise
     """
     try:
-        # Path to REAPER user config directory on macOS
+        # Detect the platform-specific REAPER config directory
         home_dir = Path.home()
-        reaper_config_dir = home_dir / "Library/Application Support/REAPER"
+        reaper_config_dir = None
+        
+        if is_windows():
+            # Windows: Use %APPDATA% environment variable if available, or default to user's AppData/Roaming
+            appdata = os.environ.get("APPDATA")
+            if appdata:
+                reaper_config_dir = Path(appdata) / "REAPER"
+            else:
+                reaper_config_dir = home_dir / "AppData/Roaming/REAPER"
+                
+        elif is_apple():
+            # macOS: ~/Library/Application Support/REAPER
+            reaper_config_dir = home_dir / "Library/Application Support/REAPER"
+            
+        else:
+            # Linux: ~/.config/REAPER (XDG_CONFIG_HOME)
+            xdg_config_home = os.environ.get("XDG_CONFIG_HOME")
+            if xdg_config_home:
+                reaper_config_dir = Path(xdg_config_home) / "REAPER"
+            else:
+                reaper_config_dir = home_dir / ".config/REAPER"
         
         # Check if the directory exists
         if not reaper_config_dir.exists():
-            print(f"REAPER config directory not found at {reaper_config_dir}")
-            return False
+            # Try alternative common locations based on platform
+            alternative_paths = []
+            
+            if is_windows():
+                alternative_paths = [
+                    home_dir / "AppData/Local/REAPER",
+                    # Some installations might put the config in the program directory
+                    Path(os.environ.get("ProgramFiles", "C:\\Program Files")) / "REAPER/userdata"
+                ]
+                
+            elif is_apple():
+                alternative_paths = [
+                    home_dir / "Library/Preferences/REAPER",
+                    # Some older or custom installations might use this directory
+                    home_dir / ".reaper" 
+                ]
+                
+            else:  # Linux
+                alternative_paths = [
+                    home_dir / ".reaper",
+                    home_dir / ".local/share/REAPER",
+                    Path("/usr/local/share/REAPER"),
+                    Path("/usr/share/REAPER")
+                ]
+                
+            # Check alternatives
+            for alt_path in alternative_paths:
+                if alt_path.exists():
+                    reaper_config_dir = alt_path
+                    break
+                    
+            # If still not found, report error
+            if not reaper_config_dir.exists():
+                print(f"REAPER config directory not found at {reaper_config_dir} or any alternative locations")
+                return False
         
         # Create a timestamp for the backup
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -226,20 +438,62 @@ def reinit_reaper_with_backup():
         print(f"Destination: {backup_dir}")
         
         # Check if any REAPER instances are running
-        try:
-            result = subprocess.run(
-                ["pgrep", "REAPER"], 
-                capture_output=True, 
-                text=True, 
-                check=False
-            )
-            
-            if result.stdout.strip():
-                print("WARNING: REAPER is currently running. Please close it before proceeding.")
-                print("Running processes:", result.stdout.strip())
-                return False
-        except Exception as e:
-            print(f"Warning: Could not check if REAPER is running: {e}")
+        if is_windows():
+            try:
+                # Windows-specific process check using tasklist
+                result = subprocess.run(
+                    ["tasklist", "/FI", "IMAGENAME eq reaper.exe", "/NH"], 
+                    capture_output=True, 
+                    text=True, 
+                    check=False
+                )
+                
+                if "reaper.exe" in result.stdout.lower():
+                    print("WARNING: REAPER is currently running. Please close it before proceeding.")
+                    print("Running processes found in tasklist output")
+                    return False
+                    
+            except Exception as e:
+                print(f"Warning: Could not check if REAPER is running using tasklist: {e}")
+                print("Please make sure REAPER is not running before continuing.")
+                
+        elif is_apple():
+            try:
+                # macOS-specific process check using pgrep
+                result = subprocess.run(
+                    ["pgrep", "REAPER"], 
+                    capture_output=True, 
+                    text=True, 
+                    check=False
+                )
+                
+                if result.stdout.strip():
+                    print("WARNING: REAPER is currently running. Please close it before proceeding.")
+                    print("Running processes:", result.stdout.strip())
+                    return False
+                    
+            except Exception as e:
+                print(f"Warning: Could not check if REAPER is running using pgrep: {e}")
+                print("Please make sure REAPER is not running before continuing.")
+                
+        else:
+            try:
+                # Linux-specific process check using pgrep
+                result = subprocess.run(
+                    ["pgrep", "reaper"], 
+                    capture_output=True, 
+                    text=True, 
+                    check=False
+                )
+                
+                if result.stdout.strip():
+                    print("WARNING: REAPER is currently running. Please close it before proceeding.")
+                    print("Running processes:", result.stdout.strip())
+                    return False
+                    
+            except Exception as e:
+                print(f"Warning: Could not check if REAPER is running using pgrep: {e}")
+                print("Please make sure REAPER is not running before continuing.")
         
         # Perform the backup by renaming the directory
         shutil.move(str(reaper_config_dir), str(backup_dir))
