@@ -6,7 +6,7 @@
   import CodeEditor from './CodeEditor.svelte';
   import Collections from './Collections.svelte';
   import Configuration from './Configuration.svelte';
-  import SuperColliderBackend from './SuperColliderBackend.svelte';
+  import AudioBackend from './AudioBackend.svelte';
   import ThemeSelector from './lib/ThemeSelector.svelte';
   import ThemeButton from './lib/ThemeButton.svelte';
   
@@ -167,7 +167,7 @@
           <li><a href="#init" class:active={currentRoute === 'init'}>Initialize</a></li>
           <li><a href="#editor" class:active={currentRoute === 'editor'}>Code Editor</a></li>
           <li><a href="#collections" class:active={currentRoute === 'collections'}>Collections</a></li>
-          <li><a href="#scbackend" class:active={currentRoute === 'scbackend'}>SuperCollider</a></li>
+          <li><a href="#scbackend" class:active={currentRoute === 'scbackend'}>Audio Backends</a></li>
           <li><a href="#config" class:active={currentRoute === 'config'}>Settings</a></li>
         </ul>
       </div>
@@ -265,9 +265,9 @@
                       <div class="bg-warning text-warning-content rounded-full w-8 h-8 flex items-center justify-center">
                         <span class="font-bold">3</span>
                       </div>
-                      <h3 class="text-lg font-medium title-font">SuperCollider Backend</h3>
+                      <h3 class="text-lg font-medium title-font">Audio Backends</h3>
                     </div>
-                    <p class="text-sm mb-4">Configure and start the SuperCollider sound synthesis engine.</p>
+                    <p class="text-sm mb-4">Configure and start SuperCollider and REAPER audio backends.</p>
                     <div class="card-actions justify-end">
                       <button class="btn btn-warning btn-sm" on:click={() => navigate('scbackend')}>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
@@ -403,7 +403,7 @@
       {:else if currentRoute === 'config'}
         <Configuration />
       {:else if currentRoute === 'scbackend'}
-        <SuperColliderBackend />
+        <AudioBackend />
       {/if}
     </div>
   </div>
@@ -417,7 +417,7 @@
       <li><a href="#init" class:active={currentRoute === 'init'}>Initialize</a></li>
       <li><a href="#editor" class:active={currentRoute === 'editor'}>Code Editor</a></li>
       <li><a href="#collections" class:active={currentRoute === 'collections'}>Collections</a></li>
-      <li><a href="#scbackend" class:active={currentRoute === 'scbackend'}>SuperCollider</a></li>
+      <li><a href="#scbackend" class:active={currentRoute === 'scbackend'}>Audio Backends</a></li>
       <li><a href="#config" class:active={currentRoute === 'config'}>Settings</a></li>
 
       <!-- Divider -->
