@@ -162,8 +162,7 @@ def launch_reaper_with_pythonhome():
             # Windows-specific launch
             startupinfo = None
             try:
-                # Import subprocess specific modules for Windows
-                import subprocess
+                # Use subprocess with Windows-specific options
                 startupinfo = subprocess.STARTUPINFO()
                 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
                 startupinfo.wShowWindow = 1  # SW_SHOWNORMAL
@@ -478,17 +477,42 @@ def reinit_reaper_with_backup():
                 
         else:
             try:
-                # Linux-specific process check using pgrep
+                # Linux-specific process check using pgrep with a more specific pattern
+                # Use -x to require an exact match of the executable name to exclude oom_reaper
                 result = subprocess.run(
-                    ["pgrep", "reaper"], 
+                    ["pgrep", "-x", "reaper"], 
                     capture_output=True, 
                     text=True, 
                     check=False
                 )
                 
+                # Only proceed if we didn't find an exact match for 'reaper'
                 if result.stdout.strip():
                     print("WARNING: REAPER is currently running. Please close it before proceeding.")
                     print("Running processes:", result.stdout.strip())
+                    return False
+                
+                # Additional check for REAPER executable with potential path
+                # Use ps and grep with a pattern that only matches 'reaper' at the end of a path
+                ps_result = subprocess.run(
+                    ["ps", "aux"], 
+                    capture_output=True, 
+                    text=True, 
+                    check=False
+                )
+                
+                # Check if there are any lines containing "reaper" as the last part of a path
+                # but exclude lines containing "oom_reaper"
+                reaper_processes = []
+                for line in ps_result.stdout.splitlines():
+                    if "/reaper" in line and "oom_reaper" not in line:
+                        reaper_processes.append(line)
+                
+                if reaper_processes:
+                    print("WARNING: REAPER is currently running. Please close it before proceeding.")
+                    print("Running processes found in ps output:")
+                    for proc in reaper_processes:
+                        print(proc)
                     return False
                     
             except Exception as e:
