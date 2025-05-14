@@ -17,6 +17,7 @@
   let reaperInitLog = [];
   let showReaperInitModal = false;
   let isReaperModalLoading = false;
+  let isReinitializingReaper = false;
   
   // Tab state
   let activeTab = 'supercollider'; // supercollider, reaper
@@ -66,11 +67,36 @@
           }
         }
         
+        // Handle REAPER config reset responses
+        if (message.type === 'reaper_reinit_result') {
+          isReinitializingReaper = false;
+          
+          if (message.data.success) {
+            successMessage = 'REAPER configuration has been reset successfully';
+          } else {
+            error = message.data.message || 'Failed to reset REAPER configuration';
+          }
+          
+          setTimeout(() => { 
+            successMessage = '';
+            error = null;
+          }, 5000);
+        }
+        
+        // Handle REAPER user directory responses
+        if (message.type === 'reaper_user_dir_result') {
+          if (!message.data.success) {
+            error = message.data.message || 'Failed to open REAPER user directory';
+            setTimeout(() => { error = null; }, 5000);
+          }
+        }
+        
         // Handle errors
         if (message.type === 'error') {
           error = message.message;
           isReaperModalLoading = false;
           isReaperInitializing = false;
+          isReinitializingReaper = false;
           setTimeout(() => { error = null; }, 5000);
         }
       }
@@ -146,6 +172,25 @@
     showReaperInitModal = false;
     reaperInitLog = [];
     isReaperInitComplete = false;
+  }
+  
+  function openReaperUserDir() {
+    sendMessage({
+      type: 'open_reaper_user_dir'
+    });
+  }
+  
+  function reinitializeReaper() {
+    // Confirm with the user before resetting REAPER config
+    if (confirm('This will backup your current REAPER configuration and create a fresh one. Continue?')) {
+      isReinitializingReaper = true;
+      
+      sendMessage({
+        type: 'reinit_reaper_with_backup'
+      });
+      
+      // The response will be handled in the subscription
+    }
   }
 </script>
 
@@ -318,6 +363,33 @@
               </svg>
             {/if}
             Initialize REAPER Integration
+          </button>
+          
+          <button
+            class="btn btn-outline"
+            on:click={openReaperUserDir}
+            disabled={!$appState.connected}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1H8a3 3 0 00-3 3v1.5a1.5 1.5 0 01-3 0V6z" clip-rule="evenodd" />
+              <path d="M6 12a2 2 0 012-2h8a2 2 0 012 2v2a2 2 0 01-2 2H2h2a2 2 0 002-2v-2z" />
+            </svg>
+            Open REAPER User Directory
+          </button>
+          
+          <button
+            class="btn btn-warning"
+            on:click={reinitializeReaper}
+            disabled={isReinitializingReaper || !$appState.connected}
+          >
+            {#if isReinitializingReaper}
+              <span class="loading loading-spinner loading-xs"></span>
+            {:else}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+              </svg>
+            {/if}
+            Reset REAPER Configuration
           </button>
         </div>
       </div>
