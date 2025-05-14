@@ -9,6 +9,7 @@ settings.set_defaults_from_dict({
     "core": {
         "CPU_USAGE" : 2,
         "CLOCK_LATENCY" : 0,
+        "INSTANCIATE_FOXDOT_PLAYERS": False,
     }
 },
 )
