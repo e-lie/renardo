@@ -52,12 +52,51 @@ class RenardoApp:
         # Handle command-line options
         if self.args.create_scfiles:
             write_sc_renardo_files_in_user_config()
-            
             # Update the state
             self.state_manager.update_renardo_init_status("superColliderClasses", True)
-            
         
-
+        # REAPER integration options
+        if self.args.launch_reaper:
+            print("Launching REAPER with correct PYTHONHOME environment...")
+            if launch_reaper_with_pythonhome():
+                print("REAPER launched successfully")
+            else:
+                print("Failed to launch REAPER")
+            return
+                
+        elif self.args.initialize_reapy:
+            print("Starting Reapy initialization process...")
+            success = initialize_reapy()
+            if success:
+                print("Reapy initialization completed successfully")
+                # Update the state
+                self.state_manager.update_renardo_init_status("reaperIntegration", True)
+            else:
+                print("Reapy initialization failed")
+            return
+                
+        elif self.args.reinit_reaper:
+            print("Backing up and reinitializing REAPER configuration...")
+            if reinit_reaper_with_backup():
+                print("REAPER configuration has been backed up and will be reset on next launch")
+            else:
+                print("Failed to backup and reinitialize REAPER configuration")
+            return
+                
+        # Original reapy integration
+        elif self.args.reapy:
+            try:
+                import renardo_reapy
+                renardo_reapy.configure_reaper()
+                print("Reaper integration enabled successfully")
+                # Update the state
+                self.state_manager.update_renardo_init_status("reaperIntegration", True)
+            except ImportError:
+                print("Error: renardo_reapy module not found. Please install it to use Reaper integration.")
+            except Exception as e:
+                print(f"Error configuring Reaper integration: {e}")
+            return
+        
         # Create and launch web server if not using pipe or foxdot editor
         if not (self.args.pipe or self.args.foxdot_editor):
             # Create the Flask application if it doesn't exist
@@ -73,43 +112,6 @@ class RenardoApp:
                     port=PORT,
                     debug=DEBUG
                 )
-        # REAPER integration options
-        elif self.args.launch_reaper:
-            print("Launching REAPER with correct PYTHONHOME environment...")
-            if launch_reaper_with_pythonhome():
-                print("REAPER launched successfully")
-            else:
-                print("Failed to launch REAPER")
-                
-        elif self.args.initialize_reapy:
-            print("Starting Reapy initialization process...")
-            success = initialize_reapy()
-            if success:
-                print("Reapy initialization completed successfully")
-                # Update the state
-                self.state_manager.update_renardo_init_status("reaperIntegration", True)
-            else:
-                print("Reapy initialization failed")
-                
-        elif self.args.reinit_reaper:
-            print("Backing up and reinitializing REAPER configuration...")
-            if reinit_reaper_with_backup():
-                print("REAPER configuration has been backed up and will be reset on next launch")
-            else:
-                print("Failed to backup and reinitialize REAPER configuration")
-                
-        # Original reapy integration
-        elif self.args.reapy:
-            try:
-                import renardo_reapy
-                renardo_reapy.configure_reaper()
-                print("Reaper integration enabled successfully")
-                # Update the state
-                self.state_manager.update_renardo_init_status("reaperIntegration", True)
-            except ImportError:
-                print("Error: renardo_reapy module not found. Please install it to use Reaper integration.")
-            except Exception as e:
-                print(f"Error configuring Reaper integration: {e}")
         # Handle different run modes
         elif self.args.pipe:
             from renardo.runtime import handle_stdin, FoxDotCode
