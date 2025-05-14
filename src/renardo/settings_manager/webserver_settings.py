@@ -18,7 +18,7 @@ webserver_public_defaults = {
 # Define default internal settings (not visible/changeable by users)
 webserver_internal_defaults = {
     "webserver": {
-        "STATIC_FOLDER_PATH": None,  # Will be dynamically resolved
+        "STATIC_FOLDER_PATH": "",  # Will be dynamically resolved
         "WEBSOCKET_ROUTE": "/ws",
         "PING_INTERVAL": 25,         # WebSocket ping interval in seconds
     }
