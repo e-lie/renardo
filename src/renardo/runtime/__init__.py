@@ -331,20 +331,22 @@ set_server_manager(Server)
 
 set_main_clock(Clock)
 
-def instantiate_player_objects():
-    """ Instantiates all two-character variable Player Objects """
-    alphabet = list('abcdefghijklmnopqrstuvwxyz')
-    numbers  = list('0123456789')
-    for char1 in alphabet:
-        group = []
-        for char2 in alphabet + numbers:
-            arg = char1 + char2
-            FoxDotCode.namespace[arg] = EmptyPlayer(arg)
-            group.append(arg)
-        FoxDotCode.namespace[char1 + "_all"] = Group(*[FoxDotCode.namespace[char1+str(n)] for n in range(10)])
-    return
 
-instantiate_player_objects()
+if settings.get("core.INSTANCIATE_FOXDOT_PLAYERS"):
+    def instantiate_player_objects():
+        """ Instantiates all two-character variable Player Objects """
+        alphabet = list('abcdefghijklmnopqrstuvwxyz')
+        numbers  = list('0123456789')
+        for char1 in alphabet:
+            group = []
+            for char2 in alphabet + numbers:
+                arg = char1 + char2
+                FoxDotCode.namespace[arg] = EmptyPlayer(arg)
+                group.append(arg)
+            FoxDotCode.namespace[char1 + "_all"] = Group(*[FoxDotCode.namespace[char1+str(n)] for n in range(10)])
+        return
+
+    instantiate_player_objects()
 
 # Create a "now" time variable
 now = var([0]).transform(lambda a: Clock.now())
