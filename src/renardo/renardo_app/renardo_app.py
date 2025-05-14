@@ -7,6 +7,11 @@ import time
 from renardo.sc_backend import write_sc_renardo_files_in_user_config
 from renardo.webserver import create_webapp
 from renardo.webserver.config import HOST, PORT, DEBUG
+from renardo.reaper_backend.reaper_mgt.launcher import (
+    launch_reaper_with_pythonhome,
+    initialize_reapy,
+    reinit_reaper_with_backup
+)
 
 from .state_manager import StateManager
 
@@ -68,7 +73,32 @@ class RenardoApp:
                     port=PORT,
                     debug=DEBUG
                 )
-        # Handle Reapy integration if requested
+        # REAPER integration options
+        elif self.args.launch_reaper:
+            print("Launching REAPER with correct PYTHONHOME environment...")
+            if launch_reaper_with_pythonhome():
+                print("REAPER launched successfully")
+            else:
+                print("Failed to launch REAPER")
+                
+        elif self.args.initialize_reapy:
+            print("Starting Reapy initialization process...")
+            success = initialize_reapy()
+            if success:
+                print("Reapy initialization completed successfully")
+                # Update the state
+                self.state_manager.update_renardo_init_status("reaperIntegration", True)
+            else:
+                print("Reapy initialization failed")
+                
+        elif self.args.reinit_reaper:
+            print("Backing up and reinitializing REAPER configuration...")
+            if reinit_reaper_with_backup():
+                print("REAPER configuration has been backed up and will be reset on next launch")
+            else:
+                print("Failed to backup and reinitialize REAPER configuration")
+                
+        # Original reapy integration
         elif self.args.reapy:
             try:
                 import renardo_reapy
@@ -221,6 +251,12 @@ class RenardoApp:
         parser.add_argument('-c', '--create-scfiles', action='store_true', help="Create Renardo class file and startup file in SuperCollider user conf dir.")
         parser.add_argument('-N', '--no-tui', action='store_true', help="Don't start Renardo TUI")
         parser.add_argument('-g', '--use-gunicorn', action='store_true', help="Use Gunicorn to serve the web application (1 process, 10 threads)")
-        parser.add_argument('-r', '--reapy', action='store_true', help="Enable Reaper integration with Reapy")
+        
+        # REAPER integration arguments
+        reaper_group = parser.add_argument_group('REAPER Integration')
+        reaper_group.add_argument('-r', '--reapy', action='store_true', help="Enable REAPER integration with Reapy")
+        reaper_group.add_argument('--launch-reaper', action='store_true', help="Launch REAPER with correct PYTHONHOME environment")
+        reaper_group.add_argument('--initialize-reapy', action='store_true', help="Run interactive Reapy initialization process")
+        reaper_group.add_argument('--reinit-reaper', action='store_true', help="Backup current REAPER config and reset to default")
 
         return parser.parse_args()
