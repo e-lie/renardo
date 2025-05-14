@@ -49,6 +49,11 @@ class RenardoApp:
     
     def launch(self):
         """Launch the Renardo application"""
+        import os
+        import threading
+        import time
+        import webbrowser
+        
         # Handle command-line options
         if self.args.create_scfiles:
             write_sc_renardo_files_in_user_config()
@@ -101,6 +106,21 @@ class RenardoApp:
         if not (self.args.pipe or self.args.foxdot_editor):
             # Create the Flask application if it doesn't exist
             webapp = self.create_webapp_instance()
+            
+            # Define function to open browser after a short delay
+            def open_browser_after_delay():
+                # Wait for the server to start up
+                time.sleep(1.5)
+                # Determine the URL based on the host and port
+                url = f"http://localhost:{PORT}" if HOST == "0.0.0.0" else f"http://{HOST}:{PORT}"
+                print(f"Opening browser at {url}")
+                webbrowser.open(url)
+                
+            # Start browser in a separate thread if not disabled
+            if not self.args.no_browser:
+                browser_thread = threading.Thread(target=open_browser_after_delay)
+                browser_thread.daemon = True
+                browser_thread.start()
             
             # Run the web server with Gunicorn or Flask development server
             if self.args.use_gunicorn:
@@ -253,6 +273,7 @@ class RenardoApp:
         parser.add_argument('-c', '--create-scfiles', action='store_true', help="Create Renardo class file and startup file in SuperCollider user conf dir.")
         parser.add_argument('-N', '--no-tui', action='store_true', help="Don't start Renardo TUI")
         parser.add_argument('-g', '--use-gunicorn', action='store_true', help="Use Gunicorn to serve the web application (1 process, 10 threads)")
+        parser.add_argument('--no-browser', action='store_true', help="Don't automatically open the web browser when starting the server")
         
         # REAPER integration arguments
         reaper_group = parser.add_argument_group('REAPER Integration')
