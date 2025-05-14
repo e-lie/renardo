@@ -31,7 +31,10 @@ export const appState = writable({
 let socket;
 let reconnectTimer;
 let pingTimer;
-const MAX_RECONNECT_DELAY = 5000;
+const MAX_RECONNECT_DELAY = 2000; // Reduced from 5000ms to 2000ms for faster reconnection
+const BASE_RECONNECT_DELAY = 300; // Base delay of 300ms instead of 1000ms
+const RECONNECT_FACTOR = 1.2; // Reduced exponential factor from 1.5 to 1.2
+const MAX_RECONNECT_ATTEMPTS = 10; // Reset backoff after this many attempts
 let reconnectAttempts = 0;
 const PING_INTERVAL = 30000; // 30 seconds
 
@@ -108,10 +111,11 @@ export function initWebSocket() {
       pingTimer = null;
     }
     
-    // Update store to indicate disconnected status
+    // Update store to indicate disconnected status with reconnection information
     appState.update(state => ({
       ...state,
-      connected: false
+      connected: false,
+      error: 'Connection lost. Reconnecting automatically...'
     }));
     
     // Don't reconnect for clean closes with certain codes
@@ -120,11 +124,17 @@ export function initWebSocket() {
       return;
     }
     
-    // Attempt to reconnect with exponential backoff
-    const delay = Math.min(1000 * Math.pow(1.5, reconnectAttempts), MAX_RECONNECT_DELAY);
+    // Attempt to reconnect with faster exponential backoff
+    const delay = Math.min(BASE_RECONNECT_DELAY * Math.pow(RECONNECT_FACTOR, reconnectAttempts), MAX_RECONNECT_DELAY);
     reconnectAttempts++;
     
-    console.log(`Attempting to reconnect in ${delay}ms...`);
+    // Reset reconnect attempts counter after MAX_RECONNECT_ATTEMPTS to prevent prolonged backoffs
+    if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+      console.log(`Reached maximum reconnect attempts (${MAX_RECONNECT_ATTEMPTS}), resetting backoff timer`);
+      reconnectAttempts = 0;
+    }
+    
+    console.log(`Attempting to reconnect (attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}) in ${delay}ms...`);
     reconnectTimer = setTimeout(initWebSocket, delay);
   });
   
