@@ -6,6 +6,9 @@ import threading
 import io
 import sys
 import time
+import os
+import subprocess
+import platform
 from pathlib import Path
 
 from renardo.webserver import state_helper
@@ -381,6 +384,214 @@ def confirm_reaper_action_task(ws):
                     "step": reaper_init_state.current_step,
                     "confirmation_request": False,
                     "complete": True
+                }
+            }))
+        except:
+            pass
+
+
+def open_reaper_user_dir_task(ws):
+    """Open the REAPER user directory in the file explorer"""
+    # Create logger
+    logger = WebsocketLogger(ws)
+    
+    try:
+        # Import REAPER launcher to access platform detection functions
+        from renardo.reaper_backend.reaper_mgt.launcher import is_windows, is_apple
+        
+        # Get the platform-specific REAPER config directory
+        home_dir = Path.home()
+        reaper_config_dir = None
+        
+        if is_windows():
+            # Windows: Use %APPDATA% environment variable if available, or default to user's AppData/Roaming
+            appdata = os.environ.get("APPDATA")
+            if appdata:
+                reaper_config_dir = Path(appdata) / "REAPER"
+            else:
+                reaper_config_dir = home_dir / "AppData/Roaming/REAPER"
+                
+        elif is_apple():
+            # macOS: ~/Library/Application Support/REAPER
+            reaper_config_dir = home_dir / "Library/Application Support/REAPER"
+            
+        else:
+            # Linux: ~/.config/REAPER (XDG_CONFIG_HOME)
+            xdg_config_home = os.environ.get("XDG_CONFIG_HOME")
+            if xdg_config_home:
+                reaper_config_dir = Path(xdg_config_home) / "REAPER"
+            else:
+                reaper_config_dir = home_dir / ".config/REAPER"
+        
+        # Check if the directory exists
+        if not reaper_config_dir.exists():
+            # Try alternative common locations based on platform
+            alternative_paths = []
+            
+            if is_windows():
+                alternative_paths = [
+                    home_dir / "AppData/Local/REAPER",
+                    # Some installations might put the config in the program directory
+                    Path(os.environ.get("ProgramFiles", "C:\\Program Files")) / "REAPER/userdata"
+                ]
+                
+            elif is_apple():
+                alternative_paths = [
+                    home_dir / "Library/Preferences/REAPER",
+                    # Some older or custom installations might use this directory
+                    home_dir / ".reaper" 
+                ]
+                
+            else:  # Linux
+                alternative_paths = [
+                    home_dir / ".reaper",
+                    home_dir / ".local/share/REAPER",
+                    Path("/usr/local/share/REAPER"),
+                    Path("/usr/share/REAPER")
+                ]
+                
+            # Check alternatives
+            for alt_path in alternative_paths:
+                if alt_path.exists():
+                    reaper_config_dir = alt_path
+                    break
+        
+        # Open the directory using platform-specific commands
+        if reaper_config_dir and reaper_config_dir.exists():
+            try:
+                if is_windows():
+                    # Windows: Use explorer
+                    os.startfile(str(reaper_config_dir))
+                elif is_apple():
+                    # macOS: Use open
+                    subprocess.run(["open", str(reaper_config_dir)])
+                else:
+                    # Linux: Try xdg-open or similar
+                    subprocess.run(["xdg-open", str(reaper_config_dir)])
+                
+                logger.write_line(f"Opened REAPER user directory: {reaper_config_dir}", "SUCCESS")
+                
+                # Send success message
+                ws.send(json.dumps({
+                    "type": "reaper_user_dir_result",
+                    "data": {
+                        "success": True,
+                        "path": str(reaper_config_dir)
+                    }
+                }))
+                
+            except Exception as e:
+                error_msg = f"Error opening directory: {str(e)}"
+                logger.write_error(error_msg)
+                
+                # Send error message
+                ws.send(json.dumps({
+                    "type": "reaper_user_dir_result",
+                    "data": {
+                        "success": False,
+                        "message": error_msg
+                    }
+                }))
+        else:
+            error_msg = "REAPER user directory not found"
+            logger.write_error(error_msg)
+            
+            # Send error message
+            ws.send(json.dumps({
+                "type": "reaper_user_dir_result",
+                "data": {
+                    "success": False,
+                    "message": error_msg
+                }
+            }))
+            
+    except Exception as e:
+        error_msg = f"Error opening REAPER user directory: {str(e)}"
+        logger.write_error(error_msg)
+        
+        # Send error message
+        try:
+            ws.send(json.dumps({
+                "type": "reaper_user_dir_result",
+                "data": {
+                    "success": False,
+                    "message": error_msg
+                }
+            }))
+        except:
+            pass
+
+
+def reinit_reaper_with_backup_task(ws):
+    """Reinitialize REAPER with backup in a separate thread"""
+    # Create logger
+    logger = WebsocketLogger(ws)
+    
+    try:
+        # Import REAPER launcher module
+        try:
+            from renardo.reaper_backend.reaper_mgt.launcher import reinit_reaper_with_backup
+        except ImportError as e:
+            error_msg = f"Error importing REAPER modules: {str(e)}"
+            logger.write_error(error_msg)
+            ws.send(json.dumps({
+                "type": "reaper_reinit_result",
+                "data": {
+                    "success": False,
+                    "message": error_msg
+                }
+            }))
+            return
+        
+        # Capture console output
+        old_stdout = sys.stdout
+        sys.stdout = captured_output = io.StringIO()
+        
+        # Call the reinit function
+        success = reinit_reaper_with_backup()
+        
+        # Restore stdout and get captured output
+        sys.stdout = old_stdout
+        output_lines = captured_output.getvalue().strip().split('\n')
+        
+        # Log the output
+        for line in output_lines:
+            if line.strip():
+                level = "ERROR" if "error" in line.lower() else "INFO"
+                logger.write_line(line, level)
+        
+        # Send result to client
+        if success:
+            logger.write_line("REAPER configuration reset successful", "SUCCESS")
+            ws.send(json.dumps({
+                "type": "reaper_reinit_result",
+                "data": {
+                    "success": True,
+                    "message": "REAPER configuration has been reset successfully"
+                }
+            }))
+        else:
+            error_msg = "Failed to reset REAPER configuration"
+            logger.write_error(error_msg)
+            ws.send(json.dumps({
+                "type": "reaper_reinit_result",
+                "data": {
+                    "success": False,
+                    "message": error_msg
+                }
+            }))
+    
+    except Exception as e:
+        error_msg = f"Error resetting REAPER configuration: {str(e)}"
+        logger.write_error(error_msg)
+        
+        # Send error message
+        try:
+            ws.send(json.dumps({
+                "type": "reaper_reinit_result",
+                "data": {
+                    "success": False,
+                    "message": error_msg
                 }
             }))
         except:
