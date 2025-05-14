@@ -51,18 +51,7 @@ class RenardoApp:
             # Update the state
             self.state_manager.update_renardo_init_status("superColliderClasses", True)
             
-        # Handle Reapy integration if requested
-        if self.args.reapy:
-            try:
-                import renardo_reapy
-                renardo_reapy.configure_reaper()
-                print("Reaper integration enabled successfully")
-                # Update the state
-                self.state_manager.update_renardo_init_status("reaperIntegration", True)
-            except ImportError:
-                print("Error: renardo_reapy module not found. Please install it to use Reaper integration.")
-            except Exception as e:
-                print(f"Error configuring Reaper integration: {e}")
+        
 
         # Create and launch web server if not using pipe or foxdot editor
         if not (self.args.pipe or self.args.foxdot_editor):
@@ -79,6 +68,18 @@ class RenardoApp:
                     port=PORT,
                     debug=DEBUG
                 )
+        # Handle Reapy integration if requested
+        elif self.args.reapy:
+            try:
+                import renardo_reapy
+                renardo_reapy.configure_reaper()
+                print("Reaper integration enabled successfully")
+                # Update the state
+                self.state_manager.update_renardo_init_status("reaperIntegration", True)
+            except ImportError:
+                print("Error: renardo_reapy module not found. Please install it to use Reaper integration.")
+            except Exception as e:
+                print(f"Error configuring Reaper integration: {e}")
         # Handle different run modes
         elif self.args.pipe:
             from renardo.runtime import handle_stdin, FoxDotCode
