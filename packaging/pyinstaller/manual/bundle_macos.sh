@@ -1,4 +1,4 @@
-export RENARDO_VERSION="1.0.0.dev22"
+export RENARDO_VERSION="1.0.0.dev23"
 
 echo '######## creating venv'
 python3 -m venv ../venv
