@@ -4,6 +4,8 @@ import subprocess
 import sys
 import os.path
 import time
+import datetime
+import shutil
 from pathlib import Path
 
 from renardo.reaper_backend.reaper_mgt.shared_library import get_python_shared_library
@@ -18,6 +20,7 @@ def launch_reaper_with_pythonhome():
     2. Extracts the Python home directory from the library path
     3. Sets PYTHONHOME environment variable to point to the current Python installation
     4. Launches the REAPER application from /Applications/REAPER.app
+    5. Detaches the REAPER process from the Python script
     """
     try:
         # Get the Python shared library path
@@ -46,11 +49,24 @@ def launch_reaper_with_pythonhome():
             print(f"Error: REAPER application not found at {reaper_path}")
             return False
         
-        # Launch REAPER with the modified environment
-        print(f"Launching REAPER from: {reaper_path}")
-        process = subprocess.Popen([reaper_path], env=env)
+        # Launch REAPER with the modified environment in a detached process
+        print(f"Launching REAPER from: {reaper_path} (detached)")
         
-        # Wait a bit for REAPER to start
+        # Method 1: Use subprocess.DEVNULL to detach standard file descriptors
+        process = subprocess.Popen(
+            [reaper_path], 
+            env=env, 
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,
+            start_new_session=True  # Create a new session
+        )
+        
+        # Alternative macOS-specific approach using open command:
+        # subprocess.Popen([
+        #     "open", "-a", "REAPER", "--env", f"PYTHONHOME={python_home}"
+        # ])
+        
         print("REAPER process started. PID:", process.pid)
         return True
         
@@ -154,16 +170,90 @@ def initialize_reapy():
         return False
 
 
+def reinit_reaper_with_backup():
+    """
+    Reinitialize REAPER by backing up the current user configuration directory.
+    
+    This function:
+    1. Locates the REAPER user configuration directory in ~/Library/Application Support/REAPER
+    2. Creates a backup with a timestamp suffix
+    3. The original config will be recreated by REAPER when it's next launched
+    
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        # Path to REAPER user config directory on macOS
+        home_dir = Path.home()
+        reaper_config_dir = home_dir / "Library/Application Support/REAPER"
+        
+        # Check if the directory exists
+        if not reaper_config_dir.exists():
+            print(f"REAPER config directory not found at {reaper_config_dir}")
+            return False
+        
+        # Create a timestamp for the backup
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_dir = reaper_config_dir.parent / f"REAPER.backup_{timestamp}"
+        
+        print(f"Creating backup of REAPER configuration...")
+        print(f"Source: {reaper_config_dir}")
+        print(f"Destination: {backup_dir}")
+        
+        # Check if any REAPER instances are running
+        try:
+            result = subprocess.run(
+                ["pgrep", "REAPER"], 
+                capture_output=True, 
+                text=True, 
+                check=False
+            )
+            
+            if result.stdout.strip():
+                print("WARNING: REAPER is currently running. Please close it before proceeding.")
+                print("Running processes:", result.stdout.strip())
+                return False
+        except Exception as e:
+            print(f"Warning: Could not check if REAPER is running: {e}")
+        
+        # Perform the backup by renaming the directory
+        shutil.move(str(reaper_config_dir), str(backup_dir))
+        print(f"Backup created successfully")
+        
+        print("REAPER configuration will be reset on next launch.")
+        return True
+    
+    except Exception as e:
+        print(f"Error backing up REAPER configuration: {e}")
+        return False
+
+
 # Test code
 if __name__ == "__main__":
-    # print("Starting Reapy initialization test...")
+    # Uncomment one of these lines to run the corresponding function
+    
+    # Backup and reinitialize REAPER
+    # reinit_reaper_with_backup()
+    
+    # Launch REAPER with correct PYTHONHOME
+    # launch_reaper_with_pythonhome()
+    
+    # Full initialization process
     # success = initialize_reapy()
-    #
-    # time.sleep(130)
     # print(f"Reapy initialization {'successful' if success else 'failed'}")
+    
+    # Test reapy directly
+    import reapy
+    #reapy.configure_reaper()
 
-    launch_reaper_with_pythonhome()
+    project = reapy.Project()
 
+    # Add a new track
+    track = project.add_track(index=0, name="Test Track")
+    print(f"Successfully created track: {track.name}")
+
+    # Test basic Reapy commands
+    print(f"Number of tracks: {len(project.tracks)}")
     
     """
     # Additional testing code if needed
