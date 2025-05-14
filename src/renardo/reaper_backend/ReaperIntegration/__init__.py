@@ -12,8 +12,9 @@ from renardo.reaper_backend.ReaperIntegrationLib.ReaTaskQueue import ReaTask
 def init_reapy_project():
     project = None
     try:
-        import reapy
-        project = ReaProject(Clock, reapy)
+        # import reapy
+        import renardo_reapy.runtime as runtime
+        project = ReaProject(Clock, reapylib=runtime)
     except Exception as err:
         output = err.message if hasattr(err, 'message') else err
         print("Error scanning and initializing Reaper project: {output} -> skipping Reaper integration".format(output=output))
@@ -101,9 +102,9 @@ class ReaperInstrumentFactory:
         selff.instru_facades += facades
         return tuple([facade.out for facade in facades])
 
-    def instanciate(selff, track_name, chain_name, scan_all_params=True, is_chain=True):
+    def instanciate(self, track_name, chain_name, scan_all_params=True, is_chain=True):
         try:
-            facade_obj = selff.add_instrument(chain_name, chain_name, track_name=track_name, scan_all_params=scan_all_params, is_chain=is_chain)
+            facade_obj = self.add_instrument(chain_name, chain_name, track_name=track_name, scan_all_params=scan_all_params, is_chain=is_chain)
             return facade_obj.out
         except Exception as e:
             print(f"Error adding chain {chain_name}: {e}")
