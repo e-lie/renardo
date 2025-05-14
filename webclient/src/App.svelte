@@ -42,7 +42,7 @@
   }
   
   // Router state
-  let currentRoute = 'home';
+  let currentRoute = 'editor'; // Changed default route to 'editor' from 'home'
 
   // Theme state
   let currentTheme = 'default';
@@ -122,7 +122,14 @@
       // Simple router based on URL hash
       function handleHashChange() {
         const hash = window.location.hash.replace('#', '');
-        currentRoute = hash || 'home';
+        
+        // Changed default route to 'editor' instead of 'home'
+        currentRoute = hash || 'editor';
+        
+        // If empty hash, redirect to editor
+        if (!hash) {
+          window.location.hash = 'editor';
+        }
 
         // When changing routes, always request the latest status
         if ($appState.connected) {
@@ -236,16 +243,15 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
           </svg>
         </label>
-        <a href="#home" class="btn btn-ghost text-xl">Renardo ฅ^•ﻌ•^ฅ</a>
+        <a href="#editor" class="btn btn-ghost text-xl">Renardo ฅ^•ﻌ•^ฅ</a>
       </div>
       
       <div class="navbar-center hidden lg:flex">
         <ul class="menu menu-horizontal px-1">
-          <li><a href="#home" class:active={currentRoute === 'home'}>Home</a></li>
-          <li><a href="#init" class:active={currentRoute === 'init'}>Initialize</a></li>
           <li><a href="#editor" class:active={currentRoute === 'editor'}>Code Editor</a></li>
-          <li><a href="#collections" class:active={currentRoute === 'collections'}>Collections</a></li>
+          <li><a href="#init" class:active={currentRoute === 'init'}>Initialize</a></li>
           <li><a href="#scbackend" class:active={currentRoute === 'scbackend'}>Audio Backends</a></li>
+          <li><a href="#collections" class:active={currentRoute === 'collections'}>Collections</a></li>
           <li><a href="#config" class:active={currentRoute === 'config'}>Settings</a></li>
         </ul>
       </div>
@@ -276,51 +282,25 @@
 
     <!-- Main content -->
     <div class="min-h-screen bg-base-100">
-      {#if currentRoute === 'home'}
+      {#if currentRoute === 'editor'}
+        <CodeEditor />
+      {:else if currentRoute === 'init'}
         <div class="container mx-auto px-4 py-8 max-w-4xl">
-          <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold mb-2 title-font">Renardo (Web)</h1>
-            <p class="text-base-content/70">
-              {$appState.welcomeText || 'Create music with the Renardo live coding environment'}
-            </p>
-          </div>
-
           <!-- Getting Started Tutorial Card -->
           <div class="card bg-base-100 shadow-xl mb-8">
             <div class="card-body">
-              <h2 class="card-title text-xl title-font">Getting Started >></h2>
+              <h2 class="card-title text-xl title-font">Getting Started with Renardo >></h2>
               <p class="text-base-content/70 mb-4">
-                Follow these steps to setup and use Renardo for live music coding.
+                {$appState.welcomeText || 'Create music with the Renardo live coding environment'}
               </p>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Initialize -->
-                <div class="card bg-base-200 hover:shadow-md transition-shadow">
-                  <div class="card-body p-4">
-                    <div class="flex items-center gap-3 mb-3">
-                      <div class="bg-primary text-primary-content rounded-full w-8 h-8 flex items-center justify-center">
-                        <span class="font-bold">1</span>
-                      </div>
-                      <h3 class="text-lg font-medium title-font">Initialize Renardo</h3>
-                    </div>
-                    <p class="text-sm mb-4">Set up SuperCollider, download samples, and install instruments.</p>
-                    <div class="card-actions justify-end">
-                      <button class="btn btn-primary btn-sm" on:click={() => navigate('init')}>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
-                        </svg>
-                        Get Started
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
                 <!-- Live Coding Editor -->
                 <div class="card bg-base-200 hover:shadow-md transition-shadow">
                   <div class="card-body p-4">
                     <div class="flex items-center gap-3 mb-3">
                       <div class="bg-success text-success-content rounded-full w-8 h-8 flex items-center justify-center">
-                        <span class="font-bold">2</span>
+                        <span class="font-bold">1</span>
                       </div>
                       <h3 class="text-lg font-medium title-font">Live Coding Editor</h3>
                     </div>
@@ -341,7 +321,7 @@
                   <div class="card-body p-4">
                     <div class="flex items-center gap-3 mb-3">
                       <div class="bg-warning text-warning-content rounded-full w-8 h-8 flex items-center justify-center">
-                        <span class="font-bold">3</span>
+                        <span class="font-bold">2</span>
                       </div>
                       <h3 class="text-lg font-medium title-font">Audio Backends</h3>
                     </div>
@@ -362,7 +342,7 @@
                   <div class="card-body p-4">
                     <div class="flex items-center gap-3 mb-3">
                       <div class="bg-accent text-accent-content rounded-full w-8 h-8 flex items-center justify-center">
-                        <span class="font-bold">4</span>
+                        <span class="font-bold">3</span>
                       </div>
                       <h3 class="text-lg font-medium title-font">Additional Collections</h3>
                     </div>
@@ -379,11 +359,11 @@
                 </div>
 
                 <!-- Configuration -->
-                <div class="card bg-base-200 hover:shadow-md transition-shadow md:col-span-2">
+                <div class="card bg-base-200 hover:shadow-md transition-shadow">
                   <div class="card-body p-4">
                     <div class="flex items-center gap-3 mb-3">
                       <div class="bg-neutral text-neutral-content rounded-full w-8 h-8 flex items-center justify-center">
-                        <span class="font-bold">5</span>
+                        <span class="font-bold">4</span>
                       </div>
                       <h3 class="text-lg font-medium title-font">Configuration</h3>
                     </div>
@@ -471,11 +451,10 @@
               <span>Error: {$appState.error}</span>
             </div>
           {/if}
+          
+          <!-- Component-specific content -->
+          <RenardoInit />
         </div>
-      {:else if currentRoute === 'init'}
-        <RenardoInit />
-      {:else if currentRoute === 'editor'}
-        <CodeEditor />
       {:else if currentRoute === 'collections'}
         <Collections />
       {:else if currentRoute === 'config'}
@@ -491,11 +470,10 @@
     <label for="drawer-toggle" aria-label="close sidebar" class="drawer-overlay"></label>
     <ul class="menu p-4 w-64 min-h-full bg-base-200 text-base-content">
       <li class="menu-title">Renardo ฅ^•ﻌ•^ฅ</li>
-      <li><a href="#home" class:active={currentRoute === 'home'}>Home</a></li>
-      <li><a href="#init" class:active={currentRoute === 'init'}>Initialize</a></li>
       <li><a href="#editor" class:active={currentRoute === 'editor'}>Code Editor</a></li>
-      <li><a href="#collections" class:active={currentRoute === 'collections'}>Collections</a></li>
+      <li><a href="#init" class:active={currentRoute === 'init'}>Initialize</a></li>
       <li><a href="#scbackend" class:active={currentRoute === 'scbackend'}>Audio Backends</a></li>
+      <li><a href="#collections" class:active={currentRoute === 'collections'}>Collections</a></li>
       <li><a href="#config" class:active={currentRoute === 'config'}>Settings</a></li>
 
       <!-- Divider -->
