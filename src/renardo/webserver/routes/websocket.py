@@ -181,6 +181,20 @@ def register_websocket_routes(sock):
                             args=(ws,)
                         ).start()
                     
+                    elif message_type == "open_reaper_user_dir":
+                        # Open REAPER user directory
+                        threading.Thread(
+                            target=open_reaper_user_dir_task,
+                            args=(ws,)
+                        ).start()
+                    
+                    elif message_type == "reinit_reaper_with_backup":
+                        # Reinitialize REAPER with backup
+                        threading.Thread(
+                            target=reinit_reaper_with_backup_task,
+                            args=(ws,)
+                        ).start()
+                    
                     elif message_type == "ping":
                         # Respond to ping with pong to keep connection alive
                         ws.send(json.dumps({
