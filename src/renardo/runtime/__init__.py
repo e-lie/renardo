@@ -8,10 +8,6 @@ import logging
 
 from renardo.settings_manager import conf, get_tutorial_files
 
-from renardo.midi_backend import select_output_device, send_short_note
-
-send_short_note(select_output_device(0))
-
 from renardo.lib.Code import (
     CodeString,
     CodeType,
