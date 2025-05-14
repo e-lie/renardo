@@ -1135,7 +1135,7 @@ wheels = [
 
 [[package]]
 name = "renardo"
-version = "1.0.0.dev19"
+version = "1.0.0.dev20"
 source = { editable = "." }
 dependencies = [
     { name = "fastnumbers" },

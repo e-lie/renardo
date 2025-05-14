@@ -49,7 +49,7 @@ class workspace:
         CodeClass.namespace['GUI'] = self
         CodeClass.namespace['Player'].widget = self
 
-        self.version = this_version = '1.0.0.dev19'
+        self.version = this_version = '1.0.0.dev20'
 
         pypi_version = get_pypi_version()
         self.theme = settings.get("foxdot_editor.COLOR_THEME")
