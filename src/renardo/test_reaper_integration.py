@@ -87,7 +87,7 @@ if __name__ == "__main__":
     
     reainstru_factory = ReaperInstrumentFactory(old_style_presets, reaproject)
     
-    add_chains = reainstru_factory.add_chains
+    add_multiple_fxchains = reainstru_factory.add_multiple_fxchains
     instanciate = reainstru_factory.instanciate
     
     gone = instanciate("chan1", "pads/gone_1")

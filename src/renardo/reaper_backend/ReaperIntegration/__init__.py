@@ -87,7 +87,7 @@ class ReaperInstrumentFactory:
             is_chain=is_chain
         )
     
-    def add_chains(*args, scan_all_params=True, is_chain=True):
+    def add_multiple_fxchains(*args, scan_all_params=True, is_chain=True):
         facades = []
         # args[0] is self is the instru factory
         selff = args[0]
