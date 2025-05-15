@@ -327,20 +327,6 @@
             Start SuperCollider Backend
           </button>
 
-          <button
-            class="btn btn-success"
-            on:click={executeScCode}
-            disabled={isSCCodeExecuting || !isScBackendRunning || isRenardoInitialized || !$appState.connected}
-          >
-            {#if isSCCodeExecuting}
-              <span class="loading loading-spinner loading-xs"></span>
-            {:else}
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
-              </svg>
-            {/if}
-            Execute Renardo Init Code
-          </button>
 
           <button
             class="btn btn-error"
@@ -394,7 +380,7 @@
         {/if}
         
         <div class="form-control">
-          <label for="sclangCode" class="form-control w-full">
+          <label for="sclangCode" class="form-control w-full mb-4">
             <textarea
               id="sclangCode"
               class="textarea textarea-bordered font-mono h-32 w-full"
@@ -403,6 +389,23 @@
               disabled={isRenardoInitialized || isSCCodeExecuting}
             ></textarea>
           </label>
+          
+          <div class="flex justify-end">
+            <button
+              class="btn btn-success btn-lg"
+              on:click={executeScCode}
+              disabled={isSCCodeExecuting || !isScBackendRunning || isRenardoInitialized || !$appState.connected}
+            >
+              {#if isSCCodeExecuting}
+                <span class="loading loading-spinner loading-sm"></span>
+              {:else}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                </svg>
+              {/if}
+              Execute Renardo Init Code
+            </button>
+          </div>
         </div>
       </div>
     </div>
