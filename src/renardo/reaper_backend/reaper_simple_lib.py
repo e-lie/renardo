@@ -29,6 +29,7 @@ def ensure_track(track_or_num):
     if isinstance(track_or_num, int):
         track = get_track(track_or_num)
         return track
+    return track
 
 def rename_track(track_name, track=None, track_num=-1):
     set_new_value = True
@@ -115,33 +116,38 @@ master_volume(db_to_volume(-2))
 unarm_track(0)
 
 
-def create_16_midi_tracks():
+def create_standard_midi_track(track_num: int):
     """
-    Creates 16 MIDI tracks in REAPER, one for each MIDI channel.
-    
-    Each track is:
-    - Named chan1 through chan16
+    Create a MIDI track for renardo integration
+
+    The track is:
+    - Named chan1 to 16 from track_num
     - Record armed
     - Set to receive from "All MIDI inputs"
     - Set to receive from the MIDI channel corresponding to its number
     - Record mode set to disable (normal)
     """
+    # Create track with name "chanX" where X is the channel number
+    track_name = f"chan{track_num}"
+    track = add_track(track_name)
     
+    # Set MIDI input to "All MIDI inputs" on the appropriate channel
+    track_midi_input(track, track_num)  # This sets the input to the corresponding channel number
+    
+    # Arm the track for recording
+    arm_track(track)
+    
+    # Set record mode to normal (not monitoring)
+    # 0 = disabled (normal), 1 = record (input) monitoring, 2 = monitoring and record
+    RPR.SetMediaTrackInfo_Value(track, "I_RECMODE", 0)
+
+def create_16_midi_tracks():
+    """
+    Creates 16 MIDI tracks in REAPER, one for each MIDI channel.
+    """
     # Get the current project
     project = reapy.Project()
     
     # Create 16 tracks, one for each MIDI channel
     for i in range(1, 17):  # 1 to 16
-        # Create track with name "chanX" where X is the channel number
-        track_name = f"chan{i}"
-        track = add_track(track_name)
-        
-        # Set MIDI input to "All MIDI inputs" on the appropriate channel
-        track_midi_input(track, i)  # This sets the input to the corresponding channel number
-        
-        # Arm the track for recording
-        arm_track(track)
-        
-        # Set record mode to normal (not monitoring)
-        # 0 = disabled (normal), 1 = record (input) monitoring, 2 = monitoring and record
-        RPR.SetMediaTrackInfo_Value(track, "I_RECMODE", 0)
+        create_standard_midi_track(i)
