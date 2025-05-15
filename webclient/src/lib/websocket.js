@@ -397,6 +397,11 @@ function handleMessage(message) {
       // This will be handled by the AudioBackend component via _lastMessage
       break;
       
+    case 'reaper_test_result':
+      console.log('RECEIVED REAPER TEST RESULT:', message);
+      // This will be handled by the AudioBackend component via _lastMessage
+      break;
+      
     default:
       console.log('Unhandled message type:', type, message);
   }
