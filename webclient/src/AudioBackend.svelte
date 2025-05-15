@@ -71,30 +71,53 @@
             // Check for MIDI device listing in the message
             const output = message.data.message || '';
             
+            console.log("SuperCollider execution result:", output);
+            
+            // Log the full message data structure to help debug
+            console.log("Full message data:", message.data);
+            
+            // Log more details about the message
+            console.log("Message customCode includes MIDI listing:", 
+              message.data.customCode?.includes('MIDI_DEVICES_START'));
+            
             // Parse MIDI devices list if present
+            // Check for our marker MIDI_DEVICES_START 
             if (output.includes('MIDI_DEVICES_START')) {
+              console.log("MIDI device listing detected in output");
               midiDevices = [];
               const lines = output.split('\n');
               let collectingDevices = false;
               
+              console.log("Parsed output into lines:", lines.length);
+              
               for (const line of lines) {
+                // Log every line to see what we're working with
+                console.log("Checking line:", line);
+                
                 if (line.includes('MIDI_DEVICES_START')) {
+                  console.log("Found marker to start collecting devices");
                   collectingDevices = true;
                   continue;
                 }
                 
                 if (line.includes('MIDI_DEVICES_END')) {
+                  console.log("Found marker to stop collecting devices");
                   collectingDevices = false;
                   break;
                 }
                 
                 if (collectingDevices && line.includes('MIDI_DEVICE:')) {
+                  console.log("Found a MIDI device line:", line);
                   // Format: MIDI_DEVICE:index:device:name
                   const parts = line.split(':');
+                  console.log("Split parts:", parts);
+                  
                   if (parts.length >= 4) {
                     const deviceIndex = parseInt(parts[1].trim());
                     const deviceInfo = parts[2].trim();
                     const deviceName = parts.slice(3).join(':').trim();
+                    
+                    console.log("Extracted device info:", deviceIndex, deviceInfo, deviceName);
                     
                     midiDevices.push({
                       index: deviceIndex,
@@ -105,8 +128,13 @@
                 }
               }
               
+              console.log("Final MIDI devices array:", midiDevices);
+              isLoadingMidiDevices = false;
+              
               if (midiDevices.length > 0) {
                 successMessage = `Found ${midiDevices.length} MIDI device(s)`;
+                // Force a UI update
+                midiDevices = [...midiDevices];
               } else {
                 successMessage = 'No MIDI devices found';
               }
@@ -238,17 +266,32 @@
     isLoadingMidiDevices = true;
     error = null;
     successMessage = '';
+    midiDevices = []; // Clear existing devices
+    
+    console.log("Listing MIDI devices...");
     
     // This code will list MIDI devices in SuperCollider and return them
+    // Use more explicit postln statements to make output easier to debug
     const listDevicesCode = `
+    "STARTING MIDI DEVICE LISTING...".postln;
     MIDIClient.init;
+    "MIDIClient initialized".postln;
     ~midiOutDevices = MIDIClient.destinations;
-    "MIDI_DEVICES_START";
-    ~midiOutDevices.do({ |device, i|
-      ("MIDI_DEVICE:" + i + ":" + device.device + ":" + device.name).postln;
-    });
-    "MIDI_DEVICES_END";
+    "Found " ++ ~midiOutDevices.size ++ " MIDI devices".postln;
+    "MIDI_DEVICES_START".postln;
+    if(~midiOutDevices.size > 0) {
+      ~midiOutDevices.do({ |device, i|
+        ("MIDI_DEVICE:" + i + ":" + device.device + ":" + device.name).postln;
+      });
+    } {
+      "No MIDI devices found".postln;
+    };
+    "MIDI_DEVICES_END".postln;
+    "MIDI DEVICE LISTING COMPLETE".postln;
     `;
+    
+    // Add some console logging to debug
+    console.log("Sending MIDI listing code to SuperCollider:", listDevicesCode);
     
     sendMessage({
       type: 'execute_sc_code',
@@ -604,18 +647,18 @@
       </div>
     </div>
     
-    <!-- MIDI initialization card -->
+    <!-- MIDI Initialization Card -->
     <div class="card bg-base-100 shadow-xl mb-8">
       <div class="card-body">
         <h2 class="card-title">MIDI Initialization</h2>
         <p class="text-base-content/70 mb-4">
-          Configure and initialize MIDI for Renardo. This allows Renardo to send MIDI messages to external synthesizers and hardware.
+          Configure MIDI devices for Renardo. First list available MIDI devices, then select the ones you want to use.
         </p>
         
         {#if isMidiInitialized}
           <div class="alert alert-success mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <span>MIDI has been initialized. You can now send MIDI signals from Renardo!</span>
+            <span>MIDI has been successfully initialized. You can use MIDI functionality in Renardo!</span>
           </div>
         {:else if isRenardoInitialized}
           <div class="flex flex-wrap gap-2 mb-4">
