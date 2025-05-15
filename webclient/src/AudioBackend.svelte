@@ -24,6 +24,7 @@
   let isReaperInitComplete = false;
   let reaperInitLog = [];
   let showReaperInitModal = false;
+  let showReaperResetModal = false;
   let isReaperModalLoading = false;
   let isReinitializingReaper = false;
   
@@ -188,8 +189,22 @@
         
         // Handle REAPER config reset responses
         if (message.type === 'reaper_reinit_result') {
+          console.log("Received reaper_reinit_result:", message);
           isReinitializingReaper = false;
           
+          // Create a log entry for the reset result
+          const resetResultEntry = {
+            timestamp: new Date().toLocaleTimeString(),
+            level: message.data.success ? 'SUCCESS' : 'ERROR',
+            message: message.data.success 
+              ? 'REAPER configuration has been reset successfully. A backup of your previous configuration has been created.' 
+              : message.data.message || 'Failed to reset REAPER configuration'
+          };
+          
+          // Add this log entry to our log messages
+          logMessages = [...logMessages, resetResultEntry];
+          
+          // Also display a user notification
           if (message.data.success) {
             successMessage = 'REAPER configuration has been reset successfully';
           } else {
@@ -402,16 +417,38 @@
   }
   
   function reinitializeReaper() {
-    // Confirm with the user before resetting REAPER config
-    if (confirm('This will backup your current REAPER configuration and create a fresh one. Continue?')) {
-      isReinitializingReaper = true;
-      
-      sendMessage({
-        type: 'reinit_reaper_with_backup'
-      });
-      
-      // The response will be handled in the subscription
-    }
+    // Show the confirmation modal
+    showReaperResetModal = true;
+  }
+  
+  function confirmReaperReset() {
+    // User confirmed the reset
+    showReaperResetModal = false;
+    isReinitializingReaper = true;
+    
+    // Add a log entry for the reset action
+    const resetLogEntry = {
+      timestamp: new Date().toLocaleTimeString(),
+      level: 'INFO',
+      message: 'Resetting REAPER configuration with backup...'
+    };
+    
+    // Manually add to log messages to ensure it's visible immediately
+    logMessages = [...logMessages, resetLogEntry];
+    
+    console.log("Sending reinit_reaper_with_backup message");
+    
+    // Send the reset command
+    sendMessage({
+      type: 'reinit_reaper_with_backup'
+    });
+    
+    // The response will be handled in the subscription
+  }
+  
+  function cancelReaperReset() {
+    // User canceled the reset
+    showReaperResetModal = false;
   }
 </script>
 
@@ -916,12 +953,24 @@
         <h2 class="card-title">REAPER Integration Log</h2>
 
         <div class="bg-base-300 rounded-lg p-4 h-[300px] overflow-y-auto font-mono text-sm">
-          {#if logMessages.length === 0 || !logMessages.some(msg => msg.message.includes('REAPER') || msg.message.includes('reapy'))}
+          {#if logMessages.length === 0 || !logMessages.some(msg => 
+            msg.message.includes('REAPER') || 
+            msg.message.includes('reapy') ||
+            msg.message.includes('configuration') ||
+            msg.message.includes('resetting') ||
+            msg.message.includes('Resetting')
+          )}
             <div class="flex justify-center items-center h-full">
               <p class="opacity-50 italic">No REAPER integration logs yet. Initialize REAPER integration to see output.</p>
             </div>
           {:else}
-            {#each logMessages.filter(msg => msg.message.includes('REAPER') || msg.message.includes('reapy')) as log}
+            {#each logMessages.filter(msg => 
+              msg.message.includes('REAPER') || 
+              msg.message.includes('reapy') ||
+              msg.message.includes('configuration') ||
+              msg.message.includes('resetting') ||
+              msg.message.includes('Resetting')
+            ) as log}
               <div class="mb-1 {log.level.toLowerCase() === 'error' ? 'text-error' : log.level.toLowerCase() === 'warn' ? 'text-warning' : log.level.toLowerCase() === 'success' ? 'text-success' : 'text-info'}">
                 <span class="opacity-70 mr-2">[{log.timestamp}]</span>
                 <span class="font-bold mr-2">[{log.level}]</span>
@@ -993,6 +1042,46 @@
             Cancel
           </button>
         {/if}
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- REAPER Reset Configuration Modal -->
+{#if showReaperResetModal}
+  <div class="modal modal-open">
+    <div class="modal-box">
+      <h3 class="font-bold text-xl mb-4 text-warning">Reset REAPER Configuration</h3>
+      
+      <p class="mb-4">
+        This action will:
+      </p>
+      
+      <ul class="list-disc list-inside mb-6 space-y-2">
+        <li>Back up your current REAPER configuration</li>
+        <li>Create a fresh configuration optimized for Renardo</li>
+        <li>Overwrite any custom REAPER settings you may have</li>
+      </ul>
+      
+      <div class="alert alert-warning mb-6">
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+        <span>This action cannot be undone, but a backup will be created automatically.</span>
+      </div>
+      
+      <p class="mb-4 text-sm opacity-70">
+        Note: The backup will be saved in your REAPER user directory. You can restore it manually if needed.
+      </p>
+      
+      <div class="modal-action">
+        <button class="btn" on:click={cancelReaperReset}>
+          Cancel
+        </button>
+        <button class="btn btn-warning" on:click={confirmReaperReset}>
+          {#if isReinitializingReaper}
+            <span class="loading loading-spinner loading-xs"></span>
+          {/if}
+          Reset Configuration
+        </button>
       </div>
     </div>
   </div>

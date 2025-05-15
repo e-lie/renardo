@@ -16,7 +16,7 @@ from renardo.sc_backend import write_sc_renardo_files_in_user_config, is_renardo
 from renardo.webserver.routes.ws_utils import WebsocketLogger
 
 # Import REAPER routes
-from renardo.webserver.routes.reaper_routes import start_reaper_initialization_task, confirm_reaper_action_task
+from renardo.webserver.routes.reaper_routes import start_reaper_initialization_task, confirm_reaper_action_task, reinit_reaper_with_backup_task, open_reaper_user_dir_task
 
 def register_websocket_routes(sock):
     """
