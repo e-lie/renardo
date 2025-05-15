@@ -1,5 +1,4 @@
 
-from pathlib import Path
 from .settings_manager import settings
 
 recording_dir = settings.get_path("RECORDING_DIR")
