@@ -66,6 +66,17 @@
           }
         }
         
+        // Handle SuperCollider IDE launch response
+        if (message.type === 'sc_ide_launch_result') {
+          if (message.data.success) {
+            successMessage = message.data.message || 'SuperCollider IDE launched successfully';
+            setTimeout(() => { successMessage = ''; }, 3000);
+          } else {
+            error = message.data.message || 'Failed to launch SuperCollider IDE';
+            setTimeout(() => { error = null; }, 5000);
+          }
+        }
+        
         // Handle REAPER initialization responses
         if (message.type === 'reaper_init_log') {
           reaperInitLog = [...reaperInitLog, message.data];
@@ -154,6 +165,18 @@
       data: {
         customCode: customSclangCode
       }
+    });
+    
+    // We'll get the response via WebSocket in the subscription
+  }
+  
+  // Launch SuperCollider IDE
+  function launchSupercolliderIDE() {
+    error = null;
+    successMessage = '';
+    
+    sendMessage({
+      type: 'launch_supercollider_ide'
     });
     
     // We'll get the response via WebSocket in the subscription
@@ -387,6 +410,18 @@
             Note: The parameter "0" in these commands refers to the device index. You can use different indices if you have multiple 
             audio or MIDI devices and want to use a specific one.
           </p>
+          
+          <div class="flex justify-center mt-6">
+            <button 
+              class="btn btn-primary" 
+              on:click={launchSupercolliderIDE}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+              </svg>
+              Launch SuperCollider IDE
+            </button>
+          </div>
         </div>
       </div>
     </div>
