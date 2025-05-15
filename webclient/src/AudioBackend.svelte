@@ -27,6 +27,7 @@
   let showReaperResetModal = false;
   let isReaperModalLoading = false;
   let isReinitializingReaper = false;
+  let isTestingReaperIntegration = false;
   
   // Tab state
   let activeTab = 'supercollider'; // supercollider, reaper
@@ -246,6 +247,36 @@
             successMessage = 'REAPER launched successfully';
           } else {
             error = message.data.message || 'Failed to launch REAPER';
+          }
+          
+          setTimeout(() => { 
+            successMessage = '';
+            error = null;
+          }, 5000);
+        }
+        
+        // Handle REAPER integration test responses
+        if (message.type === 'reaper_test_result') {
+          console.log("Received reaper_test_result:", message);
+          isTestingReaperIntegration = false;
+          
+          // Create a log entry for the test result
+          const testResultEntry = {
+            timestamp: new Date().toLocaleTimeString(),
+            level: message.data.success ? 'SUCCESS' : 'ERROR',
+            message: message.data.message || (message.data.success 
+              ? 'REAPER integration test completed successfully.' 
+              : 'REAPER integration test failed.')
+          };
+          
+          // Add this log entry to our log messages
+          logMessages = [...logMessages, testResultEntry];
+          
+          // Also display a user notification
+          if (message.data.success) {
+            successMessage = 'REAPER integration test completed successfully';
+          } else {
+            error = message.data.message || 'REAPER integration test failed';
           }
           
           setTimeout(() => { 
@@ -494,6 +525,26 @@
     // Send the launch REAPER command
     sendMessage({
       type: 'launch_reaper_pythonhome'
+    });
+  }
+  
+  function testReaperIntegration() {
+    // Set flag to show spinner
+    isTestingReaperIntegration = true;
+    
+    // Add a log entry for testing REAPER integration
+    const testLogEntry = {
+      timestamp: new Date().toLocaleTimeString(),
+      level: 'INFO',
+      message: 'Running REAPER integration test (adding tracks)...'
+    };
+    
+    // Manually add to log messages to ensure it's visible immediately
+    logMessages = [...logMessages, testLogEntry];
+    
+    // Send the test integration command
+    sendMessage({
+      type: 'test_reaper_integration'
     });
   }
 </script>
@@ -989,6 +1040,21 @@
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
             </svg>
             Launch REAPER
+          </button>
+          
+          <button
+            class="btn btn-success"
+            on:click={testReaperIntegration}
+            disabled={isTestingReaperIntegration || !$appState.connected}
+          >
+            {#if isTestingReaperIntegration}
+              <span class="loading loading-spinner loading-xs"></span>
+            {:else}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V8z" />
+              </svg>
+            {/if}
+            Test Integration (Add Tracks)
           </button>
           
           <button
