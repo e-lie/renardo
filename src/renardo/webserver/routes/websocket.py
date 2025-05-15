@@ -16,7 +16,7 @@ from renardo.sc_backend import write_sc_renardo_files_in_user_config, is_renardo
 from renardo.webserver.routes.ws_utils import WebsocketLogger
 
 # Import REAPER routes
-from renardo.webserver.routes.reaper_routes import start_reaper_initialization_task, confirm_reaper_action_task, reinit_reaper_with_backup_task, open_reaper_user_dir_task, launch_reaper_pythonhome_task
+from renardo.webserver.routes.reaper_routes import start_reaper_initialization_task, confirm_reaper_action_task, reinit_reaper_with_backup_task, open_reaper_user_dir_task, launch_reaper_pythonhome_task, test_reaper_integration_task
 
 def register_websocket_routes(sock):
     """
@@ -213,6 +213,13 @@ def register_websocket_routes(sock):
                         # Launch REAPER with correct PYTHONHOME environment
                         threading.Thread(
                             target=launch_reaper_pythonhome_task,
+                            args=(ws,)
+                        ).start()
+                        
+                    elif message_type == "test_reaper_integration":
+                        # Run REAPER integration test (add tracks)
+                        threading.Thread(
+                            target=test_reaper_integration_task,
                             args=(ws,)
                         ).start()
                     
