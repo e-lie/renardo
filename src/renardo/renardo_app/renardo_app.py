@@ -91,13 +91,13 @@ class RenardoApp:
         # Original reapy integration
         elif self.args.reapy:
             try:
-                import renardo_reapy
-                renardo_reapy.configure_reaper()
+                import reapy
+                reapy.configure_reaper()
                 print("Reaper integration enabled successfully")
                 # Update the state
                 self.state_manager.update_renardo_init_status("reaperIntegration", True)
             except ImportError:
-                print("Error: renardo_reapy module not found. Please install it to use Reaper integration.")
+                print("Error: reapy module not found. Please install it to use Reaper integration.")
             except Exception as e:
                 print(f"Error configuring Reaper integration: {e}")
             return
