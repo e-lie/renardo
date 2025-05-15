@@ -522,6 +522,82 @@ def open_reaper_user_dir_task(ws):
             pass
 
 
+def launch_reaper_pythonhome_task(ws):
+    """Launch REAPER with the correct PYTHONHOME environment variable"""
+    # Create logger
+    logger = WebsocketLogger(ws)
+    
+    try:
+        # Import REAPER launcher module
+        try:
+            from renardo.reaper_backend.reaper_mgt.launcher import launch_reaper_with_pythonhome
+        except ImportError as e:
+            error_msg = f"Error importing REAPER modules: {str(e)}"
+            logger.write_error(error_msg)
+            ws.send(json.dumps({
+                "type": "reaper_launch_result",
+                "data": {
+                    "success": False,
+                    "message": error_msg
+                }
+            }))
+            return
+        
+        # Capture console output
+        old_stdout = sys.stdout
+        sys.stdout = captured_output = io.StringIO()
+        
+        # Launch REAPER
+        success = launch_reaper_with_pythonhome()
+        
+        # Restore stdout and get captured output
+        sys.stdout = old_stdout
+        output_lines = captured_output.getvalue().strip().split('\n')
+        
+        # Log the output
+        for line in output_lines:
+            if line.strip():
+                level = "ERROR" if "error" in line.lower() else "INFO"
+                logger.write_line(line, level)
+        
+        # Send result to client
+        if success:
+            logger.write_line("REAPER launched successfully with correct PYTHONHOME environment", "SUCCESS")
+            ws.send(json.dumps({
+                "type": "reaper_launch_result",
+                "data": {
+                    "success": True,
+                    "message": "REAPER launched successfully"
+                }
+            }))
+        else:
+            error_msg = "Failed to launch REAPER"
+            logger.write_error(error_msg)
+            ws.send(json.dumps({
+                "type": "reaper_launch_result",
+                "data": {
+                    "success": False,
+                    "message": error_msg
+                }
+            }))
+    
+    except Exception as e:
+        error_msg = f"Error launching REAPER: {str(e)}"
+        logger.write_error(error_msg)
+        
+        # Send error message
+        try:
+            ws.send(json.dumps({
+                "type": "reaper_launch_result",
+                "data": {
+                    "success": False,
+                    "message": error_msg
+                }
+            }))
+        except:
+            pass
+
+
 def reinit_reaper_with_backup_task(ws):
     """Reinitialize REAPER with backup in a separate thread"""
     # Create logger
