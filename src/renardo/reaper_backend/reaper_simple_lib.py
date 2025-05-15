@@ -125,7 +125,7 @@ def create_standard_midi_track(track_num: int):
     - Record armed
     - Set to receive from "All MIDI inputs"
     - Set to receive from the MIDI channel corresponding to its number
-    - Record mode set to disable (normal)
+    - Record mode set to "Record: disable (monitoring only)"
     """
     # Create track with name "chanX" where X is the channel number
     track_name = f"chan{track_num}"
@@ -137,17 +137,16 @@ def create_standard_midi_track(track_num: int):
     # Arm the track for recording
     arm_track(track)
     
-    # Set record mode to normal (not monitoring)
-    # 0 = disabled (normal), 1 = record (input) monitoring, 2 = monitoring and record
-    RPR.SetMediaTrackInfo_Value(track, "I_RECMODE", 0)
+    # Set record mode to "Record: disable (monitoring only)"
+    # 0 = disabled (normal)
+    # 1 = record: disable (monitoring only)
+    # 2 = record: enable (input monitoring and recording)
+    RPR.SetMediaTrackInfo_Value(track, "I_RECMODE", 1)
 
 def create_16_midi_tracks():
     """
     Creates 16 MIDI tracks in REAPER, one for each MIDI channel.
-    """
-    # Get the current project
-    project = reapy.Project()
-    
+    """  
     # Create 16 tracks, one for each MIDI channel
     for i in range(1, 17):  # 1 to 16
         create_standard_midi_track(i)
