@@ -35,7 +35,7 @@ def launch_reaper_with_pythonhome():
     5. Detaches the REAPER process from the Python script
     
     Returns:
-        bool: True if REAPER was launched successfully, False otherwise
+        tuple: (bool, str) - Success status and PYTHONHOME path used
     """
     try:
         # Get the Python shared library path
@@ -229,11 +229,11 @@ def launch_reaper_with_pythonhome():
             )
         
         print("REAPER process started. PID:", process.pid)
-        return True
+        return True, python_home
         
     except Exception as e:
         print(f"Error launching REAPER: {e}")
-        return False
+        return False, None
 
 
 def initialize_reapy():
@@ -251,7 +251,8 @@ def initialize_reapy():
     try:
         # Step 1: Launch REAPER with correct PYTHONHOME
         print("\n===== Step 1: Launching REAPER with correct PYTHONHOME =====")
-        if not launch_reaper_with_pythonhome():
+        success, pythonhome = launch_reaper_with_pythonhome()
+        if not success:
             print("Failed to launch REAPER")
             return False
         
@@ -278,7 +279,8 @@ def initialize_reapy():
         input("Press Enter once REAPER is closed...")
             
         print("Restarting REAPER...")
-        if not launch_reaper_with_pythonhome():
+        success, pythonhome = launch_reaper_with_pythonhome()
+        if not success:
             print("Failed to restart REAPER")
             return False
         
