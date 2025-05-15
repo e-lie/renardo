@@ -1223,9 +1223,9 @@ dependencies = [
     { name = "psutil" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f4/43/ad4444eb8a8659f97267b19ff38204d72a1c64b1bb6aac2015ba5467e52b/renardo_reapy-0.11.0.dev6.tar.gz", hash = "sha256:3250876f975c9368318ced46c8b6b906a63aa85443fd8eb5110d7aa924500738", size = 146345, upload-time = "2025-05-14T13:03:13.432Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f4/43/ad4444eb8a8659f97267b19ff38204d72a1c64b1bb6aac2015ba5467e52b/reapy-0.11.0.dev6.tar.gz", hash = "sha256:3250876f975c9368318ced46c8b6b906a63aa85443fd8eb5110d7aa924500738", size = 146345, upload-time = "2025-05-14T13:03:13.432Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/07/e9/3ed9ff50c927df361355f63dbeadeb5bfd1c3a848c4e963e50bb7c847319/renardo_reapy-0.11.0.dev6-py3-none-any.whl", hash = "sha256:3284ae9e870a424b477ccd60c09b25e87dbd78a7b49049ab0707f7f4840eb2c5", size = 124908, upload-time = "2025-05-14T13:03:11.6Z" },
+    { url = "https://files.pythonhosted.org/packages/07/e9/3ed9ff50c927df361355f63dbeadeb5bfd1c3a848c4e963e50bb7c847319/reapy-0.11.0.dev6-py3-none-any.whl", hash = "sha256:3284ae9e870a424b477ccd60c09b25e87dbd78a7b49049ab0707f7f4840eb2c5", size = 124908, upload-time = "2025-05-14T13:03:11.6Z" },
 ]
 
 [[package]]

@@ -12,9 +12,8 @@ from renardo.reaper_backend.ReaperIntegrationLib.ReaTaskQueue import ReaTask
 def init_reapy_project():
     project = None
     try:
-        # import reapy
-        import renardo_reapy.runtime as runtime
-        project = ReaProject(Clock, reapylib=runtime)
+        import reapy
+        project = ReaProject(Clock, reapylib=reapy)
     except Exception as err:
         output = err.message if hasattr(err, 'message') else err
         print("Error scanning and initializing Reaper project: {output} -> skipping Reaper integration".format(output=output))
