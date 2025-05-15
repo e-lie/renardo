@@ -572,12 +572,36 @@ def execute_sc_code_task(ws, custom_code="Renardo.start; Renardo.midi;"):
             "scBackendStartupCode": custom_code
         })
         
+        # Check if sclang is actually running and accessible
+        if not sc_instance.sclang_process or sc_instance.sclang_process.stdin is None:
+            # Try to restart the sclang process if it's not properly initialized
+            logger.write_line("SuperCollider process not fully initialized. Attempting to restart...", "WARN")
+            sc_instance.start_sclang_subprocess()
+            
+            # Wait briefly for initialization
+            import time
+            time.sleep(2)
+            
+            # Check again
+            if not sc_instance.sclang_process or sc_instance.sclang_process.stdin is None:
+                error_msg = "Could not initialize SuperCollider process properly. Please restart the backend."
+                logger.write_line(error_msg, "ERROR")
+                ws.send(json.dumps({
+                    "type": "error",
+                    "message": error_msg
+                }))
+                return
+        
         # Execute custom code
         logger.write_line(f"Executing SuperCollider code...", "INFO")
         for line in custom_code.strip().split(';'):
             if line.strip():
-                sc_instance.evaluate_sclang_code(f"{line.strip()};")
-                logger.write_line(f"Executed: {line.strip()};", "INFO")
+                try:
+                    sc_instance.evaluate_sclang_code(f"{line.strip()};")
+                    logger.write_line(f"Executed: {line.strip()};", "INFO")
+                except Exception as e:
+                    logger.write_line(f"Error executing code line '{line.strip()}': {str(e)}", "ERROR")
+                    raise
         
         # Update state to reflect Renardo running
         state_helper.update_state("runtime_status", {

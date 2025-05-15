@@ -92,14 +92,19 @@ class SupercolliderInstance:
             return False
 
     def read_stdout_line(self):
-        if self.sclang_process.returncode is None:
+        if self.sclang_process is not None and self.sclang_process.returncode is None and self.sclang_process.stdout is not None:
            return self.sclang_process.stdout.readline().decode("utf-8")
+        return ""
 
     def read_stderr_line(self):
-        if self.sclang_process.returncode is None:
+        if self.sclang_process is not None and self.sclang_process.returncode is None and self.sclang_process.stderr is not None:
             return self.sclang_process.stderr.readline().decode("utf-8")
+        return ""
 
     def evaluate_sclang_code(self, code_string):
+        if self.sclang_process is None or self.sclang_process.stdin is None:
+            raise RuntimeError("SuperCollider process is not running or stdin is not available")
+            
         raw = code_string.encode("utf-8") + b"\x1b"
         self.sclang_process.stdin.write(raw)
         self.sclang_process.stdin.flush()
@@ -115,10 +120,24 @@ class SupercolliderInstance:
         # self.popen.wait()
 
     def is_sclang_running(self):
+        # First check if our stored process is running
+        if self.sclang_process is not None:
+            try:
+                # Check if process still exists and is running
+                if self.sclang_process.poll() is None:
+                    return True
+            except:
+                pass  # Process likely terminated, continue to fallback check
+                
+        # Fallback: Check if any sclang process is running
         running = False
         for process in psutil.process_iter():
-            if 'sclang' in process.name():
-                running = True
+            try:
+                if 'sclang' in process.name():
+                    running = True
+                    break
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                pass
         return running
         
     def launch_supercollider_ide(self):
