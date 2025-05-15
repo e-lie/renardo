@@ -60,17 +60,47 @@ def master_volume(volume):
     master_track = get_master_track()
     RPR.SetMediaTrackInfo_Value(master_track, "D_VOL", volume)
 
-def midi_selection_idx(midi_device=0, midi_chan=0):
-    if midi_chan == -1: # -1 means all channel
+def midi_selection_idx(midi_device=0, midi_chan=0, all_midi_inputs=False):
+    """
+    Calculate the MIDI input selection index for REAPER.
+    
+    Args:
+        midi_device: Index of MIDI device (0 = first device, 1 = second device, etc.)
+                     Ignored if all_midi_inputs is True.
+        midi_chan: MIDI channel (1-16), or -1 for all channels
+        all_midi_inputs: When True, use "All MIDI inputs" instead of a specific device
+    
+    Returns:
+        int: The calculated index for REAPER's I_RECINPUT parameter
+    """
+    if midi_chan == -1:  # -1 means all channels
         channel_idx = 0
     else:
-        channel_idx = max(midi_chan, 1)
-    idx = 4096 + (midi_device << 5) + channel_idx # Magicccc
+        channel_idx = max(midi_chan, 1)  # Ensure valid channel (minimum 1)
+    
+    if all_midi_inputs:
+        # For "All MIDI inputs", use device index 63 (0x3F)
+        device_idx = 63  # Special value for "All MIDI inputs"
+    else:
+        device_idx = midi_device
+    
+    idx = 4096 + (device_idx << 5) + channel_idx  # Magic REAPER formula
     return idx
 
-def track_midi_input(track_or_num, midi_chan, midi_device=0):
+def track_midi_input(track_or_num, midi_chan, midi_device=0, all_midi_inputs=True):
+    """
+    Set the MIDI input for a track.
+    
+    Args:
+        track_or_num: Track object or track index
+        midi_chan: MIDI channel (1-16), or -1 for all channels
+        midi_device: Index of MIDI device (0 = first device, 1 = second device, etc.)
+                     Ignored if all_midi_inputs is True.
+        all_midi_inputs: When True, use "All MIDI inputs" instead of a specific device
+    """
     track = ensure_track(track_or_num)
-    RPR.SetMediaTrackInfo_Value(track, "I_RECINPUT", midi_selection_idx(midi_device, midi_chan))
+    RPR.SetMediaTrackInfo_Value(track, "I_RECINPUT", 
+                               midi_selection_idx(midi_device, midi_chan, all_midi_inputs))
 
 def add_send(src_track_or_num, dest_track_or_num, volume=1.0, mode="post_fader"):
     if mode == "pre_fx":
@@ -109,11 +139,11 @@ def unarm_track(track_or_num):
     track = ensure_track(track_or_num)
     RPR.SetMediaTrackInfo_Value(track, "I_RECARM", 0)
 
-set_send_volume(1,0,db_to_volume(-3))
+# set_send_volume(1,0,db_to_volume(-3))
 
-master_volume(db_to_volume(-2))
+# master_volume(db_to_volume(-2))
 
-unarm_track(0)
+# unarm_track(0)
 
 
 def create_standard_midi_track(track_num: int):
