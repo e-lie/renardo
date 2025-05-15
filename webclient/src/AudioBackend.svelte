@@ -225,6 +225,35 @@
           }
         }
         
+        // Handle REAPER launch responses
+        if (message.type === 'reaper_launch_result') {
+          console.log("Received reaper_launch_result:", message);
+          
+          // Create a log entry for the launch result
+          const launchResultEntry = {
+            timestamp: new Date().toLocaleTimeString(),
+            level: message.data.success ? 'SUCCESS' : 'ERROR',
+            message: message.data.success 
+              ? 'REAPER launched successfully with the correct PYTHONHOME environment.' 
+              : message.data.message || 'Failed to launch REAPER'
+          };
+          
+          // Add this log entry to our log messages
+          logMessages = [...logMessages, launchResultEntry];
+          
+          // Also display a user notification
+          if (message.data.success) {
+            successMessage = 'REAPER launched successfully';
+          } else {
+            error = message.data.message || 'Failed to launch REAPER';
+          }
+          
+          setTimeout(() => { 
+            successMessage = '';
+            error = null;
+          }, 5000);
+        }
+        
         // Handle errors
         if (message.type === 'error') {
           error = message.message;
@@ -449,6 +478,23 @@
   function cancelReaperReset() {
     // User canceled the reset
     showReaperResetModal = false;
+  }
+
+  function launchReaper() {
+    // Add a log entry for launching REAPER
+    const launchLogEntry = {
+      timestamp: new Date().toLocaleTimeString(),
+      level: 'INFO',
+      message: 'Launching REAPER with correct PYTHONHOME environment...'
+    };
+    
+    // Manually add to log messages to ensure it's visible immediately
+    logMessages = [...logMessages, launchLogEntry];
+    
+    // Send the launch REAPER command
+    sendMessage({
+      type: 'launch_reaper_pythonhome'
+    });
   }
 </script>
 
@@ -901,6 +947,11 @@
           <span>REAPER must be installed on your system to use this integration. Visit <a href="https://www.reaper.fm/" target="_blank" class="link link-primary">reaper.fm</a> to download.</span>
         </div>
         
+        <div class="alert alert-warning mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+          <span><strong>Important:</strong> Always launch REAPER through Renardo using the "Launch REAPER" button below. This sets the correct PYTHONHOME environment variable. Launching REAPER directly may cause it to crash when using Python functionality.</span>
+        </div>
+        
         <div class="flex flex-wrap gap-2">
           <button
             class="btn btn-primary"
@@ -927,6 +978,17 @@
               <path d="M6 12a2 2 0 012-2h8a2 2 0 012 2v2a2 2 0 01-2 2H2h2a2 2 0 002-2v-2z" />
             </svg>
             Open REAPER User Directory
+          </button>
+          
+          <button
+            class="btn btn-primary"
+            on:click={launchReaper}
+            disabled={!$appState.connected}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+            </svg>
+            Launch REAPER
           </button>
           
           <button
