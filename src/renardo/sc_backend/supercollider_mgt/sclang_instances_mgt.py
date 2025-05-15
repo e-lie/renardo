@@ -78,27 +78,81 @@ class SupercolliderInstance:
 
 
     def start_sclang_subprocess(self):
-        if not self.is_sclang_running():
-            #print("Auto Launching Renardo SC module with SynthDefManagement...")
+        # First check if we already have a process running
+        if self.sclang_process is not None:
+            try:
+                # Check if it's still running
+                if self.sclang_process.poll() is None:
+                    return True  # Process is already running
+                # If we reach here, the process has terminated
+            except:
+                pass  # Process reference is invalid, create a new one
+        
+        # At this point, either we don't have a process or it's not running
+        # Check if there's any other sclang running that might interfere
+        for process in psutil.process_iter():
+            try:
+                if 'sclang' in process.name():
+                    print(f"Warning: Found existing sclang process (PID: {process.pid})")
+                    # Don't try to kill it here, just notify
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                pass
+        
+        # Start a new sclang process
+        try:
             self.sclang_process = subprocess.Popen(
                 args=self.sclang_exec,
-                #shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 stdin=subprocess.PIPE,
+                bufsize=1,  # Line buffered
+                universal_newlines=False  # Use binary mode
             )
+            
+            # Wait a short time to ensure the process starts properly
+            import time
+            time.sleep(1)
+            
+            # Check if the process is actually running
+            if self.sclang_process.poll() is not None:
+                print(f"Error: sclang process failed to start (exit code: {self.sclang_process.returncode})")
+                self.sclang_process = None
+                return False
+                
             return True
-        else:
+        except Exception as e:
+            print(f"Error starting sclang: {e}")
+            self.sclang_process = None
             return False
 
     def read_stdout_line(self):
-        if self.sclang_process is not None and self.sclang_process.returncode is None and self.sclang_process.stdout is not None:
-           return self.sclang_process.stdout.readline().decode("utf-8")
+        """Read a line from the sclang process stdout
+        
+        Returns:
+            str: Line read from stdout, or empty string if process not available
+        """
+        if self.sclang_process is not None:
+            try:
+                # Check if process is still running
+                if self.sclang_process.poll() is None and self.sclang_process.stdout is not None:
+                    return self.sclang_process.stdout.readline().decode("utf-8", errors="replace")
+            except Exception as e:
+                print(f"Error reading stdout: {e}")
         return ""
 
     def read_stderr_line(self):
-        if self.sclang_process is not None and self.sclang_process.returncode is None and self.sclang_process.stderr is not None:
-            return self.sclang_process.stderr.readline().decode("utf-8")
+        """Read a line from the sclang process stderr
+        
+        Returns:
+            str: Line read from stderr, or empty string if process not available
+        """
+        if self.sclang_process is not None:
+            try:
+                # Check if process is still running
+                if self.sclang_process.poll() is None and self.sclang_process.stderr is not None:
+                    return self.sclang_process.stderr.readline().decode("utf-8", errors="replace")
+            except Exception as e:
+                print(f"Error reading stderr: {e}")
         return ""
 
     def evaluate_sclang_code(self, code_string):
