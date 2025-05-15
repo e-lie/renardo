@@ -356,6 +356,40 @@
         </div>
       </div>
     </div>
+    
+    <!-- SuperCollider Documentation -->
+    <div class="collapse collapse-arrow bg-base-200 shadow-md mb-8">
+      <input type="checkbox" /> 
+      <div class="collapse-title text-md font-medium">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        SuperCollider troubleshooting and manual setup
+      </div>
+      <div class="collapse-content bg-base-100"> 
+        <div class="prose">
+          <p>
+            SuperCollider/sclang can behave in unexpected ways depending on your system configuration, audio setup, 
+            and other software running. If you encounter issues with automatic initialization, you can start the backend manually:
+          </p>
+          
+          <ol>
+            <li>Open SuperCollider (IDE) application</li>
+            <li>Execute the following code to start the audio server on the first Audio device:
+              <pre class="bg-base-300 p-2 rounded"><code>Renardo.start(0)</code></pre>
+            </li>
+            <li>Execute the following code to start the Renardo SuperCollider MIDI on the first MIDI device:
+              <pre class="bg-base-300 p-2 rounded"><code>Renardo.midi(0)</code></pre>
+            </li>
+          </ol>
+          
+          <p class="text-sm opacity-75">
+            Note: The parameter "0" in these commands refers to the device index. You can use different indices if you have multiple 
+            audio or MIDI devices and want to use a specific one.
+          </p>
+        </div>
+      </div>
+    </div>
 
     <!-- Custom initialization code card -->
     <div class="card bg-base-100 shadow-xl mb-8">
