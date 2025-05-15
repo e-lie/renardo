@@ -387,6 +387,11 @@ function handleMessage(message) {
       console.debug(`Received pong, RTT: ${roundTripTime}ms`);
       break;
       
+    case 'reaper_reinit_result':
+      console.log('RECEIVED REAPER RESET RESULT:', message);
+      // This will be handled by the AudioBackend component via _lastMessage
+      break;
+      
     default:
       console.log('Unhandled message type:', type, message);
   }
@@ -396,12 +401,24 @@ function handleMessage(message) {
  * Send message to WebSocket server
  */
 export function sendMessage(message) {
+  // Add debugging for REAPER reset functionality
+  if (message.type === 'reinit_reaper_with_backup') {
+    console.log('SENDING REAPER RESET MESSAGE:', message);
+  }
+  
   if (socket && socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify(message));
+    const messageStr = JSON.stringify(message);
+    socket.send(messageStr);
+    
+    // Log after sending
+    if (message.type === 'reinit_reaper_with_backup') {
+      console.log('REAPER RESET MESSAGE SENT SUCCESSFULLY');
+    }
+    
     return true;
   }
   
-  console.warn('WebSocket not connected, unable to send message');
+  console.warn('WebSocket not connected, unable to send message:', message);
   return false;
 }
 
