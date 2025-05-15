@@ -235,7 +235,7 @@
             timestamp: new Date().toLocaleTimeString(),
             level: message.data.success ? 'SUCCESS' : 'ERROR',
             message: message.data.success 
-              ? 'REAPER launched successfully with the correct PYTHONHOME environment.' 
+              ? `REAPER launched successfully with PYTHONHOME=${message.data.pythonhome}` 
               : message.data.message || 'Failed to launch REAPER'
           };
           
@@ -244,15 +244,27 @@
           
           // Also display a user notification
           if (message.data.success) {
-            successMessage = 'REAPER launched successfully';
+            successMessage = message.data.pythonhome 
+              ? `REAPER launched successfully with PYTHONHOME=${message.data.pythonhome}`
+              : 'REAPER launched successfully';
           } else {
             error = message.data.message || 'Failed to launch REAPER';
+          }
+          
+          // If we have PYTHONHOME, add a more detailed log entry explaining its importance
+          if (message.data.success && message.data.pythonhome) {
+            const pythonHomeInfoEntry = {
+              timestamp: new Date().toLocaleTimeString(),
+              level: 'INFO',
+              message: `The PYTHONHOME environment variable is set to point to the Python installation used by Renardo. This ensures REAPER can correctly load Python plugins and extensions.`
+            };
+            logMessages = [...logMessages, pythonHomeInfoEntry];
           }
           
           setTimeout(() => { 
             successMessage = '';
             error = null;
-          }, 5000);
+          }, 8000); // Increase timeout to give users time to read the PYTHONHOME path
         }
         
         // Handle REAPER integration test responses
