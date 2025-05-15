@@ -445,3 +445,23 @@ def reinit_reaper_with_backup():
     except Exception as e:
         print(f"Error backing up REAPER configuration: {e}")
         return False
+
+
+def test_reaper_integration():
+    import reapy
+    project = reapy.Project()
+    # Create a new track for audio
+    audio_track = project.add_track(index=-1, name="Test Track")
+    if audio_track:
+        result = {
+            "success": True,
+            "message": audio_track.name
+        }
+    else:
+        result = {
+            "success": False,
+            "message": ""
+        }
+    return result
+        
+        
