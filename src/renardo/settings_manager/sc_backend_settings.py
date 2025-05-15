@@ -10,7 +10,7 @@ settings.set_defaults_from_dict({
         "ACTIVATED_SCCODE_BANKS": ['foxdot_core', 'foxdot_community', 'crashserver'],
         # Indicate to which ouput device should the Renardo supercollider midi connect by default
         # You can list the midi device in the corresponding section of Audio backends > SuperCollider > MIDI.
-        "SUPERCOLLIDER_MIDI_OUTPUT_NUMBER": 0,
+        # "SUPERCOLLIDER_MIDI_OUTPUT_NUMBER": 0,
     }
 },
 )
