@@ -1,4 +1,4 @@
-import renardo_reapy.reascript_api as RPR
+import reapy.reascript_api as RPR
 # import reapy.reascript_api as RPR
 
 
