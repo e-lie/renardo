@@ -285,11 +285,18 @@
       {#if currentRoute === 'editor'}
         <CodeEditor />
       {:else if currentRoute === 'init'}
-        <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Component-specific content -->
+        <RenardoInit />
+
+        <div class="container mx-auto px-4 py-8 max-w-6xl">
+          
+          <!-- Theme Selector -->
+          <ThemeSelector />
+
           <!-- Getting Started Tutorial Card -->
           <div class="card bg-base-100 shadow-xl mb-8">
             <div class="card-body">
-              <h2 class="card-title text-xl title-font">Getting Started with Renardo >></h2>
+              <h2 class="card-title text-xl title-font">Explore further >></h2>
               <p class="text-base-content/70 mb-4">
                 {$appState.welcomeText || 'Create music with the Renardo live coding environment'}
               </p>
@@ -383,67 +390,6 @@
             </div>
           </div>
 
-          <!-- Theme Selector -->
-          <ThemeSelector />
-
-          <!-- Status Card -->
-          {#if webSocketSupported}
-            <div class="card bg-base-100 shadow-xl mb-8">
-              <div class="card-body">
-                <h2 class="card-title title-font">System Status >></h2>
-                <div class="overflow-x-auto">
-                  <table class="table table-zebra">
-                    <tbody>
-                      <tr>
-                        <td class="font-medium">WebSocket Connection</td>
-                        <td>
-                          {#if $appState.connected}
-                            <div class="badge badge-success gap-2">
-                              <span class="relative flex h-2 w-2">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-success"></span>
-                                <span class="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
-                              </span>
-                              Connected
-                            </div>
-                          {:else}
-                            <div class="badge badge-error gap-2">
-                              <span class="relative flex h-2 w-2">
-                                <span class="relative inline-flex rounded-full h-2 w-2 bg-error"></span>
-                              </span>
-                              Disconnected
-                            </div>
-                          {/if}
-                        </td>
-                      </tr>
-                      {#if $appState.runtimeStatus}
-                        <tr>
-                          <td class="font-medium">SuperCollider Backend</td>
-                          <td>
-                            {#if $appState.runtimeStatus.scBackendRunning}
-                              <div class="badge badge-success gap-2">Running</div>
-                            {:else}
-                              <div class="badge badge-error gap-2">Stopped</div>
-                            {/if}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td class="font-medium">Renardo Runtime</td>
-                          <td>
-                            {#if $appState.runtimeStatus.renardoRuntimeRunning}
-                              <div class="badge badge-success gap-2">Running</div>
-                            {:else}
-                              <div class="badge badge-error gap-2">Stopped</div>
-                            {/if}
-                          </td>
-                        </tr>
-                      {/if}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          {/if}
-
           <!-- Error messages -->
           {#if $appState.error}
             <div class="alert alert-error mb-8">
@@ -451,9 +397,6 @@
               <span>Error: {$appState.error}</span>
             </div>
           {/if}
-          
-          <!-- Component-specific content -->
-          <RenardoInit />
         </div>
       {:else if currentRoute === 'collections'}
         <Collections />
