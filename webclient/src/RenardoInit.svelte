@@ -72,7 +72,7 @@
   }
 </script>
 
-<div class="container mx-auto px-4 py-8 max-w-4xl">
+<div class="container mx-auto px-4 py-8 max-w-6xl">
   <div class="text-center mb-8">
     <h1 class="text-3xl font-bold mb-2 title-font">Renardo Initialization</h1>
     <p class="text-base-content/70">
@@ -111,20 +111,8 @@
           </div>
         </div>
       {/if}
-    </div>
-  </div>
 
-  <!-- Error messages -->
-  {#if $appState.error}
-    <div class="alert alert-error mb-8">
-      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-      <span>Error: {$appState.error}</span>
-    </div>
-  {/if}
-
-  <!-- Initialization Components -->
+      <!-- Initialization Components -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <!-- SuperCollider Classes -->
     <div class="card bg-base-100 shadow-xl">
@@ -321,4 +309,19 @@
       </div>
     </div>
   </div>
+
+    </div>
+  </div>
+
+  <!-- Error messages -->
+  {#if $appState.error}
+    <div class="alert alert-error mb-8">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>Error: {$appState.error}</span>
+    </div>
+  {/if}
+
+  
 </div>
