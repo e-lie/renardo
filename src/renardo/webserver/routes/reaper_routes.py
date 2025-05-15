@@ -598,6 +598,121 @@ def launch_reaper_pythonhome_task(ws):
             pass
 
 
+def test_reaper_integration_task(ws):
+    """Test REAPER integration by adding tracks to the current project"""
+    # Create logger
+    logger = WebsocketLogger(ws)
+    
+    try:
+        logger.write_line("Starting REAPER integration test...", "INFO")
+        
+        # Reapy Python code to add tracks
+        reapy_test_code = '''
+import reapy
+from reapy import reascript_api as RPR
+import time
+
+try:
+    # Check if REAPER is running
+    if not reapy.is_inside_reaper():
+        result = {
+            "success": False,
+            "message": "REAPER is not running. Please launch REAPER first."
+        }
+    else:
+        # Open a new project
+        RPR.Main_OnCommandEx(40023, 0, 0) # File: New project
+        time.sleep(0.5) # Short delay to let REAPER create the project
+        
+        # Get the current project
+        project = reapy.Project()
+        
+        # Add some tracks
+        track_names = ["Drums", "Bass", "Guitar", "Synth", "Vocals"]
+        
+        for name in track_names:
+            # Add a track at the end of the project
+            track = project.add_track(index=-1, name=name)
+            # Small delay to ensure tracks are created properly
+            time.sleep(0.1)
+        
+        # Count tracks to verify they were added
+        track_count = project.n_tracks
+        
+        result = {
+            "success": True,
+            "message": f"Successfully added {len(track_names)} tracks to the project: {', '.join(track_names)}. Total track count: {track_count}"
+        }
+        
+except Exception as e:
+    result = {
+        "success": False,
+        "message": f"Error in REAPER integration test: {str(e)}"
+    }
+    
+# Return result
+result
+'''
+        
+        try:
+            # Try to import reapy - this will fail if not configured or if REAPER isn't running
+            import reapy
+            logger.write_line("Reapy module imported successfully", "INFO")
+            
+            # Execute the test code
+            result = eval(reapy_test_code)
+            
+            # Log the result
+            if result["success"]:
+                logger.write_line(result["message"], "SUCCESS")
+            else:
+                logger.write_line(result["message"], "ERROR")
+            
+            # Send result to client
+            ws.send(json.dumps({
+                "type": "reaper_test_result",
+                "data": result
+            }))
+            
+        except ImportError:
+            error_msg = "Could not import reapy module. Make sure REAPER integration is initialized."
+            logger.write_error(error_msg)
+            ws.send(json.dumps({
+                "type": "reaper_test_result",
+                "data": {
+                    "success": False,
+                    "message": error_msg
+                }
+            }))
+            
+        except Exception as e:
+            error_msg = f"Error executing REAPER test: {str(e)}"
+            logger.write_error(error_msg)
+            ws.send(json.dumps({
+                "type": "reaper_test_result",
+                "data": {
+                    "success": False,
+                    "message": error_msg
+                }
+            }))
+    
+    except Exception as e:
+        error_msg = f"Error in REAPER integration test task: {str(e)}"
+        logger.write_error(error_msg)
+        
+        # Send error message
+        try:
+            ws.send(json.dumps({
+                "type": "reaper_test_result",
+                "data": {
+                    "success": False,
+                    "message": error_msg
+                }
+            }))
+        except:
+            pass
+
+
 def reinit_reaper_with_backup_task(ws):
     """Reinitialize REAPER with backup in a separate thread"""
     # Create logger
