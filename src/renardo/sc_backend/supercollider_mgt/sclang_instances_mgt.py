@@ -10,9 +10,9 @@ class SupercolliderInstance:
     def __init__(self):
         self.sclang_process = None
         self.supercollider_ready = None
+        self.sc_app_path = None
 
         if platform == "win32":
-
             path_glob = list(pathlib.Path("C:\\Program Files").glob("SuperCollider*"))
             if len(path_glob) == 0: # return if no supercollider folder
                 self.supercollider_ready = False
@@ -23,10 +23,47 @@ class SupercolliderInstance:
                 #self.sclang_exec = [str(sclang_path), str(SC_USER_CONFIG_DIR / 'start_renardo.scd')]
                 self.sclang_exec = [str(sclang_path), '-i', 'scqt']
                 self.check_exec = [str(sclang_path), '-version']
-        else:
-            #self.sclang_exec = ["sclang",  str(SC_USER_CONFIG_DIR / 'start_renardo.scd')]
+                
+                # Path to the SuperCollider IDE application on Windows
+                self.sc_app_path = sc_dir / "scide.exe"
+        
+        elif platform == "darwin":  # macOS
+            # Default sclang command
             self.sclang_exec = ["sclang", '-i', 'scqt']
             self.check_exec = ["sclang", '-version']
+            
+            # Standard macOS application paths
+            standard_paths = [
+                "/Applications/SuperCollider.app",
+                os.path.expanduser("~/Applications/SuperCollider.app")
+            ]
+            
+            for path in standard_paths:
+                if os.path.exists(path):
+                    self.sc_app_path = path
+                    break
+        
+        else:  # Linux
+            self.sclang_exec = ["sclang", '-i', 'scqt']
+            self.check_exec = ["sclang", '-version']
+            
+            # On Linux, the IDE might be accessible via various commands
+            try:
+                # Check if scide is in the PATH
+                result = subprocess.run(["which", "scide"], capture_output=True, text=True)
+                if result.returncode == 0:
+                    self.sc_app_path = "scide"
+            except:
+                # Try generic paths
+                standard_paths = [
+                    "/usr/bin/scide",
+                    "/usr/local/bin/scide"
+                ]
+                
+                for path in standard_paths:
+                    if os.path.exists(path):
+                        self.sc_app_path = path
+                        break
 
         self.is_supercollider_ready()
 
@@ -83,3 +120,26 @@ class SupercolliderInstance:
             if 'sclang' in process.name():
                 running = True
         return running
+        
+    def launch_supercollider_ide(self):
+        """Launch the SuperCollider IDE application
+        
+        Returns:
+            bool: True if the application was launched successfully, False otherwise
+        """
+        if not self.sc_app_path:
+            return False
+            
+        try:
+            if platform == "darwin":  # macOS needs special handling for .app bundles
+                subprocess.Popen(["open", self.sc_app_path])
+            elif platform == "win32" or (isinstance(self.sc_app_path, str) and os.path.exists(self.sc_app_path)):
+                # Windows or Linux with direct path
+                subprocess.Popen([str(self.sc_app_path)])
+            else:
+                # Linux with command in PATH
+                subprocess.Popen([self.sc_app_path])
+            return True
+        except Exception as e:
+            print(f"Error launching SuperCollider IDE: {e}")
+            return False
