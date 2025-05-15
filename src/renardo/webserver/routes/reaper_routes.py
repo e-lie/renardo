@@ -548,7 +548,7 @@ def launch_reaper_pythonhome_task(ws):
         sys.stdout = captured_output = io.StringIO()
         
         # Launch REAPER
-        success = launch_reaper_with_pythonhome()
+        success, pythonhome_path = launch_reaper_with_pythonhome()
         
         # Restore stdout and get captured output
         sys.stdout = old_stdout
@@ -562,12 +562,14 @@ def launch_reaper_pythonhome_task(ws):
         
         # Send result to client
         if success:
-            logger.write_line("REAPER launched successfully with correct PYTHONHOME environment", "SUCCESS")
+            success_message = f"REAPER launched successfully with PYTHONHOME={pythonhome_path}"
+            logger.write_line(success_message, "SUCCESS")
             ws.send(json.dumps({
                 "type": "reaper_launch_result",
                 "data": {
                     "success": True,
-                    "message": "REAPER launched successfully"
+                    "message": "REAPER launched successfully",
+                    "pythonhome": pythonhome_path
                 }
             }))
         else:
