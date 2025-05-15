@@ -57,6 +57,7 @@ Homepage = "http://renardo.org/"
 [dependency-groups]
 dev = [
     "hatch>=1.14.1",
+    "ipython>=8.18.1",
     "pip>=25.1.1",
     "pytest>=8.3.5",
 ]
