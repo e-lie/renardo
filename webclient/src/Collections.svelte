@@ -267,7 +267,7 @@
   });
 </script>
 
-<div class="container mx-auto px-4 py-8 max-w-4xl">
+<div class="container mx-auto px-4 py-8 max-w-6xl">
   <div class="text-center mb-8">
     <h1 class="text-3xl font-bold mb-2 title-font">Additional Collections</h1>
     <p class="text-base-content/70">
