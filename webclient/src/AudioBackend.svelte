@@ -5,10 +5,12 @@
   
   // Local state
   let isLoading = false;
+  let isSCCodeExecuting = false;
   let error = null;
   let successMessage = '';
   let logMessages = [];
   let isScBackendRunning = false;
+  let isRenardoInitialized = false;
   let customSclangCode = 'Renardo.start; Renardo.midi;'; // Default code
   
   // REAPER related state
@@ -34,6 +36,7 @@
       // Check for SC backend running status if available
       if (state.runtimeStatus && state.runtimeStatus.scBackendRunning !== undefined) {
         isScBackendRunning = state.runtimeStatus.scBackendRunning;
+        isRenardoInitialized = state.runtimeStatus.renardoRuntimeRunning || false;
       }
       
       // Check for last message for handling specific responses
@@ -43,8 +46,22 @@
         // Handle SC backend startup response
         if (message.type === 'sc_backend_status') {
           isScBackendRunning = message.data.running;
+          if (message.data.renardoInitialized !== undefined) {
+            isRenardoInitialized = message.data.renardoInitialized;
+          }
+          
           if (message.data.running) {
             successMessage = 'SuperCollider backend started successfully';
+            setTimeout(() => { successMessage = ''; }, 3000);
+          }
+        }
+        
+        // Handle SC code execution response
+        if (message.type === 'sc_code_execution_result') {
+          isSCCodeExecuting = false;
+          
+          if (message.data.success) {
+            successMessage = message.data.message || 'SuperCollider code executed successfully';
             setTimeout(() => { successMessage = ''; }, 3000);
           }
         }
@@ -120,7 +137,20 @@
     successMessage = '';
     
     sendMessage({
-      type: 'start_sc_backend',
+      type: 'start_sc_backend'
+    });
+    
+    // We'll get the response via WebSocket in the subscription
+  }
+  
+  // Execute Renardo initialization code in SuperCollider
+  function executeScCode() {
+    isSCCodeExecuting = true;
+    error = null;
+    successMessage = '';
+    
+    sendMessage({
+      type: 'execute_sc_code',
       data: {
         customCode: customSclangCode
       }
@@ -244,22 +274,41 @@
       <div class="card-body">
         <div class="flex justify-between items-center mb-4">
           <h2 class="card-title">SuperCollider Backend Status</h2>
-          {#if isScBackendRunning}
-            <div class="badge badge-success gap-2">
-              <span class="relative flex h-3 w-3">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-3 w-3 bg-success"></span>
-              </span>
-              Running
-            </div>
-          {:else}
-            <div class="badge badge-error gap-2">
-              <span class="relative flex h-3 w-3">
-                <span class="relative inline-flex rounded-full h-3 w-3 bg-error"></span>
-              </span>
-              Stopped
-            </div>
-          {/if}
+          <div class="flex gap-2">
+            {#if isScBackendRunning}
+              <div class="badge badge-success gap-2">
+                <span class="relative flex h-3 w-3">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-success"></span>
+                </span>
+                SuperCollider Running
+              </div>
+            {:else}
+              <div class="badge badge-error gap-2">
+                <span class="relative flex h-3 w-3">
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-error"></span>
+                </span>
+                SuperCollider Stopped
+              </div>
+            {/if}
+            
+            {#if isRenardoInitialized}
+              <div class="badge badge-success gap-2">
+                <span class="relative flex h-3 w-3">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-success"></span>
+                </span>
+                Renardo Initialized
+              </div>
+            {:else if isScBackendRunning}
+              <div class="badge badge-warning gap-2">
+                <span class="relative flex h-3 w-3">
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-warning"></span>
+                </span>
+                Not Initialized
+              </div>
+            {/if}
+          </div>
         </div>
 
         <div class="flex flex-wrap gap-2">
@@ -276,6 +325,21 @@
               </svg>
             {/if}
             Start SuperCollider Backend
+          </button>
+
+          <button
+            class="btn btn-success"
+            on:click={executeScCode}
+            disabled={isSCCodeExecuting || !isScBackendRunning || isRenardoInitialized || !$appState.connected}
+          >
+            {#if isSCCodeExecuting}
+              <span class="loading loading-spinner loading-xs"></span>
+            {:else}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+              </svg>
+            {/if}
+            Execute Renardo Init Code
           </button>
 
           <button
@@ -310,12 +374,24 @@
     <!-- Custom initialization code card -->
     <div class="card bg-base-100 shadow-xl mb-8">
       <div class="card-body">
-        <h2 class="card-title">Initialization Code</h2>
+        <h2 class="card-title">Renardo Initialization Code</h2>
         <p class="text-base-content/70 mb-4">
-          Customize the code that will be executed when starting the SuperCollider backend.
+          Customize the code that will be executed to initialize Renardo in the running SuperCollider instance.
           Default code includes starting Renardo and enabling MIDI support.
           <span class="label-text-alt">Default code: <code class="bg-base-300 p-1 rounded text-xs">Renardo.start; Renardo.midi;</code></span>
         </p>
+        
+        {#if isRenardoInitialized}
+          <div class="alert alert-success mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span>Renardo has been initialized in SuperCollider. You're ready to start coding music!</span>
+          </div>
+        {:else if isScBackendRunning}
+          <div class="alert alert-warning mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            <span>SuperCollider is running but Renardo has not been initialized yet. Click the "Execute Renardo Init Code" button to complete setup.</span>
+          </div>
+        {/if}
         
         <div class="form-control">
           <label for="sclangCode" class="form-control w-full">
@@ -324,7 +400,7 @@
               class="textarea textarea-bordered font-mono h-32 w-full"
               bind:value={customSclangCode}
               placeholder="Enter SuperCollider initialization code..."
-              disabled={isScBackendRunning || isLoading}
+              disabled={isRenardoInitialized || isSCCodeExecuting}
             ></textarea>
           </label>
         </div>
