@@ -7,8 +7,6 @@ import os
 
 settings.set_defaults_from_dict({
     "core": {
-        "CPU_USAGE" : 2,
-        "CLOCK_LATENCY" : 0,
         "INSTANCIATE_FOXDOT_PLAYERS": True,
     }
 },
@@ -16,6 +14,8 @@ settings.set_defaults_from_dict({
 
 settings.set_defaults_from_dict({
     "core": {
+        "CPU_USAGE" : 2,
+        "CLOCK_LATENCY" : 0,
         "PERFORMANCE_EXCEPTIONS_CATCHING" : True,
         "COLLECTIONS_DOWNLOAD_SERVER": 'https://collections.renardo.org',
     }
