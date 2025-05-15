@@ -1,5 +1,5 @@
-
-from renardo.reaper_backend.reapy import Project, RPR
+import reapy
+from reapy import Project, RPR
 
 
 def calculate_track_idx(track_num):
@@ -113,3 +113,35 @@ set_send_volume(1,0,db_to_volume(-3))
 master_volume(db_to_volume(-2))
 
 unarm_track(0)
+
+
+def create_16_midi_tracks():
+    """
+    Creates 16 MIDI tracks in REAPER, one for each MIDI channel.
+    
+    Each track is:
+    - Named chan1 through chan16
+    - Record armed
+    - Set to receive from "All MIDI inputs"
+    - Set to receive from the MIDI channel corresponding to its number
+    - Record mode set to disable (normal)
+    """
+    
+    # Get the current project
+    project = reapy.Project()
+    
+    # Create 16 tracks, one for each MIDI channel
+    for i in range(1, 17):  # 1 to 16
+        # Create track with name "chanX" where X is the channel number
+        track_name = f"chan{i}"
+        track = add_track(track_name)
+        
+        # Set MIDI input to "All MIDI inputs" on the appropriate channel
+        track_midi_input(track, i)  # This sets the input to the corresponding channel number
+        
+        # Arm the track for recording
+        arm_track(track)
+        
+        # Set record mode to normal (not monitoring)
+        # 0 = disabled (normal), 1 = record (input) monitoring, 2 = monitoring and record
+        RPR.SetMediaTrackInfo_Value(track, "I_RECMODE", 0)
