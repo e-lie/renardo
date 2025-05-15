@@ -47,7 +47,7 @@ def add_fx_chain(track, chain_name):
         # return fx count to be able to find the instanciated fxs
         return fx_count
     except:
-        print("Error initializing Reapy Extensions : is reaper started ?")
+        print("Error adding an FX chain !")
 
 #pproject = Project()
 #track = pproject.tracks["chan1"]
