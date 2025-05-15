@@ -11,7 +11,13 @@
   let logMessages = [];
   let isScBackendRunning = false;
   let isRenardoInitialized = false;
-  let customSclangCode = 'Renardo.start; Renardo.midi;'; // Default code
+  let customSclangCode = 'Renardo.start;'; // Default code
+  
+  // MIDI related state
+  let midiDevices = [];
+  let selectedMidiDevices = [];
+  let isMidiInitialized = false;
+  let isLoadingMidiDevices = false;
   
   // REAPER related state
   let isReaperInitializing = false;
@@ -59,10 +65,95 @@
         // Handle SC code execution response
         if (message.type === 'sc_code_execution_result') {
           isSCCodeExecuting = false;
+          isLoadingMidiDevices = false;
           
           if (message.data.success) {
-            successMessage = message.data.message || 'SuperCollider code executed successfully';
-            setTimeout(() => { successMessage = ''; }, 3000);
+            // Check for MIDI device listing in the message
+            const output = message.data.message || '';
+            
+            console.log("SuperCollider execution result:", output);
+            
+            // Log the full message data structure to help debug
+            console.log("Full message data:", message.data);
+            
+            // Log more details about the message
+            console.log("Message customCode includes MIDI listing:", 
+              message.data.customCode?.includes('MIDI_DEVICES_START'));
+            
+            // Parse MIDI devices list if present
+            // Check for our marker MIDI_DEVICES_START 
+            if (output.includes('MIDI_DEVICES_START')) {
+              console.log("MIDI device listing detected in output");
+              midiDevices = [];
+              const lines = output.split('\n');
+              let collectingDevices = false;
+              
+              console.log("Parsed output into lines:", lines.length);
+              
+              for (const line of lines) {
+                // Log every line to see what we're working with
+                console.log("Checking line:", line);
+                
+                if (line.includes('MIDI_DEVICES_START')) {
+                  console.log("Found marker to start collecting devices");
+                  collectingDevices = true;
+                  continue;
+                }
+                
+                if (line.includes('MIDI_DEVICES_END')) {
+                  console.log("Found marker to stop collecting devices");
+                  collectingDevices = false;
+                  break;
+                }
+                
+                if (collectingDevices && line.includes('MIDI_DEVICE:')) {
+                  console.log("Found a MIDI device line:", line);
+                  // Format: MIDI_DEVICE:index:device:name
+                  const parts = line.split(':');
+                  console.log("Split parts:", parts);
+                  
+                  if (parts.length >= 4) {
+                    const deviceIndex = parseInt(parts[1].trim());
+                    const deviceInfo = parts[2].trim();
+                    const deviceName = parts.slice(3).join(':').trim();
+                    
+                    console.log("Extracted device info:", deviceIndex, deviceInfo, deviceName);
+                    
+                    midiDevices.push({
+                      index: deviceIndex,
+                      name: deviceName,
+                      info: deviceInfo
+                    });
+                  }
+                }
+              }
+              
+              console.log("Final MIDI devices array:", midiDevices);
+              isLoadingMidiDevices = false;
+              
+              if (midiDevices.length > 0) {
+                successMessage = `Found ${midiDevices.length} MIDI device(s)`;
+                // Force a UI update
+                midiDevices = [...midiDevices];
+              } else {
+                successMessage = 'No MIDI devices found';
+              }
+              
+              setTimeout(() => { successMessage = ''; }, 3000);
+            }
+            // Check for MIDI initialization success
+            else if (output.includes('MIDI initialized') || message.data.customCode?.includes('Renardo.midi')) {
+              isMidiInitialized = true;
+              successMessage = 'MIDI initialized successfully';
+              setTimeout(() => { successMessage = ''; }, 3000);
+            }
+            // General success message
+            else {
+              successMessage = message.data.message || 'SuperCollider code executed successfully';
+              setTimeout(() => { successMessage = ''; }, 3000);
+            }
+          } else {
+            isLoadingMidiDevices = false;
           }
         }
         
@@ -168,6 +259,83 @@
     });
     
     // We'll get the response via WebSocket in the subscription
+  }
+  
+  // List available MIDI devices
+  function listMidiDevices() {
+    isLoadingMidiDevices = true;
+    error = null;
+    successMessage = '';
+    midiDevices = []; // Clear existing devices
+    
+    console.log("Listing MIDI devices...");
+    
+    // This code will list MIDI devices in SuperCollider and return them
+    // Use more explicit postln statements to make output easier to debug
+    const listDevicesCode = `
+    "STARTING MIDI DEVICE LISTING...".postln;
+    MIDIClient.init;
+    "MIDIClient initialized".postln;
+    ~midiOutDevices = MIDIClient.destinations;
+    "Found " ++ ~midiOutDevices.size ++ " MIDI devices".postln;
+    "MIDI_DEVICES_START".postln;
+    if(~midiOutDevices.size > 0) {
+      ~midiOutDevices.do({ |device, i|
+        ("MIDI_DEVICE:" + i + ":" + device.device + ":" + device.name).postln;
+      });
+    } {
+      "No MIDI devices found".postln;
+    };
+    "MIDI_DEVICES_END".postln;
+    "MIDI DEVICE LISTING COMPLETE".postln;
+    `;
+    
+    // Add some console logging to debug
+    console.log("Sending MIDI listing code to SuperCollider:", listDevicesCode);
+    
+    sendMessage({
+      type: 'execute_sc_code',
+      data: {
+        customCode: listDevicesCode
+      }
+    });
+    
+    // Response will be processed in the subscription
+  }
+  
+  // Initialize MIDI with selected devices
+  function startMidi() {
+    if (selectedMidiDevices.length === 0) {
+      error = "Please select at least one MIDI device";
+      setTimeout(() => { error = null; }, 3000);
+      return;
+    }
+    
+    isLoadingMidiDevices = true;
+    error = null;
+    successMessage = '';
+    
+    // Create code to initialize MIDI with selected devices
+    const deviceIndices = selectedMidiDevices.join(', ');
+    const midiInitCode = `Renardo.midi(${deviceIndices});`;
+    
+    sendMessage({
+      type: 'execute_sc_code',
+      data: {
+        customCode: midiInitCode
+      }
+    });
+    
+    // Response will be processed in the subscription
+  }
+  
+  // Toggle selection of a MIDI device
+  function toggleMidiDevice(index) {
+    if (selectedMidiDevices.includes(index)) {
+      selectedMidiDevices = selectedMidiDevices.filter(i => i !== index);
+    } else {
+      selectedMidiDevices = [...selectedMidiDevices, index];
+    }
   }
   
   // Launch SuperCollider IDE
@@ -432,8 +600,8 @@
         <h2 class="card-title">Renardo Initialization Code</h2>
         <p class="text-base-content/70 mb-4">
           Customize the code that will be executed to initialize Renardo in the running SuperCollider instance.
-          Default code includes starting Renardo and enabling MIDI support.
-          <span class="label-text-alt">Default code: <code class="bg-base-300 p-1 rounded text-xs">Renardo.start; Renardo.midi;</code></span>
+          Default code initializes Renardo without MIDI support.
+          <span class="label-text-alt">Default code: <code class="bg-base-300 p-1 rounded text-xs">Renardo.start;</code></span>
         </p>
         
         {#if isRenardoInitialized}
@@ -476,6 +644,174 @@
             </button>
           </div>
         </div>
+      </div>
+    </div>
+    
+    <!-- MIDI Initialization Card -->
+    <div class="card bg-base-100 shadow-xl mb-8">
+      <div class="card-body">
+        <h2 class="card-title">MIDI Initialization</h2>
+        <p class="text-base-content/70 mb-4">
+          Configure MIDI devices for Renardo. First list available MIDI devices, then select the ones you want to use.
+        </p>
+        
+        {#if isMidiInitialized}
+          <div class="alert alert-success mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span>MIDI has been successfully initialized. You can use MIDI functionality in Renardo!</span>
+          </div>
+        {:else if isRenardoInitialized}
+          <div class="flex flex-wrap gap-2 mb-4">
+            <button
+              class="btn btn-primary"
+              on:click={listMidiDevices}
+              disabled={isLoadingMidiDevices || !isRenardoInitialized || isMidiInitialized || !$appState.connected}
+            >
+              {#if isLoadingMidiDevices}
+                <span class="loading loading-spinner loading-xs"></span>
+              {:else}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M2 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V4zM8 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1H9a1 1 0 01-1-1V4zM15 3a1 1 0 00-1 1v12a1 1 0 001 1h2a1 1 0 001-1V4a1 1 0 00-1-1h-2z" />
+                </svg>
+              {/if}
+              List MIDI Devices
+            </button>
+          </div>
+          
+          {#if midiDevices.length > 0}
+            <div class="bg-base-200 p-4 rounded-lg mb-4">
+              <h3 class="font-bold mb-2">Available MIDI Devices</h3>
+              <p class="text-sm text-base-content/70 mb-4">Select the MIDI devices you want to use with Renardo:</p>
+              
+              <div class="flex flex-col gap-2 max-h-[200px] overflow-y-auto">
+                {#each midiDevices as device}
+                  <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-2">
+                      <input 
+                        type="checkbox" 
+                        class="checkbox" 
+                        checked={selectedMidiDevices.includes(device.id)}
+                        on:change={() => toggleMidiDevice(device.id)}
+                      />
+                      <span class="label-text">{device.name} <span class="text-xs opacity-70">(Device Index: {device.id})</span></span>
+                    </label>
+                  </div>
+                {/each}
+              </div>
+              
+              <div class="flex justify-end mt-4">
+                <button
+                  class="btn btn-success"
+                  on:click={startMidi}
+                  disabled={selectedMidiDevices.length === 0 || isSCCodeExecuting || isMidiInitialized || !$appState.connected}
+                >
+                  {#if isSCCodeExecuting}
+                    <span class="loading loading-spinner loading-xs"></span>
+                  {:else}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" />
+                    </svg>
+                  {/if}
+                  Start Renardo MIDI
+                </button>
+              </div>
+            </div>
+          {/if}
+        {:else}
+          <div class="alert alert-warning mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            <span>Initialize Renardo first before configuring MIDI.</span>
+          </div>
+        {/if}
+      </div>
+    </div>
+    
+    <!-- MIDI Initialization Card -->
+    <div class="card bg-base-100 shadow-xl mb-8">
+      <div class="card-body">
+        <h2 class="card-title">MIDI Initialization</h2>
+        <p class="text-base-content/70 mb-4">
+          Configure MIDI devices for Renardo. First list available MIDI devices, then select the ones you want to use.
+        </p>
+        
+        {#if isMidiInitialized}
+          <div class="alert alert-success mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span>MIDI has been successfully initialized. You can use MIDI functionality in Renardo!</span>
+          </div>
+        {:else if isRenardoInitialized}
+          <div class="alert alert-info mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span>Renardo is running but MIDI is not initialized. Click "List MIDI Devices" to see available devices.</span>
+          </div>
+        {/if}
+        
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button
+            class="btn btn-primary"
+            on:click={listMidiDevices}
+            disabled={isLoadingMidiDevices || !isRenardoInitialized || !isScBackendRunning || !$appState.connected}
+          >
+            {#if isLoadingMidiDevices}
+              <span class="loading loading-spinner loading-xs"></span>
+            {:else}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+              </svg>
+            {/if}
+            List MIDI Devices
+          </button>
+          
+          <button
+            class="btn btn-success"
+            on:click={startMidi}
+            disabled={isLoadingMidiDevices || !isRenardoInitialized || !isScBackendRunning || !$appState.connected || midiDevices.length === 0 || selectedMidiDevices.length === 0 || isMidiInitialized}
+          >
+            {#if isLoadingMidiDevices}
+              <span class="loading loading-spinner loading-xs"></span>
+            {:else}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+              </svg>
+            {/if}
+            Start Renardo MIDI
+          </button>
+        </div>
+        
+        <!-- MIDI Devices List -->
+        {#if midiDevices.length > 0}
+          <div class="bg-base-200 p-4 rounded-lg">
+            <h3 class="text-lg font-semibold mb-2">Available MIDI Devices</h3>
+            <p class="text-sm opacity-70 mb-4">Select the MIDI devices you want to use with Renardo:</p>
+            
+            <div class="space-y-2">
+              {#each midiDevices as device}
+                <div class="form-control">
+                  <label class="cursor-pointer label justify-start gap-4">
+                    <input 
+                      type="checkbox" 
+                      class="checkbox checkbox-primary" 
+                      checked={selectedMidiDevices.includes(device.index)}
+                      on:change={() => toggleMidiDevice(device.index)}
+                      disabled={isMidiInitialized}
+                    />
+                    <span class="label-text">
+                      <span class="badge mr-2">{device.index}</span>
+                      {device.name} 
+                      <span class="text-xs opacity-70">({device.info})</span>
+                    </span>
+                  </label>
+                </div>
+              {/each}
+            </div>
+          </div>
+        {:else if isLoadingMidiDevices}
+          <div class="bg-base-200 p-4 rounded-lg flex justify-center items-center">
+            <span class="loading loading-dots loading-md mr-2"></span>
+            <p>Loading MIDI devices...</p>
+          </div>
+        {/if}
       </div>
     </div>
 
