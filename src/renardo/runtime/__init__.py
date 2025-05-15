@@ -354,3 +354,7 @@ PatternTypes = functions(Sequences)
 
 # Start
 Clock.start()
+
+## Conditionnal init of reaper backend
+if settings.get("reaper_backend.REAPER_BACKEND_ENABLED"):
+    from .reaper_backend_init import *
