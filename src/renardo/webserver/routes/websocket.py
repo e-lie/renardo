@@ -173,6 +173,13 @@ def register_websocket_routes(sock):
                     elif message_type == "get_sc_backend_status":
                         # Check and send current SC backend status
                         send_sc_backend_status(ws)
+                        
+                    elif message_type == "launch_supercollider_ide":
+                        # Launch SuperCollider IDE
+                        threading.Thread(
+                            target=launch_supercollider_ide_task,
+                            args=(ws,)
+                        ).start()
                     
                     elif message_type == "start_reaper_initialization":
                         # Start REAPER initialization process in a separate thread
@@ -609,6 +616,59 @@ def execute_sc_code_task(ws, custom_code="Renardo.start; Renardo.midi;"):
         
     except Exception as e:
         error_msg = f"Error executing SuperCollider code: {str(e)}"
+        logger.write_error(error_msg)
+        
+        # Send error message to client
+        try:
+            ws.send(json.dumps({
+                "type": "error",
+                "message": error_msg
+            }))
+        except:
+            pass
+
+
+def launch_supercollider_ide_task(ws):
+    """Launch the SuperCollider IDE application in a separate thread"""
+    # Create logger
+    logger = WebsocketLogger(ws)
+    
+    try:
+        # Import SC backend module
+        from renardo.sc_backend.supercollider_mgt.sclang_instances_mgt import SupercolliderInstance
+        
+        # Create SC instance
+        sc_instance = SupercolliderInstance()
+        
+        # Launch the SuperCollider IDE
+        success = sc_instance.launch_supercollider_ide()
+        
+        if success:
+            logger.write_line("SuperCollider IDE launched successfully", "SUCCESS")
+            
+            # Send success message to client
+            ws.send(json.dumps({
+                "type": "sc_ide_launch_result",
+                "data": {
+                    "success": True,
+                    "message": "SuperCollider IDE launched successfully"
+                }
+            }))
+        else:
+            error_msg = "Failed to launch SuperCollider IDE. The application may not be installed or could not be found."
+            logger.write_line(error_msg, "ERROR")
+            
+            # Send error message to client
+            ws.send(json.dumps({
+                "type": "sc_ide_launch_result",
+                "data": {
+                    "success": False,
+                    "message": error_msg
+                }
+            }))
+    
+    except Exception as e:
+        error_msg = f"Error launching SuperCollider IDE: {str(e)}"
         logger.write_error(error_msg)
         
         # Send error message to client
