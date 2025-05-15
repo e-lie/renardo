@@ -186,39 +186,8 @@ def launch_reaper_with_pythonhome():
                     stdin=subprocess.DEVNULL
                 )
                 
-        elif is_apple():
-            # macOS-specific launch options
-            try:
-                # Try using 'open' command first which is more reliable on macOS
-                open_command = ["open", "-a", "REAPER"]
-                
-                # Convert PYTHONHOME to an env parameter for the open command
-                env_params = [f"PYTHONHOME={python_home}"]
-                for env_var in ["PYTHONPATH", "DYLD_LIBRARY_PATH", "DYLD_FRAMEWORK_PATH"]:
-                    if env_var in env:
-                        env_params.append(f"{env_var}={env[env_var]}")
-                
-                if env_params:
-                    open_command.extend(["--env", ",".join(env_params)])
-                
-                process = subprocess.Popen(
-                    open_command,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    stdin=subprocess.DEVNULL
-                )
-            except Exception as e:
-                print(f"Error with macOS 'open' command: {e}, falling back to direct launch")
-                process = subprocess.Popen(
-                    [reaper_path], 
-                    env=env,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    stdin=subprocess.DEVNULL,
-                    start_new_session=True  # Create a new session
-                )
         else:
-            # Linux launch
+            # Linux or MacOS launch
             process = subprocess.Popen(
                 [reaper_path], 
                 env=env,
