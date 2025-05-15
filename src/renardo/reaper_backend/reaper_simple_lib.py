@@ -53,7 +53,7 @@ def add_track(track_name="", track_num=-1):
 
 
 def track_volume(track_or_num, volume):
-    track = ensure_track(rack_or_num)
+    track = ensure_track(track_or_num)
     RPR.SetMediaTrackInfo_Value(track, "D_VOL", float(volume))
 
 def master_volume(volume):
@@ -155,7 +155,7 @@ def create_standard_midi_track(track_num: int):
     - Record armed
     - Set to receive from "All MIDI inputs"
     - Set to receive from the MIDI channel corresponding to its number
-    - Record mode set to "Record: disable (monitoring only)"
+    - Record mode set to "Stereo Out" (monitors the track output)
     """
     # Create track with name "chanX" where X is the channel number
     track_name = f"chan{track_num}"
@@ -167,11 +167,54 @@ def create_standard_midi_track(track_num: int):
     # Arm the track for recording
     arm_track(track)
     
-    # Set record mode to "Record: disable (monitoring only)"
-    # 0 = disabled (normal)
-    # 1 = record: disable (monitoring only)
-    # 2 = record: enable (input monitoring and recording)
-    RPR.SetMediaTrackInfo_Value(track, "I_RECMODE", 1)
+    # Set record mode to "2 = None (disables recording)"
+    set_record_mode(track, 2)
+
+def set_record_mode(track_or_num, mode, output_point=None):
+    """
+    Set the record mode for a track.
+    
+    Args:
+        track_or_num: Track object or track index
+        mode: Record mode (integer value):
+            0 = Input (records from track input)
+            1 = Stereo Out (records output of track)
+            2 = None (disables recording)
+            3 = Stereo Out with latency compensation
+            4 = MIDI Output
+            5 = Mono Out
+            6 = Mono Out with latency compensation
+            7 = MIDI Overdub
+            8 = MIDI Replace
+        output_point: Output point for recording (only relevant for output recording modes):
+            None = Don't change output point 
+            "post-fader" = Post-fader (default in REAPER)
+            "pre-fx" = Pre-FX
+            "post-fx" = Post-FX/Pre-fader
+    """
+    track = ensure_track(track_or_num)
+    
+    # Set the basic record mode
+    RPR.SetMediaTrackInfo_Value(track, "I_RECMODE", mode)
+    
+    # Set the output recording point if specified
+    if output_point is not None:
+        # Get current flags
+        current_flags = RPR.GetMediaTrackInfo_Value(track, "I_RECMODE_FLAGS")
+        
+        # Clear the first 2 bits that define output point
+        flags = current_flags & ~3
+        
+        # Set new output point
+        if output_point == "pre-fx":
+            flags |= 1
+        elif output_point == "post-fx":
+            flags |= 2
+        # "post-fader" is 0, so no bits need to be set
+        
+        # Update the flags
+        RPR.SetMediaTrackInfo_Value(track, "I_RECMODE_FLAGS", flags)
+
 
 def create_16_midi_tracks():
     """
