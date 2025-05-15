@@ -5,6 +5,7 @@ from renardo.sc_backend import (
 )
 from renardo.lib.InstrumentProxy import InstrumentProxy
 
+from renardo.settings_manager import settings
 
 from renardo.lib.Key import PlayerKey, NumberKey
 from renardo.lib.Patterns import (
@@ -17,8 +18,13 @@ from renardo.lib.TimeVar import TimeVar
 from renardo.lib.Code import WarningMsg
 from renardo.lib.Utils import get_first_item, get_expanded_len
 
-from renardo.reaper_backend.ReaperIntegrationLib.ReaProject import get_reaper_object_and_param_name, set_reaper_param, get_reaper_param
-from renardo.reaper_backend.ReaperIntegrationLib.ReaTrack import ReaTrack
+if settings.get("reaper_backend.REAPER_BACKEND_ENABLED"):
+    from renardo.reaper_backend.ReaperIntegrationLib.ReaProject import (
+        get_reaper_object_and_param_name,
+        set_reaper_param, get_reaper_param
+    )
+    from renardo.reaper_backend.ReaperIntegrationLib.ReaTrack import ReaTrack
+
 
 from .Repeat import Repeatable
 from .rest import rest
@@ -278,12 +284,13 @@ class Player(Repeatable):
     def __getattr__(self, name):
         try:
             # Get the parameter value from reaper if it exists
-            if "reatrack" in self.attr.keys():
-                reatrack = self.attr["reatrack"][0]
-                if isinstance(reatrack, ReaTrack):
-                    device, _ = get_reaper_object_and_param_name(reatrack, name, quiet=True)
-                    if device is not None:
-                        return get_reaper_param(reatrack, name)
+            if settings.get("reaper_backend.REAPER_BACKEND_ENABLED"):
+                if "reatrack" in self.attr.keys():
+                    reatrack = self.attr["reatrack"][0]
+                    if isinstance(reatrack, ReaTrack):
+                        device, _ = get_reaper_object_and_param_name(reatrack, name, quiet=True)
+                        if device is not None:
+                            return get_reaper_param(reatrack, name)
 
             # This checks for aliases, not the actual keys
             name = self.alias.get(name, name)
