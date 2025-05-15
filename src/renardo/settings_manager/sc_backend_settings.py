@@ -7,7 +7,17 @@ recording_dir.mkdir(exist_ok=True, parents=True)
 
 settings.set_defaults_from_dict({
     "sc_backend": {
+        # Select the Supercollider instruments and effects bank that should be loaded
         "ACTIVATED_SCCODE_BANKS": ['foxdot_core', 'foxdot_community', 'crashserver'],
+        # Indicate to which ouput device should the Renardo supercollider midi connect by default
+        # You can list the midi device in the corresponding section of Audio backends > SuperCollider > MIDI.
+        "SUPERCOLLIDER_MIDI_OUTPUT_NUMBER": 0,
+    }
+},
+)
+
+settings.set_defaults_from_dict({
+    "sc_backend": {
         "OSC_MIDI_ADDRESS": "/foxdot_midi",
         "GET_SC_INFO": True,
         "ADDRESS": 'localhost',
@@ -17,12 +27,6 @@ settings.set_defaults_from_dict({
         "FORWARD_ADDRESS": '',
         "BOOT_SCLANG_ON_STARTUP": False,
         "SC3_PLUGINS": False,
-    }
-},
-)
-
-settings.set_defaults_from_dict({
-    "sc_backend": {
         "INFO_FILE": "Info.scd",
         "RECORD_FILE" : "Record.scd",
         "STARTUP_FILE" : "Startup.scd",
