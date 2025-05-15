@@ -460,7 +460,7 @@ def stop_sc_backend_task(ws):
             return
         
         # Use platform-specific commands to reliably kill SC processes
-        success = kill_supercollider_processes(logger)
+        success = kill_supercollider_processes(logger, force=True)
         
         # Update state to reflect backend stopped
         state_helper.update_state("runtime_status", {
@@ -573,24 +573,50 @@ def execute_sc_code_task(ws, custom_code="Renardo.start; Renardo.midi;"):
         })
         
         # Check if sclang is actually running and accessible
-        if not sc_instance.sclang_process or sc_instance.sclang_process.stdin is None:
+        if not sc_instance.is_sclang_running() or not sc_instance.sclang_process or sc_instance.sclang_process.stdin is None:
             # Try to restart the sclang process if it's not properly initialized
-            logger.write_line("SuperCollider process not fully initialized. Attempting to restart...", "WARN")
-            sc_instance.start_sclang_subprocess()
+            logger.write_line("SuperCollider process not properly accessible. Let's verify and restart if needed...", "WARN")
             
-            # Wait briefly for initialization
+            # First, ensure no zombie processes are left
+            from renardo.webserver.routes.sc_utils import kill_supercollider_processes
+            # Force kill to make sure we get a clean state
+            kill_supercollider_processes(logger, force=True)
+            
+            # Now start a fresh process
             import time
-            time.sleep(2)
+            time.sleep(1)  # Wait a bit for cleanup
             
-            # Check again
-            if not sc_instance.sclang_process or sc_instance.sclang_process.stdin is None:
-                error_msg = "Could not initialize SuperCollider process properly. Please restart the backend."
+            success = sc_instance.start_sclang_subprocess()
+            if not success:
+                error_msg = "Failed to start SuperCollider process. Please check if SuperCollider is properly installed."
                 logger.write_line(error_msg, "ERROR")
                 ws.send(json.dumps({
                     "type": "error",
                     "message": error_msg
                 }))
                 return
+                
+            # Wait for initialization
+            logger.write_line("Waiting for SuperCollider to initialize...", "INFO")
+            time.sleep(3)
+            
+            # Read some output to ensure it's ready
+            for _ in range(10):  # Try to read a few lines
+                output = sc_instance.read_stdout_line()
+                if output:
+                    logger.write_line(output)
+            
+            # Final check
+            if not sc_instance.sclang_process or sc_instance.sclang_process.stdin is None or sc_instance.sclang_process.poll() is not None:
+                error_msg = "Could not initialize SuperCollider process properly. Please restart the application."
+                logger.write_line(error_msg, "ERROR")
+                ws.send(json.dumps({
+                    "type": "error",
+                    "message": error_msg
+                }))
+                return
+                
+            logger.write_line("SuperCollider process restarted successfully.", "SUCCESS")
         
         # Execute custom code
         logger.write_line(f"Executing SuperCollider code...", "INFO")
@@ -916,7 +942,7 @@ def stop_sc_backend_task(ws):
             return
         
         # Use platform-specific commands to reliably kill SC processes
-        success = kill_supercollider_processes(logger)
+        success = kill_supercollider_processes(logger, force=True)
         
         # Update state to reflect backend stopped
         state_helper.update_state("runtime_status", {
