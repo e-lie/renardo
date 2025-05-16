@@ -1,7 +1,7 @@
 from renardo.lib.Extensions.MidiMapFactory import MidiMapFactory
 from renardo.reaper_backend.ReaperIntegrationLib.ReaProject import get_reaper_object_and_param_name, set_reaper_param
 from renardo.reaper_backend.ReaperIntegrationLib.functions import split_param_name
-from renardo.sc_backend.Midi import ReaperInstrument
+from renardo.sc_backend.Midi import ReaperInstrumentProxy
 from renardo.lib.Patterns import Pattern
 from typing import Dict
 
@@ -121,7 +121,7 @@ class ReaperInstrumentFacade:
         sus = Pattern(sus) if sus is not None else Pattern(dur)-0.03
 
 
-        return ReaperInstrument(
+        return ReaperInstrumentProxy(
             reatrack=self._reatrack,
             channel=self._midi_channel - 1,
             sus=sus,
