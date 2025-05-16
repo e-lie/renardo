@@ -262,6 +262,11 @@ Master().fadeout(dur=24)
     
     // Set up keyboard shortcuts for execution - fallback for whole document
     const handleKeyDown = (event) => {
+      // Only handle key events when CodeMirror doesn't have focus
+      if (editor && editor.hasFocus()) {
+        return; // Let CodeMirror handle it
+      }
+      
       // Mode 2: Ctrl+Enter (or Cmd+Enter on Mac) for paragraph or selection
       if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key === 'Enter') {
         event.preventDefault();
