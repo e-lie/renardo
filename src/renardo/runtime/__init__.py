@@ -243,18 +243,14 @@ def foxdot_reload():
 
 
 #########################################
-### Initialize base Player instances
-#########################################
-
-
-
-
-#########################################
 ### Initialize base synthdefs
 #########################################
 
 from renardo.runtime.synthdefs_initialisation import *
 
+Clock = TempoClock()
+
+_Clock = Clock
 
 #########################################
 ### Define some practical functions
@@ -302,7 +298,7 @@ _ = None
 logging.basicConfig(level=logging.ERROR)
 when.set_namespace(FoxDotCode) # experimental
 
-_Clock = Clock = TempoClock()
+
 
 def set_main_clock(clock):
     """ Tells the TimeVar, Player, and MidiIn classes to use
@@ -352,9 +348,13 @@ Attributes = Player.get_attributes()
 PatternMethods = Pattern.get_methods()
 PatternTypes = functions(Sequences)
 
-# Start
-Clock.start()
-
 ## Conditionnal init of reaper backend
 if settings.get("reaper_backend.REAPER_BACKEND_ENABLED"):
     from .reaper_backend_init import *
+
+### All aliases (and basic wrapper) should progressively move here
+from .aliases import *
+
+
+# Start !!!
+Clock.start()
