@@ -12,6 +12,7 @@ webserver_public_defaults = {
         "FLASK_DEBUG": False,  # Set to False by default for production
         "HOST": "0.0.0.0",     # Listen on all interfaces by default
         "PORT": 5000,          # Default port
+        "AUTOCLOSE_WEBCLIENT": True,  # Auto-close browser tabs when webserver stops
     }
 }
 
