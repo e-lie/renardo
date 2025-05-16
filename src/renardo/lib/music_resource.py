@@ -119,7 +119,7 @@ class Instrument(MusicResource):
 
     def __call__(self, first_argument=None, **kwargs):
         """
-        Calling an instrument should create a proxy that can be used with a Player.
+        Calling an instrument should create an intrument proxy that can be used with a Player.
         Must be implemented by subclasses.
         """
         raise NotImplementedError("Subclasses must implement __call__()")
