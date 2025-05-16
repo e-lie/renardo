@@ -10,7 +10,7 @@ from .scheduling_queue import SchedulingQueue, SoloPlayer, History, ScheduleErro
 
 from renardo.lib.Player import Player
 from renardo.lib.TimeVar import TimeVar
-from renardo.lib.Midi import MidiIn, MIDIDeviceNotFound
+from renardo.sc_backend.Midi import MidiIn, MIDIDeviceNotFound
 from renardo.sc_backend import TempoClient, ServerManager
 from renardo.settings_manager import settings
 
