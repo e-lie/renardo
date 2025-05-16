@@ -28,6 +28,7 @@
   let isReaperModalLoading = false;
   let isReinitializingReaper = false;
   let isTestingReaperIntegration = false;
+  let isPreparingReaper = false;
   
   // Tab state
   let activeTab = 'supercollider'; // supercollider, reaper
@@ -297,6 +298,36 @@
           }, 5000);
         }
         
+        // Handle REAPER prepare responses
+        if (message.type === 'reaper_prepare_result') {
+          console.log("Received reaper_prepare_result:", message);
+          isPreparingReaper = false;
+          
+          // Create a log entry for the prepare result
+          const prepareResultEntry = {
+            timestamp: new Date().toLocaleTimeString(),
+            level: message.data.success ? 'SUCCESS' : 'ERROR',
+            message: message.data.message || (message.data.success 
+              ? 'REAPER project prepared with 16 MIDI tracks.' 
+              : 'Failed to prepare REAPER project.')
+          };
+          
+          // Add this log entry to our log messages
+          logMessages = [...logMessages, prepareResultEntry];
+          
+          // Also display a user notification
+          if (message.data.success) {
+            successMessage = 'REAPER project prepared with 16 MIDI tracks';
+          } else {
+            error = message.data.message || 'Failed to prepare REAPER project';
+          }
+          
+          setTimeout(() => { 
+            successMessage = '';
+            error = null;
+          }, 5000);
+        }
+        
         // Handle errors
         if (message.type === 'error') {
           error = message.message;
@@ -557,6 +588,26 @@
     // Send the test integration command
     sendMessage({
       type: 'test_reaper_integration'
+    });
+  }
+  
+  function prepareReaper() {
+    // Set flag to show spinner
+    isPreparingReaper = true;
+    
+    // Add a log entry for preparing REAPER
+    const prepareLogEntry = {
+      timestamp: new Date().toLocaleTimeString(),
+      level: 'INFO',
+      message: 'Preparing REAPER with new project and 16 MIDI tracks...'
+    };
+    
+    // Manually add to log messages to ensure it's visible immediately
+    logMessages = [...logMessages, prepareLogEntry];
+    
+    // Send the prepare REAPER command
+    sendMessage({
+      type: 'prepare_reaper'
     });
   }
 </script>
@@ -1082,6 +1133,21 @@
               </svg>
             {/if}
             Reset REAPER Configuration
+          </button>
+          
+          <button
+            class="btn btn-info"
+            on:click={prepareReaper}
+            disabled={isPreparingReaper || !$appState.connected}
+          >
+            {#if isPreparingReaper}
+              <span class="loading loading-spinner loading-xs"></span>
+            {:else}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd" />
+              </svg>
+            {/if}
+            Prepare REAPER
           </button>
         </div>
       </div>
