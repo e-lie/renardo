@@ -87,7 +87,7 @@ class ReaperInstrumentFacade:
                 remaining_param_dict[param_fullname] = value
 
 
-    def out(self, *args, sus=None, **kwargs):
+    def __call__(self, *args, sus=None, **kwargs):
 
         config_defaults = {}
         refx = self._reatrack.reafxs

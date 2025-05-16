@@ -6,5 +6,3 @@ reaproject = init_reapy_project()
 reainstru_factory = ReaperInstrumentFactory(old_style_presets, reaproject)
 #reaper_instruments = reainstru_factory.create_all_facades_from_reaproject_tracks()
 
-add_multiple_fxchains = reainstru_factory.add_multiple_fxchains
-instanciate = reainstru_factory.instanciate
