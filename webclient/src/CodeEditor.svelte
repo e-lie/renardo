@@ -177,9 +177,8 @@ Master().fadeout(dur=24)
             'Ctrl-Enter': executeCode,       // Mode 2: Execute paragraph or selection
             'Cmd-Enter': executeCode,        // For Mac
             'Alt-Enter': executeCurrentLine, // Mode 1: Execute current line
-            'Alt-Cmd-Enter': executeCurrentLine, // For Mac Alt+Enter
-            'Ctrl-.': stopMusic,            // Stop all music
-            'Cmd-.': stopMusic              // For Mac
+            'Alt-Cmd-Enter': executeCurrentLine // For Mac Alt+Enter
+            // Note: Ctrl+. and Cmd+. are handled by the document listener
           });
 
           // For the editor to be properly initialized with the theme and settings,
@@ -262,7 +261,14 @@ Master().fadeout(dur=24)
     
     // Set up keyboard shortcuts for execution - fallback for whole document
     const handleKeyDown = (event) => {
-      // Only handle key events when CodeMirror doesn't have focus
+      // Stop music should work regardless of focus
+      if ((event.ctrlKey || event.metaKey) && event.key === '.') {
+        event.preventDefault();
+        stopMusic();
+        return;
+      }
+      
+      // Only handle other key events when CodeMirror doesn't have focus
       if (editor && editor.hasFocus()) {
         return; // Let CodeMirror handle it
       }
@@ -281,11 +287,6 @@ Master().fadeout(dur=24)
       else if (event.altKey && event.metaKey && event.key === 'Enter') {
         event.preventDefault();
         executeCurrentLine();
-      }
-      // Stop music: Ctrl+. or Cmd+. (period)
-      else if ((event.ctrlKey || event.metaKey) && event.key === '.') {
-        event.preventDefault();
-        stopMusic();
       }
     };
     
