@@ -18,7 +18,7 @@ def newintru(name:str, plugin_name:str=None, effects:List=[], plugin_preset:str=
         plugin_name = name
     if not params:
         scan_all_params = True
-    instrument_facade = reainstru_factory.add_instrument(name, plugin_name, plugin_preset, params, scan_all_params)
+    instrument_facade = reainstru_factory.create_instrument_facade(name, plugin_name, plugin_preset, params, scan_all_params)
     for effect_config in effects:
         if isinstance(effect_config, dict):
             instrument_facade.add_effect_plugin(**effect_config)
