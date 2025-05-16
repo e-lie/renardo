@@ -4,7 +4,7 @@ from pprint import pprint
 
 from renardo.runtime import Clock, player_method
 
-from .ReaperInstruments import ReaperInstrumentFacade
+from renardo.reaper_backend.reaper_music_resource import ReaperInstrument
 from renardo.reaper_backend.ReaperIntegrationLib.ReaProject import ReaProject
 from renardo.reaper_backend.ReaperIntegrationLib.ReaTrack import ReaTrack
 from renardo.reaper_backend.ReaperIntegrationLib.ReaTaskQueue import ReaTask
@@ -69,7 +69,11 @@ class ReaperInstrumentFactory:
         if preset is None:
             preset = name
         try:
-            return ReaperInstrumentFacade(
+            return ReaperInstrument(
+                shortname=name,
+                fullname=name,
+                description=f"ReaperInstrument for {name}",
+                fxchain_relative_path="",
                 reaproject=self._reaproject,
                 presets=self._presets,
                 track_name=track_name,
@@ -84,7 +88,7 @@ class ReaperInstrumentFactory:
             )
         except Exception as err:
             output = err.message if hasattr(err, 'message') else err
-            print("Error creating instruc {name}: {output} -> skipping".format(name=kwargs["track_name"], output=output))
+            print("Error creating instrument {name}: {output} -> skipping".format(name=name, output=output))
             return None
     
     def add_multiple_fxchains(*args, scan_all_params=True, is_chain=True):
