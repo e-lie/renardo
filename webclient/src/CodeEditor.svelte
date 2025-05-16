@@ -5,6 +5,14 @@
   import CodeMirrorThemeSelector from './lib/CodeMirrorThemeSelector.svelte';
   // We'll load CodeMirror and its dependencies from CDN
   
+  // State for right panel
+  let rightPanelOpen = false;
+  let activeTab = 'tutorial'; // tutorial, musicExamples, or documentation
+  
+  // Tutorial files state
+  let tutorialFiles = [];
+  let loadingTutorials = false;
+  
   // Initialization check
   let showInitModal = false;
   let initStatus = {
@@ -224,6 +232,9 @@ Master().fadeout(dur=24)
     
     // Start the initialization process
     initEditor();
+    
+    // Load tutorial files on mount
+    loadTutorialFiles();
     
     // Subscribe to appState changes to update UI
     const unsubscribe = appState.subscribe(state => {
@@ -491,6 +502,55 @@ Master().fadeout(dur=24)
   
   function goToInitializePage() {
     window.location.hash = 'init';
+  }
+  
+  // Function to insert preset code at cursor position
+  function insertPreset(code) {
+    if (!editor) return;
+    
+    const cursor = editor.getCursor();
+    editor.replaceRange(code + '\n', cursor);
+    editor.setCursor({ line: cursor.line + code.split('\n').length, ch: 0 });
+    editor.focus();
+  }
+  
+  // Function to load tutorial files
+  async function loadTutorialFiles() {
+    loadingTutorials = true;
+    try {
+      const response = await fetch('/api/tutorial/files');
+      if (response.ok) {
+        const data = await response.json();
+        tutorialFiles = data.files || [];
+      } else {
+        console.error('Failed to load tutorial files');
+        tutorialFiles = [];
+      }
+    } catch (error) {
+      console.error('Error loading tutorial files:', error);
+      tutorialFiles = [];
+    } finally {
+      loadingTutorials = false;
+    }
+  }
+  
+  // Function to load a tutorial file into the editor
+  async function loadTutorialFile(file) {
+    try {
+      const response = await fetch(file.url);
+      if (response.ok) {
+        const content = await response.text();
+        if (editor) {
+          editor.setValue(content);
+          editor.setCursor({ line: 0, ch: 0 });
+          editor.focus();
+        }
+      } else {
+        console.error('Failed to load tutorial file');
+      }
+    } catch (error) {
+      console.error('Error loading tutorial file:', error);
+    }
   }</script>
 
 <div class="flex flex-col h-screen w-full overflow-hidden">
@@ -540,54 +600,188 @@ Master().fadeout(dur=24)
           </button>
         </div>
 
-        <!-- Editor Theme Selector -->
-        <CodeMirrorThemeSelector bind:editor={editor} />
+        <!-- Right Panel Toggle and Editor Theme Selector -->
+        <div class="flex items-center gap-2">
+          <button
+            class="btn btn-sm btn-outline"
+            on:click={() => {
+              rightPanelOpen = !rightPanelOpen;
+              if (!rightPanelOpen) return;
+              // Reload tutorial files when opening the panel
+              if (activeTab === 'tutorial') {
+                loadTutorialFiles();
+              }
+            }}
+            title="{rightPanelOpen ? 'Close' : 'Open'} side panel"
+          >
+            {#if rightPanelOpen}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            {:else}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+              </svg>
+            {/if}
+            {rightPanelOpen ? 'Hide' : 'Show'} Panel
+          </button>
+          <CodeMirrorThemeSelector bind:editor={editor} />
+        </div>
       </div>
     </div>
   </div>
 
   <!-- Main workspace -->
-  <div class="flex flex-col flex-1 overflow-hidden">
-    <!-- Code editor -->
-    <div class="flex-1 min-h-[60vh] border border-base-300" bind:this={editorContainer}>
-      <textarea id="code-editor">{editorContent}</textarea>
+  <div class="flex flex-1 overflow-hidden">
+    <!-- Left side: Code editor and console -->
+    <div class="flex flex-col flex-1 overflow-hidden">
+      <!-- Code editor -->
+      <div class="flex-1 min-h-[60vh] border border-base-300" bind:this={editorContainer}>
+        <textarea id="code-editor">{editorContent}</textarea>
+      </div>
+
+      <!-- Console output - always below editor -->
+      <div class="flex flex-col h-[30vh] bg-neutral text-neutral-content overflow-hidden">
+        <div class="flex justify-between items-center px-4 py-2 bg-neutral-focus text-neutral-content">
+          <h3 class="text-sm font-bold"> ฅ^•ﻌ•^ฅ >> output</h3>
+          <button
+            class="btn btn-xs btn-ghost"
+            on:click={clearConsole}
+            title="Clear console output"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            Clear
+          </button>
+        </div>
+        <div class="overflow-y-auto flex-1 p-4 font-mono text-sm" bind:this={consoleContainer}>
+          {#if consoleOutput.length === 0}
+            <div class="flex items-center justify-center h-full opacity-50 italic">
+              No output yet. Run some code to see results here.
+            </div>
+          {:else}
+            {#each consoleOutput as output}
+              <div class="mb-1 border-b border-base-300 border-opacity-20 pb-1">
+                <span class="{
+                  output.level.toLowerCase() === 'info' ? 'text-info' :
+                  output.level.toLowerCase() === 'command' ? 'text-accent font-bold' :
+                  output.level.toLowerCase() === 'error' ? 'text-error font-bold' :
+                  output.level.toLowerCase() === 'success' ? 'text-success' :
+                  output.level.toLowerCase() === 'warn' ? 'text-warning' : ''
+                } whitespace-pre-wrap">{output.message}</span>
+              </div>
+            {/each}
+          {/if}
+        </div>
+      </div>
     </div>
 
-    <!-- Console output - always below editor -->
-    <div class="flex flex-col h-[30vh] bg-neutral text-neutral-content overflow-hidden">
-      <div class="flex justify-between items-center px-4 py-2 bg-neutral-focus text-neutral-content">
-        <h3 class="text-sm font-bold"> ฅ^•ﻌ•^ฅ >> output</h3>
-        <button
-          class="btn btn-xs btn-ghost"
-          on:click={clearConsole}
-          title="Clear console output"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-          </svg>
-          Clear
-        </button>
-      </div>
-      <div class="overflow-y-auto flex-1 p-4 font-mono text-sm" bind:this={consoleContainer}>
-        {#if consoleOutput.length === 0}
-          <div class="flex items-center justify-center h-full opacity-50 italic">
-            No output yet. Run some code to see results here.
-          </div>
-        {:else}
-          {#each consoleOutput as output}
-            <div class="mb-1 border-b border-base-300 border-opacity-20 pb-1">
-              <span class="{
-                output.level.toLowerCase() === 'info' ? 'text-info' :
-                output.level.toLowerCase() === 'command' ? 'text-accent font-bold' :
-                output.level.toLowerCase() === 'error' ? 'text-error font-bold' :
-                output.level.toLowerCase() === 'success' ? 'text-success' :
-                output.level.toLowerCase() === 'warn' ? 'text-warning' : ''
-              } whitespace-pre-wrap">{output.message}</span>
+    <!-- Right side: Collapsible panel with tabs -->
+    {#if rightPanelOpen}
+      <div transition:fade={{ duration: 200 }} class="w-96 flex flex-col border-l border-base-300 bg-base-100 transition-all">
+        <!-- Panel header with tabs and close button -->
+        <div class="bg-base-300 p-2">
+          <div class="flex justify-between items-center mb-2">
+            <div class="tabs tabs-boxed">
+              <button 
+                class="tab {activeTab === 'tutorial' ? 'tab-active' : ''}" 
+                on:click={() => activeTab = 'tutorial'}>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+                Tutorial
+              </button>
+              <button 
+                class="tab {activeTab === 'musicExamples' ? 'tab-active' : ''}" 
+                on:click={() => activeTab = 'musicExamples'}>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z" />
+                </svg>
+                Music Examples
+              </button>
+              <button 
+                class="tab {activeTab === 'documentation' ? 'tab-active' : ''}" 
+                on:click={() => activeTab = 'documentation'}>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                </svg>
+                Documentation
+              </button>
             </div>
-          {/each}
-        {/if}
+            <button
+              class="btn btn-sm btn-ghost btn-square"
+              on:click={() => rightPanelOpen = false}
+              title="Close panel"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tab content -->
+        <div class="flex-1 overflow-y-auto p-4">
+          {#if activeTab === 'tutorial'}
+            <div>
+              <h3 class="text-lg font-bold mb-4">Tutorials</h3>
+              {#if loadingTutorials}
+                <div class="flex justify-center">
+                  <span class="loading loading-spinner loading-md"></span>
+                </div>
+              {:else if tutorialFiles.length === 0}
+                <p class="text-sm opacity-70">No tutorial files available.</p>
+              {:else}
+                <div class="space-y-2">
+                  {#each tutorialFiles as file}
+                    <button
+                      class="w-full text-left btn btn-sm btn-outline justify-start"
+                      on:click={() => loadTutorialFile(file)}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-5L9 2H4z" clip-rule="evenodd" />
+                      </svg>
+                      {file.name}
+                    </button>
+                  {/each}
+                </div>
+              {/if}
+            </div>
+          {:else if activeTab === 'musicExamples'}
+            <div>
+              <h3 class="text-lg font-bold mb-4">Music Examples</h3>
+              <p class="text-sm opacity-70">Coming soon...</p>
+            </div>
+          {:else if activeTab === 'documentation'}
+            <div>
+              <h3 class="text-lg font-bold mb-4">Renardo Documentation</h3>
+              <div class="prose">
+                <h4 class="text-md font-semibold mb-2">Quick Start</h4>
+                <p class="text-sm mb-4">
+                  Renardo is a Python-based live coding environment for creating music in real-time.
+                </p>
+                
+                <h4 class="text-md font-semibold mb-2">Basic Commands</h4>
+                <ul class="text-sm space-y-2">
+                  <li><code class="bg-base-300 px-2 py-1 rounded">d1 >> play("x-o-")</code> - Play a drum pattern</li>
+                  <li><code class="bg-base-300 px-2 py-1 rounded">p1 >> pluck([0,2,4,7])</code> - Play a melody</li>
+                  <li><code class="bg-base-300 px-2 py-1 rounded">p1.stop()</code> - Stop a player</li>
+                  <li><code class="bg-base-300 px-2 py-1 rounded">Clock.clear()</code> - Stop all patterns</li>
+                </ul>
+                
+                <h4 class="text-md font-semibold mt-4 mb-2">Keyboard Shortcuts</h4>
+                <ul class="text-sm space-y-1">
+                  <li><kbd class="kbd kbd-sm">Alt+Enter</kbd> - Execute current line</li>
+                  <li><kbd class="kbd kbd-sm">Ctrl+Enter</kbd> - Execute paragraph or selection</li>
+                  <li><kbd class="kbd kbd-sm">Ctrl+.</kbd> - Stop all music</li>
+                </ul>
+              </div>
+            </div>
+          {/if}
+        </div>
       </div>
-    </div>
+    {/if}
   </div>
 
   <!-- Error messages -->
@@ -705,5 +899,10 @@ Master().fadeout(dur=24)
   /* Make sure the textarea is hidden properly */
   #code-editor {
     display: none;
+  }
+  
+  /* Smooth transitions for layout changes */
+  .flex {
+    transition: all 0.3s ease;
   }
 </style>
