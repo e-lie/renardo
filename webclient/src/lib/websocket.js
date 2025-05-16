@@ -402,6 +402,18 @@ function handleMessage(message) {
       // This will be handled by the AudioBackend component via _lastMessage
       break;
       
+    case 'server_shutdown':
+      console.log('Server is shutting down, closing window');
+      // Close the current window/tab when server shuts down
+      window.close();
+      // If window.close() doesn't work (some browsers restrict it), update the UI
+      appState.update(state => ({
+        ...state,
+        connected: false,
+        error: 'Server has stopped. Please restart the server to continue.'
+      }));
+      break;
+      
     default:
       console.log('Unhandled message type:', type, message);
   }
