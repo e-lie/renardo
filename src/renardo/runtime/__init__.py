@@ -112,7 +112,7 @@ from renardo.lib.TimeVar import (
 )
 
 from renardo.lib.Constants import NoneConst, const
-from renardo.sc_backend.Midi import MidiInputHandler, MidiOut, midi, rtMidiNotFound
+from renardo.sc_backend.Midi import MidiInputHandler, MidiOut, MidiInstrumentProxy, midi, rtMidiNotFound
 
 from renardo.sc_backend import (
     Buffer, buffer_management, BufferManager, Dict, Optional, Path,

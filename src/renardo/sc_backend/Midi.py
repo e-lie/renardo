@@ -188,26 +188,20 @@ class MidiIn:
         self.device.close_port()
         return
 
-
-class MidiOut(InstrumentProxy):
+class MidiInstrumentProxy(InstrumentProxy):
     """ Instrument proxy for sending midi message via supercollider """
     def __init__(self, degree=0, **kwargs):
         InstrumentProxy.__init__(self, self.__class__.__name__, degree, kwargs)
 
-class MidiInstrument(InstrumentProxy):
-    """ Instrument proxy for sending midi message via supercollider """
-    def __init__(self, degree=0, **kwargs):
-        InstrumentProxy.__init__(self, self.__class__.__name__, degree, kwargs)
-
-class ReaperInstrument(MidiOut):
+class ReaperInstrumentProxy(MidiInstrumentProxy):
     """Instrument proxy to handle MIDI + reaper integration"""
     def __init__(self, degree=0, **kwargs):
         if isinstance(degree, str) and "midi_map" not in kwargs.keys():
             raise Exception("No midi map defined to translate playstring")
-        MidiOut.__init__(self, degree, **kwargs)
+        MidiInstrumentProxy.__init__(self, degree, **kwargs)
 
 
-midi = MidiOut # experimental alias
+midi = MidiOut = MidiInstrumentProxy # experimental alias
 
 # Midi information exceptions
 
