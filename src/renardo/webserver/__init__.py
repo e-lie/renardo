@@ -11,7 +11,7 @@ from .config import STATIC_FOLDER, PING_INTERVAL, HOST, PORT, DEBUG
 
 # Import route initializers
 from .routes import init_routes
-from .websocket_utils import initialize_log_observer
+from .websocket_utils import initialize_log_observer, broadcast_to_clients
 
 def create_webapp():
     """
@@ -89,5 +89,23 @@ def create_webapp():
         if path and os.path.exists(os.path.join(webapp.static_folder, path)):
             return send_from_directory(webapp.static_folder, path)
         return send_from_directory(webapp.static_folder, 'index.html')
+    
+    # Add shutdown hook for Flask development server
+    import atexit
+    from ..settings_manager import settings
+    
+    def shutdown_handler():
+        """Send shutdown message to all connected clients when server stops"""
+        if settings.get("webserver.AUTOCLOSE_WEBCLIENT", True):
+            broadcast_to_clients({
+                "type": "server_shutdown",
+                "message": "Server is shutting down"
+            })
+            # Give clients a moment to close before exiting
+            import time
+            time.sleep(0.5)
+    
+    # Register the shutdown handler
+    atexit.register(shutdown_handler)
     
     return webapp
