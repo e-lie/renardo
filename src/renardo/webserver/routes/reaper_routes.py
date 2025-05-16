@@ -1209,7 +1209,7 @@ def prepare_reaper_task(ws):
         try:
             # Import the necessary functions
             import reapy
-            from renardo.midi_backend.examples_and_tests.minimal_midi import create_16_midi_tracks
+            from renardo.reaper_backend.reaper_simple_lib import create_16_midi_tracks
             
             logger.write_line("Connecting to REAPER via ReaPy...", "INFO")
             
