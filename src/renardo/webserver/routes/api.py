@@ -369,3 +369,36 @@ def register_api_routes(webapp):
                 "success": False,
                 "message": f"Error resetting settings: {str(e)}"
             }), 500
+            
+    @webapp.route('/api/tutorial/files', methods=['GET'])
+    def get_tutorial_files():
+        """
+        Get list of tutorial files
+        
+        Returns:
+            JSON: List of tutorial file paths
+        """
+        try:
+            from renardo.settings_manager import get_tutorial_files
+            tutorial_files = get_tutorial_files()
+            
+            # Return file paths and relevant metadata
+            files_data = []
+            for file_path in tutorial_files:
+                import os
+                basename = os.path.basename(file_path)
+                files_data.append({
+                    "name": basename,
+                    "path": file_path,
+                    "url": f"/api/tutorial/files/{basename}"
+                })
+            
+            return jsonify({
+                "success": True,
+                "files": files_data
+            })
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "message": f"Error fetching tutorial files: {str(e)}"
+            }), 500
