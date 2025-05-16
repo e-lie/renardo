@@ -60,7 +60,7 @@ from renardo.lib.TempoClock import (
 
 from renardo.sc_backend import TempoClient, ServerManager, RequestTimeout
 
-from renardo.lib.Midi import MidiIn, MIDIDeviceNotFound
+from renardo.sc_backend.Midi import MidiIn, MIDIDeviceNotFound
 
 from renardo.lib.Patterns import (
     Add, CalculateDelaysFromDur, CalculateEuclideanDelay, ClassPatternMethod,
@@ -113,7 +113,7 @@ from renardo.lib.TimeVar import (
 )
 
 from renardo.lib.Constants import NoneConst, const
-from renardo.lib.Midi import MidiInputHandler, MidiOut, midi, rtMidiNotFound
+from renardo.sc_backend.Midi import MidiInputHandler, MidiOut, midi, rtMidiNotFound
 
 from renardo.sc_backend import (
     Buffer, buffer_management, BufferManager, Dict, Optional, Path,
