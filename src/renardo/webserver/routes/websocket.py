@@ -102,6 +102,24 @@ def register_websocket_routes(sock):
                         # Handle code execution
                         try:
                             code = message.get("data", {}).get("code", "")
+                            request_id = message.get("data", {}).get("requestId", None)
+                            
+                            # Simple duplicate prevention using request IDs
+                            if hasattr(ws, '_recent_requests'):
+                                if request_id and request_id in ws._recent_requests:
+                                    # Skip duplicate request
+                                    print(f"Skipping duplicate request: {request_id}")
+                                    continue
+                            else:
+                                ws._recent_requests = set()
+                            
+                            # Track this request
+                            if request_id:
+                                ws._recent_requests.add(request_id)
+                                # Keep only last 100 request IDs to prevent memory growth
+                                if len(ws._recent_requests) > 100:
+                                    ws._recent_requests = set(list(ws._recent_requests)[-100:])
+                            
                             # Print info for debugging
                             print(f"Executing code: {code}")
 
