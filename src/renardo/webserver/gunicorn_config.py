@@ -49,6 +49,17 @@ def on_exit(server):
     """Called just before exiting."""
     if debug_mode:
         print("Shutting down Renardo Gunicorn server")
+    
+    # Send shutdown message to all connected clients
+    if settings.get("webserver.AUTOCLOSE_WEBCLIENT", True):
+        from renardo.webserver.websocket_utils import broadcast_to_clients
+        broadcast_to_clients({
+            "type": "server_shutdown",
+            "message": "Server is shutting down"
+        })
+        # Give clients a moment to process the shutdown message
+        import time
+        time.sleep(0.5)
 
 def post_fork(server, worker):
     """Called just after a worker has been forked."""
