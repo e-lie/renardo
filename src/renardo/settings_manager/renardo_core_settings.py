@@ -26,7 +26,7 @@ internal=True
 settings.save_to_file()
 
 def get_tutorial_files():
-    tutorial_dir = settings.get_path("RENARDO_ROOT_PATH") / "lib" / "demo"
+    tutorial_dir = settings.get_path("RENARDO_ROOT_PATH") / "demo"
     return [
         str(tutorial_dir / path)
         for path in sorted(os.listdir(tutorial_dir))
