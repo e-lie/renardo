@@ -895,7 +895,7 @@ Master().fadeout(dur=24)
     <!-- Left side: Code editor and console -->
     <div class="flex flex-col flex-1 overflow-hidden">
       <!-- Code editor -->
-      <div class="flex-1 min-h-[60vh] border border-base-300" bind:this={editorContainer}>
+      <div class="flex-1 border border-base-300" bind:this={editorContainer}>
         <textarea id="code-editor">{editorContent}</textarea>
       </div>
 
@@ -1226,11 +1226,13 @@ Master().fadeout(dur=24)
 <style>
   /* Style for buffer tabs */
   .tab-lifted {
-    @apply px-4 py-2 mr-1 text-sm;
+    padding: 0.5rem 1rem;
+    margin-right: 0.25rem;
+    font-size: 0.875rem;
   }
   
   .tab-active {
-    @apply bg-base-100;
+    background-color: oklch(var(--b1));
   }
   
   /* Make CodeMirror look better */
