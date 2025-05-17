@@ -53,49 +53,6 @@
   // Check if WebSockets are supported
   const webSocketSupported = 'WebSocket' in window;
 
-  // Connection state tracking
-  let showDisconnectionModal = false;
-  let connectionTimer;
-  let reconnectAttempts = 0;
-
-  // Monitor connection changes
-  $: {
-    if ($appState.connected === false && webSocketSupported) {
-      // Clear any existing timer
-      if (connectionTimer) {
-        clearTimeout(connectionTimer);
-      }
-      
-      // Delay showing the disconnection modal to avoid flashing during initial connection
-      // or brief network hiccups
-      connectionTimer = setTimeout(() => {
-        showDisconnectionModal = true;
-        reconnectAttempts = 0;
-      }, 3000); // Show modal after 3 seconds of being disconnected
-      
-    } else if ($appState.connected === true) {
-      // Clear timer when connection is restored
-      if (connectionTimer) {
-        clearTimeout(connectionTimer);
-        connectionTimer = null;
-      }
-      
-      // Hide modal
-      showDisconnectionModal = false;
-      reconnectAttempts = 0;
-    }
-  }
-  
-  // Track reconnection attempts
-  function updateReconnectAttempts() {
-    reconnectAttempts++;
-  }
-  
-  // Export the function to be available to the websocket module
-  if (typeof window !== 'undefined') {
-    window.renardoApp = window.renardoApp || {};
-    window.renardoApp.updateReconnectAttempts = updateReconnectAttempts;
-  }
   
   // Initialize WebSocket connection on mount
   onMount(() => {
@@ -158,12 +115,6 @@
           zenMode = event.detail.zenMode;
         });
         
-        // Clear connection timer if it exists
-        if (connectionTimer) {
-          clearTimeout(connectionTimer);
-          connectionTimer = null;
-        }
-        
         // Do NOT close the WebSocket here - it should stay open for the app's lifetime
       };
     } else {
@@ -217,31 +168,6 @@
 </script>
 
 <!-- Disconnection Modal -->
-{#if showDisconnectionModal && webSocketSupported}
-  <div class="modal modal-open" transition:fade={{ duration: 200 }}>
-    <div class="modal-box">
-      <h3 class="font-bold text-lg mb-4">Connection Lost</h3>
-      <div class="flex flex-col items-center mb-6">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-error animate-pulse mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-        </svg>
-        <p class="text-center mb-2">Connection to the Renardo backend has been lost.</p>
-        <p class="text-center text-sm opacity-75 mb-2">Has the Renardo backend application been closed or crashed?</p>
-        <div class="badge badge-error gap-2 my-2">
-          <span class="relative flex h-2 w-2">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-error"></span>
-            <span class="relative inline-flex rounded-full h-2 w-2 bg-error"></span>
-          </span>
-          Attempting to reconnect automatically... ({reconnectAttempts} attempts)
-        </div>
-      </div>
-      <div class="flex flex-col gap-2">
-        <button class="btn btn-primary" onclick="location.reload()">Refresh Page</button>
-        <button class="btn btn-outline" onclick="window.close()">Close Tab</button>
-      </div>
-    </div>
-  </div>
-{/if}
 
 <div class="drawer">
   <input id="drawer-toggle" type="checkbox" class="drawer-toggle" /> 
@@ -271,24 +197,6 @@
       <div class="navbar-end">
         <!-- Theme Button -->
         <!-- <ThemeButton /> To fix ! -->
-
-        {#if webSocketSupported}
-          <div class="badge {$appState.connected ? 'badge-success' : 'badge-error'} gap-2 ml-2">
-            <span class="relative flex h-2 w-2">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 {$appState.connected ? 'bg-success' : 'bg-error'}"></span>
-              <span class="relative inline-flex rounded-full h-2 w-2 {$appState.connected ? 'bg-success' : 'bg-error'}"></span>
-            </span>
-            {$appState.connected ? 'Connected' : 'Disconnected'}
-          </div>
-        {:else}
-          <div class="badge badge-warning gap-2 ml-2">
-            <span class="relative flex h-2 w-2">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-warning"></span>
-              <span class="relative inline-flex rounded-full h-2 w-2 bg-warning"></span>
-            </span>
-            HTTP Fallback
-          </div>
-        {/if}
       </div>
     </div>
     {/if}
