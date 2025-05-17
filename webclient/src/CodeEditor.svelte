@@ -41,7 +41,7 @@
   let tabs = [
     {
       id: 1,
-      name: 'Buffer 1',
+      name: 'Untitled',
       content: `# Renardo Live Coding Editor
 # Type your code here and press Ctrl+Enter to run
 
@@ -54,7 +54,8 @@ k2 >> play("V.", lpf=400).eclipse(64,128)
 d2.dur=var([.25,1/3,1/2], 16)
 
 Master().fadeout(dur=24)
-`
+`,
+      editing: false
     }
   ];
   
@@ -561,7 +562,8 @@ Master().fadeout(dur=24)
     const newBuffer = {
       id: nextTabId++,
       name: newBufferName.trim(),
-      content: `# ${newBufferName.trim()}\n`
+      content: `# ${newBufferName.trim()}\n`,
+      editing: false
     };
     tabs = [...tabs, newBuffer];
     activeTabId = newBuffer.id;
@@ -581,6 +583,47 @@ Master().fadeout(dur=24)
   function cancelNewBuffer() {
     showNewBufferModal = false;
     newBufferName = '';
+  }
+  
+  // Function to start editing a buffer name
+  function startEditingBufferName(bufferId) {
+    const buffer = tabs.find(t => t.id === bufferId);
+    if (buffer) {
+      buffer.editing = true;
+      buffer.editingName = buffer.name;
+      tabs = tabs; // Trigger reactivity
+      
+      // Focus the input after it's rendered
+      setTimeout(() => {
+        const input = document.getElementById(`buffer-name-input-${bufferId}`);
+        if (input) {
+          input.focus();
+          input.select();
+        }
+      }, 10);
+    }
+  }
+  
+  // Function to finish editing a buffer name
+  function finishEditingBufferName(bufferId) {
+    const buffer = tabs.find(t => t.id === bufferId);
+    if (buffer && buffer.editing) {
+      if (buffer.editingName && buffer.editingName.trim()) {
+        buffer.name = buffer.editingName.trim();
+      }
+      buffer.editing = false;
+      tabs = tabs; // Trigger reactivity
+    }
+  }
+  
+  // Function to cancel editing a buffer name
+  function cancelEditingBufferName(bufferId) {
+    const buffer = tabs.find(t => t.id === bufferId);
+    if (buffer && buffer.editing) {
+      buffer.editing = false;
+      delete buffer.editingName;
+      tabs = tabs; // Trigger reactivity
+    }
   }
   
   // Function to close a buffer
@@ -635,7 +678,8 @@ Master().fadeout(dur=24)
         const newBuffer = {
           id: nextTabId++,
           name: file.name.replace('.py', ''),
-          content: content
+          content: content,
+          editing: false
         };
         tabs = [...tabs, newBuffer];
         activeTabId = newBuffer.id;
@@ -772,7 +816,8 @@ Master().fadeout(dur=24)
                 tabs.push({
                   id: newTabId++,
                   name: bufferName,
-                  content: bufferContent
+                  content: bufferContent,
+                  editing: false
                 });
                 
                 i++; // Skip the content part we just processed
@@ -781,8 +826,9 @@ Master().fadeout(dur=24)
               // Legacy format without names
               tabs.push({
                 id: newTabId++,
-                name: `Buffer ${tabs.length + 1}`,
-                content: part
+                name: `Untitled ${tabs.length + 1}`,
+                content: part,
+                editing: false
               });
             }
           }
@@ -791,8 +837,9 @@ Master().fadeout(dur=24)
           if (tabs.length === 0) {
             tabs.push({
               id: 1,
-              name: 'Buffer 1',
-              content: ''
+              name: 'Untitled',
+              content: '',
+              editing: false
             });
           }
           
@@ -926,8 +973,27 @@ Master().fadeout(dur=24)
         <button
           class="tab tab-lifted {activeTabId === buffer.id ? 'tab-active' : ''}"
           on:click={() => activeTabId = buffer.id}
+          on:dblclick={() => startEditingBufferName(buffer.id)}
         >
-          {buffer.name}
+          {#if buffer.editing}
+            <input
+              id="buffer-name-input-{buffer.id}"
+              type="text"
+              class="bg-transparent outline-none w-24"
+              bind:value={buffer.editingName}
+              on:keydown={(e) => {
+                if (e.key === 'Enter') {
+                  finishEditingBufferName(buffer.id);
+                } else if (e.key === 'Escape') {
+                  cancelEditingBufferName(buffer.id);
+                }
+              }}
+              on:blur={() => finishEditingBufferName(buffer.id)}
+              on:click|stopPropagation
+            />
+          {:else}
+            {buffer.name}
+          {/if}
           {#if tabs.length > 1}
             <button
               class="ml-2 w-4 h-4 rounded-full hover:bg-base-300 flex items-center justify-center text-xs"
