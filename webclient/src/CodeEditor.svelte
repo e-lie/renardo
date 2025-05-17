@@ -920,8 +920,8 @@ Master().fadeout(dur=24)
   </div>
 
   <!-- Buffer tabs -->
-  <div class="bg-base-200 px-4 py-1">
-    <div class="flex items-center gap-1">
+  <div class="bg-base-200 px-4 py-0.5">
+    <div class="flex items-center gap-1 h-8">
       {#each tabs as buffer}
         <button
           class="tab tab-lifted {activeTabId === buffer.id ? 'tab-active' : ''}"
@@ -930,7 +930,7 @@ Master().fadeout(dur=24)
           {buffer.name}
           {#if tabs.length > 1}
             <button
-              class="ml-2 btn btn-xs btn-circle btn-ghost"
+              class="ml-2 w-4 h-4 rounded-full hover:bg-base-300 flex items-center justify-center text-xs"
               on:click|stopPropagation={() => closeBuffer(buffer.id)}
             >
               ×
@@ -943,7 +943,7 @@ Master().fadeout(dur=24)
         on:click={openNewBufferModal}
         title="New Buffer"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
         </svg>
       </button>
@@ -1333,9 +1333,12 @@ Master().fadeout(dur=24)
 <style>
   /* Style for buffer tabs */
   .tab-lifted {
-    padding: 0.25rem 1rem;
+    padding: 0.125rem 0.75rem;
     margin-right: 0.25rem;
-    font-size: 0.875rem;
+    font-size: 0.8rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
   }
   
   .tab-active {
