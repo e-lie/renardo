@@ -22,6 +22,11 @@
   let sessionName = '';
   let savingSession = false;
   
+  // New buffer modal state
+  let showNewBufferModal = false;
+  let newBufferName = '';
+  let creatingBuffer = false;
+  
   // Initialization check
   let showInitModal = false;
   let initStatus = {
@@ -537,15 +542,45 @@ Master().fadeout(dur=24)
     window.location.hash = 'init';
   }
   
-  // Function to add a new buffer
-  function addNewBuffer() {
+  // Function to open new buffer modal
+  function openNewBufferModal() {
+    showNewBufferModal = true;
+    newBufferName = '';
+    
+    // Focus the input field after the modal opens
+    setTimeout(() => {
+      const input = document.getElementById('new-buffer-name-input');
+      if (input) input.focus();
+    }, 100);
+  }
+  
+  // Function to actually create the new buffer
+  function createNewBuffer() {
+    if (!newBufferName.trim()) return;
+    
     const newBuffer = {
       id: nextTabId++,
-      name: `Buffer ${tabs.length + 1}`,
-      content: '# New buffer\n'
+      name: newBufferName.trim(),
+      content: `# ${newBufferName.trim()}\n`
     };
     tabs = [...tabs, newBuffer];
     activeTabId = newBuffer.id;
+    
+    showNewBufferModal = false;
+    newBufferName = '';
+    
+    // Update editor if it exists
+    if (editor) {
+      editor.setValue(newBuffer.content);
+      editor.setCursor({ line: 0, ch: 0 });
+      editor.focus();
+    }
+  }
+  
+  // Function to cancel new buffer creation
+  function cancelNewBuffer() {
+    showNewBufferModal = false;
+    newBufferName = '';
   }
   
   // Function to close a buffer
@@ -630,11 +665,14 @@ Master().fadeout(dur=24)
     
     savingSession = true;
     try {
-      // Concatenate all buffers with separator
-      const separator = '#'.repeat(80) + '\n';
+      // Concatenate all buffers with separator and names
+      const separator = '#'.repeat(80);
       const combinedContent = tabs
-        .map(tab => tab.content)
-        .join('\n' + separator + '\n');
+        .map(tab => {
+          const nameHeader = `######## ${tab.name}`;
+          return `${separator}\n${nameHeader}\n${separator}\n${tab.content}`;
+        })
+        .join('\n');
       
       const response = await fetch('/api/sessions', {
         method: 'POST',
@@ -712,23 +750,42 @@ Master().fadeout(dur=24)
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          // Split content by separator
+          // Parse content with buffer names
           const separator = '#'.repeat(80);
-          const bufferContents = data.content.split(new RegExp(`\\n?${separator}\\n?`));
+          const parts = data.content.split(new RegExp(`\\n?${separator}\\n?`));
           
           // Clear existing tabs and create new ones from the loaded content
           tabs = [];
           let newTabId = 1;
           
-          bufferContents.forEach((content, index) => {
-            if (content.trim()) { // Only create buffer if content is not empty
+          for (let i = 0; i < parts.length; i++) {
+            const part = parts[i].trim();
+            if (!part) continue;
+            
+            // Check if this part contains a buffer name header
+            if (part.startsWith('######## ')) {
+              const nameHeaderMatch = part.match(/^######## (.+?)(?:\n|$)/);
+              if (nameHeaderMatch && i + 1 < parts.length) {
+                const bufferName = nameHeaderMatch[1];
+                const bufferContent = parts[i + 1].trim();
+                
+                tabs.push({
+                  id: newTabId++,
+                  name: bufferName,
+                  content: bufferContent
+                });
+                
+                i++; // Skip the content part we just processed
+              }
+            } else {
+              // Legacy format without names
               tabs.push({
                 id: newTabId++,
-                name: `Buffer ${index + 1}`,
-                content: content
+                name: `Buffer ${tabs.length + 1}`,
+                content: part
               });
             }
-          });
+          }
           
           // If no buffers were created, create at least one
           if (tabs.length === 0) {
@@ -863,7 +920,7 @@ Master().fadeout(dur=24)
   </div>
 
   <!-- Buffer tabs -->
-  <div class="bg-base-200 px-4 pt-2 pb-0">
+  <div class="bg-base-200 px-4 py-1">
     <div class="flex items-center gap-1">
       {#each tabs as buffer}
         <button
@@ -883,7 +940,7 @@ Master().fadeout(dur=24)
       {/each}
       <button
         class="tab tab-lifted"
-        on:click={addNewBuffer}
+        on:click={openNewBufferModal}
         title="New Buffer"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -1226,10 +1283,57 @@ Master().fadeout(dur=24)
   </div>
 {/if}
 
+<!-- New Buffer Modal -->
+{#if showNewBufferModal}
+  <div class="modal modal-open" transition:fade={{ duration: 200 }}>
+    <div class="modal-box">
+      <h3 class="font-bold text-lg mb-4">New Buffer</h3>
+      
+      <div class="form-control">
+        <label for="new-buffer-name-input" class="label">
+          <span class="label-text">Buffer Name</span>
+        </label>
+        <input 
+          id="new-buffer-name-input"
+          type="text" 
+          placeholder="Enter buffer name" 
+          class="input input-bordered w-full"
+          bind:value={newBufferName}
+          on:keydown={(e) => {
+            if (e.key === 'Enter' && newBufferName.trim()) {
+              createNewBuffer();
+            } else if (e.key === 'Escape') {
+              cancelNewBuffer();
+            }
+          }}
+          disabled={creatingBuffer}
+        />
+      </div>
+      
+      <div class="modal-action">
+        <button 
+          class="btn btn-primary"
+          on:click={createNewBuffer}
+          disabled={!newBufferName.trim() || creatingBuffer}
+        >
+          Create
+        </button>
+        <button 
+          class="btn btn-outline"
+          on:click={cancelNewBuffer}
+          disabled={creatingBuffer}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
 <style>
   /* Style for buffer tabs */
   .tab-lifted {
-    padding: 0.5rem 1rem;
+    padding: 0.25rem 1rem;
     margin-right: 0.25rem;
     font-size: 0.875rem;
   }
