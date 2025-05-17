@@ -1,6 +1,6 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
-  import { fade } from 'svelte/transition';
+  import { fade, slide } from 'svelte/transition';
   import { appState, initWebSocket, sendMessage } from './lib/websocket.js';
   import CodeMirrorThemeSelector from './lib/CodeMirrorThemeSelector.svelte';
   // We'll load CodeMirror and its dependencies from CDN
@@ -30,6 +30,9 @@
   // Close buffer confirmation modal state
   let showCloseBufferModal = false;
   let bufferToClose = null;
+  
+  // Zen mode state
+  let zenMode = false;
   
   // Initialization check
   let showInitModal = false;
@@ -659,6 +662,14 @@ Master().fadeout(dur=24)
     bufferToClose = null;
   }
   
+  // Function to toggle zen mode
+  function toggleZenMode() {
+    zenMode = !zenMode;
+    // Notify parent component
+    const event = new CustomEvent('zenModeChange', { detail: { zenMode } });
+    window.dispatchEvent(event);
+  }
+  
   // Function to insert preset code at cursor position
   function insertPreset(code) {
     if (!editor) return;
@@ -886,8 +897,29 @@ Master().fadeout(dur=24)
   }</script>
 
 <div class="flex flex-col h-screen w-full overflow-hidden">
+  <!-- Zen mode toggle button -->
+  <div class="absolute top-2 right-2 z-50">
+    <button
+      class="btn btn-sm btn-ghost"
+      on:click={toggleZenMode}
+      title="{zenMode ? 'Exit' : 'Enter'} Zen Mode"
+    >
+      {#if zenMode}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+        </svg>
+      {:else}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+          <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+        </svg>
+      {/if}
+    </button>
+  </div>
+  
   <!-- Header with controls -->
-  <div class="bg-base-300 p-4">
+  {#if !zenMode}
+    <div class="bg-base-300 p-4" transition:slide>
     <div class="flex flex-col gap-2">
       <div class="flex flex-wrap gap-2 text-xs mb-2">
         <span class="badge badge-sm">Alt+Enter: Run current line</span>
@@ -986,6 +1018,7 @@ Master().fadeout(dur=24)
       </div>
     </div>
   </div>
+  {/if}
 
   <!-- Buffer tabs -->
   <div class="bg-base-200 px-4 py-0.5">
