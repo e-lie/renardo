@@ -566,7 +566,7 @@ Master().fadeout(dur=24)
     const newBuffer = {
       id: nextTabId++,
       name: newBufferName.trim(),
-      content: `# ${newBufferName.trim()}\n`,
+      content: '',
       editing: false
     };
     tabs = [...tabs, newBuffer];
