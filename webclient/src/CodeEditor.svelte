@@ -6,7 +6,7 @@
   // We'll load CodeMirror and its dependencies from CDN
   
   // State for right panel
-  let rightPanelOpen = false;
+  let rightPanelOpen = true;
   let activeTab = 'tutorial'; // tutorial, musicExamples, or documentation
   
   // Tutorial files state
@@ -233,7 +233,7 @@ Master().fadeout(dur=24)
     // Start the initialization process
     initEditor();
     
-    // Load tutorial files on mount
+    // Load tutorial files on mount since panel is open by default
     loadTutorialFiles();
     
     // Subscribe to appState changes to update UI
