@@ -17,6 +17,11 @@
   let sessionFiles = [];
   let loadingSessions = false;
   
+  // Save session modal state
+  let showSaveModal = false;
+  let sessionName = '';
+  let savingSession = false;
+  
   // Initialization check
   let showInitModal = false;
   let initStatus = {
@@ -557,11 +562,17 @@ Master().fadeout(dur=24)
     }
   }
   
-  // Function to save current session
-  async function saveSession() {
-    const filename = prompt('Enter session name:');
-    if (!filename) return;
+  // Function to open save session modal
+  function saveSession() {
+    showSaveModal = true;
+    sessionName = '';
+  }
+  
+  // Function to actually save the session
+  async function doSaveSession() {
+    if (!sessionName.trim()) return;
     
+    savingSession = true;
     try {
       const response = await fetch('/api/sessions', {
         method: 'POST',
@@ -569,14 +580,19 @@ Master().fadeout(dur=24)
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          filename: filename,
+          filename: sessionName,
           content: editor.getValue()
         })
       });
       
       const result = await response.json();
       if (result.success) {
-        alert(`Session saved as ${result.filename}`);
+        showSaveModal = false;
+        sessionName = '';
+        
+        // Show success message in console
+        addConsoleOutput(`Session saved as ${result.filename}`, 'success');
+        
         // Reload sessions list if the sessions tab is active
         if (activeTab === 'sessions') {
           loadSessionFiles();
@@ -587,7 +603,16 @@ Master().fadeout(dur=24)
     } catch (error) {
       console.error('Error saving session:', error);
       alert('Error saving session');
+    } finally {
+      savingSession = false;
     }
+  }
+  
+  // Function to cancel save session
+  function cancelSaveSession() {
+    showSaveModal = false;
+    sessionName = '';
+    savingSession = false;
   }
   
   // Function to load a session
@@ -1014,6 +1039,61 @@ Master().fadeout(dur=24)
       <div class="flex flex-col gap-2">
         <button class="btn btn-primary" on:click={goToInitializePage}>Go to Initialize Page</button>
         <button class="btn btn-outline" on:click={dismissInitModal}>Continue Anyway</button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Save Session Modal -->
+{#if showSaveModal}
+  <div class="modal modal-open" transition:fade={{ duration: 200 }}>
+    <div class="modal-box">
+      <h3 class="font-bold text-lg mb-4">Save Session</h3>
+      
+      <div class="form-control">
+        <label for="session-name-input" class="label">
+          <span class="label-text">Session Name</span>
+        </label>
+        <input 
+          id="session-name-input"
+          type="text" 
+          placeholder="my_session.py" 
+          class="input input-bordered w-full"
+          bind:value={sessionName}
+          on:keydown={(e) => {
+            if (e.key === 'Enter' && sessionName.trim()) {
+              doSaveSession();
+            } else if (e.key === 'Escape') {
+              cancelSaveSession();
+            }
+          }}
+          disabled={savingSession}
+        />
+        <label for="session-name-input" class="label">
+          <span class="label-text-alt">The .py extension will be added automatically if not provided</span>
+        </label>
+      </div>
+      
+      <div class="modal-action">
+        <button 
+          class="btn btn-primary"
+          on:click={doSaveSession}
+          disabled={!sessionName.trim() || savingSession}
+        >
+          {#if savingSession}
+            <span class="loading loading-spinner loading-sm"></span>
+            Saving...
+          {:else}
+            Save
+          {/if}
+        </button>
+        <button 
+          class="btn btn-outline"
+          on:click={cancelSaveSession}
+          disabled={savingSession}
+        >
+          Cancel
+        </button>
       </div>
     </div>
   </div>
