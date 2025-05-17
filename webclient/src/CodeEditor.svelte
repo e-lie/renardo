@@ -27,6 +27,10 @@
   let newBufferName = '';
   let creatingBuffer = false;
   
+  // Close buffer confirmation modal state
+  let showCloseBufferModal = false;
+  let bufferToClose = null;
+  
   // Initialization check
   let showInitModal = false;
   let initStatus = {
@@ -626,16 +630,33 @@ Master().fadeout(dur=24)
     }
   }
   
-  // Function to close a buffer
-  function closeBuffer(bufferId) {
-    if (tabs.length <= 1) return; // Keep at least one buffer
+  // Function to show close buffer confirmation
+  function confirmCloseBuffer(bufferId) {
+    bufferToClose = tabs.find(t => t.id === bufferId);
+    showCloseBufferModal = true;
+  }
+  
+  // Function to actually close a buffer
+  function closeBuffer() {
+    if (!bufferToClose || tabs.length <= 1) return;
     
+    const bufferId = bufferToClose.id;
     tabs = tabs.filter(t => t.id !== bufferId);
     
     // If we closed the active buffer, switch to another one
     if (activeTabId === bufferId) {
       activeTabId = tabs[0].id;
     }
+    
+    // Reset modal state
+    showCloseBufferModal = false;
+    bufferToClose = null;
+  }
+  
+  // Function to cancel closing a buffer
+  function cancelCloseBuffer() {
+    showCloseBufferModal = false;
+    bufferToClose = null;
   }
   
   // Function to insert preset code at cursor position
@@ -997,7 +1018,7 @@ Master().fadeout(dur=24)
           {#if tabs.length > 1}
             <button
               class="ml-2 w-4 h-4 rounded-full hover:bg-base-300 flex items-center justify-center text-xs"
-              on:click|stopPropagation={() => closeBuffer(buffer.id)}
+              on:click|stopPropagation={() => confirmCloseBuffer(buffer.id)}
             >
               ×
             </button>
@@ -1388,6 +1409,39 @@ Master().fadeout(dur=24)
           class="btn btn-outline"
           on:click={cancelNewBuffer}
           disabled={creatingBuffer}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Close Buffer Confirmation Modal -->
+{#if showCloseBufferModal && bufferToClose}
+  <div class="modal modal-open" transition:fade={{ duration: 200 }}>
+    <div class="modal-box">
+      <h3 class="font-bold text-lg mb-4">Close Buffer</h3>
+      
+      <p class="mb-4">
+        Are you sure you want to close the buffer "{bufferToClose.name}"?
+      </p>
+      
+      <div class="alert alert-warning mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+        <span>Any unsaved changes will be lost.</span>
+      </div>
+      
+      <div class="modal-action">
+        <button 
+          class="btn btn-error"
+          on:click={closeBuffer}
+        >
+          Close Buffer
+        </button>
+        <button 
+          class="btn btn-outline"
+          on:click={cancelCloseBuffer}
         >
           Cancel
         </button>
