@@ -32,8 +32,12 @@
   };
   let modalDismissed = false;
   
-  // State for editor content
-  let editorContent = `# Renardo Live Coding Editor
+  // State for multi-tab editor
+  let tabs = [
+    {
+      id: 1,
+      name: 'Buffer 1',
+      content: `# Renardo Live Coding Editor
 # Type your code here and press Ctrl+Enter to run
 
 Root.default = var([0,2,4], [2,4,6])
@@ -45,7 +49,23 @@ k2 >> play("V.", lpf=400).eclipse(64,128)
 d2.dur=var([.25,1/3,1/2], 16)
 
 Master().fadeout(dur=24)
-`;
+`
+    }
+  ];
+  
+  let activeTabId = 1;
+  let nextTabId = 2;
+  
+  // Get the active tab's content
+  $: activeBuffer = tabs.find(t => t.id === activeTabId);
+  $: editorContent = activeBuffer ? activeBuffer.content : '';
+  
+  // Watch for buffer switches and update editor
+  $: if (editor && activeBuffer) {
+    if (editor.getValue() !== activeBuffer.content) {
+      editor.setValue(activeBuffer.content);
+    }
+  }
 
   // CodeMirror options
   const editorOptions = {
@@ -186,7 +206,11 @@ Master().fadeout(dur=24)
 
           // Update local content when editor changes
           editor.on('change', (instance) => {
-            editorContent = instance.getValue();
+            const currentBuffer = tabs.find(t => t.id === activeTabId);
+            if (currentBuffer) {
+              currentBuffer.content = instance.getValue();
+              tabs = tabs; // Trigger reactivity
+            }
           });
 
           // Add key bindings for different execution modes
@@ -513,6 +537,29 @@ Master().fadeout(dur=24)
     window.location.hash = 'init';
   }
   
+  // Function to add a new buffer
+  function addNewBuffer() {
+    const newBuffer = {
+      id: nextTabId++,
+      name: `Buffer ${tabs.length + 1}`,
+      content: '# New buffer\n'
+    };
+    tabs = [...tabs, newBuffer];
+    activeTabId = newBuffer.id;
+  }
+  
+  // Function to close a buffer
+  function closeBuffer(bufferId) {
+    if (tabs.length <= 1) return; // Keep at least one buffer
+    
+    tabs = tabs.filter(t => t.id !== bufferId);
+    
+    // If we closed the active buffer, switch to another one
+    if (activeTabId === bufferId) {
+      activeTabId = tabs[0].id;
+    }
+  }
+  
   // Function to insert preset code at cursor position
   function insertPreset(code) {
     if (!editor) return;
@@ -549,6 +596,15 @@ Master().fadeout(dur=24)
       const response = await fetch(file.url);
       if (response.ok) {
         const content = await response.text();
+        // Create a new buffer for the tutorial
+        const newBuffer = {
+          id: nextTabId++,
+          name: file.name.replace('.py', ''),
+          content: content
+        };
+        tabs = [...tabs, newBuffer];
+        activeTabId = newBuffer.id;
+        
         if (editor) {
           editor.setValue(content);
           editor.setCursor({ line: 0, ch: 0 });
@@ -574,6 +630,12 @@ Master().fadeout(dur=24)
     
     savingSession = true;
     try {
+      // Concatenate all buffers with separator
+      const separator = '#'.repeat(80) + '\n';
+      const combinedContent = tabs
+        .map(tab => tab.content)
+        .join('\n' + separator + '\n');
+      
       const response = await fetch('/api/sessions', {
         method: 'POST',
         headers: {
@@ -581,7 +643,7 @@ Master().fadeout(dur=24)
         },
         body: JSON.stringify({
           filename: sessionName,
-          content: editor.getValue()
+          content: combinedContent
         })
       });
       
@@ -649,10 +711,44 @@ Master().fadeout(dur=24)
       const response = await fetch(file.url);
       if (response.ok) {
         const data = await response.json();
-        if (data.success && editor) {
-          editor.setValue(data.content);
-          editor.setCursor({ line: 0, ch: 0 });
-          editor.focus();
+        if (data.success) {
+          // Split content by separator
+          const separator = '#'.repeat(80);
+          const bufferContents = data.content.split(new RegExp(`\\n?${separator}\\n?`));
+          
+          // Clear existing tabs and create new ones from the loaded content
+          tabs = [];
+          let newTabId = 1;
+          
+          bufferContents.forEach((content, index) => {
+            if (content.trim()) { // Only create buffer if content is not empty
+              tabs.push({
+                id: newTabId++,
+                name: `Buffer ${index + 1}`,
+                content: content
+              });
+            }
+          });
+          
+          // If no buffers were created, create at least one
+          if (tabs.length === 0) {
+            tabs.push({
+              id: 1,
+              name: 'Buffer 1',
+              content: ''
+            });
+          }
+          
+          // Set the first buffer as active
+          activeTabId = tabs[0].id;
+          nextTabId = newTabId;
+          
+          // Update editor with first buffer's content
+          if (editor) {
+            editor.setValue(tabs[0].content);
+            editor.setCursor({ line: 0, ch: 0 });
+            editor.focus();
+          }
         } else {
           console.error('Failed to load session file:', data.message);
         }
@@ -665,6 +761,34 @@ Master().fadeout(dur=24)
   }</script>
 
 <div class="flex flex-col h-screen w-full overflow-hidden">
+  <!-- Buffer tabs -->
+  <div class="bg-base-200 px-4 pt-2 pb-0">
+    <div class="flex items-center gap-1">
+      {#each tabs as buffer}
+        <button
+          class="tab tab-lifted {activeTabId === buffer.id ? 'tab-active' : ''}"
+          on:click={() => activeTabId = buffer.id}
+        >
+          {buffer.name}
+          {#if tabs.length > 1}
+            <button
+              class="ml-2 btn btn-xs btn-circle btn-ghost"
+              on:click|stopPropagation={() => closeBuffer(buffer.id)}
+            >
+              ×
+            </button>
+          {/if}
+        </button>
+      {/each}
+      <button
+        class="tab tab-lifted"
+        on:click={addNewBuffer}
+      >
+        + New Buffer
+      </button>
+    </div>
+  </div>
+  
   <!-- Header with controls -->
   <div class="bg-base-300 p-4">
     <div class="flex flex-col gap-2">
@@ -1100,6 +1224,15 @@ Master().fadeout(dur=24)
 {/if}
 
 <style>
+  /* Style for buffer tabs */
+  .tab-lifted {
+    @apply px-4 py-2 mr-1 text-sm;
+  }
+  
+  .tab-active {
+    @apply bg-base-100;
+  }
+  
   /* Make CodeMirror look better */
   :global(.CodeMirror) {
     height: 100% !important;
