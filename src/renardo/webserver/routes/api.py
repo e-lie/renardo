@@ -402,3 +402,42 @@ def register_api_routes(webapp):
                 "success": False,
                 "message": f"Error fetching tutorial files: {str(e)}"
             }), 500
+            
+    @webapp.route('/api/tutorial/files/<filename>', methods=['GET'])
+    def get_tutorial_file(filename):
+        """
+        Get a specific tutorial file content
+        
+        Args:
+            filename (str): Name of the tutorial file
+            
+        Returns:
+            Text: Tutorial file content
+        """
+        try:
+            from renardo.settings_manager import settings
+            import os
+            
+            tutorial_dir = settings.get_path("RENARDO_ROOT_PATH") / "demo"
+            file_path = tutorial_dir / filename
+            
+            # Security check - ensure the file is within the tutorial directory
+            if not file_path.resolve().is_relative_to(tutorial_dir.resolve()):
+                return "Access denied", 403
+                
+            # Check if file exists
+            if not file_path.exists():
+                return "File not found", 404
+                
+            # Read and return the file content
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                
+            from flask import Response
+            return Response(content, mimetype='text/plain')
+            
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "message": f"Error reading tutorial file: {str(e)}"
+            }), 500
