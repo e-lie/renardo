@@ -986,33 +986,8 @@ Master().fadeout(dur=24)
           </button>
         </div>
 
-        <!-- Right Panel Toggle and Editor Theme Selector -->
+        <!-- Editor Theme Selector -->
         <div class="flex items-center gap-2">
-          <button
-            class="btn btn-sm btn-outline"
-            on:click={() => {
-              rightPanelOpen = !rightPanelOpen;
-              if (!rightPanelOpen) return;
-              // Reload files when opening the panel
-              if (activeTab === 'tutorial') {
-                loadTutorialFiles();
-              } else if (activeTab === 'sessions') {
-                loadSessionFiles();
-              }
-            }}
-            title="{rightPanelOpen ? 'Close' : 'Open'} side panel"
-          >
-            {#if rightPanelOpen}
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-              </svg>
-            {:else}
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-              </svg>
-            {/if}
-            {rightPanelOpen ? 'Hide' : 'Show'} Panel
-          </button>
           <CodeMirrorThemeSelector bind:editor={editor} />
         </div>
       </div>
@@ -1022,7 +997,8 @@ Master().fadeout(dur=24)
 
   <!-- Buffer tabs -->
   <div class="bg-base-200 px-4 py-0.5">
-    <div class="flex items-center gap-1 h-8">
+    <div class="flex items-center justify-between gap-1 h-8">
+      <div class="flex items-center gap-1">
       {#each tabs as buffer}
         <button
           class="tab tab-lifted {activeTabId === buffer.id ? 'tab-active' : ''}"
@@ -1067,6 +1043,34 @@ Master().fadeout(dur=24)
           <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
         </svg>
       </button>
+    </div>
+    
+    <!-- Right Panel Toggle -->
+    <button
+      class="btn btn-sm btn-outline"
+      on:click={() => {
+        rightPanelOpen = !rightPanelOpen;
+        if (!rightPanelOpen) return;
+        // Reload files when opening the panel
+        if (activeTab === 'tutorial') {
+          loadTutorialFiles();
+        } else if (activeTab === 'sessions') {
+          loadSessionFiles();
+        }
+      }}
+      title="{rightPanelOpen ? 'Close' : 'Open'} side panel"
+    >
+      {#if rightPanelOpen}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+        </svg>
+      {:else}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+        </svg>
+      {/if}
+      {rightPanelOpen ? 'Hide' : 'Show'} Panel
+    </button>
     </div>
   </div>
 
