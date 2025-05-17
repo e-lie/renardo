@@ -441,3 +441,141 @@ def register_api_routes(webapp):
                 "success": False,
                 "message": f"Error reading tutorial file: {str(e)}"
             }), 500
+            
+    @webapp.route('/api/sessions', methods=['POST'])
+    def save_session():
+        """
+        Save a session file
+        
+        Request body:
+            {
+                "filename": "session_name.py",
+                "content": "code content"
+            }
+            
+        Returns:
+            JSON: Save status
+        """
+        try:
+            data = request.get_json()
+            
+            if not data or 'filename' not in data or 'content' not in data:
+                return jsonify({
+                    "success": False,
+                    "message": "Missing 'filename' or 'content' in request data"
+                }), 400
+                
+            filename = data['filename']
+            content = data['content']
+            
+            # Ensure filename ends with .py
+            if not filename.endswith('.py'):
+                filename += '.py'
+                
+            # Get sessions directory
+            from pathlib import Path
+            from renardo.settings_manager import settings
+            sessions_dir = settings.get_path("RENARDO_ROOT_PATH") / "sessions"
+            
+            # Create sessions directory if it doesn't exist
+            sessions_dir.mkdir(exist_ok=True)
+            
+            # Save the file
+            file_path = sessions_dir / filename
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+                
+            return jsonify({
+                "success": True,
+                "message": f"Session saved as {filename}",
+                "filename": filename
+            })
+            
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "message": f"Error saving session: {str(e)}"
+            }), 500
+            
+    @webapp.route('/api/sessions', methods=['GET'])
+    def list_sessions():
+        """
+        List available session files
+        
+        Returns:
+            JSON: List of session files
+        """
+        try:
+            from pathlib import Path
+            from renardo.settings_manager import settings
+            sessions_dir = settings.get_path("RENARDO_ROOT_PATH") / "sessions"
+            
+            # Create sessions directory if it doesn't exist
+            sessions_dir.mkdir(exist_ok=True)
+            
+            # List all .py files in sessions directory
+            session_files = []
+            for file_path in sorted(sessions_dir.glob("*.py")):
+                session_files.append({
+                    "name": file_path.name,
+                    "url": f"/api/sessions/{file_path.name}"
+                })
+                
+            return jsonify({
+                "success": True,
+                "sessions": session_files
+            })
+            
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "message": f"Error listing sessions: {str(e)}"
+            }), 500
+            
+    @webapp.route('/api/sessions/<filename>', methods=['GET'])
+    def load_session(filename):
+        """
+        Load a specific session file
+        
+        Args:
+            filename (str): Name of the session file
+            
+        Returns:
+            JSON: Session content
+        """
+        try:
+            from pathlib import Path
+            from renardo.settings_manager import settings
+            sessions_dir = settings.get_path("RENARDO_ROOT_PATH") / "sessions"
+            
+            file_path = sessions_dir / filename
+            
+            # Security check - ensure the file is within the sessions directory
+            if not file_path.resolve().is_relative_to(sessions_dir.resolve()):
+                return jsonify({
+                    "success": False,
+                    "message": "Access denied"
+                }), 403
+                
+            # Check if file exists
+            if not file_path.exists():
+                return jsonify({
+                    "success": False,
+                    "message": "Session file not found"
+                }), 404
+                
+            # Read and return the file content
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                
+            return jsonify({
+                "success": True,
+                "filename": filename,
+                "content": content
+            })
+            
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "message": f"Error loading session: {str(e)}"
+            }), 500
