@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import { fade } from 'svelte/transition';
+  import { fade, slide } from 'svelte/transition';
   import { appState, initWebSocket, incrementCounter, incrementCounterFallback, sendMessage } from './lib/websocket.js';
   import RenardoInit from './RenardoInit.svelte';
   import CodeEditor from './CodeEditor.svelte';
@@ -46,6 +46,9 @@
 
   // Theme state
   let currentTheme = 'default';
+  
+  // Zen mode state
+  let zenMode = false;
 
   // Check if WebSockets are supported
   const webSocketSupported = 'WebSocket' in window;
@@ -142,10 +145,18 @@
 
       // Listen for hash changes
       window.addEventListener('hashchange', handleHashChange);
+      
+      // Listen for zen mode changes from CodeEditor
+      window.addEventListener('zenModeChange', (event) => {
+        zenMode = event.detail.zenMode;
+      });
 
       // Clean up event listeners on component unmount, but keep WebSocket connection
       return () => {
         window.removeEventListener('hashchange', handleHashChange);
+        window.removeEventListener('zenModeChange', (event) => {
+          zenMode = event.detail.zenMode;
+        });
         
         // Clear connection timer if it exists
         if (connectionTimer) {
@@ -236,25 +247,26 @@
   <input id="drawer-toggle" type="checkbox" class="drawer-toggle" /> 
   <div class="drawer-content flex flex-col">
     <!-- Navbar -->
-    <div class="navbar bg-base-300">
-      <div class="navbar-start">
-        <label for="drawer-toggle" class="btn btn-square btn-ghost drawer-button lg:hidden">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-5 h-5 stroke-current">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-          </svg>
-        </label>
-        <a href="#editor" class="btn btn-ghost text-xl">Renardo ฅ^•ﻌ•^ฅ</a>
-      </div>
-      
-      <div class="navbar-center hidden lg:flex">
-        <ul class="menu menu-horizontal px-1">
-          <li><a href="#editor" class:active={currentRoute === 'editor'}>Code Editor</a></li>
-          <li><a href="#init" class:active={currentRoute === 'init'}>Initialize</a></li>
-          <li><a href="#scbackend" class:active={currentRoute === 'scbackend'}>Audio Backends</a></li>
-          <li><a href="#collections" class:active={currentRoute === 'collections'}>Collections</a></li>
-          <li><a href="#config" class:active={currentRoute === 'config'}>Settings</a></li>
-        </ul>
-      </div>
+    {#if !zenMode || currentRoute !== 'editor'}
+      <div class="navbar bg-base-300" transition:slide>
+        <div class="navbar-start">
+          <label for="drawer-toggle" class="btn btn-square btn-ghost drawer-button lg:hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-5 h-5 stroke-current">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </label>
+          <a href="#editor" class="btn btn-ghost text-xl">{zenMode && currentRoute === 'editor' ? 'ฅ^•ﻌ•^ฅ' : 'Renardo ฅ^•ﻌ•^ฅ'}</a>
+        </div>
+        
+        <div class="navbar-center hidden lg:flex">
+          <ul class="menu menu-horizontal px-1">
+            <li><a href="#editor" class:active={currentRoute === 'editor'}>Code Editor</a></li>
+            <li><a href="#init" class:active={currentRoute === 'init'}>Initialize</a></li>
+            <li><a href="#scbackend" class:active={currentRoute === 'scbackend'}>Audio Backends</a></li>
+            <li><a href="#collections" class:active={currentRoute === 'collections'}>Collections</a></li>
+            <li><a href="#config" class:active={currentRoute === 'config'}>Settings</a></li>
+          </ul>
+        </div>
       
       <div class="navbar-end">
         <!-- Theme Button -->
@@ -279,6 +291,7 @@
         {/if}
       </div>
     </div>
+    {/if}
 
     <!-- Main content -->
     <div class="min-h-screen bg-base-100">
