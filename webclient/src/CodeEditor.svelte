@@ -7,11 +7,15 @@
   
   // State for right panel
   let rightPanelOpen = true;
-  let activeTab = 'tutorial'; // tutorial, musicExamples, or documentation
+  let activeTab = 'tutorial'; // tutorial, sessions, musicExamples, or documentation
   
   // Tutorial files state
   let tutorialFiles = [];
   let loadingTutorials = false;
+  
+  // Session files state
+  let sessionFiles = [];
+  let loadingSessions = false;
   
   // Initialization check
   let showInitModal = false;
@@ -551,6 +555,88 @@ Master().fadeout(dur=24)
     } catch (error) {
       console.error('Error loading tutorial file:', error);
     }
+  }
+  
+  // Function to save current session
+  async function saveSession() {
+    const filename = prompt('Enter session name:');
+    if (!filename) return;
+    
+    try {
+      const response = await fetch('/api/sessions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          filename: filename,
+          content: editor.getValue()
+        })
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+        alert(`Session saved as ${result.filename}`);
+        // Reload sessions list if the sessions tab is active
+        if (activeTab === 'sessions') {
+          loadSessionFiles();
+        }
+      } else {
+        alert(`Failed to save session: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Error saving session:', error);
+      alert('Error saving session');
+    }
+  }
+  
+  // Function to load a session
+  async function loadSession() {
+    // Switch to sessions tab and load list
+    rightPanelOpen = true;
+    activeTab = 'sessions';
+    loadSessionFiles();
+  }
+  
+  // Function to load session files list
+  async function loadSessionFiles() {
+    loadingSessions = true;
+    try {
+      const response = await fetch('/api/sessions');
+      if (response.ok) {
+        const data = await response.json();
+        sessionFiles = data.sessions || [];
+      } else {
+        console.error('Failed to load session files');
+        sessionFiles = [];
+      }
+    } catch (error) {
+      console.error('Error loading session files:', error);
+      sessionFiles = [];
+    } finally {
+      loadingSessions = false;
+    }
+  }
+  
+  // Function to load a session file into the editor
+  async function loadSessionFile(file) {
+    try {
+      const response = await fetch(file.url);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && editor) {
+          editor.setValue(data.content);
+          editor.setCursor({ line: 0, ch: 0 });
+          editor.focus();
+        } else {
+          console.error('Failed to load session file:', data.message);
+        }
+      } else {
+        console.error('Failed to load session file');
+      }
+    } catch (error) {
+      console.error('Error loading session file:', error);
+    }
   }</script>
 
 <div class="flex flex-col h-screen w-full overflow-hidden">
@@ -598,6 +684,28 @@ Master().fadeout(dur=24)
             </svg>
             Clear Console
           </button>
+
+          <button
+            class="btn btn-sm btn-primary"
+            on:click={saveSession}
+            title="Save current code as a session"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+            Save Session
+          </button>
+
+          <button
+            class="btn btn-sm btn-primary"
+            on:click={loadSession}
+            title="Load a saved session"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+            </svg>
+            Load Session
+          </button>
         </div>
 
         <!-- Right Panel Toggle and Editor Theme Selector -->
@@ -607,9 +715,11 @@ Master().fadeout(dur=24)
             on:click={() => {
               rightPanelOpen = !rightPanelOpen;
               if (!rightPanelOpen) return;
-              // Reload tutorial files when opening the panel
+              // Reload files when opening the panel
               if (activeTab === 'tutorial') {
                 loadTutorialFiles();
+              } else if (activeTab === 'sessions') {
+                loadSessionFiles();
               }
             }}
             title="{rightPanelOpen ? 'Close' : 'Open'} side panel"
@@ -693,6 +803,14 @@ Master().fadeout(dur=24)
                 Tutorial
               </button>
               <button 
+                class="tab {activeTab === 'sessions' ? 'tab-active' : ''}" 
+                on:click={() => {activeTab = 'sessions'; loadSessionFiles();}}>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-5L9 2H4z" clip-rule="evenodd" />
+                </svg>
+                Sessions
+              </button>
+              <button 
                 class="tab {activeTab === 'musicExamples' ? 'tab-active' : ''}" 
                 on:click={() => activeTab = 'musicExamples'}>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -752,6 +870,31 @@ Master().fadeout(dur=24)
             <div>
               <h3 class="text-lg font-bold mb-4">Music Examples</h3>
               <p class="text-sm opacity-70">Coming soon...</p>
+            </div>
+          {:else if activeTab === 'sessions'}
+            <div>
+              <h3 class="text-lg font-bold mb-4">Sessions</h3>
+              {#if loadingSessions}
+                <div class="flex justify-center">
+                  <span class="loading loading-spinner loading-md"></span>
+                </div>
+              {:else if sessionFiles.length === 0}
+                <p class="text-sm opacity-70">No saved sessions yet.</p>
+              {:else}
+                <div class="space-y-2">
+                  {#each sessionFiles as file}
+                    <button
+                      class="w-full text-left btn btn-sm btn-outline justify-start"
+                      on:click={() => loadSessionFile(file)}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-5L9 2H4z" clip-rule="evenodd" />
+                      </svg>
+                      {file.name}
+                    </button>
+                  {/each}
+                </div>
+              {/if}
             </div>
           {:else if activeTab === 'documentation'}
             <div>
