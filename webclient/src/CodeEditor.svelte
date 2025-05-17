@@ -761,34 +761,6 @@ Master().fadeout(dur=24)
   }</script>
 
 <div class="flex flex-col h-screen w-full overflow-hidden">
-  <!-- Buffer tabs -->
-  <div class="bg-base-200 px-4 pt-2 pb-0">
-    <div class="flex items-center gap-1">
-      {#each tabs as buffer}
-        <button
-          class="tab tab-lifted {activeTabId === buffer.id ? 'tab-active' : ''}"
-          on:click={() => activeTabId = buffer.id}
-        >
-          {buffer.name}
-          {#if tabs.length > 1}
-            <button
-              class="ml-2 btn btn-xs btn-circle btn-ghost"
-              on:click|stopPropagation={() => closeBuffer(buffer.id)}
-            >
-              ×
-            </button>
-          {/if}
-        </button>
-      {/each}
-      <button
-        class="tab tab-lifted"
-        on:click={addNewBuffer}
-      >
-        + New Buffer
-      </button>
-    </div>
-  </div>
-  
   <!-- Header with controls -->
   <div class="bg-base-300 p-4">
     <div class="flex flex-col gap-2">
@@ -887,6 +859,34 @@ Master().fadeout(dur=24)
           <CodeMirrorThemeSelector bind:editor={editor} />
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Buffer tabs -->
+  <div class="bg-base-200 px-4 pt-2 pb-0">
+    <div class="flex items-center gap-1">
+      {#each tabs as buffer}
+        <button
+          class="tab tab-lifted {activeTabId === buffer.id ? 'tab-active' : ''}"
+          on:click={() => activeTabId = buffer.id}
+        >
+          {buffer.name}
+          {#if tabs.length > 1}
+            <button
+              class="ml-2 btn btn-xs btn-circle btn-ghost"
+              on:click|stopPropagation={() => closeBuffer(buffer.id)}
+            >
+              ×
+            </button>
+          {/if}
+        </button>
+      {/each}
+      <button
+        class="tab tab-lifted"
+        on:click={addNewBuffer}
+      >
+        + New Buffer
+      </button>
     </div>
   </div>
 
