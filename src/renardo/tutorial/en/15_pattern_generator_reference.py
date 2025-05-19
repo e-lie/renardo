@@ -1,7 +1,7 @@
 # Tutorial 15: Patterns Generators Reference
 
 
-# There are several other Pattern classes in FoxDot that help you generate arrays of numbers but also behave
+# There are several other Pattern classes in Renardo that help you generate arrays of numbers but also behave
 # in the same way as the base Pattern. To see what Patterns exist and have a go at using them, execute
 print(classes(Patterns.Sequences))
 

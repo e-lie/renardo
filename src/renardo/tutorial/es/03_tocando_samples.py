@@ -1,7 +1,7 @@
 # Tutorial 3: Reproduciendo samples Incorporadas
 
 
-# FoxDot también puede ser usado para secuenciar y manipular muestras de audio.
+# Renardo también puede ser usado para secuenciar y manipular muestras de audio.
 # Para hacer esto todo lo que necesitas hacer es usar el play SynthDef especial.
 # El primer argumento del play SynthDef debe ser una cadena de caracteres
 # en lugar de una lista de números como lo haría para cualquier otro SynthDef.
@@ -10,7 +10,7 @@
 # Para ver qué carácter corresponde a cada archivo de audio, ejecute
 print(DefaultSamples)
 
-# Puedes reproducir samples de audio en los subdirectorios FoxDot/snd/ utilizando el sintetizador
+# Puedes reproducir samples de audio en los subdirectorios Renardo/snd/ utilizando el sintetizador
 # sintetizador 'play' y utilizando una cadena de caracteres en lugar de una lista de notas.
 bd >> play("x")
 

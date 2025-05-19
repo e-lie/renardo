@@ -3,7 +3,7 @@
 ################
 # Ejecutanco código
 
-# Para ejecutar código en FoxDot, asegúrese de que el cursor de texto se encuentra en el «bloque» de código
+# Para ejecutar código en Renardo, asegúrese de que el cursor de texto se encuentra en el «bloque» de código
 # (secciones de texto no separadas por líneas en blanco) y pulse Ctrl+Enter
 
 #  Para ejecutar una sola línea, incluso en un bloque, pulse Alt+Retorno
