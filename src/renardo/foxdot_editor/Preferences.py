@@ -34,7 +34,7 @@ class Preferences:
             theme = os.path.splitext(file_name)[0]
             self.text_themes = self.text_themes + (theme,)
         self.settings = {}
-        self.conf_toml = settings.get("core.PUBLIC_SETTINGS_FILE")
+        self.conf_toml = settings.get_path("PUBLIC_SETTINGS_FILE")
         self.tabview = tb.Notebook(self.stop)
         self.general = tb.Frame(self.tabview)
         self.colors = tb.Frame(self.tabview)
@@ -71,7 +71,7 @@ class Preferences:
                 self.text = f.read().rstrip()
             self.textbox.insert(INSERT, self.text)
         except FileNotFoundError:
-            print(f"{settings.get("core.PUBLIC_SETTINGS_FILE")} file not found")
+            print(f"{settings.get_path('PUBLIC_SETTINGS_FILE')} file not found")
         # Add binds?
         self.textbox.bind()
 

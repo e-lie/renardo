@@ -291,7 +291,11 @@ class SettingsManager:
     def get_path(self, path_name: str) -> Optional[Path]:
         """Paths for files used by renardo and foxdot editor are dynamically resolved
         in one method depending on OS and initial user dir setting"""
-        if path_name == "SAMPLES_DIR":
+        if path_name == "PUBLIC_SETTINGS_FILE":
+            return self.get_renardo_user_dir() / "settings.toml"
+        elif path_name == "INTERNAL_SETTINGS_FILE":
+            return self.get_standard_user_dir() / "internal_settings.toml"
+        elif path_name == "SAMPLES_DIR":
             return self.get_renardo_user_dir() / self.get("samples.SAMPLES_DIR_NAME")
         elif path_name == "RECORDING_DIR":
             return self.get_renardo_user_dir() / "rec"
@@ -327,7 +331,6 @@ class SettingsManager:
 
 public_defaults = {
     "core": {
-        "PUBLIC_SETTINGS_FILE": str(SettingsManager.get_renardo_user_dir() / "settings.toml")
     }
 }
 
@@ -336,7 +339,6 @@ internal_defaults = {
         "SAMPLES_DIR": str(SettingsManager.get_renardo_user_dir() / 'sample_packs')
     },
     "core": {
-        "INTERNAL_SETTINGS_FILE": str(SettingsManager.get_standard_user_dir() / "internal_settings.toml")
     }
 }
 
