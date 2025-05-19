@@ -1,7 +1,7 @@
 # Tutorial 3: Playing Built-In Samples
 
 
-# FoxDot can also be used to sequence and manipulate audio samples.
+# Renardo can also be used to sequence and manipulate audio samples.
 # To do this all you need to do is use the special play SynthDef.
 # The first argument of the play SynthDef should be a string of characters
 # instead of a list of numbers as you would do for any other SynthDef.
@@ -10,7 +10,7 @@
 # To view which character relates to which audio file, execute
 print(DefaultSamples)
 
-# You can play audio samples in the FoxDot/snd/ sub-directories by using the
+# You can play audio samples in the Renardo/snd/ sub-directories by using the
 # 'play' Synth and using a string of characters instead of list of notes.
 bd >> play("x")
 

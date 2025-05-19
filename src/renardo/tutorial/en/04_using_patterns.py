@@ -9,7 +9,7 @@ print([1, 2, 3] * 2)
 
 # Is the result what you expected?
 
-# FoxDot uses a container type called a 'Pattern' to help solve this problem.
+# Renardo uses a container type called a 'Pattern' to help solve this problem.
 # They act like regular lists but any mathematical operation performed on it is done to each item
 # in the list and done so pair-wise if using a second pattern. A basic pattern is created as
 # you would with a normal list or tuple, but with a 'P' preceeding it.
@@ -71,7 +71,7 @@ print(PRange(10) + [0,10])
 
 # To concatonate Patterns, use the pipe operator like so:
 print(PRange(10) | [0,10])
-# FoxDot automatically converts any object being piped to a Pattern to the base Pattern class
+# Renardo automatically converts any object being piped to a Pattern to the base Pattern class
 # so you don't have to worry about making sure everything is the right type.
 
 # Plays all the values together
