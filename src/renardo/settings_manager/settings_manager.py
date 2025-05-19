@@ -220,32 +220,82 @@ class SettingsManager:
             else:
                 target[key] = value
 
+    @staticmethod
+    def get_standard_user_dir():
+        renardo_user_dir: Optional[Path] = None
+        # standard config path
+        # on windows AppData/Roaming/renardo
+        # on Linux ~/.config/renardo
+        # on MacOS /Users/<username>/Library/Application Support/renardo
+        if platform == "linux" or platform == "linux2":
+            home_path = pathlib.Path.home()
+            renardo_user_dir = home_path / '.config' / 'renardo'
+        elif platform == "darwin":
+            home_path = pathlib.Path.home()
+            renardo_user_dir = home_path / 'Library' / 'Application Support' / 'renardo'
+        else: # platform == "win32":
+            appdata_roaming_path = pathlib.Path(os.getenv('APPDATA'))
+            renardo_user_dir = appdata_roaming_path / 'renardo'
+        return renardo_user_dir
 
+    @staticmethod
+    def set_user_dir_path(path: Path) -> bool:
+        """
+        Create or update user_dir.toml with a custom user directory path.
+        
+        Args:
+            path: The path to set as the Renardo user directory
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        standard_dir = SettingsManager.get_standard_user_dir()
+        user_dir_file = standard_dir / "user_dir.toml"
+        
+        try:
+            standard_dir.mkdir(parents=True, exist_ok=True)
+            config = {"RENARDO_USER_DIR_PATH": str(path)}
+            
+            with open(user_dir_file, "wb") as f:
+                tomli_w.dump(config, f)
+            return True
+        except Exception as e:
+            print(f"Error writing user_dir.toml: {e}")
+            return False
+    
     @staticmethod
     def get_renardo_user_dir():
         renardo_user_dir: Optional[Path] = None
         try: # if env variable exists to define custom user dir use it
             renardo_user_dir = Path(os.environ["RENARDO_USER_DIR"])
-        except KeyError: # if not use os specific standard user dir
-            # default config path
-            # on windows AppData/Roaming/renardo
-            # on Linux ~/.config/renardo
-            # on MacOS /Users/<username>/Library/Application Support/renardo
-            if platform == "linux" or platform == "linux2":
-                home_path = pathlib.Path.home()
-                renardo_user_dir = home_path / '.config' / 'renardo'
-            elif platform == "darwin":
-                home_path = pathlib.Path.home()
-                renardo_user_dir = home_path / 'Library' / 'Application Support' / 'renardo'
-            elif platform == "win32":
-                appdata_roaming_path = pathlib.Path(os.getenv('APPDATA'))
-                renardo_user_dir = appdata_roaming_path / 'renardo'
+        except KeyError: # if not, check for user_dir.toml
+            standard_dir = SettingsManager.get_standard_user_dir()
+            user_dir_file = standard_dir / "user_dir.toml"
+            
+            if user_dir_file.exists():
+                try:
+                    with open(user_dir_file, "rb") as f:
+                        user_dir_config = tomli.load(f)
+                    if "RENARDO_USER_DIR_PATH" in user_dir_config:
+                        renardo_user_dir = Path(user_dir_config["RENARDO_USER_DIR_PATH"])
+                    else:
+                        renardo_user_dir = standard_dir
+                except Exception as e:
+                    print(f"Error reading user_dir.toml: {e}")
+                    renardo_user_dir = standard_dir
+            else:
+                # No user_dir.toml exists, use standard directory
+                renardo_user_dir = standard_dir
         return renardo_user_dir
 
     def get_path(self, path_name: str) -> Optional[Path]:
         """Paths for files used by renardo and foxdot editor are dynamically resolved
         in one method depending on OS and initial user dir setting"""
-        if path_name == "SAMPLES_DIR":
+        if path_name == "PUBLIC_SETTINGS_FILE":
+            return self.get_renardo_user_dir() / "settings.toml"
+        elif path_name == "INTERNAL_SETTINGS_FILE":
+            return self.get_standard_user_dir() / "internal_settings.toml"
+        elif path_name == "SAMPLES_DIR":
             return self.get_renardo_user_dir() / self.get("samples.SAMPLES_DIR_NAME")
         elif path_name == "RECORDING_DIR":
             return self.get_renardo_user_dir() / "rec"
@@ -281,7 +331,6 @@ class SettingsManager:
 
 public_defaults = {
     "core": {
-        "PUBLIC_SETTINGS_FILE": str(SettingsManager.get_renardo_user_dir() / "settings.toml")
     }
 }
 
@@ -290,13 +339,12 @@ internal_defaults = {
         "SAMPLES_DIR": str(SettingsManager.get_renardo_user_dir() / 'sample_packs')
     },
     "core": {
-        "INTERNAL_SETTINGS_FILE": str(SettingsManager.get_renardo_user_dir() / "internal_settings.toml")
     }
 }
 
 settings = SettingsManager(
     SettingsManager.get_renardo_user_dir() / "settings.toml",
-    SettingsManager.get_renardo_user_dir() / "internal_settings.toml",
+    SettingsManager.get_standard_user_dir() / "internal_settings.toml",
     public_defaults,
     internal_defaults
 )
