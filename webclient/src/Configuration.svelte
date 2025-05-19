@@ -10,6 +10,11 @@
   let successMessage = '';
   let showAdvancedView = false;
   
+  // User directory state
+  let userDirectory = '';
+  let isMovingDirectory = false;
+  let newUserDirectory = '';
+  
   // Track settings that have been modified but not saved
   let modifiedSettings = {};
   
@@ -41,6 +46,102 @@
   
   // Generate list of settings groups dynamically from schema
   const settingsGroups = [...new Set(Object.values(settingsSchema).map(setting => setting.group))];
+  
+  // Load user directory
+  async function loadUserDirectory() {
+    try {
+      const response = await fetch('/api/settings/user-directory');
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch user directory: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      if (data.success) {
+        userDirectory = data.path;
+      } else {
+        throw new Error(data.message || 'Unknown error');
+      }
+    } catch (err) {
+      console.error('Error loading user directory:', err);
+      error = err.message;
+    }
+  }
+  
+  // Open user directory in OS file browser
+  async function openUserDirectory() {
+    try {
+      const response = await fetch('/api/settings/user-directory/open', {
+        method: 'POST'
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to open user directory');
+      }
+      
+      successMessage = 'User directory opened';
+      setTimeout(() => {
+        successMessage = '';
+      }, 3000);
+    } catch (err) {
+      console.error('Error opening user directory:', err);
+      error = err.message;
+      setTimeout(() => {
+        error = null;
+      }, 5000);
+    }
+  }
+  
+  // Move user directory
+  async function moveUserDirectory() {
+    if (!newUserDirectory.trim()) {
+      error = 'Please enter a new directory path';
+      setTimeout(() => {
+        error = null;
+      }, 3000);
+      return;
+    }
+    
+    if (!confirm(`Are you sure you want to move the user directory to:\n${newUserDirectory}?\n\nThis will move all configuration and data files to the new location.`)) {
+      return;
+    }
+    
+    isMovingDirectory = true;
+    
+    try {
+      const response = await fetch('/api/settings/user-directory/move', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ path: newUserDirectory })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to move user directory');
+      }
+      
+      userDirectory = data.path;
+      newUserDirectory = '';
+      
+      successMessage = 'User directory moved successfully';
+      setTimeout(() => {
+        successMessage = '';
+      }, 3000);
+    } catch (err) {
+      console.error('Error moving user directory:', err);
+      error = err.message;
+      setTimeout(() => {
+        error = null;
+      }, 5000);
+    } finally {
+      isMovingDirectory = false;
+    }
+  }
   
   // Load settings data
   async function loadSettings() {
@@ -261,6 +362,7 @@
   // Load settings on mount
   onMount(() => {
     loadSettings();
+    loadUserDirectory();
   });
   
   // Cleanup on destroy
@@ -298,6 +400,81 @@
       <span class="loading loading-spinner loading-lg text-primary"></span>
     </div>
   {:else}
+    <!-- User Directory Section -->
+    <div class="card bg-base-100 shadow-xl mb-6">
+      <div class="card-body">
+        <h2 class="card-title text-lg mb-4">User Directory</h2>
+        
+        <div class="space-y-4">
+          <div>
+            <div class="label">
+              <span class="label-text">Current User Directory</span>
+            </div>
+            <div class="bg-base-200 p-3 rounded-box font-mono text-sm break-all">
+              {userDirectory || 'Loading...'}
+            </div>
+          </div>
+          
+          <div class="flex flex-wrap gap-2">
+            <button
+              class="btn btn-primary btn-sm"
+              on:click={openUserDirectory}
+              disabled={!userDirectory}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              Open User Directory
+            </button>
+            
+            <button
+              class="btn btn-secondary btn-sm"
+              on:click={() => isMovingDirectory = true}
+              disabled={!userDirectory}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+              </svg>
+              Move User Directory
+            </button>
+          </div>
+          
+          {#if isMovingDirectory}
+            <div class="alert alert-warning">
+              <div class="space-y-3 w-full">
+                <p class="font-semibold">Move User Directory</p>
+                <p class="text-sm">Enter the new path for the user directory:</p>
+                <input
+                  type="text"
+                  class="input input-bordered w-full"
+                  bind:value={newUserDirectory}
+                  placeholder="e.g., /home/user/renardo"
+                />
+                <div class="flex gap-2">
+                  <button
+                    class="btn btn-primary btn-sm"
+                    on:click={moveUserDirectory}
+                    disabled={!newUserDirectory.trim()}
+                  >
+                    Confirm Move
+                  </button>
+                  <button
+                    class="btn btn-ghost btn-sm"
+                    on:click={() => {
+                      isMovingDirectory = false;
+                      newUserDirectory = '';
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          {/if}
+        </div>
+      </div>
+    </div>
+
     <!-- View toggle and actions -->
     <div class="card bg-base-200 mb-6">
       <div class="card-body p-4 sm:p-6">
