@@ -6,6 +6,9 @@ from renardo.webserver import state_helper
 from renardo.webserver import websocket_utils
 from renardo.settings_manager import settings
 import json
+import subprocess
+import platform
+import shutil
 
 def register_api_routes(webapp):
     """
@@ -612,4 +615,131 @@ def register_api_routes(webapp):
             return jsonify({
                 "success": False,
                 "message": f"Error loading session: {str(e)}"
+            }), 500
+            
+    @webapp.route('/api/settings/user-directory', methods=['GET'])
+    def get_user_directory():
+        """
+        Get the current user directory path
+        
+        Returns:
+            JSON: Current user directory path
+        """
+        try:
+            user_dir = settings.get_renardo_user_dir()
+            return jsonify({
+                "success": True,
+                "path": str(user_dir)
+            })
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "message": f"Error fetching user directory: {str(e)}"
+            }), 500
+    
+    @webapp.route('/api/settings/user-directory/open', methods=['POST'])
+    def open_user_directory():
+        """
+        Open the user directory in the OS file browser
+        
+        Returns:
+            JSON: Operation status
+        """
+        try:
+            user_dir = settings.get_renardo_user_dir()
+            
+            # Platform-specific commands to open directory
+            if platform.system() == 'Windows':
+                subprocess.Popen(['explorer', str(user_dir)])
+            elif platform.system() == 'Darwin':  # macOS
+                subprocess.Popen(['open', str(user_dir)])
+            else:  # Linux and others
+                subprocess.Popen(['xdg-open', str(user_dir)])
+                
+            return jsonify({
+                "success": True,
+                "message": "User directory opened"
+            })
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "message": f"Error opening user directory: {str(e)}"
+            }), 500
+    
+    @webapp.route('/api/settings/user-directory/move', methods=['POST'])
+    def move_user_directory():
+        """
+        Move the user directory to a new location
+        
+        Request body:
+            {
+                "path": "/new/user/directory/path"
+            }
+            
+        Returns:
+            JSON: Operation status
+        """
+        try:
+            data = request.get_json()
+            
+            if not data or 'path' not in data:
+                return jsonify({
+                    "success": False,
+                    "message": "Missing 'path' in request data"
+                }), 400
+                
+            new_path = data['path']
+            from pathlib import Path
+            new_dir = Path(new_path)
+            
+            # Get current user directory
+            current_dir = settings.get_renardo_user_dir()
+            
+            # Validate the new path
+            if not new_dir.is_absolute():
+                return jsonify({
+                    "success": False,
+                    "message": "Path must be absolute"
+                }), 400
+                
+            # Check if new directory exists or can be created
+            try:
+                new_dir.mkdir(parents=True, exist_ok=True)
+            except Exception as e:
+                return jsonify({
+                    "success": False,
+                    "message": f"Cannot create directory: {str(e)}"
+                }), 400
+            
+            # Move all files from current to new directory
+            try:
+                # Copy all files and subdirectories
+                for item in current_dir.iterdir():
+                    if item.is_dir():
+                        shutil.copytree(item, new_dir / item.name, dirs_exist_ok=True)
+                    else:
+                        shutil.copy2(item, new_dir / item.name)
+                
+                # Update user_dir.toml with new path
+                settings.set_user_dir_path(new_dir)
+                
+                # Save current settings to ensure they're persisted
+                settings.save_to_file()
+                
+                return jsonify({
+                    "success": True,
+                    "message": "User directory moved successfully",
+                    "path": str(new_dir)
+                })
+                
+            except Exception as e:
+                return jsonify({
+                    "success": False,
+                    "message": f"Error moving files: {str(e)}"
+                }), 500
+                
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "message": f"Error moving user directory: {str(e)}"
             }), 500
