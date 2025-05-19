@@ -1,6 +1,6 @@
 # Tutorial 1: Playing Notes
 
-# In FoxDot, all two-character variable names are reserved for player objects, such as 'p1'
+# In Renardo, all two-character variable names are reserved for player objects, such as 'p1'
 # Creating a Player Object with no arguments will play a single note on middle C, by default, repeatedly until stopped.
 # Use >> to give one of these to a player object like so:
 
@@ -16,8 +16,8 @@ p1.stop()
 foo = Player()
 foo >> pluck()
 
-# The >> in Python is usually reserved for a type of operation, like + or -, but it is not the case in FoxDot.
-# If a user re-executes the code, FoxDot will update p1 instead of creating a PlayerObject,
+# The >> in Python is usually reserved for a type of operation, like + or -, but it is not the case in Renardo.
+# If a user re-executes the code, Renardo will update p1 instead of creating a PlayerObject,
 # which means you can make changes to your music using just one line of code.
 
 # If you now give your player object some arguments, you can change the notes being played back.

@@ -8,7 +8,7 @@ print([1, 2, 3] * 2)
 
 # ¿El resultado es el que esperabas?
 
-# FoxDot usa un tipo de contenedor llamado 'Pattern' para ayudar a resolver este problema.
+# Renardo usa un tipo de contenedor llamado 'Pattern' para ayudar a resolver este problema.
 # Actúan como listas normales, pero cualquier operación matemática que se realice en ellas se aplica a cada elemento
 # de la lista y se hace de a pares si se usa un segundo patrón. Se crea un patrón básico como
 # lo harías con una lista o tupla normal, pero con una 'P' precediéndolo.
@@ -72,7 +72,7 @@ print(PRange(10) + [0,10])
 # Para concatenar patrones, usa el operador pipe así:
 print(PRange(10) | [0,10])
 
-# FoxDot convierte automáticamente cualquier objeto que se canaliza a un Patrón a la clase Patrón base.
+# Renardo convierte automáticamente cualquier objeto que se canaliza a un Patrón a la clase Patrón base.
 # para que no tengas que preocuparte de asegurarte de que todo es del tipo correcto.
 
 # ejecuta todos los valores juntos

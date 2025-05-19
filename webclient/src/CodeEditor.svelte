@@ -12,6 +12,8 @@
   // Tutorial files state
   let tutorialFiles = [];
   let loadingTutorials = false;
+  let selectedLanguage = 'en';
+  let availableLanguages = [];
   
   // Session files state
   let sessionFiles = [];
@@ -681,13 +683,33 @@ Master().fadeout(dur=24)
   }
   
   // Function to load tutorial files
-  async function loadTutorialFiles() {
+  async function loadTutorialFiles(lang = null) {
     loadingTutorials = true;
     try {
-      const response = await fetch('/api/tutorial/files');
+      const url = lang ? `/api/tutorial/files?lang=${lang}` : '/api/tutorial/files';
+      const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
-        tutorialFiles = data.files || [];
+        
+        if (lang) {
+          // Loading specific language
+          tutorialFiles = data.files || [];
+        } else {
+          // Loading all languages - initialize available languages and default files
+          availableLanguages = Object.keys(data.languages || {}).map(code => ({
+            code,
+            name: code === 'en' ? 'English' : code === 'es' ? 'Español' : code.toUpperCase()
+          }));
+          
+          // Load files for the selected language
+          if (data.languages && data.languages[selectedLanguage]) {
+            tutorialFiles = data.languages[selectedLanguage];
+          } else if (availableLanguages.length > 0) {
+            // Fallback to first available language
+            selectedLanguage = availableLanguages[0].code;
+            tutorialFiles = data.languages[selectedLanguage] || [];
+          }
+        }
       } else {
         console.error('Failed to load tutorial files');
         tutorialFiles = [];
@@ -698,6 +720,12 @@ Master().fadeout(dur=24)
     } finally {
       loadingTutorials = false;
     }
+  }
+  
+  // Function to handle language change
+  async function changeLanguage(lang) {
+    selectedLanguage = lang;
+    await loadTutorialFiles(lang);
   }
   
   // Function to load a tutorial file into the editor
@@ -952,16 +980,6 @@ Master().fadeout(dur=24)
             Stop Music
           </button>
 
-          <button
-            class="btn btn-sm btn-error"
-            on:click={clearConsole}
-            title="Clear console output"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-            </svg>
-            Clear Console
-          </button>
 
           <button
             class="btn btn-sm btn-primary"
@@ -1053,7 +1071,11 @@ Master().fadeout(dur=24)
         if (!rightPanelOpen) return;
         // Reload files when opening the panel
         if (activeTab === 'tutorial') {
-          loadTutorialFiles();
+          if (availableLanguages.length === 0) {
+            loadTutorialFiles(); // Load all languages first
+          } else {
+            loadTutorialFiles(selectedLanguage); // Load current language
+          }
         } else if (activeTab === 'sessions') {
           loadSessionFiles();
         }
@@ -1129,7 +1151,12 @@ Master().fadeout(dur=24)
             <div class="tabs tabs-boxed">
               <button 
                 class="tab {activeTab === 'tutorial' ? 'tab-active' : ''}" 
-                on:click={() => activeTab = 'tutorial'}>
+                on:click={() => {
+                  activeTab = 'tutorial';
+                  if (availableLanguages.length === 0) {
+                    loadTutorialFiles(); // Load all languages first
+                  }
+                }}>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
                 </svg>
@@ -1176,13 +1203,26 @@ Master().fadeout(dur=24)
         <div class="flex-1 overflow-y-auto p-4">
           {#if activeTab === 'tutorial'}
             <div>
-              <h3 class="text-lg font-bold mb-4">Tutorials</h3>
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold">Tutorials</h3>
+                {#if availableLanguages.length > 1}
+                  <select 
+                    class="select select-sm select-bordered w-24"
+                    bind:value={selectedLanguage}
+                    on:change={(e) => changeLanguage(e.target.value)}
+                  >
+                    {#each availableLanguages as lang}
+                      <option value={lang.code}>{lang.name}</option>
+                    {/each}
+                  </select>
+                {/if}
+              </div>
               {#if loadingTutorials}
                 <div class="flex justify-center">
                   <span class="loading loading-spinner loading-md"></span>
                 </div>
               {:else if tutorialFiles.length === 0}
-                <p class="text-sm opacity-70">No tutorial files available.</p>
+                <p class="text-sm opacity-70">No tutorial files available for this language.</p>
               {:else}
                 <div class="space-y-2">
                   {#each tutorialFiles as file}

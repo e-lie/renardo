@@ -1,6 +1,6 @@
 # Tutorial 1: Tocando Notas
 
-# En FoxDot, todos los nombres de variables de dos caracteres están reservados para objetos reproductores, como 'p1'
+# En Renardo, todos los nombres de variables de dos caracteres están reservados para objetos reproductores, como 'p1'
 # Creando un objeto reproductor sin argumentos tocará una sola nota en Do central, por defecto, repetidamente hasta que se detenga.
 # Usa >> para dar uno de estos a un objeto reproductor así:
 
@@ -16,8 +16,8 @@ p1.stop()
 foo = Player()
 foo >> pluck()
 
-# El >> en Python está normalmente reservado para un tipo de operación, como + o -, pero no es el caso en FoxDot.
-# Si un usuario re-ejecuta el código, FoxDot actualizará p1 en lugar de crear un PlayerObject,
+# El >> en Python está normalmente reservado para un tipo de operación, como + o -, pero no es el caso en Renardo.
+# Si un usuario re-ejecuta el código, Renardo actualizará p1 en lugar de crear un PlayerObject,
 # lo que significa que puedes hacer cambios en tu música usando sólo una línea de código.
 
 # Si ahora le das a tu objeto reproductor algunos argumentos, puedes cambiar las notas que se reproducen.

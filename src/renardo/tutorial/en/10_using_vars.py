@@ -1,7 +1,7 @@
 # Tutorial 10: Using Vars
 
 
-# A TimeVar is an abbreviation of "Time Dependent Variable" and is a key feature of FoxDot.
+# A TimeVar is an abbreviation of "Time Dependent Variable" and is a key feature of Renardo.
 # A TimeVar has a series of values that it changes between after a pre-defined number of beats
 # and is created using a var object with the syntax var([list_of_values],[list_of_durations]).
 
