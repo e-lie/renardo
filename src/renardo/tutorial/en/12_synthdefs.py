@@ -1,7 +1,7 @@
 # Tutoral 12: SynthDefs
 
 
-# FoxDot creates music by giving player objects a 'digital instrument'
+# Renardo creates music by giving player objects a 'digital instrument'
 # to play, which are called 'SynthDefs'. You can see the list of pre-installed
 # 'Synths' by executing
 
@@ -17,21 +17,21 @@ print(SynthDefs)
 # Supercollider then you might feel at home.  If not, come back to this section
 # later.
 
-# FoxDot can access any SynthDef stored on the SuperCollider server,
+# Renardo can access any SynthDef stored on the SuperCollider server,
 # but it needs to know it's there. If you have already written a SynthDef
 # in SuperCollider and named it \mySynth then you just create a SynthDef
-# instance using FoxDot like so:
+# instance using Renardo like so:
 
 mySynth = SynthDef("mySynth")
 
-# Using the same variable name in FoxDot as in SuperCollider for your SynthDef
+# Using the same variable name in Renardo as in SuperCollider for your SynthDef
 # is a good idea to avoid confusion. If you want to write (or edit) your own
-# SynthDef during run-time in FoxDot you can use a SuperCollider API by
-# importing the SynthDefManagement module. All FoxDot SynthDef objects inherit the
+# SynthDef during run-time in Renardo you can use a SuperCollider API by
+# importing the SynthDefManagement module. All Renardo SynthDef objects inherit the
 # base-class behaviour, such as low- and high-pass filters and vibrato,
 # but these can be overridden or updated easily. If you want to know more
 # about digital sound processing and SynthDef creation, check out the
-# SuperCollider documentation. Below is an example of creating one in FoxDot:
+# SuperCollider documentation. Below is an example of creating one in Renardo:
 
 # Import module for writing SynthDefManagement code from Python
 from SCLang import *
