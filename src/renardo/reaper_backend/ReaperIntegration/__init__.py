@@ -1,6 +1,7 @@
 
 from typing import Mapping
 from pprint import pprint
+from pathlib import Path
 
 from renardo.runtime import Clock, player_method
 
@@ -8,6 +9,9 @@ from renardo.reaper_backend.reaper_music_resource import ReaperInstrument
 from renardo.reaper_backend.ReaperIntegrationLib.ReaProject import ReaProject
 from renardo.reaper_backend.ReaperIntegrationLib.ReaTrack import ReaTrack
 from renardo.reaper_backend.ReaperIntegrationLib.ReaTaskQueue import ReaTask
+from renardo.settings_manager import settings, SettingsManager
+from renardo.gatherer.reaper_resource_management.reaper_resource_library import ReaperResourceLibrary
+from renardo.lib.music_resource import ResourceType
 
 def init_reapy_project():
     project = None
@@ -26,6 +30,7 @@ class ReaperInstrumentFactory:
         self._reaproject = project
         self.used_track_indexes = []
         self.instru_facades = []
+        self._resource_library = None
 
     def update_used_track_indexes(self):
         for i in range(16):
@@ -104,6 +109,104 @@ class ReaperInstrumentFactory:
                 facades.append(facade)
         selff.instru_facades += facades
         return tuple([facade.out for facade in facades])
+    
+    def ensure_fxchain_in_reaper(self, shortname: str):
+        """
+        Ensure that a FXChain from the ReaperResourceLibrary is present in REAPER's FXChains directory.
+        
+        Args:
+            shortname: The short name of the FXChain resource to install
+            
+        Returns:
+            bool: True if the FXChain was successfully installed or already exists, False otherwise
+        """
+        try:
+            # Get the Renardo FXChains directory in REAPER's config
+            config_dir = SettingsManager.get_standard_config_dir()
+            reaper_fxchains_dir = config_dir / "REAPER" / "FXChains"
+            renardo_fxchains_dir = reaper_fxchains_dir / "renardo_fxchains"
+            
+            # Create the renardo_fxchains directory if it doesn't exist
+            renardo_fxchains_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Get the resource library if not already loaded
+            if self._resource_library is None:
+                # Use the renardo resources path
+                resources_path = settings.get_path("RENARDO_ROOT_PATH") / "reaper_resources"
+                if resources_path.exists():
+                    self._resource_library = ReaperResourceLibrary(resources_path)
+                else:
+                    print(f"Reaper resources directory not found: {resources_path}")
+                    return False
+            
+            # Search for the FXChain in the resource library
+            fxchain_resource = None
+            for bank in self._resource_library:
+                # Check instruments section
+                for category in bank.instruments.categories.values():
+                    resource = category.get_resource(shortname)
+                    if resource:
+                        # Load the resource from the Python file
+                        loaded_resource = resource.load_resource_from_python()
+                        if loaded_resource and hasattr(loaded_resource, 'fxchain_relative_path'):
+                            fxchain_resource = loaded_resource
+                            break
+                
+                if fxchain_resource:
+                    break
+                    
+                # Check effects section if not found in instruments
+                for category in bank.effects.categories.values():
+                    resource = category.get_resource(shortname)
+                    if resource:
+                        # Load the resource from the Python file
+                        loaded_resource = resource.load_resource_from_python()
+                        if loaded_resource and hasattr(loaded_resource, 'fxchain_relative_path'):
+                            fxchain_resource = loaded_resource
+                            break
+                
+                if fxchain_resource:
+                    break
+            
+            if not fxchain_resource:
+                print(f"FXChain resource '{shortname}' not found in resource library")
+                return False
+            
+            # Get the FXChain file path
+            if not fxchain_resource.fxchain_relative_path:
+                print(f"FXChain resource '{shortname}' has no fxchain_relative_path defined")
+                return False
+            
+            # Construct the source path - assume it's relative to the resource file
+            source_path = resource.path.parent / fxchain_resource.fxchain_relative_path
+            
+            if not source_path.exists():
+                print(f"FXChain file not found: {source_path}")
+                return False
+            
+            # Copy the FXChain file to the renardo_fxchains directory
+            dest_path = renardo_fxchains_dir / f"{shortname}.RfxChain"
+            
+            # Check if it already exists and has the same content
+            if dest_path.exists():
+                with open(source_path, 'rb') as src_file:
+                    source_content = src_file.read()
+                with open(dest_path, 'rb') as dest_file:
+                    dest_content = dest_file.read()
+                
+                if source_content == dest_content:
+                    print(f"FXChain '{shortname}' already up to date in REAPER")
+                    return True
+            
+            # Copy the file
+            import shutil
+            shutil.copy2(source_path, dest_path)
+            print(f"FXChain '{shortname}' installed to REAPER: {dest_path}")
+            return True
+            
+        except Exception as e:
+            print(f"Error ensuring FXChain '{shortname}' in REAPER: {e}")
+            return False
 
 
 
