@@ -221,22 +221,26 @@ class SettingsManager:
                 target[key] = value
 
     @staticmethod
-    def get_standard_user_dir():
-        renardo_user_dir: Optional[Path] = None
+    def get_standard_config_dir():
+        config_dir: Optional[Path] = None
         # standard config path
         # on windows AppData/Roaming/renardo
         # on Linux ~/.config/renardo
         # on MacOS /Users/<username>/Library/Application Support/renardo
         if platform == "linux" or platform == "linux2":
             home_path = pathlib.Path.home()
-            renardo_user_dir = home_path / '.config' / 'renardo'
+            config_dir = home_path / '.config'
         elif platform == "darwin":
             home_path = pathlib.Path.home()
-            renardo_user_dir = home_path / 'Library' / 'Application Support' / 'renardo'
+            config_dir = home_path / 'Library' / 'Application Support'
         else: # platform == "win32":
             appdata_roaming_path = pathlib.Path(os.getenv('APPDATA'))
-            renardo_user_dir = appdata_roaming_path / 'renardo'
-        return renardo_user_dir
+            config_dir = appdata_roaming_path
+        return config_dir
+
+    @staticmethod
+    def get_standard_user_dir():
+        return SettingsManager.get_standard_config_dir() / 'renardo'
 
     @staticmethod
     def set_user_dir_path(path: Path) -> bool:
