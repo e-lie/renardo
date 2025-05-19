@@ -3,7 +3,7 @@
 ################
 # Executing code
 
-# To execute code in FoxDot, make sure your text cursor is in the 'block' of code
+# To execute code in Renardo, make sure your text cursor is in the 'block' of code
 # (sections of text not separated by blank lines) and press Ctrl+Return
 
 # To execute just a single line, even in a block, press Alt+Return

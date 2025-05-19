@@ -375,40 +375,74 @@ def register_api_routes(webapp):
         """
         Get list of tutorial files
         
+        Query params:
+            lang (optional): Language code (e.g., 'en', 'es'). If not provided, returns all languages.
+        
         Returns:
-            JSON: List of tutorial file paths
+            JSON: List of tutorial file paths organized by language
         """
         try:
-            from renardo.settings_manager import get_tutorial_files
-            tutorial_files = get_tutorial_files()
+            from renardo.settings_manager import settings
+            import os
             
-            # Return file paths and relevant metadata
-            files_data = []
-            for file_path in tutorial_files:
-                import os
-                basename = os.path.basename(file_path)
-                files_data.append({
-                    "name": basename,
-                    "path": file_path,
-                    "url": f"/api/tutorial/files/{basename}"
+            language = request.args.get('lang', None)
+            tutorial_base_dir = settings.get_path("RENARDO_ROOT_PATH") / "tutorial"
+            
+            if language:
+                # Return files for specific language
+                lang_dir = tutorial_base_dir / language
+                if not lang_dir.exists():
+                    return jsonify({
+                        "success": False,
+                        "message": f"Language '{language}' not found"
+                    }), 404
+                
+                files_data = []
+                for file_path in sorted(lang_dir.glob("*.py")):
+                    files_data.append({
+                        "name": file_path.name,
+                        "path": str(file_path),
+                        "url": f"/api/tutorial/files/{language}/{file_path.name}"
+                    })
+                
+                return jsonify({
+                    "success": True,
+                    "language": language,
+                    "files": files_data
                 })
-            
-            return jsonify({
-                "success": True,
-                "files": files_data
-            })
+            else:
+                # Return all available languages
+                languages = {}
+                for lang_dir in tutorial_base_dir.iterdir():
+                    if lang_dir.is_dir():
+                        lang_code = lang_dir.name
+                        files_data = []
+                        for file_path in sorted(lang_dir.glob("*.py")):
+                            files_data.append({
+                                "name": file_path.name,
+                                "path": str(file_path),
+                                "url": f"/api/tutorial/files/{lang_code}/{file_path.name}"
+                            })
+                        languages[lang_code] = files_data
+                
+                return jsonify({
+                    "success": True,
+                    "languages": languages
+                })
+                
         except Exception as e:
             return jsonify({
                 "success": False,
                 "message": f"Error fetching tutorial files: {str(e)}"
             }), 500
             
-    @webapp.route('/api/tutorial/files/<filename>', methods=['GET'])
-    def get_tutorial_file(filename):
+    @webapp.route('/api/tutorial/files/<lang>/<filename>', methods=['GET'])
+    def get_tutorial_file(lang, filename):
         """
         Get a specific tutorial file content
         
         Args:
+            lang (str): Language code (e.g., 'en', 'es')
             filename (str): Name of the tutorial file
             
         Returns:
@@ -418,7 +452,7 @@ def register_api_routes(webapp):
             from renardo.settings_manager import settings
             import os
             
-            tutorial_dir = settings.get_path("RENARDO_ROOT_PATH") / "demo"
+            tutorial_dir = settings.get_path("RENARDO_ROOT_PATH") / "tutorial" / lang
             file_path = tutorial_dir / filename
             
             # Security check - ensure the file is within the tutorial directory
