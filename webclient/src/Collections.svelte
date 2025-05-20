@@ -472,6 +472,82 @@
         </div>
       </div>
     </div>
+    
+    <!-- Reaper Resources Section -->
+    <div class="card bg-base-100 shadow-xl mb-8">
+      <div class="card-body p-0">
+        <div class="bg-base p-4">
+          <h2 class="card-title text-secondary title-font">Reaper Resources >></h2>
+        </div>
+
+        <div class="p-4">
+          {#if collectionsData.reaper && collectionsData.reaper.length > 0}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {#each collectionsData.reaper as reaper}
+                <div class="card bg-base-200 {reaper.installed ? 'border-l-4 border-success' : ''}">
+                  <div class="card-body">
+                    <div class="flex justify-between items-center">
+                      <h4 class="card-title text-lg title-font">{reaper.name}</h4>
+                      {#if reaper.is_default}
+                        <div class="badge badge-secondary">Default</div>
+                      {/if}
+                    </div>
+
+                    <p class="text-base-content/70 text-sm">{reaper.description || 'No description available'}</p>
+
+                    <div class="flex flex-wrap gap-2 my-2">
+                      <div class="badge badge-outline badge-sm">By {reaper.author || 'Unknown'}</div>
+                      <div class="badge badge-outline badge-sm">v{reaper.version || '1.0'}</div>
+                      <div class="badge badge-outline badge-sm">{formatFileSize(reaper.size)}</div>
+                    </div>
+
+                    {#if reaper.tags && reaper.tags.length > 0}
+                      <div class="flex flex-wrap gap-1 mt-1">
+                        {#each reaper.tags as tag}
+                          <div class="badge badge-ghost badge-sm">{tag}</div>
+                        {/each}
+                      </div>
+                    {/if}
+
+                    <div class="card-actions justify-end mt-4">
+                      {#if reaper.installed}
+                        <div class="badge badge-success gap-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Installed
+                        </div>
+                      {:else if downloadsInProgress.has(`reaper-${reaper.name}`)}
+                        <button class="btn btn-secondary btn-sm" disabled>
+                          <span class="loading loading-spinner loading-xs"></span>
+                          Downloading...
+                        </button>
+                      {:else}
+                        <button
+                          class="btn btn-secondary btn-sm"
+                          on:click={() => downloadCollection('reaper', reaper.name)}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                          </svg>
+                          Download
+                        </button>
+                      {/if}
+                    </div>
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {:else}
+            <div class="card bg-base-200 my-4">
+              <div class="card-body items-center text-center">
+                <p class="text-base-content/50 italic">No Reaper resources available.</p>
+              </div>
+            </div>
+          {/if}
+        </div>
+      </div>
+    </div>
   {/if}
 
   <!-- Download progress logger modal -->
