@@ -9,6 +9,7 @@
   let error = null;
   let successMessage = '';
   let showAdvancedView = false;
+  let advancedSettingsText = '';
   
   // User directory state
   let userDirectory = '';
@@ -18,34 +19,101 @@
   // Track settings that have been modified but not saved
   let modifiedSettings = {};
   
-  // Settings schema - provides metadata for each setting
-  const settingsSchema = {
-    'core.CLOCK_LATENCY': { 
-      type: 'number', 
-      label: 'Clock Latency', 
-      description: 'Latency adjustment for timing in milliseconds',
-      group: 'Performance',
-      min: 0,
-      max: 500
-    },
-    'samples.SAMPLES_PACK_NUMBER': { 
-      type: 'number', 
-      label: 'Samples Pack Number', 
-      description: 'Number of sample packs to load',
-      group: 'Samples',
-      min: 0,
-      max: 100
-    },
-    'sc_backend.ACTIVATED_SCCODE_BANKS': { 
-      type: 'array', 
-      label: 'Activated SC Code Banks', 
-      description: 'List of activated SuperCollider code banks',
-      group: 'SuperCollider'
+  // Generate settings schema dynamically based on settings structure
+  function generateSettingsSchema() {
+    const schema = {};
+    
+    if (!settingsData || Object.keys(settingsData).length === 0) {
+      return schema;
     }
-  };
+    
+    // Process each top-level section
+    for (const section in settingsData) {
+      const sectionData = settingsData[section];
+      
+      // Process each setting in the section
+      for (const key in sectionData) {
+        const fullKey = `${section}.${key}`;
+        const value = sectionData[key];
+        const valueType = typeof value;
+        
+        const setting = {
+          type: Array.isArray(value) ? 'array' : valueType,
+          label: key.split('_').map(word => word.charAt(0) + word.slice(1).toLowerCase()).join(' '),
+          description: getSettingDescription(fullKey),
+          group: section.charAt(0).toUpperCase() + section.slice(1),
+        };
+        
+        // Add min/max for number types
+        if (valueType === 'number') {
+          // Set reasonable min/max based on the value
+          if (['latency', 'delay', 'timeout'].some(term => key.toLowerCase().includes(term))) {
+            setting.min = 0;
+            setting.max = Math.max(500, value * 2);
+          } else if (key.includes('VOLUME') || key.includes('GAIN')) {
+            setting.min = 0;
+            setting.max = 1;
+            setting.step = 0.01;
+          } else if (key.includes('LEVEL') || key.includes('AMPLITUDE')) {
+            setting.min = 0;
+            setting.max = 1;
+            setting.step = 0.01;
+          } else if (key.includes('SPEED') || key.includes('RATE')) {
+            setting.min = 0.25;
+            setting.max = 4;
+            setting.step = 0.25;
+          } else {
+            setting.min = 0;
+            setting.max = Math.max(100, value * 2);
+          }
+        } else if (setting.type === 'array') {
+          // No special handling needed for arrays
+        } else if (setting.type === 'boolean') {
+          // No special handling needed for booleans
+        }
+        
+        schema[fullKey] = setting;
+      }
+    }
+    
+    return schema;
+  }
+  
+  // Get a descriptive text for a setting based on its key
+  function getSettingDescription(key) {
+    const descriptions = {
+      'core.CLOCK_LATENCY': 'Latency adjustment for timing in milliseconds',
+      'core.DEFAULT_SAMPLE_RATE': 'Default sample rate for audio processing',
+      'core.COLLECTIONS_DOWNLOAD_SERVER': 'Server URL for downloading collections',
+      'samples.SAMPLES_PACK_NUMBER': 'Number of sample packs to load',
+      'samples.SAMPLES_PACK_LOADED': 'Names of sample packs that are loaded',
+      'sc_backend.ACTIVATED_SCCODE_BANKS': 'List of activated SuperCollider code banks',
+      'reaper_backend.ACTIVATED_REAPER_BANKS': 'List of activated Reaper banks',
+      'reaper_backend.SELECTED_REAPER_INSTRUMENTS': 'List of selected Reaper instruments to load',
+      'webserver.PORT': 'Port number for the web server',
+      'webserver.ENABLED': 'Whether the web server is enabled',
+      'webserver.HOST': 'Host address for the web server',
+    };
+    
+    // If we have a specific description, use it
+    if (descriptions[key]) {
+      return descriptions[key];
+    }
+    
+    // Generate a generic description based on the key
+    const parts = key.split('.');
+    const settingName = parts[1];
+    const words = settingName.split('_');
+    const readableName = words.map(word => word.charAt(0) + word.slice(1).toLowerCase()).join(' ');
+    
+    return `Configure the ${readableName} setting for ${parts[0]}`;
+  }
+  
+  // Settings schema generated dynamically
+  $: settingsSchema = generateSettingsSchema();
   
   // Generate list of settings groups dynamically from schema
-  const settingsGroups = [...new Set(Object.values(settingsSchema).map(setting => setting.group))];
+  $: settingsGroups = [...new Set(Object.values(settingsSchema).map(setting => setting.group))];
   
   // Load user directory
   async function loadUserDirectory() {
@@ -159,6 +227,8 @@
       const data = await response.json();
       if (data.success) {
         settingsData = data.settings;
+        // Initialize the advanced settings text editor
+        advancedSettingsText = JSON.stringify(data.settings, null, 2);
         // Clear modified settings on load
         modifiedSettings = {};
       } else {
@@ -264,22 +334,70 @@
     
     let allSuccess = true;
     
-    // Save each modified setting
-    for (const key of keys) {
-      const success = await saveSetting(key, modifiedSettings[key]);
-      if (!success) {
+    // Special case for full JSON settings from advanced view
+    if (keys.includes('_json_full_settings')) {
+      try {
+        // Create an array of promises for each top-level section
+        const fullSettings = modifiedSettings['_json_full_settings'];
+        const promises = [];
+        
+        // For each section, update all its settings
+        for (const section in fullSettings) {
+          const sectionData = fullSettings[section];
+          
+          // For each setting in the section
+          for (const key in sectionData) {
+            const fullKey = `${section}.${key}`;
+            const value = sectionData[key];
+            
+            // Queue up a save operation
+            promises.push(
+              saveSetting(fullKey, value)
+                .catch(err => {
+                  console.error(`Error saving setting ${fullKey}:`, err);
+                  allSuccess = false;
+                  return false;
+                })
+            );
+          }
+        }
+        
+        // Wait for all settings to be saved
+        await Promise.all(promises);
+        
+        if (allSuccess) {
+          // Reload settings to get the fresh state
+          await loadSettings();
+          
+          // Show success message
+          successMessage = 'All changes from JSON editor saved successfully';
+          setTimeout(() => {
+            successMessage = '';
+          }, 3000);
+        }
+      } catch (err) {
+        console.error('Error saving JSON settings:', err);
+        error = `Error saving JSON settings: ${err.message}`;
         allSuccess = false;
       }
-    }
-    
-    if (allSuccess) {
-      // Clear modified settings
-      modifiedSettings = {};
-      // Show success message
-      successMessage = 'All changes saved successfully';
-      setTimeout(() => {
-        successMessage = '';
-      }, 3000);
+    } else {
+      // Normal case: save each modified setting
+      for (const key of keys) {
+        const success = await saveSetting(key, modifiedSettings[key]);
+        if (!success) {
+          allSuccess = false;
+        }
+      }
+      
+      if (allSuccess) {
+        // Clear modified settings
+        modifiedSettings = {};
+        // Show success message
+        successMessage = 'All changes saved successfully';
+        setTimeout(() => {
+          successMessage = '';
+        }, 3000);
+      }
     }
   }
   
@@ -615,12 +733,46 @@
         </div>
       {/each}
     {:else}
-      <!-- Advanced view - raw JSON display -->
+      <!-- Advanced view - editable JSON display -->
       <div class="card bg-base-100 shadow-xl mb-6">
         <div class="card-body">
-          <h2 class="card-title">All Settings (Read Only)</h2>
-          <div class="mockup-code bg-base-300 text-base-content overflow-x-auto max-h-[600px]">
-            <pre><code>{JSON.stringify(settingsData, null, 2)}</code></pre>
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="card-title">All Settings (JSON Editor)</h2>
+            
+            <div class="flex gap-2">
+              <button 
+                class="btn btn-sm btn-primary" 
+                on:click={() => {
+                  try {
+                    const parsedSettings = JSON.parse(advancedSettingsText);
+                    modifiedSettings = { '_json_full_settings': parsedSettings };
+                  } catch (e) {
+                    error = `JSON Parse Error: ${e.message}`;
+                  }
+                }}
+                disabled={!advancedSettingsText || advancedSettingsText === JSON.stringify(settingsData, null, 2)}
+              >
+                Apply Changes
+              </button>
+            </div>
+          </div>
+          
+          <!-- Warning message -->
+          <div class="alert alert-warning mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            <div>
+              <span class="font-bold">Advanced Mode</span>
+              <p class="text-sm">Edit the JSON with caution. Invalid JSON will not be applied. Click "Apply Changes" to stage your modifications before saving.</p>
+            </div>
+          </div>
+          
+          <!-- JSON Editor -->
+          <div class="form-control w-full">
+            <textarea 
+              class="textarea textarea-bordered font-mono text-sm h-[600px]"
+              bind:value={advancedSettingsText}
+              spellcheck="false"
+            ></textarea>
           </div>
         </div>
       </div>
