@@ -359,19 +359,7 @@ if settings.get("reaper_backend.REAPER_BACKEND_ENABLED"):
         project=reaproject,
         resource_library=reaper_resource_library
     )
-
-    inst = ReaperInstrument(
-        shortname='hpluck',
-        fullname='H Pluck',
-        description='High-resonance plucked bass with bright harmonics',
-        fxchain_path='hpluck.RfxChain',
-        arguments={},
-        bank='0_renardo_core',
-        category='bass',
-        auto_load_to_server=False,
-        scan_all_params=True,
-        is_chain=True
-    )
+    from .reaper_backend_init import *
 
 ### All aliases (and basic wrapper) should progressively move here
 from .aliases import *
