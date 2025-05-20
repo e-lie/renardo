@@ -130,6 +130,10 @@ class ReaperInstrument(Instrument):
             self.fxchain_path = fxchain_path
         else:
             self.fxchain_path = self._get_caller_file_from_init() / fxchain_path
+        if not self.fxchain_path.exists():
+            raise Exception(f"FXChain file not found: {self.fxchain_path}")
+            return False
+
 
         if custom_plugin_name is None:
             self.plugin_name = shortname
@@ -492,15 +496,16 @@ class ReaperInstrument(Instrument):
             bool: True if the FXChain was successfully installed or already exists, False otherwise
         """
         try:
+            if not self.fxchain_path.exists():
+                raise Exception(f"FXChain file not found: {self.fxchain_path}")
+                return False
             # Get the Renardo FXChains directory in REAPER's config
             config_dir = SettingsManager.get_standard_config_dir()
             renardo_fxchains_dir = config_dir / "REAPER" / "FXChains" / "renardo_fxchains"
             # Create the renardo_fxchains directory if it doesn't exist
             renardo_fxchains_dir.mkdir(parents=True, exist_ok=True)
             
-            if not self.fxchain_path.exists():
-                print(f"FXChain file not found: {self.fxchain_path}")
-                return False
+
             
             # Copy the FXChain file to the renardo_fxchains directory
             dest_path = renardo_fxchains_dir / f"{chain_name}.RfxChain"
