@@ -775,6 +775,7 @@ def register_api_routes(webapp):
             
             # Check if the collection directory exists
             if not collection_path.exists():
+                print(f"Collection directory not found: {collection_path}")
                 return jsonify({
                     "success": False,
                     "message": f"Collection directory not found: {collection_path}"
@@ -789,9 +790,25 @@ def register_api_routes(webapp):
                 "banks": []
             }
             
+            # Debug information
+            bank_names = library.list_banks()
+            print(f"Found {len(bank_names)} banks in collection {collection_name}: {bank_names}")
+            
             # Add each bank
-            for bank_idx, bank_name in enumerate(library.list_banks()):
+            for bank_idx, bank_name in enumerate(bank_names):
                 bank = library.get_bank(bank_idx)
+                if not bank:
+                    # Try getting the bank by name if index doesn't work
+                    bank = library.get_bank_by_name(bank_name)
+                
+                if not bank:
+                    print(f"Could not find bank with index {bank_idx} or name {bank_name}")
+                    continue
+                
+                instrument_categories = bank.list_categories(ResourceType.INSTRUMENT)
+                effect_categories = bank.list_categories(ResourceType.EFFECT)
+                
+                print(f"Bank {bank_name} has {len(instrument_categories)} instrument categories and {len(effect_categories)} effect categories")
                 
                 bank_data = {
                     "name": bank_name,
@@ -801,14 +818,17 @@ def register_api_routes(webapp):
                 }
                 
                 # Add instrument categories
-                for category_name in bank.list_categories(ResourceType.INSTRUMENT):
+                for category_name in instrument_categories:
+                    resources = bank.list_resources(ResourceType.INSTRUMENT, category_name)
+                    print(f"  Instrument category {category_name} has {len(resources)} resources")
+                    
                     category_data = {
                         "name": category_name,
                         "resources": []
                     }
                     
                     # Add resources in this category
-                    for resource_name in bank.list_resources(ResourceType.INSTRUMENT, category_name):
+                    for resource_name in resources:
                         category_data["resources"].append({
                             "name": resource_name,
                             "type": "instrument"
@@ -817,14 +837,17 @@ def register_api_routes(webapp):
                     bank_data["instruments"].append(category_data)
                 
                 # Add effect categories
-                for category_name in bank.list_categories(ResourceType.EFFECT):
+                for category_name in effect_categories:
+                    resources = bank.list_resources(ResourceType.EFFECT, category_name)
+                    print(f"  Effect category {category_name} has {len(resources)} resources")
+                    
                     category_data = {
                         "name": category_name,
                         "resources": []
                     }
                     
                     # Add resources in this category
-                    for resource_name in bank.list_resources(ResourceType.EFFECT, category_name):
+                    for resource_name in resources:
                         category_data["resources"].append({
                             "name": resource_name,
                             "type": "effect"
@@ -833,6 +856,8 @@ def register_api_routes(webapp):
                     bank_data["effects"].append(category_data)
                 
                 structure["banks"].append(bank_data)
+            
+            print(f"Final structure has {len(structure['banks'])} banks")
             
             return jsonify({
                 "success": True,
