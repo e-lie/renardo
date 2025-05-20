@@ -61,6 +61,26 @@ def reaper_resource_dir():
         # Mixed case to test case-insensitivity
         glitch_reverb = creative_dir / "Glitch REVERB.RfxChain"
         glitch_reverb.touch()
+        
+        # Create instruments directory and categories within bank 0
+        instruments0_dir = bank0_dir / "instruments"
+        instruments0_dir.mkdir()
+        
+        # Create piano category
+        piano_dir = instruments0_dir / "piano"
+        piano_dir.mkdir()
+        
+        # Create piano instrument chains
+        grand_piano = piano_dir / "Grand Piano.RfxChain"
+        grand_piano.touch()
+        
+        # Create synth category
+        synth_dir = instruments0_dir / "synth"
+        synth_dir.mkdir()
+        
+        # Create synth instrument chains
+        analog_synth = synth_dir / "Analog Synth.RfxChain"
+        analog_synth.touch()
 
         yield {
             'root': root,
@@ -68,7 +88,9 @@ def reaper_resource_dir():
             'hall_reverb': hall_reverb,
             'stereo_delay': stereo_delay,
             'weird_delay': weird_delay,
-            'glitch_reverb': glitch_reverb
+            'glitch_reverb': glitch_reverb,
+            'grand_piano': grand_piano,
+            'analog_synth': analog_synth
         }
 
 
@@ -131,3 +153,18 @@ def test_find_fxchain_nonexistent(reaper_resource_lib):
     """Test finding a nonexistent fxchain."""
     found = reaper_resource_lib.find_fxchain_by_name("Nonexistent Effect")
     assert found is None
+    
+    
+def test_find_instrument_fxchain(reaper_resource_lib, reaper_resource_dir):
+    """Test finding fxchain in the instruments directory."""
+    # Test with exact name including extension
+    found = reaper_resource_lib.find_fxchain_by_name("Grand Piano.RfxChain")
+    assert found == reaper_resource_dir['grand_piano']
+    
+    # Test with exact name without extension
+    found = reaper_resource_lib.find_fxchain_by_name("Grand Piano")
+    assert found == reaper_resource_dir['grand_piano']
+    
+    # Test partial name match
+    found = reaper_resource_lib.find_fxchain_by_name("analog")
+    assert found == reaper_resource_dir['analog_synth']

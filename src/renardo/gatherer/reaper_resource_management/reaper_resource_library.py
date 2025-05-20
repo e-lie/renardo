@@ -113,45 +113,50 @@ class ReaperResourceLibrary:
         search_name_lower = search_name.lower()
         search_term = search_name_lower.replace('.rfxchain', '')
         
-        # Search through all banks
+        # Resource types to search in
+        resource_types = [ResourceType.EFFECT, ResourceType.INSTRUMENT]
+        
+        # First try exact matches across all banks and resource types
         for bank_index, bank in self._banks.items():
-            effects_dir = bank.directory / ResourceType.EFFECT.value
-            
-            if not effects_dir.exists():
-                continue
+            for resource_type in resource_types:
+                resource_dir = bank.directory / resource_type.value
                 
-            # Search through all categories in the effects directory
-            for category_dir in effects_dir.iterdir():
-                if not category_dir.is_dir():
+                if not resource_dir.exists():
                     continue
                     
-                # First check for exact match
-                fxchain_path = category_dir / search_name
-                if fxchain_path.exists():
-                    return fxchain_path
-                    
-                # Then check for case-insensitive match
-                for file_path in category_dir.glob('*.RfxChain'):
-                    # Case-insensitive exact name match
-                    if file_path.name.lower() == search_name_lower:
-                        return file_path
+                # Search through all categories in the resource directory
+                for category_dir in resource_dir.iterdir():
+                    if not category_dir.is_dir():
+                        continue
+                        
+                    # Check for exact match
+                    fxchain_path = category_dir / search_name
+                    if fxchain_path.exists():
+                        return fxchain_path
+                        
+                    # Check for case-insensitive match
+                    for file_path in category_dir.glob('*.RfxChain'):
+                        # Case-insensitive exact name match
+                        if file_path.name.lower() == search_name_lower:
+                            return file_path
                         
         # If exact match not found, try partial match
         for bank_index, bank in self._banks.items():
-            effects_dir = bank.directory / ResourceType.EFFECT.value
-            
-            if not effects_dir.exists():
-                continue
+            for resource_type in resource_types:
+                resource_dir = bank.directory / resource_type.value
                 
-            # Search through all categories in the effects directory
-            for category_dir in effects_dir.iterdir():
-                if not category_dir.is_dir():
+                if not resource_dir.exists():
                     continue
                     
-                for file_path in category_dir.glob('*.RfxChain'):
-                    # Partial match on filename
-                    if search_term in file_path.stem.lower():
-                        return file_path
+                # Search through all categories in the resource directory
+                for category_dir in resource_dir.iterdir():
+                    if not category_dir.is_dir():
+                        continue
+                        
+                    for file_path in category_dir.glob('*.RfxChain'):
+                        # Partial match on filename
+                        if search_term in file_path.stem.lower():
+                            return file_path
         
         # Not found
         return None

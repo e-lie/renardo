@@ -8,6 +8,7 @@ from .ReaTrack import ReaTrack
 from .ReaTaskQueue import TaskQueue, ReaTask
 from .ReaTrack import ReaTrackType
 from .functions import make_snake_name, split_param_name
+from renardo.settings_manager import settings
 
 
 class ReaProject(object):
@@ -82,28 +83,24 @@ class ReaProject(object):
 
     def add_fx_chain(self,track, chain_name):
         RPR = self.reapylib.RPR
-        try:
-            track = track.id
-            fxchain_filepath = RPR.GetResourcePath() + '/FXChains/' + f'{chain_name}.RfxChain'
-            if RPR.file_exists(fxchain_filepath):
-                with open(fxchain_filepath, "r") as f:
-                    content = f.read()
-            # avoid displaying effects during operation
-            RPR.PreventUIRefresh(1)
-            # add empty track at the end tin instanciate chain
-            RPR.InsertTrackAtIndex(RPR.CountTracks(0), False)
-            last_track = RPR.GetTrack(0, RPR.CountTracks(0) - 1)
-            # add chain via xml chunk format
-            self.add_chunk_to_track(last_track, content)
-            # move fxs from chain to the right track
-            fx_count = self.move_fx(last_track, track)
-            # remove the temporary track at the end of project
-            RPR.DeleteTrack(last_track)
-            RPR.PreventUIRefresh(-1)
-            # return fx count to be able to find the instanciated fxs
-            return fx_count
-        except:
-            print("Error adding an FX chain !")
+        track = track.id
+        fxchain_filepath = settings.get_path("RENARDO_FXCHAIN_DIR") / f'{chain_name}.RfxChain'
+        with open(fxchain_filepath, "r") as f:
+            content = f.read()
+        # avoid displaying effects during operation
+        #RPR.PreventUIRefresh(1)
+        # add empty track at the end tin instanciate chain
+        RPR.InsertTrackAtIndex(RPR.CountTracks(0), False)
+        last_track = RPR.GetTrack(0, RPR.CountTracks(0) - 1)
+        # add chain via xml chunk format
+        self.add_chunk_to_track(last_track, content)
+        # move fxs from chain to the right track
+        fx_count = self.move_fx(last_track, track)
+        # remove the temporary track at the end of project
+        RPR.DeleteTrack(last_track)
+        RPR.PreventUIRefresh(-1)
+        # return fx count to be able to find the instanciated fxs
+        return fx_count
 
 
 def get_reaper_object_and_param_name(track: ReaTrack, param_fullname: str, quiet: bool = True)\
