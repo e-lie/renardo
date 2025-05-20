@@ -1,62 +1,29 @@
-# Tutoral 12: SynthDefs
 
+#Example of SCLang coding 
 
-# Renardo creates music by giving player objects a 'digital instrument'
-# to play, which are called 'SynthDefs'. You can see the list of pre-installed
-# 'Synths' by executing
+sccode="""
+SynthDef.new(\\jjbass,
+{|amp=1, sus=1, pan=0, freq=0, vib=0, fmod=0, rate=0, bus=0, blur=1, beat_dur=1, atk=0.01, decay=0.01, rel=0.01, peak=1, level=0.8|
+var osc, env;
+sus = sus * blur;
+freq = In.kr(bus, 1);
+freq = [freq, freq+fmod];
+freq=(freq / 1);
+amp=(amp * 0.5);
+osc=LFTri.ar(freq, mul: amp);
+env=EnvGen.ar(Env([0, peak, level, level, 0], [atk, decay, max((atk + decay + rel), sus - (atk + decay + rel)), rel], curve:\\sin), doneAction: 0);
+osc=(osc * env);
+osc = Mix(osc) * 0.5;
+osc = Pan2.ar(osc, pan);
+ReplaceOut.ar(bus, osc)}).add;
+"""
+jjbass = SCInstrument(
+    shortname="jjbass",
+    fullname="jjbass",
+    description="jjbass",
+    code=sccode,
+    arguments={},
+    auto_load_to_server=True,
+)
 
-print(SynthDefs)
-
-# Each one of these represents a `SynthDef` *object*. These objects are then
-# given to Players to play - like giving an instrument to someone in your
-# orchestra.
-
-# Writing your own Synth Definitions
-
-# This is a bit more advanced, but if you have already written SynthDefs in
-# Supercollider then you might feel at home.  If not, come back to this section
-# later.
-
-# Renardo can access any SynthDef stored on the SuperCollider server,
-# but it needs to know it's there. If you have already written a SynthDef
-# in SuperCollider and named it \mySynth then you just create a SynthDef
-# instance using Renardo like so:
-
-mySynth = SynthDef("mySynth")
-
-# Using the same variable name in Renardo as in SuperCollider for your SynthDef
-# is a good idea to avoid confusion. If you want to write (or edit) your own
-# SynthDef during run-time in Renardo you can use a SuperCollider API by
-# importing the SynthDefManagement module. All Renardo SynthDef objects inherit the
-# base-class behaviour, such as low- and high-pass filters and vibrato,
-# but these can be overridden or updated easily. If you want to know more
-# about digital sound processing and SynthDef creation, check out the
-# SuperCollider documentation. Below is an example of creating one in Renardo:
-
-# Import module for writing SynthDefManagement code from Python
-from SCLang import *
-
-# Create a SynthDef named 'example' (using the same variable name as the SynthDef name is a good idea)
-example = SynthDef("example")
-
-# Create the oscillator (osc) using a sine wave
-example.osc = SinOsc.ar(ex.freq)
-
-# And give it a percussive sound envelope (env)
-example.env = Env.perc()
-
-# Finally, store it!
-example.add()
-
-# How to create a SynthDef
-
-with SynthDef("charm") as charm:
-	charm.osc = SinOsc.ar(charm.freq)
-	charm.env = Env.perc()
-
-# Equivalent to
-
-charm = SynthDef("charm")
-charm.osc = SinOsc.ar(charm.freq)
-charm.env = Env.perc()
-charm.add()
+j1 >> jjbass()
