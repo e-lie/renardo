@@ -53,5 +53,18 @@ class ReaperResourceBank:
         section = self.get_section(section_type)
         return section.get_resource(category, name)
 
+    def list_categories(self, section_type: ResourceType) -> list[str]:
+        """List all categories in a section."""
+        section = self.get_section(section_type)
+        return section.list_categories()
+
+    def list_resources(self, section_type: ResourceType, category: str) -> list[str]:
+        """List all resources in a category."""
+        section = self.get_section(section_type)
+        category_obj = section.get_category(category)
+        if category_obj:
+            return category_obj.list_resources()
+        return []
+
     def __str__(self) -> str:
         return f"ReaperResourceBank({self.index}_{self.name})"
