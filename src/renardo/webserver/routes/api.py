@@ -938,6 +938,154 @@ def register_api_routes(webapp):
                 "message": f"Error fetching installed collection structure: {str(e)}"
             }), 500
     
+    @webapp.route('/api/collections/<collection_type>/<collection_name>/resource/<category>/<resource_name>', methods=['GET'])
+    def get_resource_details(collection_type, collection_name, category, resource_name):
+        """
+        Get details of a specific resource in a collection
+        
+        Args:
+            collection_type (str): Type of collection ('reaper')
+            collection_name (str): Name of the collection
+            category (str): Category of the resource
+            resource_name (str): Name of the resource
+            
+        Returns:
+            JSON: Resource details
+        """
+        try:
+            # Currently only supporting reaper collections
+            if collection_type != 'reaper':
+                return jsonify({
+                    "success": False,
+                    "message": f"Resource details are only supported for reaper collections currently"
+                }), 400
+            
+            # Initialize the Reaper resource library
+            from renardo.gatherer.reaper_resource_management.reaper_resource_library import ReaperResourceLibrary
+            from renardo.lib.music_resource import ResourceType
+            
+            # Get the collection directory
+            collection_path = settings.get_path("REAPER_LIBRARY") / collection_name
+            
+            # Check if the collection directory exists
+            if not collection_path.exists():
+                return jsonify({
+                    "success": False,
+                    "message": f"Collection directory not found: {collection_path}"
+                }), 404
+                
+            # Try to find the resource file
+            # First check if we're dealing with the direct structure (instrument/category/resource)
+            instrument_dir = None
+            for possible_name in ["instrument", "instruments", "Instrument", "Instruments"]:
+                direct_path = collection_path / possible_name / category
+                if direct_path.exists() and direct_path.is_dir():
+                    instrument_dir = direct_path
+                    break
+            
+            if instrument_dir:
+                # Look for Python files with the resource name
+                py_file = instrument_dir / f"{resource_name}.py"
+                rfxchain_file = instrument_dir / f"{resource_name}.RfxChain"
+                
+                # Prepare response
+                response_data = {
+                    "success": True,
+                    "name": resource_name,
+                    "type": "instrument",
+                    "category": category,
+                    "metadata": {},
+                    "content": None
+                }
+                
+                # Add file content if Python file exists
+                if py_file.exists():
+                    with open(py_file, 'r') as f:
+                        response_data["content"] = f.read()
+                    
+                    # Add metadata
+                    response_data["metadata"] = {
+                        "file_path": str(py_file),
+                        "has_rfxchain": rfxchain_file.exists()
+                    }
+                    
+                    if rfxchain_file.exists():
+                        response_data["metadata"]["rfxchain_path"] = str(rfxchain_file)
+                    
+                    return jsonify(response_data)
+                
+                # If no Python file but RfxChain exists, return info about the RfxChain
+                if rfxchain_file.exists():
+                    response_data["metadata"] = {
+                        "file_path": str(rfxchain_file),
+                        "type": "rfxchain"
+                    }
+                    
+                    # Don't include raw content for RfxChain files, but we could add a summary
+                    response_data["content"] = "RfxChain file (binary content)"
+                    
+                    return jsonify(response_data)
+                
+                # No files found
+                return jsonify({
+                    "success": False,
+                    "message": f"Resource file not found: {resource_name}"
+                }), 404
+            
+            # If we're here, try the bank structure approach
+            # Initialize the library
+            library = ReaperResourceLibrary(collection_path)
+            
+            # Look for the bank that might contain this resource
+            banks = library.list_banks()
+            for bank_name in banks:
+                bank = library.get_bank_by_name(bank_name)
+                if not bank:
+                    continue
+                
+                # Try to find the resource in this bank
+                resource = bank.get_resource(ResourceType.INSTRUMENT, category, resource_name)
+                if resource:
+                    # Prepare response
+                    response_data = {
+                        "success": True,
+                        "name": resource_name,
+                        "type": "instrument",
+                        "category": category,
+                        "bank": bank_name,
+                        "metadata": {},
+                        "content": None
+                    }
+                    
+                    # Add file details
+                    response_data["metadata"] = {
+                        "file_path": str(resource.full_path),
+                        "extension": resource.extension,
+                        "size": resource.size
+                    }
+                    
+                    # Add file content if it's a Python file
+                    if resource.extension.lower() == '.py':
+                        with open(resource.full_path, 'r') as f:
+                            response_data["content"] = f.read()
+                    elif resource.extension.lower() == '.rfxchain':
+                        response_data["content"] = "RfxChain file (binary content)"
+                    
+                    return jsonify(response_data)
+            
+            # Resource not found in any bank
+            return jsonify({
+                "success": False,
+                "message": f"Resource not found: {resource_name} in category {category}"
+            }), 404
+            
+        except Exception as e:
+            print(f"Error fetching resource details: {e}")
+            return jsonify({
+                "success": False,
+                "message": f"Error fetching resource details: {str(e)}"
+            }), 500
+    
     def get_remote_reaper_collection_structure(collection_name):
         """
         Get the structure of a remote Reaper collection
