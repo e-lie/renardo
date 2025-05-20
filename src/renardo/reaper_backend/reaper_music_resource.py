@@ -155,8 +155,6 @@ class ReaperInstrument(Instrument):
             self._sus = custom_default_sustain
 
         if instanciate_plugin:
-            self.ensure_fxchain_in_reaper(chain_name=self.plugin_name)
-                    
             reafxs_names = self._reatrack.create_reafxs_for_chain(
                 chain_name=self.plugin_name,
                 scan_all_params=scan_all_params
@@ -494,7 +492,7 @@ class ReaperInstrument(Instrument):
 
             # First try using the provided fxchain_path
             source_path = self.fxchain_path
-            chain_name = self.fxchain_path.name
+            chain_name = self.fxchain_path.stem
             
             # If the path doesn't exist, try to search for it in the resource library
             if not source_path.exists() and self.__class__._resource_library is not None:
@@ -510,7 +508,7 @@ class ReaperInstrument(Instrument):
                 
             # Get the Renardo FXChains directory in REAPER's config
             config_dir = SettingsManager.get_standard_config_dir()
-            renardo_fxchains_dir = config_dir / "REAPER" / "FXChains" / "renardo_fxchains"
+            renardo_fxchains_dir = settings.get_path("RENARDO_FXCHAIN_DIR")
             # Create the renardo_fxchains directory if it doesn't exist
             renardo_fxchains_dir.mkdir(parents=True, exist_ok=True)
             
