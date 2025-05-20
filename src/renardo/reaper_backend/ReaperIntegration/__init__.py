@@ -2,8 +2,6 @@ from typing import Mapping
 from pprint import pprint
 from pathlib import Path
 
-from renardo.runtime import Clock, player_method
-
 from renardo.reaper_backend.reaper_music_resource import ReaperInstrument
 from renardo.reaper_backend.ReaperIntegrationLib.ReaProject import ReaProject
 from renardo.reaper_backend.ReaperIntegrationLib.ReaTrack import ReaTrack
@@ -11,7 +9,8 @@ from renardo.reaper_backend.ReaperIntegrationLib.ReaTaskQueue import ReaTask
 from renardo.settings_manager import settings, SettingsManager
 
 
-def init_reapy_project():
+
+def init_reapy_project(clock):
     """Initialize a REAPER project.
     
     Returns:
@@ -20,7 +19,7 @@ def init_reapy_project():
     project = None
     try:
         import reapy
-        project = ReaProject(Clock, reapylib=reapy)
+        project = ReaProject(clock, reapylib=reapy)
     except Exception as err:
         output = err.message if hasattr(err, 'message') else err
         print(f"Error scanning and initializing Reaper project: {output} -> skipping Reaper integration")
@@ -45,7 +44,7 @@ def init_reapy_project():
 #             project: ReaProject instance for REAPER integration
 #         """
 #         # Initialize the ReaperInstrument class with our settings
-#         ReaperInstrument.initialize_factory(presets, project)
+#         ReaperInstrument.set_class_attributes(presets, project)
         
 #         # Store references for compatibility
 #         self._presets = presets
@@ -85,24 +84,3 @@ def init_reapy_project():
 #         return ReaperInstrument.ensure_fxchain_in_reaper(shortname)
 
 
-@player_method
-def setp(self, param_dict):
-    for key, value in param_dict.items():
-        setattr(self, key, value)
-
-@player_method
-def getp(self, filter = None):
-    result = None
-    if "reatrack" in self.attr.keys():
-        reatrack = self.attr["reatrack"][0]
-        if isinstance(reatrack, ReaTrack):
-            #result = reatrack.config
-            if filter is not None:
-                result = {key: value for key, value in reatrack.get_all_params().items() if filter in key}
-            else:
-                result = reatrack.get_all_params()
-    return result
-
-@player_method
-def showp(self, filter = None):
-    pprint(self.getp(filter))
