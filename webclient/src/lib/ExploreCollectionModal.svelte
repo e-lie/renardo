@@ -32,6 +32,7 @@
     error = null;
     
     try {
+      console.log(`Fetching structure for ${collectionType}/${collectionName}`);
       const response = await fetch(`/api/collections/${collectionType}/${collectionName}/structure`);
       
       if (!response.ok) {
@@ -39,6 +40,7 @@
       }
       
       const data = await response.json();
+      console.log('Response data:', data);
       
       if (!data.success) {
         throw new Error(data.message || 'Failed to fetch collection structure');
@@ -47,8 +49,11 @@
       structure = data.structure;
       isInstalled = data.is_installed;
       
+      console.log('Structure:', structure);
+      
       // Initialize navigation
       banks = structure.banks || [];
+      console.log('Banks:', banks);
       currentView = 'banks';
       currentPath = [structure.name];
       
@@ -62,18 +67,28 @@
   
   // Navigation functions
   function navigateToBank(bank) {
+    console.log('Navigating to bank:', bank);
     selectedBank = bank;
+    
+    // Add detail about what we're finding in the bank data
+    console.log(' - Bank instruments:', bank.instruments);
+    console.log(' - Bank effects:', bank.effects);
+    
     sections = [
       { id: 'instruments', name: 'Instruments', items: bank.instruments || [] },
       { id: 'effects', name: 'Effects', items: bank.effects || [] }
     ];
+    
+    console.log('Sections created:', sections);
     currentView = 'sections';
     currentPath = [...currentPath, bank.name];
   }
   
   function navigateToSection(section) {
+    console.log('Navigating to section:', section);
     selectedSection = section;
     categories = section.items;
+    console.log('Categories loaded:', categories);
     currentView = 'categories';
     currentPath = [...currentPath, section.name];
   }

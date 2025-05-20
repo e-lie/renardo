@@ -17,12 +17,26 @@ class ReaperResourceSection:
     def _load_categories(self):
         """Load all categories from the section directory."""
         if not self.directory.exists():
+            print(f"Section directory {self.directory} does not exist")
             return
+            
+        print(f"Loading categories from {self.directory} for type {self.type.value}")
+        
+        # List all entries to debug
+        all_entries = list(self.directory.iterdir())
+        print(f"Found {len(all_entries)} entries in {self.directory}:")
+        for entry in all_entries:
+            print(f"  {'Directory' if entry.is_dir() else 'File'}: {entry.name}")
+        
+        # Process only directories
         for category_dir in self.directory.iterdir():
             if category_dir.is_dir():
                 category_name = category_dir.name
+                print(f"Creating category {category_name} from {category_dir}")
                 category = ReaperResourceCategory(category_dir, category_name, self.type)
                 self._categories[category_name] = category
+                
+        print(f"Loaded {len(self._categories)} categories: {list(self._categories.keys())}")
 
     def get_category(self, category_name: str) -> Optional[ReaperResourceCategory]:
         """Get a category by its name."""
