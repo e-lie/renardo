@@ -360,6 +360,8 @@ if settings.get("reaper_backend.REAPER_BACKEND_ENABLED"):
         resource_library=reaper_resource_library
     )
     from .reaper_backend_init import *
+    instanciate_reaper_instruments.set_foxdotcode_instance(FoxDotCode)
+
 
 ### All aliases (and basic wrapper) should progressively move here
 from .aliases import *
