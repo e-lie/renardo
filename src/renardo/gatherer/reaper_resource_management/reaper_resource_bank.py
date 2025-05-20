@@ -31,7 +31,8 @@ class ReaperResourceBank:
         """Extract bank name from directory name format: {index}_{name}."""
         match = re.match(r'\d+_(.+)', dirname)
         if not match:
-            raise ValueError(f"Invalid bank directory format: {dirname}")
+            # If there's no index prefix, use the entire directory name
+            return dirname
         return match.group(1)
 
     @staticmethod
@@ -39,7 +40,8 @@ class ReaperResourceBank:
         """Extract bank index from directory name format: {index}_{name}."""
         match = re.match(r'(\d+)_', dirname)
         if not match:
-            raise ValueError(f"Invalid bank directory format: {dirname}")
+            # If there's no index prefix, use 0 as default
+            return 0
         return int(match.group(1))
 
     def get_section(self, section_type: ResourceType) -> ReaperResourceSection:

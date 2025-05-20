@@ -16,12 +16,35 @@ class ReaperResourceCategory:
 
     def _load_resource_files(self):
         """Load all Reaper resource files from the category directory."""
-        valid_extensions = ['.py', '.rfxchain']
+        # Dictionary to track Python and RfxChain files by stem name
+        resources_by_stem = {}
         
+        # First pass - collect all files by their stem name
         for file_path in self.directory.iterdir():
-            if file_path.is_file() and file_path.suffix.lower() in [ext.lower() for ext in valid_extensions] and file_path.stem != '__init__':
-                reaper_resource_file = ReaperResourceFile(file_path, self.type, self.category)
-                self._reaper_resources[str(reaper_resource_file.name)] = reaper_resource_file
+            if file_path.is_file() and file_path.stem != '__init__':
+                stem = file_path.stem
+                ext = file_path.suffix.lower()
+                
+                if stem not in resources_by_stem:
+                    resources_by_stem[stem] = {'py': None, 'rfxchain': None}
+                
+                if ext.lower() == '.py':
+                    resources_by_stem[stem]['py'] = file_path
+                elif ext.lower() == '.rfxchain':
+                    resources_by_stem[stem]['rfxchain'] = file_path
+        
+        # Second pass - create resource files, prefer Python files over RfxChain files
+        for stem, files in resources_by_stem.items():
+            # Python files contain the actual resource definition
+            if files['py']:
+                reaper_resource_file = ReaperResourceFile(files['py'], self.type, self.category)
+                self._reaper_resources[stem] = reaper_resource_file
+            # If no Python file but there's an RfxChain file, use that
+            elif files['rfxchain']:
+                reaper_resource_file = ReaperResourceFile(files['rfxchain'], self.type, self.category)
+                self._reaper_resources[stem] = reaper_resource_file
+                
+        print(f"Loaded {len(self._reaper_resources)} resources in category {self.category}")
 
 
     def get_resource(self, name: str) -> Optional[ReaperResourceFile]:
