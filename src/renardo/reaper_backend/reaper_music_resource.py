@@ -79,18 +79,13 @@ class ReaperInstrument(Instrument):
             arguments: Dict[str, Any] = None,
             bank: str = "undefined",
             category: str = "undefined",
-            midi_map=None,
-            instrument_name=None,
+            midi_map=None, # TODO
             custom_default_sustain=None,
             custom_plugin_name=None,
             custom_track_name=None,
             custom_midi_channel=None,
-            plugin_presets=None,
-            instrument_params=None,
-            auto_load_to_server: bool = False,
             instanciate_plugin=True,
             scan_all_params=True,
-            is_chain=True
     ):
         """
         Initialize a REAPER instrument.
@@ -118,7 +113,7 @@ class ReaperInstrument(Instrument):
             scan_all_params: Whether to scan all parameters
             is_chain: Whether this is a chain of effects
         """
-        super().__init__(shortname, fullname, description, arguments, bank, category, auto_load_to_server)
+        super().__init__(shortname, fullname, description, arguments, bank, category)
 
         self.instrument_loaded = False
         self.chan_track_names = [f"chan{i+1}" for i in range(16)]
@@ -174,8 +169,7 @@ class ReaperInstrument(Instrument):
         if hasattr(self.__class__, 'instrument_dict'):
             self.instrument_dict[self.shortname] = self
 
-        if auto_load_to_server:
-            self.load()
+        self.__class__.update_used_track_indexes()
 
     def _get_caller_file(self):
         """Get the path of the file that created this object instance."""
