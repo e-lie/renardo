@@ -7,7 +7,9 @@
   
   // State for right panel
   let rightPanelOpen = true;
+  let rightPanelWidth = 384; // Default width in pixels (w-96 = 384px)
   let activeTab = 'tutorial'; // tutorial, sessions, musicExamples, or documentation
+  let isResizing = false;
   
   // Tutorial files state
   let tutorialFiles = [];
@@ -117,7 +119,43 @@ Master().fadeout(dur=24)
   }
   
   // Initialize CodeMirror on mount
+  // Setup resize event handlers
+  function handleMouseMove(e) {
+    if (!isResizing) return;
+    
+    // Add class to body during resizing
+    document.body.classList.add('resizing');
+    
+    // Calculate new width based on mouse position
+    const containerWidth = document.body.clientWidth;
+    const mouseX = e.clientX;
+    
+    // Ensure the panel has a reasonable width (between 240px and 50% of window)
+    const minWidth = 240;
+    const maxWidth = containerWidth * 0.5;
+    const newWidth = containerWidth - mouseX;
+    
+    rightPanelWidth = Math.min(Math.max(newWidth, minWidth), maxWidth);
+  }
+  
+  function handleMouseUp() {
+    isResizing = false;
+    // Remove resizing class
+    document.body.classList.remove('resizing');
+    // Save the width to localStorage
+    localStorage.setItem('rightPanelWidth', rightPanelWidth.toString());
+  }
+  
   onMount(() => {
+    // Add global event listeners for resize operation
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    
+    // Try to load saved width from localStorage
+    const savedWidth = localStorage.getItem('rightPanelWidth');
+    if (savedWidth) {
+      rightPanelWidth = parseInt(savedWidth, 10);
+    }
     // Function to load a script dynamically
     const loadScript = (src) => {
       return new Promise((resolve, reject) => {
@@ -355,6 +393,8 @@ Master().fadeout(dur=24)
     return () => {
       unsubscribe();
       document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
       if (editor) {
         editor.toTextArea(); // Clean up CodeMirror instance
       }
@@ -1142,9 +1182,22 @@ Master().fadeout(dur=24)
       </div>
     </div>
 
+    <!-- Resizable divider -->
+    {#if rightPanelOpen}
+      <div 
+        class="w-1 hover:w-1 cursor-col-resize flex-shrink-0 bg-base-300 hover:bg-primary hover:opacity-50 transition-colors" 
+        on:mousedown={(e) => {
+          isResizing = true;
+          e.preventDefault();
+        }}
+      ></div>
+    {/if}
+    
     <!-- Right side: Collapsible panel with tabs -->
     {#if rightPanelOpen}
-      <div transition:fade={{ duration: 200 }} class="w-96 flex flex-col border-l border-base-300 bg-base-100 transition-all">
+      <div transition:fade={{ duration: 200 }} 
+        class="flex flex-col border-l border-base-300 bg-base-100 transition-all" 
+        style="width: {rightPanelWidth}px;">
         <!-- Panel header with tabs and close button -->
         <div class="bg-base-300 p-2">
           <div class="flex justify-between items-center mb-2">
@@ -1569,5 +1622,11 @@ Master().fadeout(dur=24)
   /* Smooth transitions for layout changes */
   .flex {
     transition: all 0.3s ease;
+  }
+  
+  /* Disable text selection during resize */
+  :global(body.resizing) {
+    user-select: none;
+    cursor: col-resize;
   }
 </style>
