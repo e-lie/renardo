@@ -11,6 +11,8 @@ import platform
 import shutil
 
 def register_api_routes(webapp):
+    import requests
+    import json
     """
     Register REST API routes with the Flask application
     
@@ -714,6 +716,365 @@ def register_api_routes(webapp):
             return jsonify({
                 "success": False,
                 "message": f"Error opening user directory: {str(e)}"
+            }), 500
+    
+    @webapp.route('/api/collections/<collection_type>/<collection_name>/structure', methods=['GET'])
+    def get_collection_structure(collection_type, collection_name):
+        """
+        Get the structure of a specific collection (installed or remote)
+        
+        Args:
+            collection_type (str): Type of collection ('reaper')
+            collection_name (str): Name of the collection
+            
+        Returns:
+            JSON: Collection structure
+        """
+        try:
+            # Currently only supporting reaper collections
+            if collection_type != 'reaper':
+                return jsonify({
+                    "success": False,
+                    "message": f"Collection structure exploration is only supported for reaper collections currently"
+                }), 400
+            
+            # Check if collection is installed
+            from renardo.gatherer.reaper_resource_management.default_reaper_pack import is_reaper_pack_initialized
+            is_installed = is_reaper_pack_initialized(collection_name)
+            
+            if is_installed:
+                # Fetch structure from local installation
+                return get_installed_reaper_collection_structure(collection_name)
+            else:
+                # Fetch structure from remote server
+                return get_remote_reaper_collection_structure(collection_name)
+                
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "message": f"Error fetching collection structure: {str(e)}"
+            }), 500
+    
+    def get_installed_reaper_collection_structure(collection_name):
+        """
+        Get the structure of an installed Reaper collection
+        
+        Args:
+            collection_name (str): Name of the Reaper collection
+            
+        Returns:
+            JSON: Collection structure
+        """
+        try:
+            # Initialize the Reaper resource library
+            from renardo.gatherer.reaper_resource_management.reaper_resource_library import ReaperResourceLibrary
+            from renardo.lib.music_resource import ResourceType
+            
+            # Get the collection directory
+            collection_path = settings.get_path("REAPER_LIBRARY") / collection_name
+            
+            # Check if the collection directory exists
+            if not collection_path.exists():
+                print(f"Collection directory not found: {collection_path}")
+                return jsonify({
+                    "success": False,
+                    "message": f"Collection directory not found: {collection_path}"
+                }), 404
+            
+            print(f"Exploring collection directory: {collection_path}")
+            
+            # First check if the collection is organized directly without banks
+            # i.e. if it has "instrument" or "instruments" directory directly 
+            direct_instrument_dir = None
+            
+            for possible_name in ["instrument", "instruments", "Instrument", "Instruments"]:
+                direct_path = collection_path / possible_name
+                if direct_path.exists() and direct_path.is_dir():
+                    direct_instrument_dir = direct_path
+                    print(f"Found direct instruments directory: {direct_path}")
+                    break
+            
+            # Check if we're dealing with a collection without banks
+            # (Categories directly in the collection without bank subdirectories)
+            if direct_instrument_dir:
+                # In this case we'll create a single bank with the collection name
+                structure = {
+                    "name": collection_name,
+                    "banks": [{
+                        "name": collection_name,
+                        "index": 0,
+                        "instruments": [],
+                        "effects": []
+                    }]
+                }
+                
+                bank_data = structure["banks"][0]
+                
+                print(f"Checking instrument directories in: {direct_instrument_dir}")
+                # Look for category directories
+                for category_dir in direct_instrument_dir.iterdir():
+                    if category_dir.is_dir():
+                        category_name = category_dir.name
+                        print(f"Found category: {category_name}")
+                        
+                        # Get resources in this category
+                        resource_files = []
+                        for file_path in category_dir.glob("*.py"):
+                            if file_path.stem != "__init__":
+                                resource_files.append(file_path.stem)
+                                
+                        print(f"  Category {category_name} has {len(resource_files)} resources: {resource_files}")
+                        
+                        category_data = {
+                            "name": category_name,
+                            "resources": []
+                        }
+                        
+                        # Add resources to category
+                        for resource_name in resource_files:
+                            category_data["resources"].append({
+                                "name": resource_name,
+                                "type": "instrument"
+                            })
+                        
+                        bank_data["instruments"].append(category_data)
+                
+                print(f"Created direct collection structure with {len(bank_data['instruments'])} categories")
+                
+                return jsonify({
+                    "success": True,
+                    "is_installed": True,
+                    "structure": structure
+                })
+            
+            # If we reach here, we're using the standard bank structure
+            # Initialize the library
+            library = ReaperResourceLibrary(collection_path)
+            
+            # Build the structure
+            structure = {
+                "name": collection_name,
+                "banks": []
+            }
+            
+            # Debug information
+            bank_names = library.list_banks()
+            print(f"Found {len(bank_names)} banks in collection {collection_name}: {bank_names}")
+            
+            # Add each bank
+            for bank_idx, bank_name in enumerate(bank_names):
+                bank = library.get_bank(bank_idx)
+                if not bank:
+                    # Try getting the bank by name if index doesn't work
+                    bank = library.get_bank_by_name(bank_name)
+                
+                if not bank:
+                    print(f"Could not find bank with index {bank_idx} or name {bank_name}")
+                    continue
+                
+                instrument_categories = bank.list_categories(ResourceType.INSTRUMENT)
+                effect_categories = bank.list_categories(ResourceType.EFFECT)
+                
+                print(f"Bank {bank_name} has {len(instrument_categories)} instrument categories and {len(effect_categories)} effect categories")
+                
+                bank_data = {
+                    "name": bank_name,
+                    "index": bank_idx,
+                    "instruments": [],
+                    "effects": []
+                }
+                
+                # Add instrument categories
+                for category_name in instrument_categories:
+                    resources = bank.list_resources(ResourceType.INSTRUMENT, category_name)
+                    print(f"  Instrument category {category_name} has {len(resources)} resources")
+                    
+                    category_data = {
+                        "name": category_name,
+                        "resources": []
+                    }
+                    
+                    # Add resources in this category
+                    for resource_name in resources:
+                        category_data["resources"].append({
+                            "name": resource_name,
+                            "type": "instrument"
+                        })
+                    
+                    bank_data["instruments"].append(category_data)
+                
+                # Add effect categories
+                for category_name in effect_categories:
+                    resources = bank.list_resources(ResourceType.EFFECT, category_name)
+                    print(f"  Effect category {category_name} has {len(resources)} resources")
+                    
+                    category_data = {
+                        "name": category_name,
+                        "resources": []
+                    }
+                    
+                    # Add resources in this category
+                    for resource_name in resources:
+                        category_data["resources"].append({
+                            "name": resource_name,
+                            "type": "effect"
+                        })
+                    
+                    bank_data["effects"].append(category_data)
+                
+                structure["banks"].append(bank_data)
+            
+            print(f"Final structure has {len(structure['banks'])} banks")
+            
+            return jsonify({
+                "success": True,
+                "is_installed": True,
+                "structure": structure
+            })
+            
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "message": f"Error fetching installed collection structure: {str(e)}"
+            }), 500
+    
+    def get_remote_reaper_collection_structure(collection_name):
+        """
+        Get the structure of a remote Reaper collection
+        
+        Args:
+            collection_name (str): Name of the Reaper collection
+            
+        Returns:
+            JSON: Collection structure
+        """
+        try:
+            # Construct the collection index URL
+            collection_index_url = '{}/{}/{}/collection_index.json'.format(
+                settings.get("core.COLLECTIONS_DOWNLOAD_SERVER"),
+                "reaper_library",
+                collection_name
+            )
+            
+            # Fetch the collection index
+            response = requests.get(collection_index_url, timeout=10)
+            response.raise_for_status()  # Raise exception for HTTP errors
+            
+            # Parse the collection index
+            collection_index = response.json()
+            
+            # Process the collection index into a structured format
+            structure = {
+                "name": collection_name,
+                "banks": []
+            }
+            
+            # Group files by bank/type/category
+            banks = {}
+            
+            for file_info in collection_index.get("files", []):
+                file_path = file_info.get("path", "")
+                if not file_path.startswith(collection_name):
+                    continue
+                    
+                # Split the path into components
+                path_parts = file_path.split("/")
+                
+                # Skip if not enough parts for bank/type/category/resource structure
+                if len(path_parts) < 5:
+                    continue
+                    
+                # Extract components
+                bank_name = path_parts[1]  # e.g., "0_renardo_core"
+                resource_type = path_parts[2]  # "instruments" or "effects"
+                category_name = path_parts[3]  # e.g., "bass", "drums", etc.
+                resource_name = path_parts[4]  # e.g., "analog_bass.RfxChain"
+                
+                # Strip file extension
+                if "." in resource_name:
+                    resource_name = resource_name.rsplit(".", 1)[0]
+                
+                # Handle resource types
+                if resource_type.lower() not in ["instrument", "instruments", "effect", "effects"]:
+                    continue
+                    
+                normalized_type = "instruments" if resource_type.lower() in ["instrument", "instruments"] else "effects"
+                
+                # Initialize bank if not exists
+                if bank_name not in banks:
+                    # Extract bank index from name (assuming format like "0_bank_name")
+                    bank_index = 0
+                    if "_" in bank_name:
+                        try:
+                            bank_index = int(bank_name.split("_")[0])
+                        except ValueError:
+                            pass
+                    
+                    banks[bank_name] = {
+                        "name": bank_name,
+                        "index": bank_index,
+                        "instruments": {},
+                        "effects": {}
+                    }
+                
+                # Initialize category if not exists
+                if category_name not in banks[bank_name][normalized_type]:
+                    banks[bank_name][normalized_type][category_name] = []
+                
+                # Add resource to category
+                banks[bank_name][normalized_type][category_name].append({
+                    "name": resource_name,
+                    "type": normalized_type[:-1]  # "instrument" or "effect"
+                })
+            
+            # Convert the nested dictionaries to lists for the final structure
+            for bank_name, bank_data in banks.items():
+                bank_structure = {
+                    "name": bank_name,
+                    "index": bank_data["index"],
+                    "instruments": [],
+                    "effects": []
+                }
+                
+                # Add instrument categories
+                for category_name, resources in bank_data["instruments"].items():
+                    bank_structure["instruments"].append({
+                        "name": category_name,
+                        "resources": resources
+                    })
+                
+                # Add effect categories
+                for category_name, resources in bank_data["effects"].items():
+                    bank_structure["effects"].append({
+                        "name": category_name,
+                        "resources": resources
+                    })
+                
+                structure["banks"].append(bank_structure)
+            
+            # Sort banks by index
+            structure["banks"].sort(key=lambda x: x["index"])
+            
+            return jsonify({
+                "success": True,
+                "is_installed": False,
+                "structure": structure
+            })
+            
+        except requests.RequestException as e:
+            return jsonify({
+                "success": False,
+                "message": f"Error fetching remote collection: {str(e)}"
+            }), 500
+        except json.JSONDecodeError as e:
+            return jsonify({
+                "success": False,
+                "message": f"Error parsing collection JSON: {str(e)}"
+            }), 500
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "message": f"Error processing remote collection structure: {str(e)}"
             }), 500
     
     @webapp.route('/api/settings/user-directory/move', methods=['POST'])
