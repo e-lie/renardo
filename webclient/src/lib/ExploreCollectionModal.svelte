@@ -15,10 +15,13 @@
   
   // Navigation state
   let currentPath = [];
-  let currentView = 'banks'; // 'banks', 'sections', 'categories', 'resources'
+  let currentView = 'banks'; // 'banks', 'sections', 'categories', 'resources', 'resource_detail'
   let selectedBank = null;
   let selectedSection = null;
   let selectedCategory = null;
+  let selectedResource = null;
+  let resourceContent = null;
+  let isLoadingResource = false;
   
   // Content display state
   let banks = [];
@@ -118,8 +121,47 @@
     currentPath = [...currentPath, category.name];
   }
   
+  // Function to load and view resource details
+  async function navigateToResource(resource) {
+    selectedResource = resource;
+    resourceContent = null;
+    isLoadingResource = true;
+    currentView = 'resource_detail';
+    currentPath = [...currentPath, resource.name];
+    
+    try {
+      // Fetch the resource content
+      console.log(`Fetching resource details for ${resource.name}`);
+      const response = await fetch(`/api/collections/${collectionType}/${collectionName}/resource/${selectedCategory.name}/${resource.name}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch resource: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Resource data:', data);
+      
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to fetch resource');
+      }
+      
+      resourceContent = data;
+    } catch (err) {
+      console.error('Error loading resource:', err);
+      error = err.message;
+    } finally {
+      isLoadingResource = false;
+    }
+  }
+  
   function navigateBack() {
-    if (currentView === 'resources') {
+    if (currentView === 'resource_detail') {
+      // Go back to resources list
+      currentView = 'resources';
+      selectedResource = null;
+      resourceContent = null;
+      currentPath.pop();
+    } else if (currentView === 'resources') {
       // Go back to categories
       currentView = 'categories';
       currentPath.pop();
@@ -144,18 +186,30 @@
       currentView = 'sections';
       selectedSection = null;
       selectedCategory = null;
+      selectedResource = null;
+      resourceContent = null;
       currentPath = currentPath.slice(0, 2);
     } else if (index === 1 && currentPath.length > 1) {
       // Bank level - show sections
       currentView = 'sections';
       selectedSection = null;
       selectedCategory = null;
+      selectedResource = null;
+      resourceContent = null;
       currentPath = currentPath.slice(0, 2);
     } else if (index === 2 && currentPath.length > 2) {
       // Section level - show categories
       currentView = 'categories';
       selectedCategory = null;
+      selectedResource = null;
+      resourceContent = null;
       currentPath = currentPath.slice(0, 3);
+    } else if (index === 3 && currentPath.length > 3) {
+      // Category level - show resources
+      currentView = 'resources';
+      selectedResource = null;
+      resourceContent = null;
+      currentPath = currentPath.slice(0, 4);
     }
   }
   
@@ -324,7 +378,12 @@
           {#if currentView === 'resources'}
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {#each resources as resource}
-                <div class="card bg-base-100 shadow-md">
+                <button 
+                  type="button"
+                  class="card bg-base-100 shadow-md hover:shadow-lg transition-shadow cursor-pointer text-left"
+                  on:click={() => navigateToResource(resource)}
+                  on:keydown={(e) => e.key === 'Enter' && navigateToResource(resource)}
+                >
                   <div class="card-body p-4">
                     <h4 class="card-title text-lg">
                       {resource.name}
@@ -335,12 +394,64 @@
                       </div>
                     </div>
                   </div>
-                </div>
+                </button>
               {/each}
               
               {#if resources.length === 0}
                 <div class="col-span-3 text-center py-12 text-base-content/50 italic">
                   No resources available in this category.
+                </div>
+              {/if}
+            </div>
+          {/if}
+          
+          <!-- Resource Detail View -->
+          {#if currentView === 'resource_detail'}
+            <div class="p-4">
+              {#if isLoadingResource}
+                <div class="flex justify-center py-12">
+                  <span class="loading loading-spinner loading-lg text-primary"></span>
+                </div>
+              {:else if resourceContent}
+                <div class="card bg-base-100 shadow-md">
+                  <div class="card-body">
+                    <div class="flex justify-between items-center mb-4">
+                      <h3 class="card-title text-xl">
+                        {selectedResource.name}
+                        <div class="badge badge-secondary ml-2">
+                          {selectedResource.type || 'resource'}
+                        </div>
+                      </h3>
+                    </div>
+
+                    {#if resourceContent.content}
+                      <div class="divider">File Content</div>
+                      <div class="mockup-code bg-base-300 text-base-content overflow-x-auto max-h-96">
+                        <pre data-prefix=""><code>{resourceContent.content}</code></pre>
+                      </div>
+                    {/if}
+
+                    {#if resourceContent.metadata}
+                      <div class="divider">Metadata</div>
+                      <div class="overflow-x-auto">
+                        <table class="table table-sm">
+                          <tbody>
+                            {#each Object.entries(resourceContent.metadata) as [key, value]}
+                              <tr>
+                                <td class="font-semibold">{key}</td>
+                                <td>{typeof value === 'object' ? JSON.stringify(value) : value}</td>
+                              </tr>
+                            {/each}
+                          </tbody>
+                        </table>
+                      </div>
+                    {/if}
+                  </div>
+                </div>
+              {:else}
+                <div class="alert alert-warning">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                  <span>Failed to load resource details.</span>
                 </div>
               {/if}
             </div>
