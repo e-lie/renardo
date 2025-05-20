@@ -9,7 +9,7 @@ from renardo.settings_manager import settings
 
 
 
-class instanciate_reaper_instruments:
+class create_selected_instruments():
 
     _foxdotcode_instance = None
 
