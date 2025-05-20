@@ -12,7 +12,7 @@ def fetch_available_collections(collection_type: str) -> List[Dict]:
     Fetch available collections of a specific type from the collections server.
     
     Args:
-        collection_type (str): Type of collection ('samples' or 'sccode')
+        collection_type (str): Type of collection ('samples', 'sccode', or 'reaper')
         
     Returns:
         List[Dict]: List of collection information dictionaries
@@ -22,6 +22,8 @@ def fetch_available_collections(collection_type: str) -> List[Dict]:
         dir_name = settings.get("samples.SAMPLES_DIR_NAME")
     elif collection_type == 'sccode':
         dir_name = settings.get("sc_backend.SCCODE_LIBRARY_DIR_NAME")
+    elif collection_type == 'reaper':
+        dir_name = "reaper_library"
     else:
         raise ValueError(f"Unknown collection type: {collection_type}")
     
@@ -56,7 +58,7 @@ def get_collection_status(collection_type: str, collection_name: str) -> Dict:
     Check if a specific collection is installed and get its metadata.
     
     Args:
-        collection_type (str): Type of collection ('samples' or 'sccode')
+        collection_type (str): Type of collection ('samples', 'sccode', or 'reaper')
         collection_name (str): Name of the collection
         
     Returns:
@@ -80,6 +82,15 @@ def get_collection_status(collection_type: str, collection_name: str) -> Dict:
         
         # Check if it's the default collection
         is_default = collection_name == settings.get("sc_backend.DEFAULT_SCCODE_PACK_NAME")
+
+    elif collection_type == 'reaper':
+        from renardo.gatherer.reaper_resource_management.default_reaper_pack import is_reaper_pack_initialized
+        
+        # Check if the collection is installed
+        is_installed = is_reaper_pack_initialized(collection_name)
+        
+        # Check if it's the default collection
+        is_default = collection_name == settings.get("reaper_backend.DEFAULT_REAPER_PACK_NAME", "0_renardo_core")
     
     else:
         raise ValueError(f"Unknown collection type: {collection_type}")
@@ -137,9 +148,29 @@ def get_all_collections_info() -> Dict:
             })
             sccode_info.append(status)
     
+    # Get all available reaper resource collections
+    reaper_collections = fetch_available_collections('reaper')
+    
+    # Get status for each reaper resource collection
+    reaper_info = []
+    for collection in reaper_collections:
+        collection_name = collection.get('name')
+        if collection_name:
+            status = get_collection_status('reaper', collection_name)
+            # Add metadata from the collection info
+            status.update({
+                "description": collection.get('description', ''),
+                "version": collection.get('version', ''),
+                "author": collection.get('author', ''),
+                "size": collection.get('size', 'Unknown'),
+                "tags": collection.get('tags', [])
+            })
+            reaper_info.append(status)
+    
     # Return all collections information
     return {
         "samples": samples_info,
         "sccode": sccode_info,
+        "reaper": reaper_info,
         "collections_server": settings.get("core.COLLECTIONS_DOWNLOAD_SERVER")
     }
