@@ -49,10 +49,9 @@
 
 # les trucs à debug
 
+- ne pas pouvoir executer deux fois le meme code deux fois de suite du tout dans l'editeur est un bug
 - spack param not working
 - d1 >> play("x-o-").every(4, "stutter", 4) -> seems every is not working anymore
-
-- play has default dur at 1 rather than .5 (maybe use the default in the .py class)
 
 - fix / remove / find something else for startup file
 
