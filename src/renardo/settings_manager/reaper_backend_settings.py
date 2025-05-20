@@ -5,6 +5,10 @@ settings.set_defaults_from_dict({
         "REAPER_BACKEND_ENABLED": False,
         "ACTIVATED_REAPER_BANKS": [
             "renardo_core"
+        ],
+        "SELECTED_REAPER_INSTRUMENTS": [
+            "bass303",
+            "lonesine"
         ]
     }
 },
