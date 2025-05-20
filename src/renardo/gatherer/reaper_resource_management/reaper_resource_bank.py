@@ -103,7 +103,16 @@ class ReaperResourceBank:
     def get_resource(self, section_type: ResourceType, category: str, name: str) -> Optional[ReaperResourceFile]:
         """Get a specific resource from the bank."""
         section = self.get_section(section_type)
-        return section.get_resource(category, name)
+        # Debug
+        print(f"Looking for resource {name} in category {category} of section {section_type.value}")
+        
+        resource = section.get_resource(category, name)
+        if resource:
+            print(f"Resource found: {resource}")
+        else:
+            print(f"Resource not found in {section_type.value}/{category}")
+            
+        return resource
 
     def list_categories(self, section_type: ResourceType) -> list[str]:
         """List all categories in a section."""
