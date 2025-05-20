@@ -15,16 +15,66 @@ class ReaperResourceBank:
         self.name = self._parse_bank_name(directory.name)
         self.index = self._parse_bank_index(directory.name)
         self.default_arguments = {}
+        
+        # Find instrument directory (case-insensitive)
+        instrument_dir = self._find_directory_case_insensitive(directory, ResourceType.INSTRUMENT.value)
+        print(f"Found instrument directory: {instrument_dir}")
+        
+        # Find effect directory (case-insensitive)
+        effect_dir = self._find_directory_case_insensitive(directory, ResourceType.EFFECT.value)
+        print(f"Found effect directory: {effect_dir}")
 
         # Initialize instruments and effects sections
         self.instruments = ReaperResourceSection(
-            directory / ResourceType.INSTRUMENT.value,
+            instrument_dir,
             ResourceType.INSTRUMENT
         )
+        
         self.effects = ReaperResourceSection(
-            directory / ResourceType.EFFECT.value,
+            effect_dir,
             ResourceType.EFFECT
         )
+        
+    def _find_directory_case_insensitive(self, parent_dir: Path, dir_name: str) -> Path:
+        """Find a directory by name, ignoring case."""
+        # Make sure the parent directory exists
+        if not parent_dir.exists() or not parent_dir.is_dir():
+            print(f"Parent directory does not exist: {parent_dir}")
+            return parent_dir / dir_name
+            
+        # First check for exact match
+        exact_match = parent_dir / dir_name
+        if exact_match.exists() and exact_match.is_dir():
+            return exact_match
+            
+        # Check for case-insensitive match
+        for item in parent_dir.iterdir():
+            if item.is_dir() and item.name.lower() == dir_name.lower():
+                print(f"Found case-insensitive match for {dir_name}: {item.name}")
+                return item
+                
+        # Finally, also check for singular/plural variations
+        plural_forms = {
+            "instrument": "instruments",
+            "effect": "effects"
+        }
+        
+        if dir_name in plural_forms:
+            plural_name = plural_forms[dir_name]
+            # Check for plural form
+            plural_match = parent_dir / plural_name
+            if plural_match.exists() and plural_match.is_dir():
+                print(f"Found plural form for {dir_name}: {plural_name}")
+                return plural_match
+                
+            # Check for plural form with different case
+            for item in parent_dir.iterdir():
+                if item.is_dir() and item.name.lower() == plural_name.lower():
+                    print(f"Found case-insensitive plural match for {dir_name}: {item.name}")
+                    return item
+        
+        # If no match found, return the original (even if it doesn't exist)
+        return parent_dir / dir_name
 
     @staticmethod
     def _parse_bank_name(dirname: str) -> str:

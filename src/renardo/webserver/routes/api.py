@@ -781,6 +781,73 @@ def register_api_routes(webapp):
                     "message": f"Collection directory not found: {collection_path}"
                 }), 404
             
+            print(f"Exploring collection directory: {collection_path}")
+            
+            # First check if the collection is organized directly without banks
+            # i.e. if it has "instrument" or "instruments" directory directly 
+            direct_instrument_dir = None
+            
+            for possible_name in ["instrument", "instruments", "Instrument", "Instruments"]:
+                direct_path = collection_path / possible_name
+                if direct_path.exists() and direct_path.is_dir():
+                    direct_instrument_dir = direct_path
+                    print(f"Found direct instruments directory: {direct_path}")
+                    break
+            
+            # Check if we're dealing with a collection without banks
+            # (Categories directly in the collection without bank subdirectories)
+            if direct_instrument_dir:
+                # In this case we'll create a single bank with the collection name
+                structure = {
+                    "name": collection_name,
+                    "banks": [{
+                        "name": collection_name,
+                        "index": 0,
+                        "instruments": [],
+                        "effects": []
+                    }]
+                }
+                
+                bank_data = structure["banks"][0]
+                
+                print(f"Checking instrument directories in: {direct_instrument_dir}")
+                # Look for category directories
+                for category_dir in direct_instrument_dir.iterdir():
+                    if category_dir.is_dir():
+                        category_name = category_dir.name
+                        print(f"Found category: {category_name}")
+                        
+                        # Get resources in this category
+                        resource_files = []
+                        for file_path in category_dir.glob("*.py"):
+                            if file_path.stem != "__init__":
+                                resource_files.append(file_path.stem)
+                                
+                        print(f"  Category {category_name} has {len(resource_files)} resources: {resource_files}")
+                        
+                        category_data = {
+                            "name": category_name,
+                            "resources": []
+                        }
+                        
+                        # Add resources to category
+                        for resource_name in resource_files:
+                            category_data["resources"].append({
+                                "name": resource_name,
+                                "type": "instrument"
+                            })
+                        
+                        bank_data["instruments"].append(category_data)
+                
+                print(f"Created direct collection structure with {len(bank_data['instruments'])} categories")
+                
+                return jsonify({
+                    "success": True,
+                    "is_installed": True,
+                    "structure": structure
+                })
+            
+            # If we reach here, we're using the standard bank structure
             # Initialize the library
             library = ReaperResourceLibrary(collection_path)
             
