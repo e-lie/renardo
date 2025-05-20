@@ -23,6 +23,6 @@ for reaper_resource_bank in reaper_resource_library:
                         # define a variable for each scinstrument (callable in the context of a player and returns a InstrumentProxy)
                         globals()[reaper_instrument.shortname] = reaper_instrument
                     else:
-                        WarningMsg(f"resource from {reaper_resource_file.path} could not be loaded !")
+                        print(f"resource from {reaper_resource_file.path} could not be loaded !")
                 else:
                     break
