@@ -105,7 +105,7 @@ def register_api_routes(webapp):
         Download a specific collection
         
         Args:
-            collection_type (str): Type of collection ('samples' or 'sccode')
+            collection_type (str): Type of collection ('samples', 'sccode', or 'reaper')
             collection_name (str): Name of the collection
             
         Returns:
@@ -214,6 +214,56 @@ def register_api_routes(webapp):
                 return jsonify({
                     "success": True,
                     "message": f"Download of SuperCollider code pack '{collection_name}' started",
+                    "in_progress": True
+                })
+            elif collection_type == 'reaper':
+                from renardo.gatherer.reaper_resource_management.default_reaper_pack import download_reaper_pack, is_reaper_pack_initialized
+                
+                # Check if already installed
+                if is_reaper_pack_initialized(collection_name):
+                    logger.write_line(f"Reaper resource pack '{collection_name}' is already installed", "WARN")
+                    return jsonify({
+                        "success": True,
+                        "message": f"Reaper resource pack '{collection_name}' is already installed",
+                        "already_installed": True
+                    })
+                
+                # Start download in a separate thread to avoid blocking
+                def download_task():
+                    try:
+                        logger.write_line(f"🚀 STARTING DOWNLOAD: Reaper resource pack '{collection_name}'...", "INFO")
+                        logger.write_line(f"Please wait while we prepare and download the reaper resources...", "INFO")
+                        success = download_reaper_pack(collection_name, logger)
+                        
+                        if success:
+                            logger.write_line(f"🎉 DOWNLOAD SUCCESSFUL: Reaper resource pack '{collection_name}' has been installed!", "SUCCESS")
+                            logger.write_line(f"You can now use these Reaper resources in your compositions.", "SUCCESS")
+                            
+                            # Broadcast updated status to all WebSocket clients
+                            websocket_utils.broadcast_to_clients({
+                                "type": "collection_downloaded",
+                                "data": {
+                                    "type": "reaper",
+                                    "name": collection_name,
+                                    "success": True
+                                }
+                            })
+                        else:
+                            logger.write_error(f"❌ DOWNLOAD FAILED: Reaper resource pack '{collection_name}' could not be installed completely.")
+                            logger.write_error(f"Please try again later or contact support if the issue persists.")
+                    except Exception as e:
+                        logger.write_error(f"❌ ERROR DURING DOWNLOAD: Reaper resource pack '{collection_name}': {str(e)}")
+                        logger.write_error(f"Please try again later or check your network connection.")
+                
+                # Start download thread
+                import threading
+                thread = threading.Thread(target=download_task)
+                thread.daemon = True
+                thread.start()
+                
+                return jsonify({
+                    "success": True,
+                    "message": f"Download of Reaper resource pack '{collection_name}' started",
                     "in_progress": True
                 })
             else:
