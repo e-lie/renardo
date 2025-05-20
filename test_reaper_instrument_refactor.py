@@ -23,7 +23,7 @@ presets = {
     "track_default": {"amp": 1.0},
     "mychain_default": {"drive": 0.5}
 }
-ReaperInstrument.initialize_factory(presets, reaproject)
+ReaperInstrument.set_class_attributes(presets, reaproject)
 
 # Now you can create instruments directly without a factory
 bass = ReaperInstrument.create_instrument_facade(
@@ -57,7 +57,7 @@ def test_reaper_instrument_factory_functionality():
         reaproject = ReaProject(Clock, reapylib=reapy)
         
         # Initialize factory functionality
-        ReaperInstrument.initialize_factory({}, reaproject)
+        ReaperInstrument.set_class_attributes({}, reaproject)
         
         # Test the ensure_fxchain_in_reaper functionality
         print("\nTesting ensure_fxchain_in_reaper:")

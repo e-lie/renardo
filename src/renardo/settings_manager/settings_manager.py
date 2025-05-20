@@ -323,6 +323,8 @@ class SettingsManager:
         #    return self.get_path("SCLANG_CODE_DIR_PATH") / "tmp_code" / "scsynth"
         # elif path_name == "TMP_EFFECTS_DIR":
         #     return self.get_path("SCLANG_CODE_DIR_PATH") / "tmp_code" / "sceffects"
+        elif path_name == "REAPER_LIBRARY":
+            return self.get_renardo_user_dir() / self.get("reaper_backend.REAPER_LIBRARY_DIR_NAME")
         elif path_name == "RENARDO_ROOT_PATH":
             return Path(__file__).parent.parent
         elif path_name == "FOXDOT_EDITOR_ROOT":

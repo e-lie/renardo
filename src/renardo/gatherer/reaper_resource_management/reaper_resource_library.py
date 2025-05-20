@@ -1,12 +1,15 @@
 from pathlib import Path
 from collections import OrderedDict
-from typing import List, Optional, Iterator, Dict, Any
+from typing import List, Optional, Iterator, Dict, Any, TYPE_CHECKING
 import re
 
 from renardo.gatherer.reaper_resource_management.reaper_resource_bank import ReaperResourceBank
-from renardo.reaper_backend.reaper_music_resource import ReaperInstrument, ReaperEffect
 from renardo.lib.music_resource import ResourceType
 from renardo.settings_manager import settings
+
+# Avoid circular imports
+# if TYPE_CHECKING:
+#     from renardo.reaper_backend.reaper_music_resource import ReaperInstrument, ReaperEffect
 
 
 class ReaperResourceLibrary:
@@ -139,3 +142,8 @@ def ensure_reaper_directories(renardo_root: Path):
                     init_file.touch()
     
     return reaper_root
+
+def ensure_reaper_directories():
+    reaper_dir_path = settings.get_path("REAPER_LIBRARY")
+    if not reaper_dir_path.exists():
+        reaper_dir_path.mkdir(parents=True, exist_ok=True)

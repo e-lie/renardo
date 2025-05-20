@@ -16,6 +16,7 @@ from renardo.gatherer.sccode_management.default_sccode_pack import (
 )
 
 from renardo.gatherer.sccode_management import SCResourceLibrary, SCResourceFile, ensure_sccode_directories
+from renardo.gatherer.reaper_resource_management import ReaperResourceLibrary, ReaperResourceFile, ensure_reaper_directories
 
 # def main():
     # pass

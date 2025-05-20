@@ -508,3 +508,27 @@ def eclipse(self: Player, dur=4, total=16, leftshift=0, smooth=0):
 #     """Not implemented - add an effect to the SynthDef bus on SuperCollider
 #     after it has been triggered."""
 #     return self
+
+
+# Bulk modification of player params with dict
+@player_method
+def setp(self, param_dict):
+    for key, value in param_dict.items():
+        setattr(self, key, value)
+
+@player_method
+def getp(self, filter = None):
+    result = None
+    if "reatrack" in self.attr.keys():
+        reatrack = self.attr["reatrack"][0]
+        if isinstance(reatrack, ReaTrack):
+            #result = reatrack.config
+            if filter is not None:
+                result = {key: value for key, value in reatrack.get_all_params().items() if filter in key}
+            else:
+                result = reatrack.get_all_params()
+    return result
+
+@player_method
+def showp(self, filter = None):
+    pprint(self.getp(filter))
