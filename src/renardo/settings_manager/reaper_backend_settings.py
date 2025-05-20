@@ -7,11 +7,12 @@ settings.set_defaults_from_dict({
 },
 )
 
-# settings.set_defaults_from_dict({
-#     "reaper_backend": {
-#     }
-# },
-# internal=True
-# )
+settings.set_defaults_from_dict({
+    "reaper_backend": {
+        "REAPER_LIBRARY_DIR_NAME": "reaper_library",
+    }
+},
+internal=True
+)
 
 settings.save_to_file()

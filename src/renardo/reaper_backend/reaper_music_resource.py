@@ -5,9 +5,10 @@ This module provides REAPER-specific implementations of the
 generic music resource classes from renardo.lib.music_resource.
 """
 
-from typing import Dict, Any, Optional, Mapping, List, Tuple, ClassVar
+from typing import Dict, Any, Optional, Mapping, List, Tuple, ClassVar, TYPE_CHECKING
 from pathlib import Path
 import shutil
+import inspect
 
 from renardo.lib.InstrumentProxy import InstrumentProxy
 from renardo.lib.music_resource import Instrument, Effect, ResourceType
@@ -17,7 +18,10 @@ from renardo.reaper_backend.ReaperIntegrationLib.ReaProject import get_reaper_ob
 from renardo.reaper_backend.ReaperIntegrationLib.functions import split_param_name
 from renardo.sc_backend.Midi import ReaperInstrumentProxy
 from renardo.lib.Patterns import Pattern
-from renardo.gatherer.reaper_resource_management.reaper_resource_library import ReaperResourceLibrary
+
+# Use TYPE_CHECKING to avoid circular imports
+#if TYPE_CHECKING:
+#    from renardo.gatherer.reaper_resource_management.reaper_resource_library import ReaperResourceLibrary
 
 
 class ReaperEffect(Effect):
@@ -60,36 +64,33 @@ class ReaperEffect(Effect):
 class ReaperInstrument(Instrument):
     """Represents a REAPER instrument."""
     # Class-level attributes (shared across all instances)
-    _global_reaproject = None
-    _global_presets = {}
+    _reaproject = None
+    _presets = {}
     _used_track_indexes: ClassVar[List[int]] = []
     _instru_facades: ClassVar[List['ReaperInstrument']] = []
-    _resource_library: ClassVar[Optional[ReaperResourceLibrary]] = None
+    _resource_library = None  # Will be loaded dynamically to avoid circular imports
 
     def __init__(
             self,
             shortname: str,
             fullname: str,
             description: str,
-            fxchain_relative_path: str,
+            fxchain_path: str,
             arguments: Dict[str, Any] = None,
             bank: str = "undefined",
             category: str = "undefined",
-            auto_load_to_server: bool = False,
-            # Reaper Facade specific argument
-            reaproject=None,
-            presets=None,
-            track_name=None,
-            midi_channel=None,
             midi_map=None,
-            sus=None,
-            create_instrument=False,
             instrument_name=None,
-            plugin_name=None,
-            plugin_preset=None,
+            custom_default_sustain=None,
+            custom_plugin_name=None,
+            custom_track_name=None,
+            custom_midi_channel=None,
+            plugin_presets=None,
             instrument_params=None,
+            auto_load_to_server: bool = False,
+            instanciate_plugin=True,
             scan_all_params=True,
-            is_chain=False
+            is_chain=True
     ):
         """
         Initialize a REAPER instrument.
@@ -118,46 +119,62 @@ class ReaperInstrument(Instrument):
             is_chain: Whether this is a chain of effects
         """
         super().__init__(shortname, fullname, description, arguments, bank, category, auto_load_to_server)
-        self.fxchain_relative_path = fxchain_relative_path
+
         self.instrument_loaded = False
+        self.chan_track_names = [f"chan{i+1}" for i in range(16)]
+
+        # if relative (most cases) resolve the path relative
+        # to the file creating the ReaperInstrument instance (the caller)
+        fxchain_path = Path(fxchain_path)
+        if fxchain_path.is_absolute():
+            self.fxchain_path = fxchain_path
+        else:
+            self.fxchain_path = self._get_caller_file_from_init() / fxchain_path
+
+        if custom_plugin_name is None:
+            self.plugin_name = shortname
+        else:
+            self.plugin_name = custom_plugin_name
+
+        # find a midi channel if possible
+        first_available_midi_channel = self.__class__.find_available_midi_channel()
+        if custom_midi_channel and self.__class__.is_channel_available(custom_midi_channel):
+            self._midi_channel = custom_midi_channel
+        elif first_available_midi_channel is not None:
+            self._midi_channel = first_available_midi_channel
+        else:
+            raise Exception(f"No available MIDI channel found for {shortname}")  
         
-        # Extended REAPER properties (merged from ReaperInstrumentFacade)
-        # Use instance-specific project or fall back to class-level global project
-        self._reaproject = reaproject if reaproject is not None else self.__class__._global_reaproject
-        # Use instance-specific presets or fall back to class-level global presets
-        self._presets = presets if presets is not None else self.__class__._global_presets
-        self.track_name = track_name
-        self._midi_channel = midi_channel
-        self._sus = sus
+        # set track_name
+        if custom_track_name is None:
+            self.track_name = f"chan{self._midi_channel}"
+        elif custom_track_name not in self.chan_track_names:
+            self.track_name = custom_track_name
+        else:
+            raise Exception("You can't use one of the chanN tracks with custom_track_name")
+
+        self._reatrack = self.__class__._reaproject.get_track(self.track_name)
         
-        if self._reaproject and track_name:
-            self._reatrack = self._reaproject.get_track(track_name)
-            try:
-                self._reafx_instrument = self._reatrack.reafxs[track_name]
-            except:
-                pass
-                
-            if create_instrument:
-                if is_chain:
-                    # First, ensure the FXChain is available in REAPER
-                    if plugin_name and plugin_name == shortname and self.fxchain_relative_path:
-                        try:
-                            self.__class__.ensure_fxchain_in_reaper(shortname)
-                        except Exception as e:
-                            print(f"Warning: Could not ensure FXChain in REAPER: {e}")
+        if custom_default_sustain is not None:
+            self._sus = custom_default_sustain
+
+        if instanciate_plugin:
+            self.ensure_fxchain_in_reaper(chain_name=self.plugin_name)
                     
-                    reafxs_names = self._reatrack.create_reafxs_for_chain(
-                        chain_name=plugin_name,
-                        scan_all_params=scan_all_params
-                    )
-                    # first added fx is the instrument
-                    if reafxs_names and len(reafxs_names) > 0:
-                        self._reafx_instrument = self._reatrack.reafxs[reafxs_names[0]] 
-                else:
-                    self._reafx_instrument = self._reatrack.create_reafx(
-                        plugin_name, plugin_preset, instrument_name,
-                        instrument_params, scan_all_params
-                    )
+            reafxs_names = self._reatrack.create_reafxs_for_chain(
+                chain_name=self.plugin_name,
+                scan_all_params=scan_all_params
+            )
+            # first added fx is the instrument
+            if reafxs_names:
+                self._reafx_instrument = self._reatrack.reafxs[reafxs_names[0]] 
+            # else:
+            #     self._reafx_instrument = self._reatrack.create_reafx(
+            #         plugin_name, plugin_preset, instrument_name,
+            #         instrument_params, scan_all_params
+            #     )
+        else:
+            self._reafx_instrument = self._reatrack.reafxs[shortname]
 
         # Add to instrument dictionary if one is available
         if hasattr(self.__class__, 'instrument_dict'):
@@ -166,37 +183,51 @@ class ReaperInstrument(Instrument):
         if auto_load_to_server:
             self.load()
 
+    def _get_caller_file_from_init(self):
+        """Get the path of the file that created this object instance."""
+        # Should be used only from __init__ constructor (otherwise the num of frame backward is higher)
+        # Go up 2 frames: current method -> __init__ -> actual caller
+        frame = inspect.currentframe().f_back.f_back
+        # Get the filename and return as Path
+        return Path(frame.f_code.co_filename)
+
+    @classmethod
+    def find_available_midi_channel(cls):
+        free_midi_channels = [index for index in range(1, 17) if index not in cls._used_track_indexes]
+        if not free_midi_channels:
+            print("No free track indexes available.")
+            return None
+        return free_midi_channels[0]
+
+    @classmethod
+    def is_channel_available(cls, channel_num):
+        return channel_num not in cls._used_track_indexes
+
     @classmethod
     def set_instrument_dict(cls, instrument_dict):
         """Set the dictionary to track all instrument instances."""
         cls.instrument_dict = instrument_dict
         
     @classmethod
-    def initialize_factory(cls, presets: Mapping, project):
-        """Initialize the class-level factory attributes.
-        
-        Args:
-            presets: Dictionary of preset configurations
-            project: ReaProject instance for REAPER integration
-        """
-        cls._global_presets = presets
-        cls._global_reaproject = project
+    def set_class_attributes(cls, presets: Mapping, project, resource_library):
+        """Initialize the class-level attributes."""
+        cls._presets = presets
+        cls._reaproject = project
         cls._used_track_indexes = []
         cls._instru_facades = []
-        cls._resource_library = None
+        cls._resource_library = resource_library
     
     @classmethod
     def update_used_track_indexes(cls):
         """Update the list of track indexes that are currently in use."""
-        if not cls._global_reaproject:
+        if not cls._reaproject:
             return
-            
         for i in range(16):
             track_name = "chan" + str(i+1)
-            if track_name in cls._global_reaproject.reatracks:
-                if len(cls._global_reaproject.reatracks[track_name].reafxs) != 0 and i+1 not in cls._used_track_indexes:
+            if track_name in cls._reaproject.reatracks:
+                if len(cls._reaproject.reatracks[track_name].reafxs) != 0 and i+1 not in cls._used_track_indexes:
                     cls._used_track_indexes.append(i+1)
-                elif i+1 in cls._used_track_indexes and len(cls._global_reaproject.reatracks[track_name].reafxs) == 0:
+                elif i+1 in cls._used_track_indexes and len(cls._reaproject.reatracks[track_name].reafxs) == 0:
                     cls._used_track_indexes = [index for index in cls._used_track_indexes if index != i+1]
     
     def add_effect_plugin(
@@ -317,20 +348,20 @@ class ReaperInstrument(Instrument):
         Returns:
             Dict: Dictionary of created instrument facades
         """
-        if not cls._global_reaproject:
+        if not cls._reaproject:
             print("REAPER project not initialized.")
             return {}
             
         instrument_dict = {}
         # Process bus tracks
-        for reatrack in cls._global_reaproject.bus_tracks:
+        for reatrack in cls._reaproject.bus_tracks:
             instrument_dict[reatrack.name[1:]] = cls.create_instrument_facade(
                 track_name=reatrack.name, 
                 midi_channel=-1
             )
 
         # Process instrument tracks
-        for i, track in enumerate(cls._global_reaproject.instrument_tracks):
+        for i, track in enumerate(cls._reaproject.instrument_tracks):
             if len(track.reafxs.values()) > 0:
                 # First fx is usually the synth/instrument that gives the name
                 instrument_name = list(track.reafxs.values())[0].name 
@@ -363,7 +394,7 @@ class ReaperInstrument(Instrument):
         Returns:
             ReaperInstrument: A new instrument instance
         """
-        if not cls._global_reaproject:
+        if not cls._reaproject:
             print("REAPER project not initialized.")
             return None
             
@@ -405,8 +436,8 @@ class ReaperInstrument(Instrument):
                 fullname=name,
                 description=f"ReaperInstrument for {name}",
                 fxchain_relative_path="",
-                reaproject=cls._global_reaproject,
-                presets=cls._global_presets,
+                reaproject=cls._reaproject,
+                presets=cls._presets,
                 track_name=track_name,
                 midi_channel=midi_channel,
                 create_instrument=True,
@@ -449,9 +480,8 @@ class ReaperInstrument(Instrument):
                 print(f"Error adding chain {chain}: {e}")
                 
         return tuple([facade.out for facade in facades])
-        
-    @classmethod
-    def ensure_fxchain_in_reaper(cls, shortname: str):
+
+    def ensure_fxchain_in_reaper(self, chain_name: str):
         """
         Ensure that a FXChain from the ReaperResourceLibrary is present in REAPER's FXChains directory.
         
@@ -464,88 +494,33 @@ class ReaperInstrument(Instrument):
         try:
             # Get the Renardo FXChains directory in REAPER's config
             config_dir = SettingsManager.get_standard_config_dir()
-            reaper_fxchains_dir = config_dir / "REAPER" / "FXChains"
-            renardo_fxchains_dir = reaper_fxchains_dir / "renardo_fxchains"
-            
+            renardo_fxchains_dir = config_dir / "REAPER" / "FXChains" / "renardo_fxchains"
             # Create the renardo_fxchains directory if it doesn't exist
             renardo_fxchains_dir.mkdir(parents=True, exist_ok=True)
             
-            # Get the resource library if not already loaded
-            if cls._resource_library is None:
-                # Use the renardo resources path
-                resources_path = settings.get_path("RENARDO_ROOT_PATH") / "reaper_resources"
-                if resources_path.exists():
-                    cls._resource_library = ReaperResourceLibrary(resources_path)
-                else:
-                    print(f"Reaper resources directory not found: {resources_path}")
-                    return False
-            
-            # Search for the FXChain in the resource library
-            fxchain_resource = None
-            resource = None
-            
-            for bank in cls._resource_library:
-                # Check instruments section
-                for category in bank.instruments.categories.values():
-                    resource = category.get_resource(shortname)
-                    if resource:
-                        # Load the resource from the Python file
-                        loaded_resource = resource.load_resource_from_python()
-                        if loaded_resource and hasattr(loaded_resource, 'fxchain_relative_path'):
-                            fxchain_resource = loaded_resource
-                            break
-                
-                if fxchain_resource:
-                    break
-                    
-                # Check effects section if not found in instruments
-                for category in bank.effects.categories.values():
-                    resource = category.get_resource(shortname)
-                    if resource:
-                        # Load the resource from the Python file
-                        loaded_resource = resource.load_resource_from_python()
-                        if loaded_resource and hasattr(loaded_resource, 'fxchain_relative_path'):
-                            fxchain_resource = loaded_resource
-                            break
-                
-                if fxchain_resource:
-                    break
-            
-            if not fxchain_resource:
-                print(f"FXChain resource '{shortname}' not found in resource library")
-                return False
-            
-            # Get the FXChain file path
-            if not fxchain_resource.fxchain_relative_path:
-                print(f"FXChain resource '{shortname}' has no fxchain_relative_path defined")
-                return False
-            
-            # Construct the source path - assume it's relative to the resource file
-            source_path = resource.path.parent / fxchain_resource.fxchain_relative_path
-            
-            if not source_path.exists():
-                print(f"FXChain file not found: {source_path}")
+            if not self.fxchain_path.exists():
+                print(f"FXChain file not found: {self.fxchain_path}")
                 return False
             
             # Copy the FXChain file to the renardo_fxchains directory
-            dest_path = renardo_fxchains_dir / f"{shortname}.RfxChain"
+            dest_path = renardo_fxchains_dir / f"{chain_name}.RfxChain"
             
             # Check if it already exists and has the same content
             if dest_path.exists():
-                with open(source_path, 'rb') as src_file:
+                with open(self.fxchain_path, 'rb') as src_file:
                     source_content = src_file.read()
                 with open(dest_path, 'rb') as dest_file:
                     dest_content = dest_file.read()
                 
                 if source_content == dest_content:
-                    print(f"FXChain '{shortname}' already up to date in REAPER")
+                    print(f"FXChain '{chain_name}' already up to date in REAPER")
                     return True
             
             # Copy the file
-            shutil.copy2(source_path, dest_path)
-            print(f"FXChain '{shortname}' installed to REAPER: {dest_path}")
+            shutil.copy2(self.fxchain_path, dest_path)
+            print(f"FXChain '{chain_name}' installed to REAPER: {dest_path}")
             return True
             
         except Exception as e:
-            print(f"Error ensuring FXChain '{shortname}' in REAPER: {e}")
+            print(f"Error injecting FXChain '{chain_name}' in REAPER: {e}")
             return False

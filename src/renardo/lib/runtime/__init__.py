@@ -31,10 +31,27 @@ from renardo.lib.runtime.managers_instanciation import (
     scresource_library, SynthDefs
 )
 
+## Conditionnal init of reaper backend resource library
+if settings.get("reaper_backend.REAPER_BACKEND_ENABLED"):
+    from renardo.lib.runtime.managers_instanciation import (
+        reaper_resource_library
+    )
+    from renardo.reaper_backend import ReaperInstrument, init_reapy_project
+    old_style_presets = {}
+    reaproject = init_reapy_project()
+    ReaperInstrument.set_class_attributes(
+        presets=old_style_presets,
+        project=reaproject,
+        resource_library=reaper_resource_library
+    )
+
 from renardo.sc_backend.sc_music_resource import SCInstrument
+# setting class attributes
 SCInstrument.set_instrument_dict(SynthDefs)
 SCInstrument.set_buffer_manager(buffer_manager)
 SCInstrument.set_server(Server)
+
+
 
 import renardo.lib.runtime.synthdefs_initialisation
 

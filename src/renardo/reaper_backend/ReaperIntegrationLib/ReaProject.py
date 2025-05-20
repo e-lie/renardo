@@ -11,6 +11,7 @@ from .functions import make_snake_name, split_param_name
 
 
 class ReaProject(object):
+
     def __init__(self, clock, reapylib):
         self._clock = clock
         self.reapy_project = reapylib.Project()

@@ -27,7 +27,7 @@ FoxDotCode.namespace = globals()
 from renardo.runtime.managers_instanciation import (
     settings, Server, sample_pack_library, sample_packs,
     DefaultSamples, buffer_manager, effect_manager, Effects,
-    scresource_library, SynthDefs
+    scresource_library, SynthDefs, reaper_resource_library
 )
 
 from renardo.sc_backend.sc_music_resource import SCInstrument
@@ -44,6 +44,8 @@ PygenEffect.set_server(Server)
 # In()
 # Out()
 PygenEffect.server.setFx(effect_manager)
+
+
 
 from renardo.lib.Player import Player
 
@@ -350,7 +352,26 @@ PatternTypes = functions(Sequences)
 
 ## Conditionnal init of reaper backend
 if settings.get("reaper_backend.REAPER_BACKEND_ENABLED"):
-    from .reaper_backend_init import *
+    from renardo.reaper_backend import ReaperInstrument, init_reapy_project
+    reaproject = init_reapy_project(Clock)
+    ReaperInstrument.set_class_attributes(
+        presets={},
+        project=reaproject,
+        resource_library=reaper_resource_library
+    )
+
+    inst = ReaperInstrument(
+        shortname='hpluck',
+        fullname='H Pluck',
+        description='High-resonance plucked bass with bright harmonics',
+        fxchain_path='hpluck.RfxChain',
+        arguments={},
+        bank='0_renardo_core',
+        category='bass',
+        auto_load_to_server=False,
+        scan_all_params=True,
+        is_chain=True
+    )
 
 ### All aliases (and basic wrapper) should progressively move here
 from .aliases import *
