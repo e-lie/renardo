@@ -5,7 +5,6 @@ from typing import Dict
 from .ReaFX import ReaFX, ReaFXGroup
 from .ReaParam import ReaSend
 from .functions import make_snake_name, split_param_name
-from .ReapyExtensions import add_fx_chain
 
 class ReaTrackType(Enum):
     INSTRUMENT = 1
@@ -122,7 +121,7 @@ class ReaTrack(object):
         fx_count = 1
         chain_reafx_names = []
         with self.reaproject.reapylib.inside_reaper():
-            fx_count = add_fx_chain(self.track, chain_name)
+            fx_count = self.reaproject.add_fx_chain(self.track, chain_name)
         # iterate over the last fx_count fxs on track to instanciate reafxs as they are the chain fxs
             for fx in self.track.fxs[len(self.track.fxs) - fx_count:]:
                 reafx_name = make_snake_name(fx.name)
