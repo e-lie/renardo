@@ -15,9 +15,11 @@ class ReaperResourceCategory:
         self._load_resource_files()
 
     def _load_resource_files(self):
-        """Load all Reaper python resource files from the category directory."""
+        """Load all Reaper resource files from the category directory."""
+        valid_extensions = ['.py', '.rfxchain']
+        
         for file_path in self.directory.iterdir():
-            if file_path.is_file() and file_path.suffix.lower() == '.py' and file_path.stem != '__init__':
+            if file_path.is_file() and file_path.suffix.lower() in [ext.lower() for ext in valid_extensions] and file_path.stem != '__init__':
                 reaper_resource_file = ReaperResourceFile(file_path, self.type, self.category)
                 self._reaper_resources[str(reaper_resource_file.name)] = reaper_resource_file
 
