@@ -46,22 +46,33 @@ class ReaperResourceLibrary:
         if not self.root_directory.exists():
             raise FileNotFoundError(f"Root directory not found: {self.root_directory}")
         
-        # Find all directories matching the pattern: digit_name
-        bank_dirs = sorted(
-            [d for d in self.root_directory.iterdir() 
-             if d.is_dir() and re.match(r'\d+_', d.name)],
-            key=lambda x: int(re.match(r'(\d+)_', x.name).group(1))
-        )
+        # First try to find directories with the pattern: digit_name
+        indexed_dirs = [d for d in self.root_directory.iterdir() 
+                    if d.is_dir() and re.match(r'\d+_', d.name)]
+        
+        # If we found indexed directories, use those
+        if indexed_dirs:
+            bank_dirs = sorted(
+                indexed_dirs,
+                key=lambda x: int(re.match(r'(\d+)_', x.name).group(1))
+            )
+        else:
+            # Otherwise, use all directories (include those without index prefix)
+            bank_dirs = [d for d in self.root_directory.iterdir() if d.is_dir()]
         
         for bank_dir in bank_dirs:
-            bank = ReaperResourceBank(bank_dir)
-            
-            # Look for bank-specific configuration
-            config_path = bank_dir / "config.py"
-            if config_path.exists():
-                self._load_bank_config(bank, config_path)
+            try:
+                bank = ReaperResourceBank(bank_dir)
                 
-            self._banks[bank.index] = bank
+                # Look for bank-specific configuration
+                config_path = bank_dir / "config.py"
+                if config_path.exists():
+                    self._load_bank_config(bank, config_path)
+                    
+                self._banks[bank.index] = bank
+            except Exception as e:
+                print(f"Error loading bank from {bank_dir}: {e}")
+                # Continue with next bank if one fails to load
     
     def _load_bank_config(self, bank: ReaperResourceBank, config_path: Path):
         """Load bank-specific configuration from a Python file."""
