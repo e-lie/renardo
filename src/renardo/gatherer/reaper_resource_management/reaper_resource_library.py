@@ -2,6 +2,7 @@ from pathlib import Path
 from collections import OrderedDict
 from typing import List, Optional, Iterator, Dict, Any, TYPE_CHECKING
 import re
+import glob
 
 from renardo.gatherer.reaper_resource_management.reaper_resource_bank import ReaperResourceBank
 from renardo.lib.music_resource import ResourceType
@@ -91,6 +92,69 @@ class ReaperResourceLibrary:
 
     def __iter__(self) -> Iterator[ReaperResourceBank]:
         return iter(self._banks.values())
+    
+    def find_fxchain_by_name(self, name: str) -> Optional[Path]:
+        """
+        Search for a fxchain file by name across all banks and categories.
+        
+        Args:
+            name: The name of the fxchain file to search for (with or without .RfxChain extension)
+            
+        Returns:
+            Path object to the fxchain file if found, None otherwise
+        """
+        # Normalize the name - ensure it has the .RfxChain extension
+        if not name.lower().endswith('.rfxchain'):
+            search_name = f"{name}.RfxChain"
+        else:
+            search_name = name
+        
+        # Get the lowercase version for case-insensitive comparison
+        search_name_lower = search_name.lower()
+        search_term = search_name_lower.replace('.rfxchain', '')
+        
+        # Search through all banks
+        for bank_index, bank in self._banks.items():
+            effects_dir = bank.directory / ResourceType.EFFECT.value
+            
+            if not effects_dir.exists():
+                continue
+                
+            # Search through all categories in the effects directory
+            for category_dir in effects_dir.iterdir():
+                if not category_dir.is_dir():
+                    continue
+                    
+                # First check for exact match
+                fxchain_path = category_dir / search_name
+                if fxchain_path.exists():
+                    return fxchain_path
+                    
+                # Then check for case-insensitive match
+                for file_path in category_dir.glob('*.RfxChain'):
+                    # Case-insensitive exact name match
+                    if file_path.name.lower() == search_name_lower:
+                        return file_path
+                        
+        # If exact match not found, try partial match
+        for bank_index, bank in self._banks.items():
+            effects_dir = bank.directory / ResourceType.EFFECT.value
+            
+            if not effects_dir.exists():
+                continue
+                
+            # Search through all categories in the effects directory
+            for category_dir in effects_dir.iterdir():
+                if not category_dir.is_dir():
+                    continue
+                    
+                for file_path in category_dir.glob('*.RfxChain'):
+                    # Partial match on filename
+                    if search_term in file_path.stem.lower():
+                        return file_path
+        
+        # Not found
+        return None
 
 def ensure_reaper_directories(renardo_root: Path):
     """Create the standard Reaper resource directory structure if it doesn't exist."""
