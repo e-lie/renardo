@@ -51,11 +51,29 @@
       
       console.log('Structure:', structure);
       
-      // Initialize navigation
+      // Initialize navigation with banks
       banks = structure.banks || [];
       console.log('Banks:', banks);
-      currentView = 'banks';
-      currentPath = [structure.name];
+      
+      // Skip banks view - directly go to sections view using the first bank
+      if (banks.length > 0) {
+        selectedBank = banks[0];
+        console.log('Auto-selecting bank:', selectedBank);
+        
+        // Create sections from the selected bank
+        sections = [
+          { id: 'instruments', name: 'Instruments', items: selectedBank.instruments || [] },
+          { id: 'effects', name: 'Effects', items: selectedBank.effects || [] }
+        ];
+        
+        console.log('Sections created:', sections);
+        currentView = 'sections';
+        currentPath = [structure.name, selectedBank.name];
+      } else {
+        // If no banks are available, still stay at the banks view
+        currentView = 'banks';
+        currentPath = [structure.name];
+      }
       
     } catch (err) {
       console.error('Error loading collection structure:', err);
@@ -110,10 +128,8 @@
       currentView = 'sections';
       currentPath.pop();
     } else if (currentView === 'sections') {
-      // Go back to banks
-      currentView = 'banks';
-      selectedBank = null;
-      currentPath.pop();
+      // Instead of going back to banks, just close the modal
+      onClose();
     } else {
       // Close the modal if we're at the top level
       onClose();
@@ -123,12 +139,12 @@
   function navigateTo(index) {
     // Navigate to a specific level by clicking on the breadcrumb
     if (index === 0) {
-      // Top level - show banks
-      currentView = 'banks';
-      selectedBank = null;
+      // Collection name clicked - keep at sections view
+      // We don't show banks view anymore
+      currentView = 'sections';
       selectedSection = null;
       selectedCategory = null;
-      currentPath = [currentPath[0]];
+      currentPath = currentPath.slice(0, 2);
     } else if (index === 1 && currentPath.length > 1) {
       // Bank level - show sections
       currentView = 'sections';
@@ -338,7 +354,7 @@
             class="btn btn-outline btn-secondary"
             on:click={navigateBack}
           >
-            {currentView === 'banks' ? 'Close' : 'Back'}
+            {currentView === 'banks' || currentView === 'sections' ? 'Close' : 'Back'}
           </button>
         </div>
       {/if}
