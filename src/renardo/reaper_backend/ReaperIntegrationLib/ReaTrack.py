@@ -96,26 +96,26 @@ class ReaTrack(object):
         return "<ReaTrack {} - {}>".format(self.name, pformat(self.reafxs))
 
 
-    def create_reafx(self, plugin_name: str, plugin_preset: str=None, reafx_name: str=None, param_alias_dict={}, scan_all_params=False):
-        def add_fx_plugin_with_preset(self, plugin_name, plugin_preset):
-            if not self.reafxs and self.firstfx is None:
-                self.firstfx = reafx_name
-            # add fx in last position : the index is len of the fx list - 1
-            fx = self.track.add_fx(plugin_name)
-            if plugin_preset is not None:  # plugin preset in reaper has to be applied first (before ReaFX obj creation) as it changes existing parameters
-                fx.preset = plugin_preset
-                self.preset = plugin_preset
-            return fx
+    # def create_reafx(self, plugin_name: str, plugin_preset: str=None, reafx_name: str=None, param_alias_dict={}, scan_all_params=False):
+    #     def add_fx_plugin_with_preset(self, plugin_name, plugin_preset):
+    #         if not self.reafxs and self.firstfx is None:
+    #             self.firstfx = reafx_name
+    #         # add fx in last position : the index is len of the fx list - 1
+    #         fx = self.track.add_fx(plugin_name)
+    #         if plugin_preset is not None:  # plugin preset in reaper has to be applied first (before ReaFX obj creation) as it changes existing parameters
+    #             fx.preset = plugin_preset
+    #             self.preset = plugin_preset
+    #         return fx
         
-        if reafx_name is None:
-            reafx_name = make_snake_name(plugin_name)
-        fx = None
-        reafx = None
-        with self.reaproject.reapylib.inside_reaper():
-            fx = add_fx_plugin_with_preset(self, plugin_name, plugin_preset)
-            reafx = ReaFX(fx, reafx_name, len(self.reafxs.keys()) - 1, param_alias_dict, scan_all_params)
-        self.reafxs[reafx_name] = reafx
-        return reafx
+    #     if reafx_name is None:
+    #         reafx_name = make_snake_name(plugin_name)
+    #     fx = None
+    #     reafx = None
+    #     with self.reaproject.reapylib.inside_reaper():
+    #         fx = add_fx_plugin_with_preset(self, plugin_name, plugin_preset)
+    #         reafx = ReaFX(fx, reafx_name, len(self.reafxs.keys()) - 1, param_alias_dict, scan_all_params)
+    #     self.reafxs[reafx_name] = reafx
+    #     return reafx
 
 
     def create_reafxs_for_chain(self, chain_name, param_alias_dict={}, scan_all_params=False):

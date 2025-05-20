@@ -3,7 +3,7 @@ from renardo.settings_manager import settings
 
 from renardo.gatherer import SamplePackLibrary, ensure_renardo_samples_directory
 
-from renardo.gatherer import SCResourceLibrary, ensure_sccode_directories
+from renardo.gatherer import SCResourceLibrary, ensure_sccode_directories, ReaperResourceLibrary, ensure_reaper_directories
 
 from renardo.sc_backend import BufferManager, ServerManager, EffectManager, SCEffect, FileEffect
 
@@ -25,6 +25,11 @@ buffer_manager =  BufferManager(server=Server, sample_library=sample_pack_librar
 
 ensure_sccode_directories()
 scresource_library = SCResourceLibrary(settings.get_path("SCCODE_LIBRARY"))
+
+## Conditionnal init of reaper backend resource library
+if settings.get("reaper_backend.REAPER_BACKEND_ENABLED"):
+    ensure_reaper_directories()
+    reaper_resource_library = ReaperResourceLibrary(settings.get_path("REAPER_LIBRARY"))
 
 SynthDefs = {}
 
