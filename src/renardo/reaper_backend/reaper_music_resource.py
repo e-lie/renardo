@@ -30,9 +30,9 @@ class ReaperEffect(Effect):
     def __init__(
             self,
             shortname: str,
-            fullname: str,
-            description: str,
             fxchain_relative_path: str,
+            fullname: Optional[str] = None,
+            description: Optional[str] = None,
             arguments: Dict[str, Any] = None,
             bank: str = "undefined",
             category: str = "undefined",
@@ -73,9 +73,9 @@ class ReaperInstrument(Instrument):
     def __init__(
             self,
             shortname: str,
-            fullname: str,
-            description: str,
             fxchain_path: str,
+            fullname: Optional[str] = None,
+            description: Optional[str] = None,
             arguments: Dict[str, Any] = None,
             bank: str = "undefined",
             category: str = "undefined",
