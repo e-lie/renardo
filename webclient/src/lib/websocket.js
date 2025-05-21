@@ -12,6 +12,7 @@ export const appState = writable({
     sclangCode: false,
     samples: false,
     instruments: false,
+    reaperPack: false,
     startupFiles: false
   },
   // Add runtime status
