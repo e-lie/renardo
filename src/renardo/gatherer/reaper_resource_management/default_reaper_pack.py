@@ -7,11 +7,39 @@ from renardo.gatherer.collection_download import download_files_from_json_index_
 
 def is_default_reaper_pack_initialized():
     """Check if the default Reaper resource pack has been downloaded."""
-    return (settings.get_path("REAPER_LIBRARY") / settings.get("reaper_backend.DEFAULT_REAPER_PACK_NAME") / 'downloaded_at.txt').exists()
+    default_pack_name = settings.get("reaper_backend.DEFAULT_REAPER_PACK_NAME", "0_renardo_core")
+    return (settings.get_path("REAPER_LIBRARY") / default_pack_name / 'downloaded_at.txt').exists()
 
 def is_reaper_pack_initialized(pack_name):
     """Check if a specific Reaper resource pack has been downloaded."""
     return (settings.get_path("REAPER_LIBRARY") / pack_name / 'downloaded_at.txt').exists()
+
+def ensure_default_reaper_pack():
+    """Ensure the default Reaper resource pack is initialized.
+    
+    This function checks if the default Reaper resource pack is already initialized,
+    and if not, attempts to download and initialize it.
+    
+    Returns:
+        bool: True if the default pack is available (either already initialized or successfully downloaded)
+    """
+    default_pack_name = settings.get("reaper_backend.DEFAULT_REAPER_PACK_NAME", "0_renardo_core")
+    
+    # Check if already initialized
+    if is_default_reaper_pack_initialized():
+        print(f"Default Reaper resource pack '{default_pack_name}' is already initialized")
+        return True
+    
+    # Initialize the pack
+    print(f"Initializing default Reaper resource pack: {default_pack_name}")
+    download_success = download_reaper_pack(default_pack_name)
+    
+    if download_success:
+        print(f"Successfully initialized default Reaper resource pack: {default_pack_name}")
+        return True
+    else:
+        print(f"Failed to initialize default Reaper resource pack: {default_pack_name}")
+        return False
 
 def download_reaper_pack(pack_name, logger=None):
     """Download a specific Reaper resource pack.
