@@ -223,3 +223,40 @@ def create_16_midi_tracks():
     # Create 16 tracks, one for each MIDI channel
     for i in range(1, 17):  # 1 to 16
         create_standard_midi_track(i)
+
+
+def ensure_16_midi_tracks():
+    """
+    Ensures that 16 MIDI tracks exist in REAPER, one for each MIDI channel.
+    Only creates tracks that don't already exist, making it idempotent.
+    
+    Returns:
+        list: List of track indices that were created (empty if all already existed)
+    """
+    project_idx = 0  # 0 is currently active project
+    track_count = RPR.CountTracks(project_idx)
+    
+    # Check which channels already have tracks
+    existing_channels = set()
+    for i in range(track_count):
+        track = RPR.GetTrack(project_idx, i)
+        name = RPR.GetTrackName(track, "", 512)[2].strip()
+        
+        # Check if this is a channel track (expected format: "chanX" where X is 1-16)
+        if name.startswith("chan") and len(name) > 4:
+            try:
+                channel_num = int(name[4:])
+                if 1 <= channel_num <= 16:
+                    existing_channels.add(channel_num)
+            except ValueError:
+                # If we can't convert to int, it's not a proper channel track
+                pass
+    
+    # Create only the missing tracks
+    created_tracks = []
+    for i in range(1, 17):  # 1 to 16
+        if i not in existing_channels:
+            create_standard_midi_track(i)
+            created_tracks.append(i)
+    
+    return created_tracks
