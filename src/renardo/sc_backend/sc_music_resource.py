@@ -68,9 +68,9 @@ class SCInstrument(Instrument):
             arguments: Dict[str, Any] = None,
             bank: str = "undefined",
             category: str = "undefined",
-            auto_load_to_server: bool = False,
+            auto_load_to_server: bool = True,
     ):
-        super().__init__(shortname, fullname, description, arguments, bank, category, auto_load_to_server)
+        super().__init__(shortname, fullname, description, arguments, bank, category)
         self.code = code  # SuperCollider language code
         self.synth_added = False
 
@@ -93,24 +93,31 @@ class SCInstrument(Instrument):
 
     def __call__(self, first_argument=None, **kwargs):
         # "loop" and similar instruments use a different
-        #function signature : first arg is filename and not degree
+        # function signature : first arg is filename and not degree
+        instrument_proxy = None
+        # self.arguments define defaults values for function params
+        # update it with "__call__" time values
+        #kwargs = self.arguments.update(kwargs)
+        self.arguments.update(kwargs)
+        kwargs = self.arguments
         if self.shortname in ["loop", "stretch"]:
             filename = first_argument
             pos = kwargs["pos"] if "pos" in kwargs.keys() else 0
             sample = kwargs["sample"] if "sample" in kwargs.keys() else 0
-            proxy = InstrumentProxy(self.shortname, pos, kwargs)
-            proxy.kwargs["filename"] = filename
-            proxy.kwargs["buf"] = SCInstrument.buffer_manager.load_buffer(filename, sample)
-            return proxy
+            instrument_proxy = InstrumentProxy(self.shortname, pos, kwargs)
+            instrument_proxy.kwargs["filename"] = filename
+            instrument_proxy.kwargs["buf"] = SCInstrument.buffer_manager.load_buffer(filename, sample)
         elif self.shortname in ["granular"]: # to debug
             filename = first_argument
             pos = kwargs["pos"] if "pos" in kwargs.keys() else 0
             sample = kwargs["sample"] if "sample" in kwargs.keys() else 0
             kwargs["buf"] = SCInstrument.buffer_manager.load_buffer(filename, sample)
-            return InstrumentProxy(self.shortname, pos, kwargs)
+            instrument_proxy = InstrumentProxy(self.shortname, pos, kwargs)
         else:
             degree = first_argument
-            return InstrumentProxy(self.shortname, degree, kwargs)
+            instrument_proxy = InstrumentProxy(self.shortname, degree, kwargs)
+        return instrument_proxy
+
 
     def load(self):
         """Load the instrument in the SuperCollider server"""
