@@ -34,7 +34,7 @@ FoxDotCode.namespace = globals()
 from renardo.runtime.managers_instanciation import (
     settings, Server, sample_pack_library, sample_packs,
     DefaultSamples, buffer_manager, effect_manager, Effects,
-    scresource_library, SynthDefs, reaper_resource_library
+    scresource_library, SynthDefs
 )
 
 from renardo.sc_backend.sc_music_resource import SCInstrument
@@ -359,6 +359,7 @@ PatternTypes = functions(Sequences)
 
 ## Conditionnal init of reaper backend
 if settings.get("reaper_backend.REAPER_BACKEND_ENABLED"):
+    from renardo.runtime.managers_instanciation import reaper_resource_library
     from renardo.reaper_backend import ReaperInstrument, init_reapy_project
     reaproject = init_reapy_project(Clock)
     ReaperInstrument.set_class_attributes(
