@@ -8,7 +8,7 @@
   // State for right panel
   let rightPanelOpen = true;
   let rightPanelWidth = 384; // Default width in pixels (w-96 = 384px)
-  let activeTab = 'tutorial'; // tutorial, sessions, musicExamples, or documentation
+  let activeTab = 'tutorial'; // tutorial, sessions, startupFiles, musicExamples, or documentation
   let isResizing = false;
   
   // Tutorial files state
@@ -20,6 +20,11 @@
   // Session files state
   let sessionFiles = [];
   let loadingSessions = false;
+  
+  // Startup files state
+  let startupFiles = [];
+  let loadingStartupFiles = false;
+  let selectedStartupFile = null;
   
   // Save session modal state
   let showSaveModal = false;
@@ -905,6 +910,176 @@ Master().fadeout(dur=24)
     }
   }
   
+  // Startup files functions
+  async function loadStartupFiles() {
+    loadingStartupFiles = true;
+    try {
+      const response = await fetch('/api/settings/user-directory/startup_files');
+      if (response.ok) {
+        const data = await response.json();
+        startupFiles = data.files || [];
+        // Set default startup file
+        if (startupFiles.length > 0 && !selectedStartupFile) {
+          selectedStartupFile = startupFiles.find(file => file.name === 'default.py') || startupFiles[0];
+        }
+      } else {
+        console.error('Failed to load startup files');
+        startupFiles = [];
+      }
+    } catch (error) {
+      console.error('Error loading startup files:', error);
+      startupFiles = [];
+    } finally {
+      loadingStartupFiles = false;
+    }
+  }
+  
+  async function loadStartupFile(file) {
+    try {
+      const response = await fetch(file.url);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          // Create a new buffer for the startup file
+          const newBuffer = {
+            id: nextTabId++,
+            name: file.name,
+            content: data.content,
+            editing: false,
+            isStartupFile: true,
+            startupFilePath: file.path
+          };
+          tabs = [...tabs, newBuffer];
+          activeTabId = newBuffer.id;
+          
+          if (editor) {
+            editor.setValue(data.content);
+            editor.setCursor({ line: 0, ch: 0 });
+            editor.focus();
+          }
+          
+          // Update selected startup file
+          selectedStartupFile = file;
+        } else {
+          console.error('Failed to load startup file:', data.message);
+        }
+      } else {
+        console.error('Failed to load startup file');
+      }
+    } catch (error) {
+      console.error('Error loading startup file:', error);
+    }
+  }
+  
+  async function saveStartupFile(buffer) {
+    if (!buffer.isStartupFile || !buffer.startupFilePath) {
+      console.error('Not a startup file');
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/settings/user-directory/startup_files/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          path: buffer.startupFilePath,
+          content: buffer.content
+        })
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+        // Show success message in console
+        addConsoleOutput(`Startup file ${buffer.name} saved`, 'success');
+      } else {
+        alert(`Failed to save startup file: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Error saving startup file:', error);
+      alert('Error saving startup file');
+    }
+  }
+  
+  async function createNewStartupFile() {
+    const fileName = prompt("Enter new startup file name:", "my_startup.py");
+    if (!fileName) return;
+    
+    const name = fileName.endsWith('.py') ? fileName : `${fileName}.py`;
+    
+    try {
+      const response = await fetch('/api/settings/user-directory/startup_files/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          filename: name,
+          content: "# Renardo startup file\n# This file is loaded when Renardo starts if selected\n# Add your custom code here\n"
+        })
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+        // Reload startup files
+        await loadStartupFiles();
+        // Load the newly created file
+        const newFile = startupFiles.find(file => file.name === name);
+        if (newFile) {
+          loadStartupFile(newFile);
+        }
+      } else {
+        alert(`Failed to create startup file: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Error creating startup file:', error);
+      alert('Error creating startup file');
+    }
+  }
+  
+  async function setDefaultStartupFile(file) {
+    try {
+      const response = await fetch('/api/settings/startup_files/set_default', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          filename: file.name
+        })
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+        selectedStartupFile = file;
+        addConsoleOutput(`Set ${file.name} as the default startup file`, 'success');
+      } else {
+        alert(`Failed to set default startup file: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Error setting default startup file:', error);
+      alert('Error setting default startup file');
+    }
+  }
+  
+  async function openStartupFilesFolder() {
+    try {
+      const response = await fetch('/api/settings/user-directory/startup_files/open', {
+        method: 'POST'
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        console.error('Failed to open startup files folder:', data.message);
+        addConsoleOutput(`Failed to open startup files folder: ${data.message}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error opening startup files folder:', error);
+      addConsoleOutput(`Error opening startup files folder: ${error.message}`, 'error');
+    }
+  }
+  
   // Function to load a session file into the editor
   async function loadSessionFile(file) {
     try {
@@ -1060,6 +1235,19 @@ Master().fadeout(dur=24)
             </svg>
             Load Session
           </button>
+          
+          {#if activeBuffer && activeBuffer.isStartupFile}
+            <button
+              class="btn btn-sm btn-info"
+              on:click={() => saveStartupFile(activeBuffer)}
+              title="Save current startup file"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 012 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+              Save Startup File
+            </button>
+          {/if}
         </div>
 
         <!-- Editor Theme Selector -->
@@ -1136,6 +1324,8 @@ Master().fadeout(dur=24)
           }
         } else if (activeTab === 'sessions') {
           loadSessionFiles();
+        } else if (activeTab === 'startupFiles') {
+          loadStartupFiles();
         }
       }}
       title="{rightPanelOpen ? 'Close' : 'Open'} side panel"
@@ -1242,6 +1432,14 @@ Master().fadeout(dur=24)
                 Sessions
               </button>
               <button 
+                class="tab {activeTab === 'startupFiles' ? 'tab-active' : ''}" 
+                on:click={() => {activeTab = 'startupFiles'; loadStartupFiles();}}>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                Startup Files
+              </button>
+              <button 
                 class="tab {activeTab === 'musicExamples' ? 'tab-active' : ''}" 
                 on:click={() => activeTab = 'musicExamples'}>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -1306,6 +1504,75 @@ Master().fadeout(dur=24)
                       </svg>
                       {file.name}
                     </button>
+                  {/each}
+                </div>
+              {/if}
+            </div>
+          {:else if activeTab === 'startupFiles'}
+            <div>
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold">Startup Files</h3>
+                <div class="flex gap-2">
+                  <button
+                    class="btn btn-sm btn-outline"
+                    on:click={createNewStartupFile}
+                    title="Create New Startup File"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                    </svg>
+                    New
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline"
+                    on:click={openStartupFilesFolder}
+                    title="Open Startup Files Folder"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1H8a3 3 0 00-3 3v1.5a1.5 1.5 0 01-3 0V6z" clip-rule="evenodd" />
+                      <path d="M6 12a2 2 0 012-2h8a2 2 0 012 2v2a2 2 0 01-2 2H2h2a2 2 0 002-2v-2z" />
+                    </svg>
+                    Open Folder
+                  </button>
+                </div>
+              </div>
+              <p class="text-sm mb-4">
+                Startup files contain code that runs when Renardo starts. Select a default startup file below:
+              </p>
+              {#if loadingStartupFiles}
+                <div class="flex justify-center">
+                  <span class="loading loading-spinner loading-md"></span>
+                </div>
+              {:else if startupFiles.length === 0}
+                <div class="alert alert-info">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  <span>No startup files found. Click "New" to create one.</span>
+                </div>
+              {:else}
+                <div class="space-y-2">
+                  {#each startupFiles as file}
+                    <div class="flex items-center gap-2">
+                      <button
+                        class="flex-grow text-left btn btn-sm btn-outline justify-start {selectedStartupFile && selectedStartupFile.name === file.name ? 'btn-primary' : ''}"
+                        on:click={() => loadStartupFile(file)}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-5L9 2H4z" clip-rule="evenodd" />
+                        </svg>
+                        {file.name}
+                      </button>
+                      {#if selectedStartupFile && selectedStartupFile.name === file.name}
+                        <div class="badge badge-primary mr-1">Default</div>
+                      {:else}
+                        <button
+                          class="btn btn-xs btn-outline"
+                          on:click={() => setDefaultStartupFile(file)}
+                          title="Set as Default Startup File"
+                        >
+                          Set Default
+                        </button>
+                      {/if}
+                    </div>
                   {/each}
                 </div>
               {/if}
