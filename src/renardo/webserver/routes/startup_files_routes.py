@@ -7,7 +7,7 @@ from flask import jsonify, request
 from renardo.settings_manager import settings
 import subprocess
 import platform
-from renardo.runtime.startup_files import create_startup_directory
+from renardo.gatherer.reaper_resource_management.default_reaper_pack import is_default_reaper_pack_initialized, download_reaper_pack
 
 def register_startup_files_routes(webapp):
     """
@@ -315,4 +315,44 @@ def register_startup_files_routes(webapp):
             return jsonify({
                 "success": False,
                 "message": f"Error setting default startup file: {str(e)}"
+            }), 500
+            
+    @webapp.route('/api/reaper/initialize_default_pack', methods=['POST'])
+    def initialize_default_reaper_pack():
+        """
+        Initialize the default Reaper resource pack if not already initialized
+        
+        Returns:
+            JSON: Initialization status
+        """
+        try:
+            # Get the default reaper pack name from settings
+            default_pack_name = settings.get("reaper_backend.DEFAULT_REAPER_PACK_NAME", "0_renardo_core")
+            
+            # Check if already initialized
+            if is_default_reaper_pack_initialized():
+                return jsonify({
+                    "success": True,
+                    "message": f"Default Reaper resource pack '{default_pack_name}' is already initialized",
+                    "already_initialized": True
+                })
+            
+            # Initialize the pack
+            download_success = download_reaper_pack(default_pack_name)
+            
+            if download_success:
+                return jsonify({
+                    "success": True,
+                    "message": f"Successfully initialized default Reaper resource pack: {default_pack_name}"
+                })
+            else:
+                return jsonify({
+                    "success": False,
+                    "message": f"Failed to initialize default Reaper resource pack: {default_pack_name}"
+                }), 500
+                
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "message": f"Error initializing default Reaper resource pack: {str(e)}"
             }), 500
