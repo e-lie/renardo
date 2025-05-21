@@ -10,6 +10,7 @@ from renardo.webserver import websocket_utils
 from renardo.gatherer import download_default_sample_pack, is_default_spack_initialized
 from renardo.gatherer import is_default_sccode_pack_initialized
 from renardo.gatherer import is_special_sccode_initialized, download_special_sccode_pack
+from renardo.gatherer.reaper_resource_management.default_reaper_pack import is_default_reaper_pack_initialized
 from renardo.sc_backend import write_sc_renardo_files_in_user_config, is_renardo_sc_classes_initialized
 
 # Import shared WebSocket utilities
@@ -289,6 +290,7 @@ def update_renardo_status():
         state_helper.update_renardo_init_status("sclangCode", is_special_sccode_initialized())
         state_helper.update_renardo_init_status("samples", is_default_spack_initialized())
         state_helper.update_renardo_init_status("instruments", is_default_sccode_pack_initialized())
+        state_helper.update_renardo_init_status("reaperPack", is_default_reaper_pack_initialized())
     except Exception as e:
         print(f"Error updating Renardo status: {e}")
         # If error, set all to False
@@ -296,6 +298,7 @@ def update_renardo_status():
         state_helper.update_renardo_init_status("sclangCode", False)
         state_helper.update_renardo_init_status("samples", False)
         state_helper.update_renardo_init_status("instruments", False)
+        state_helper.update_renardo_init_status("reaperPack", False)
 
 def init_supercollider_classes_task(ws):
     """Initialize SuperCollider classes in a separate thread"""
