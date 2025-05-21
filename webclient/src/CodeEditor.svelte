@@ -11,6 +11,10 @@
   let activeTab = 'tutorial'; // tutorial, sessions, startupFiles, musicExamples, or documentation
   let isResizing = false;
   
+  // State for vertical split between editor and console
+  let consoleHeight = 30; // Default console height as percentage of available height
+  let isVerticalResizing = false;
+  
   // Tutorial files state
   let tutorialFiles = [];
   let loadingTutorials = false;
@@ -182,29 +186,64 @@
   // Initialize CodeMirror on mount
   // Setup resize event handlers
   function handleMouseMove(e) {
-    if (!isResizing) return;
+    if (isResizing) {
+      // Add class to body during resizing
+      document.body.classList.add('resizing');
+      
+      // Calculate new width based on mouse position
+      const containerWidth = document.body.clientWidth;
+      const mouseX = e.clientX;
+      
+      // Ensure the panel has a reasonable width (between 240px and 50% of window)
+      const minWidth = 240;
+      const maxWidth = containerWidth * 0.5;
+      const newWidth = containerWidth - mouseX;
+      
+      rightPanelWidth = Math.min(Math.max(newWidth, minWidth), maxWidth);
+    }
     
-    // Add class to body during resizing
-    document.body.classList.add('resizing');
-    
-    // Calculate new width based on mouse position
-    const containerWidth = document.body.clientWidth;
-    const mouseX = e.clientX;
-    
-    // Ensure the panel has a reasonable width (between 240px and 50% of window)
-    const minWidth = 240;
-    const maxWidth = containerWidth * 0.5;
-    const newWidth = containerWidth - mouseX;
-    
-    rightPanelWidth = Math.min(Math.max(newWidth, minWidth), maxWidth);
+    if (isVerticalResizing) {
+      // Add class to body during resizing
+      document.body.classList.add('resizing');
+      
+      // Calculate new console height based on mouse position
+      const containerHeight = window.innerHeight;
+      const mouseY = e.clientY;
+      
+      // Get the editor container to calculate relative position
+      const editorContainer = document.querySelector('.flex.flex-col.flex-1.overflow-hidden');
+      if (editorContainer) {
+        const containerRect = editorContainer.getBoundingClientRect();
+        const relativeY = mouseY - containerRect.top;
+        const containerHeightPx = containerRect.height;
+        
+        // Calculate percentage (inverted since we're measuring from top but console is at bottom)
+        let newConsoleHeightPercent = ((containerHeightPx - relativeY) / containerHeightPx) * 100;
+        
+        // Ensure console height is between 10% and 90%
+        const minConsoleHeight = 10;
+        const maxConsoleHeight = 90;
+        consoleHeight = Math.min(Math.max(newConsoleHeightPercent, minConsoleHeight), maxConsoleHeight);
+      }
+    }
   }
   
   function handleMouseUp() {
-    isResizing = false;
-    // Remove resizing class
-    document.body.classList.remove('resizing');
-    // Save the width to localStorage
-    localStorage.setItem('rightPanelWidth', rightPanelWidth.toString());
+    if (isResizing) {
+      isResizing = false;
+      // Remove resizing class
+      document.body.classList.remove('resizing');
+      // Save the width to localStorage
+      localStorage.setItem('rightPanelWidth', rightPanelWidth.toString());
+    }
+    
+    if (isVerticalResizing) {
+      isVerticalResizing = false;
+      // Remove resizing class
+      document.body.classList.remove('resizing');
+      // Save the console height to localStorage
+      localStorage.setItem('consoleHeight', consoleHeight.toString());
+    }
   }
   
   onMount(() => {
@@ -222,6 +261,12 @@
     const savedWidth = localStorage.getItem('rightPanelWidth');
     if (savedWidth) {
       rightPanelWidth = parseInt(savedWidth, 10);
+    }
+    
+    // Try to load saved console height from localStorage
+    const savedConsoleHeight = localStorage.getItem('consoleHeight');
+    if (savedConsoleHeight) {
+      consoleHeight = parseFloat(savedConsoleHeight);
     }
     
     // Initialize with a default startup file and a code buffer
@@ -1686,13 +1731,24 @@ Master().fadeout(dur=24)
     <!-- Left side: Code editor and console -->
     <div class="flex flex-col flex-1 overflow-hidden">
       <!-- Code editor -->
-      <div class="flex-none h-[70vh] border border-base-300 overflow-hidden" bind:this={editorContainer}>
+      <div class="flex-none border border-base-300 overflow-hidden" 
+           style="height: {100 - consoleHeight}%" 
+           bind:this={editorContainer}>
         <textarea id="code-editor">{editorContent}</textarea>
       </div>
 
+      <!-- Vertical resizable divider -->
+      <div 
+        class="h-1 hover:h-1 cursor-row-resize flex-shrink-0 bg-base-300 hover:bg-primary hover:opacity-50 transition-colors" 
+        on:mousedown={(e) => {
+          isVerticalResizing = true;
+          e.preventDefault();
+        }}
+      ></div>
+
       <!-- Console output - always below editor -->
-      <div class="flex flex-col flex-none h-[30vh] console-background overflow-hidden" 
-           style="background-color: {consoleColors.consoleBg}; color: {consoleColors.textColor};">
+      <div class="flex flex-col flex-none console-background overflow-hidden"
+           style="height: {consoleHeight}%; background-color: {consoleColors.consoleBg}; color: {consoleColors.textColor};">
         <div class="flex justify-between items-center px-4 py-2 console-header"
              style="background-color: {consoleColors.consoleHeaderBg}; color: {consoleColors.textColor};">
           <h3 class="text-sm font-bold"> ฅ^•ﻌ•^ฅ >> output</h3>
