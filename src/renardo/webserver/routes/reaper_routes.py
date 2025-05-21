@@ -165,7 +165,7 @@ def prepare_reaper_task(ws):
         try:
             # Import the necessary functions
             import reapy
-            from renardo.midi_backend.examples_and_tests.minimal_midi import create_16_midi_tracks
+            from renardo.reaper_backend.reaper_simple_lib import ensure_16_midi_tracks
             
             logger.write_line("Connecting to REAPER via ReaPy...", "INFO")
             
@@ -187,10 +187,13 @@ def prepare_reaper_task(ws):
             # Now create the 16 MIDI tracks
             logger.write_line("Creating 16 MIDI tracks...", "INFO")
             
-            # Call the function to create 16 MIDI tracks
-            create_16_midi_tracks()
+            # Call the function to ensure 16 MIDI tracks exist
+            created_tracks = ensure_16_midi_tracks()
             
-            logger.write_line("Successfully created 16 MIDI tracks", "SUCCESS")
+            if created_tracks:
+                logger.write_line(f"Created {len(created_tracks)} MIDI tracks: {', '.join(map(str, created_tracks))}", "SUCCESS")
+            else:
+                logger.write_line("All 16 MIDI tracks already exist", "SUCCESS")
             
             # Send success result
             ws.send(json.dumps({
@@ -491,7 +494,7 @@ def prepare_reaper_task(ws):
         try:
             # Import the necessary functions
             import reapy
-            from renardo.midi_backend.examples_and_tests.minimal_midi import create_16_midi_tracks
+            from renardo.reaper_backend.reaper_simple_lib import ensure_16_midi_tracks
             
             logger.write_line("Connecting to REAPER via ReaPy...", "INFO")
             
@@ -513,10 +516,13 @@ def prepare_reaper_task(ws):
             # Now create the 16 MIDI tracks
             logger.write_line("Creating 16 MIDI tracks...", "INFO")
             
-            # Call the function to create 16 MIDI tracks
-            create_16_midi_tracks()
+            # Call the function to ensure 16 MIDI tracks exist
+            created_tracks = ensure_16_midi_tracks()
             
-            logger.write_line("Successfully created 16 MIDI tracks", "SUCCESS")
+            if created_tracks:
+                logger.write_line(f"Created {len(created_tracks)} MIDI tracks: {', '.join(map(str, created_tracks))}", "SUCCESS")
+            else:
+                logger.write_line("All 16 MIDI tracks already exist", "SUCCESS")
             
             # Send success result
             ws.send(json.dumps({
@@ -713,7 +719,7 @@ def prepare_reaper_task(ws):
         try:
             # Import the necessary functions
             import reapy
-            from renardo.midi_backend.examples_and_tests.minimal_midi import create_16_midi_tracks
+            from renardo.reaper_backend.reaper_simple_lib import ensure_16_midi_tracks
             
             logger.write_line("Connecting to REAPER via ReaPy...", "INFO")
             
@@ -735,10 +741,13 @@ def prepare_reaper_task(ws):
             # Now create the 16 MIDI tracks
             logger.write_line("Creating 16 MIDI tracks...", "INFO")
             
-            # Call the function to create 16 MIDI tracks
-            create_16_midi_tracks()
+            # Call the function to ensure 16 MIDI tracks exist
+            created_tracks = ensure_16_midi_tracks()
             
-            logger.write_line("Successfully created 16 MIDI tracks", "SUCCESS")
+            if created_tracks:
+                logger.write_line(f"Created {len(created_tracks)} MIDI tracks: {', '.join(map(str, created_tracks))}", "SUCCESS")
+            else:
+                logger.write_line("All 16 MIDI tracks already exist", "SUCCESS")
             
             # Send success result
             ws.send(json.dumps({
@@ -881,7 +890,7 @@ def prepare_reaper_task(ws):
         try:
             # Import the necessary functions
             import reapy
-            from renardo.midi_backend.examples_and_tests.minimal_midi import create_16_midi_tracks
+            from renardo.reaper_backend.reaper_simple_lib import ensure_16_midi_tracks
             
             logger.write_line("Connecting to REAPER via ReaPy...", "INFO")
             
@@ -903,10 +912,13 @@ def prepare_reaper_task(ws):
             # Now create the 16 MIDI tracks
             logger.write_line("Creating 16 MIDI tracks...", "INFO")
             
-            # Call the function to create 16 MIDI tracks
-            create_16_midi_tracks()
+            # Call the function to ensure 16 MIDI tracks exist
+            created_tracks = ensure_16_midi_tracks()
             
-            logger.write_line("Successfully created 16 MIDI tracks", "SUCCESS")
+            if created_tracks:
+                logger.write_line(f"Created {len(created_tracks)} MIDI tracks: {', '.join(map(str, created_tracks))}", "SUCCESS")
+            else:
+                logger.write_line("All 16 MIDI tracks already exist", "SUCCESS")
             
             # Send success result
             ws.send(json.dumps({
@@ -1043,7 +1055,7 @@ def prepare_reaper_task(ws):
         try:
             # Import the necessary functions
             import reapy
-            from renardo.midi_backend.examples_and_tests.minimal_midi import create_16_midi_tracks
+            from renardo.reaper_backend.reaper_simple_lib import ensure_16_midi_tracks
             
             logger.write_line("Connecting to REAPER via ReaPy...", "INFO")
             
@@ -1065,10 +1077,13 @@ def prepare_reaper_task(ws):
             # Now create the 16 MIDI tracks
             logger.write_line("Creating 16 MIDI tracks...", "INFO")
             
-            # Call the function to create 16 MIDI tracks
-            create_16_midi_tracks()
+            # Call the function to ensure 16 MIDI tracks exist
+            created_tracks = ensure_16_midi_tracks()
             
-            logger.write_line("Successfully created 16 MIDI tracks", "SUCCESS")
+            if created_tracks:
+                logger.write_line(f"Created {len(created_tracks)} MIDI tracks: {', '.join(map(str, created_tracks))}", "SUCCESS")
+            else:
+                logger.write_line("All 16 MIDI tracks already exist", "SUCCESS")
             
             # Send success result
             ws.send(json.dumps({
@@ -1231,10 +1246,13 @@ def prepare_reaper_task(ws):
             # Now create the 16 MIDI tracks
             logger.write_line("Creating 16 MIDI tracks...", "INFO")
             
-            # Call the function to create 16 MIDI tracks
-            create_16_midi_tracks()
+            # Call the function to ensure 16 MIDI tracks exist
+            created_tracks = ensure_16_midi_tracks()
             
-            logger.write_line("Successfully created 16 MIDI tracks", "SUCCESS")
+            if created_tracks:
+                logger.write_line(f"Created {len(created_tracks)} MIDI tracks: {', '.join(map(str, created_tracks))}", "SUCCESS")
+            else:
+                logger.write_line("All 16 MIDI tracks already exist", "SUCCESS")
             
             # Send success result
             ws.send(json.dumps({
