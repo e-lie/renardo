@@ -367,7 +367,7 @@ if settings.get("reaper_backend.REAPER_BACKEND_ENABLED"):
         resource_library=reaper_resource_library
     )
     from .reaper_backend_init import *
-    create_selected_instruments.set_foxdotcode_instance(FoxDotCode)
+    create_selected_instruments = ReaperInstrumentFactory(FoxDotCode) # then we can call create_selected_instruments as a function
 
 
 ### All aliases (and basic wrapper) should progressively move here
