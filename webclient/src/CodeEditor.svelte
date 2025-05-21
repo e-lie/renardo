@@ -61,27 +61,7 @@
   };
   
   // State for multi-tab editor
-  let tabs = [
-    {
-      id: 1,
-      name: 'Untitled',
-      content: `# Renardo Live Coding Editor
-# Type your code here and press Ctrl+Enter to run
-
-Root.default = var([0,2,4], [2,4,6])
-d1 >> play("<x-(-[--])><*....><..(ooo(oO)).>")
-d2 >> blip([2,_,[4,4,4,P*(5,2)],_], dur=.5, sus=linvar([.2,.5,3],16), pan=[-.8,0,.8]).eclipse(4,16)
-d3 >> pluck(dur=.25, oct=3, sus=linvar([.2,.5,3],16), amp=[.7,.7,1,2], lpf=linvar([400,600,3000],16)).eclipse(16,96)
-k2 >> play("V.", lpf=400).eclipse(64,128)
-
-d2.dur=var([.25,1/3,1/2], 16)
-
-Master().fadeout(dur=24)
-`,
-      editing: false,
-      isStartupFile: false
-    }
-  ];
+  let tabs = [];
   
   let activeTabId = 1;
   let nextTabId = 2;
@@ -172,6 +152,9 @@ Master().fadeout(dur=24)
     if (savedWidth) {
       rightPanelWidth = parseInt(savedWidth, 10);
     }
+    
+    // Initialize with a default startup file and a code buffer
+    initializeEditorWithDefaultStartupFile();
     // Function to load a script dynamically
     const loadScript = (src) => {
       return new Promise((resolve, reject) => {
@@ -820,21 +803,96 @@ Master().fadeout(dur=24)
   }
   
   // Function to actually save the session
+  // Make sure the current startup file tab is saved to disk  
+  async function ensureStartupFileSaved() {
+    if (!startupFileTab) return null;
+    
+    // If the startup file tab doesn't have a path, we need to save it
+    if (!startupFileTab.startupFilePath) {
+      try {
+        // Create a new startup file
+        const response = await fetch('/api/settings/user-directory/startup_files/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            filename: startupFileTab.name,
+            content: startupFileTab.content
+          })
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          // Update the startup file tab with the path
+          startupFileTab.startupFilePath = result.path;
+          
+          // Update tabs
+          tabs = tabs.map(tab => 
+            tab.id === startupFileTab.id ? {...tab, startupFilePath: result.path} : tab
+          );
+          
+          // Reload startup files to get the new file in the list
+          await loadStartupFiles();
+          
+          // Find the newly created file in the list
+          const newFile = startupFiles.find(file => file.name === startupFileTab.name);
+          if (newFile) {
+            // Update the session startup file reference
+            currentSession.startupFile = newFile;
+            // Update selectedStartupFile
+            selectedStartupFile = newFile;
+            
+            return newFile;
+          }
+        } else {
+          console.error('Failed to save startup file:', result.message);
+        }
+      } catch (error) {
+        console.error('Error saving startup file:', error);
+      }
+    } else {
+      // The startup file already exists, just save it
+      await saveStartupFile(startupFileTab);
+      return currentSession.startupFile;
+    }
+    
+    return null;
+  }
+  
   async function doSaveSession() {
     if (!sessionName.trim()) return;
     
     savingSession = true;
     try {
+      // Ensure startup file is saved first if needed
+      await ensureStartupFileSaved();
+      
       // Start with startup file info section 
       let combinedContent = "";
       
-      // Add startup file information if present
+      // Add startup file information - always include the startup file
+      const startupSeparator = '//' + '='.repeat(78);
+      
       if (currentSession.startupFile && startupFileTab) {
-        const startupSeparator = '//' + '='.repeat(78);
+        // Use the session's startup file
         combinedContent += `${startupSeparator}\n`;
         combinedContent += `// STARTUP_FILE: ${currentSession.startupFile.name}\n`;
         combinedContent += `${startupSeparator}\n`;
         combinedContent += `${startupFileTab.content}\n\n`;
+      } else if (startupFileTab) {
+        // Use the current startup file tab even if not linked to the session
+        combinedContent += `${startupSeparator}\n`;
+        combinedContent += `// STARTUP_FILE: ${startupFileTab.name}\n`;
+        combinedContent += `${startupSeparator}\n`;
+        combinedContent += `${startupFileTab.content}\n\n`;
+        
+        // Update the session to link with this startup file
+        // Find the corresponding file in the startupFiles list
+        const startupFile = startupFiles.find(f => f.name === startupFileTab.name);
+        if (startupFile) {
+          currentSession.startupFile = startupFile;
+        }
       }
       
       // Concatenate all non-startup buffers with separator and names
@@ -950,7 +1008,7 @@ Master().fadeout(dur=24)
         startupFiles = data.files || [];
         // Set default startup file
         if (startupFiles.length > 0 && !selectedStartupFile) {
-          selectedStartupFile = startupFiles.find(file => file.name === 'default.py') || startupFiles[0];
+          selectedStartupFile = startupFiles.find(file => file.name === 'startup.py') || startupFiles[0];
         }
       } else {
         console.error('Failed to load startup files');
@@ -962,6 +1020,65 @@ Master().fadeout(dur=24)
     } finally {
       loadingStartupFiles = false;
     }
+  }
+  
+  // Initialize the editor with a default startup file and a code buffer
+  async function initializeEditorWithDefaultStartupFile() {
+    // Load the list of startup files
+    await loadStartupFiles();
+    
+    // Find the default startup file (startup.py) or use the first one
+    let defaultFile = startupFiles.find(file => file.name === 'startup.py');
+    
+    if (!defaultFile && startupFiles.length > 0) {
+      defaultFile = startupFiles[0];
+    }
+    
+    // If we found a default file, load it
+    if (defaultFile) {
+      // Load the startup file
+      await loadStartupFile(defaultFile);
+    } else {
+      // Create a placeholder startup file tab if none exists
+      const startupBuffer = {
+        id: nextTabId++,
+        name: 'startup.py',
+        content: "# Renardo startup file\n# This file is loaded when Renardo starts\n# Add your custom code here\n",
+        editing: false,
+        isStartupFile: true,
+        startupFilePath: null // Will be set when saved
+      };
+      
+      // Add the startup file tab
+      tabs = [startupBuffer];
+    }
+    
+    // Add a default code buffer
+    const codeBuffer = {
+      id: nextTabId++,
+      name: 'Untitled',
+      content: `# Renardo Live Coding Editor
+# Type your code here and press Ctrl+Enter to run
+
+Root.default = var([0,2,4], [2,4,6])
+d1 >> play("<x-(-[--])><*....><..(ooo(oO)).>")
+d2 >> blip([2,_,[4,4,4,P*(5,2)],_], dur=.5, sus=linvar([.2,.5,3],16), pan=[-.8,0,.8]).eclipse(4,16)
+d3 >> pluck(dur=.25, oct=3, sus=linvar([.2,.5,3],16), amp=[.7,.7,1,2], lpf=linvar([400,600,3000],16)).eclipse(16,96)
+k2 >> play("V.", lpf=400).eclipse(64,128)
+
+d2.dur=var([.25,1/3,1/2], 16)
+
+Master().fadeout(dur=24)
+`,
+      editing: false,
+      isStartupFile: false
+    };
+    
+    // Add the code buffer to the tabs
+    tabs = [...tabs, codeBuffer];
+    
+    // Set the code buffer as active by default
+    activeTabId = codeBuffer.id;
   }
   
   async function loadStartupFile(file) {
