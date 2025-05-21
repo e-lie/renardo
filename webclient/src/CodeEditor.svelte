@@ -53,6 +53,13 @@
   };
   let modalDismissed = false;
   
+  // Session state
+  let currentSession = {
+    name: 'Untitled Session',
+    startupFile: null, // Reference to the startup file for this session
+    modified: false
+  };
+  
   // State for multi-tab editor
   let tabs = [
     {
@@ -71,7 +78,8 @@ d2.dur=var([.25,1/3,1/2], 16)
 
 Master().fadeout(dur=24)
 `,
-      editing: false
+      editing: false,
+      isStartupFile: false
     }
   ];
   
@@ -81,6 +89,9 @@ Master().fadeout(dur=24)
   // Get the active tab's content
   $: activeBuffer = tabs.find(t => t.id === activeTabId);
   $: editorContent = activeBuffer ? activeBuffer.content : '';
+  
+  // Check if there's a startup file tab
+  $: startupFileTab = tabs.find(tab => tab.isStartupFile);
   
   // Watch for buffer switches and update editor
   $: if (editor && activeBuffer) {
@@ -814,9 +825,24 @@ Master().fadeout(dur=24)
     
     savingSession = true;
     try {
-      // Concatenate all buffers with separator and names
+      // Start with startup file info section 
+      let combinedContent = "";
+      
+      // Add startup file information if present
+      if (currentSession.startupFile && startupFileTab) {
+        const startupSeparator = '//' + '='.repeat(78);
+        combinedContent += `${startupSeparator}\n`;
+        combinedContent += `// STARTUP_FILE: ${currentSession.startupFile.name}\n`;
+        combinedContent += `${startupSeparator}\n`;
+        combinedContent += `${startupFileTab.content}\n\n`;
+      }
+      
+      // Concatenate all non-startup buffers with separator and names
       const separator = '#'.repeat(80);
-      const combinedContent = tabs
+      const regularBuffers = tabs.filter(tab => !tab.isStartupFile);
+      
+      // Add regular buffers
+      combinedContent += regularBuffers
         .map(tab => {
           const nameHeader = `######## ${tab.name}`;
           return `${separator}\n${nameHeader}\n${separator}\n${tab.content}`;
@@ -838,6 +864,10 @@ Master().fadeout(dur=24)
       if (result.success) {
         showSaveModal = false;
         sessionName = '';
+        
+        // Update session name
+        currentSession.name = result.filename;
+        currentSession.modified = false;
         
         // Show success message in console
         addConsoleOutput(`Session saved as ${result.filename}`, 'success');
@@ -936,32 +966,17 @@ Master().fadeout(dur=24)
   
   async function loadStartupFile(file) {
     try {
-      // Check if this startup file is already open in a tab
-      const existingTab = tabs.find(
-        tab => tab.isStartupFile && tab.startupFilePath === file.path
-      );
-      
-      if (existingTab) {
-        // If the file is already open, just switch to that tab
-        activeTabId = existingTab.id;
-        
-        if (editor) {
-          editor.setValue(existingTab.content);
-          editor.setCursor({ line: 0, ch: 0 });
-          editor.focus();
-        }
-        
-        // Update selected startup file
-        selectedStartupFile = file;
-        return;
+      // First, remove any existing startup file tab
+      if (startupFileTab) {
+        tabs = tabs.filter(tab => !tab.isStartupFile);
       }
       
-      // Otherwise, load the file from the server
+      // Load the file from the server
       const response = await fetch(file.url);
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          // Create a new buffer for the startup file
+          // Create a new buffer for the startup file - will always be at the beginning
           const newBuffer = {
             id: nextTabId++,
             name: file.name,
@@ -970,7 +985,9 @@ Master().fadeout(dur=24)
             isStartupFile: true,
             startupFilePath: file.path
           };
-          tabs = [...tabs, newBuffer];
+          
+          // Add the startup file as the first tab
+          tabs = [newBuffer, ...tabs.filter(tab => !tab.isStartupFile)];
           activeTabId = newBuffer.id;
           
           if (editor) {
@@ -979,8 +996,10 @@ Master().fadeout(dur=24)
             editor.focus();
           }
           
-          // Update selected startup file
+          // Update selected startup file and session state
           selectedStartupFile = file;
+          currentSession.startupFile = file;
+          currentSession.modified = true;
         } else {
           console.error('Failed to load startup file:', data.message);
         }
@@ -1133,14 +1152,37 @@ Master().fadeout(dur=24)
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
+          // Reset session state
+          currentSession = {
+            name: file.name,
+            startupFile: null,
+            modified: false
+          };
+          
+          // First check for a startup file section
+          const startupFileMatch = data.content.match(/\/\/={78}\n\/\/ STARTUP_FILE: (.+?)\n\/\/={78}\n([\s\S]+?)\n\n/);
+          
+          let startupFileName = null;
+          let startupFileContent = null;
+          let remainingContent = data.content;
+          
+          if (startupFileMatch) {
+            startupFileName = startupFileMatch[1];
+            startupFileContent = startupFileMatch[2];
+            
+            // Remove the startup section from the content for regular buffer processing
+            remainingContent = data.content.substring(startupFileMatch[0].length);
+          }
+          
           // Parse content with buffer names
           const separator = '#'.repeat(80);
-          const parts = data.content.split(new RegExp(`\\n?${separator}\\n?`));
+          const parts = remainingContent.split(new RegExp(`\\n?${separator}\\n?`));
           
           // Clear existing tabs and create new ones from the loaded content
           tabs = [];
           let newTabId = 1;
           
+          // Add regular buffers
           for (let i = 0; i < parts.length; i++) {
             const part = parts[i].trim();
             if (!part) continue;
@@ -1156,7 +1198,8 @@ Master().fadeout(dur=24)
                   id: newTabId++,
                   name: bufferName,
                   content: bufferContent,
-                  editing: false
+                  editing: false,
+                  isStartupFile: false
                 });
                 
                 i++; // Skip the content part we just processed
@@ -1167,18 +1210,65 @@ Master().fadeout(dur=24)
                 id: newTabId++,
                 name: `Untitled ${tabs.length + 1}`,
                 content: part,
-                editing: false
+                editing: false,
+                isStartupFile: false
               });
+            }
+          }
+          
+          // If we found a startup file, we need to load it
+          if (startupFileName && startupFileContent) {
+            // Try to find the actual file in the startup files list
+            await loadStartupFiles(); // Make sure we have the latest list
+            
+            const startupFile = startupFiles.find(f => f.name === startupFileName);
+            
+            if (startupFile) {
+              // Load the real file from the server but use our content
+              currentSession.startupFile = startupFile;
+              
+              // Create the startup file tab (always first)
+              const startupTab = {
+                id: newTabId++,
+                name: startupFileName,
+                content: startupFileContent,
+                editing: false,
+                isStartupFile: true,
+                startupFilePath: startupFile.path
+              };
+              
+              // Add to beginning of tabs
+              tabs = [startupTab, ...tabs];
+              
+              // Update selected startup file
+              selectedStartupFile = startupFile;
+            } else {
+              // The startup file wasn't found in the system, create a local tab only
+              console.warn(`Startup file ${startupFileName} not found in the system`);
+              
+              // Create a local buffer for the startup file content
+              const localStartupTab = {
+                id: newTabId++,
+                name: startupFileName,
+                content: startupFileContent,
+                editing: false,
+                isStartupFile: true,
+                startupFilePath: null // No path since we don't have the real file
+              };
+              
+              // Add to beginning of tabs
+              tabs = [localStartupTab, ...tabs];
             }
           }
           
           // If no buffers were created, create at least one
           if (tabs.length === 0) {
             tabs.push({
-              id: 1,
+              id: newTabId,
               name: 'Untitled',
               content: '',
-              editing: false
+              editing: false,
+              isStartupFile: false
             });
           }
           
@@ -1192,6 +1282,9 @@ Master().fadeout(dur=24)
             editor.setCursor({ line: 0, ch: 0 });
             editor.focus();
           }
+          
+          // Show success message
+          addConsoleOutput(`Session "${file.name}" loaded successfully`, 'success');
         } else {
           console.error('Failed to load session file:', data.message);
         }
@@ -1311,9 +1404,10 @@ Master().fadeout(dur=24)
       <div class="flex items-center gap-1">
       {#each tabs as buffer}
         <button
-          class="tab tab-lifted {activeTabId === buffer.id ? 'tab-active' : ''}"
+          class="tab tab-lifted {activeTabId === buffer.id ? 'tab-active' : ''} {buffer.isStartupFile ? 'startup-file' : ''}"
           on:click={() => activeTabId = buffer.id}
           on:dblclick={() => startEditingBufferName(buffer.id)}
+          title={buffer.isStartupFile ? 'Startup File - Will run when Renardo starts' : buffer.name}
         >
           {#if buffer.editing}
             <input
@@ -1332,9 +1426,14 @@ Master().fadeout(dur=24)
               on:click|stopPropagation
             />
           {:else}
+            {#if buffer.isStartupFile}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 inline-block" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd" />
+              </svg>
+            {/if}
             {buffer.name}
           {/if}
-          {#if tabs.length > 1}
+          {#if !buffer.isStartupFile && tabs.length > 1}
             <button
               class="ml-2 w-4 h-4 rounded-full hover:bg-base-300 flex items-center justify-center text-xs"
               on:click|stopPropagation={() => confirmCloseBuffer(buffer.id)}
@@ -1599,7 +1698,8 @@ Master().fadeout(dur=24)
                   {#each startupFiles as file}
                     <div class="flex items-center gap-2">
                       <button
-                        class="flex-grow text-left btn btn-sm btn-outline justify-start {selectedStartupFile && selectedStartupFile.name === file.name ? 'btn-primary' : ''}"
+                        class="flex-grow text-left btn btn-sm btn-outline justify-start 
+                               {selectedStartupFile && selectedStartupFile.name === file.name ? 'btn-primary' : ''}"
                         on:click={() => loadStartupFile(file)}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -1607,17 +1707,22 @@ Master().fadeout(dur=24)
                         </svg>
                         {file.name}
                       </button>
-                      {#if selectedStartupFile && selectedStartupFile.name === file.name}
-                        <div class="badge badge-primary mr-1">Default</div>
-                      {:else}
-                        <button
-                          class="btn btn-xs btn-outline"
-                          on:click={() => setDefaultStartupFile(file)}
-                          title="Set as Default Startup File"
-                        >
-                          Set Default
-                        </button>
-                      {/if}
+                      <div class="flex gap-1">
+                        {#if currentSession.startupFile && currentSession.startupFile.name === file.name}
+                          <div class="badge badge-accent">Session</div>
+                        {/if}
+                        {#if selectedStartupFile && selectedStartupFile.name === file.name}
+                          <div class="badge badge-primary">Default</div>
+                        {:else}
+                          <button
+                            class="btn btn-xs btn-outline"
+                            on:click={() => setDefaultStartupFile(file)}
+                            title="Set as Default Startup File"
+                          >
+                            Set Default
+                          </button>
+                        {/if}
+                      </div>
                     </div>
                   {/each}
                 </div>
@@ -1972,5 +2077,16 @@ Master().fadeout(dur=24)
   :global(body.resizing) {
     user-select: none;
     cursor: col-resize;
+  }
+  
+  /* Startup file tab styling */
+  .startup-file {
+    background-color: oklch(var(--p) / 0.2); /* Primary color with some transparency */
+    border-bottom: 2px solid oklch(var(--p)); /* Primary color border bottom */
+    font-weight: bold;
+  }
+  
+  .startup-file.tab-active {
+    background-color: oklch(var(--p) / 0.3); /* Slightly darker when active */
   }
 </style>
