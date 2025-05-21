@@ -49,7 +49,8 @@
     superColliderClasses: false,
     sclangCode: false,
     samples: false,
-    instruments: false
+    instruments: false,
+    reaperPack: false
   };
   let modalDismissed = false;
   
@@ -410,7 +411,8 @@
           superColliderClasses: state.renardoInit.superColliderClasses === true,
           sclangCode: state.renardoInit.sclangCode === true,
           samples: state.renardoInit.samples === true,
-          instruments: state.renardoInit.instruments === true
+          instruments: state.renardoInit.instruments === true,
+          reaperPack: state.renardoInit.reaperPack === true
         };
         
         // Check if any initialization steps are incomplete
@@ -2073,6 +2075,21 @@ Master().fadeout(dur=24)
               {/if}
             </div>
             <span class="{initStatus.instruments ? 'text-success' : 'text-error'}">Instruments & Effects</span>
+          </div>
+          
+          <div class="flex items-center">
+            <div class="w-6 h-6 mr-2">
+              {#if initStatus.reaperPack}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              {:else}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              {/if}
+            </div>
+            <span class="{initStatus.reaperPack ? 'text-success' : 'text-error'}">Reaper Resources</span>
           </div>
         </div>
         
