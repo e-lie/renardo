@@ -102,6 +102,70 @@
   // Console output
   let consoleOutput = [];
   let consoleContainer;
+  let currentEditorTheme = "dracula"; // Default theme
+  
+  // Calculate console colors based on theme
+  $: consoleColors = getConsoleColorsForTheme(currentEditorTheme);
+  
+  // Function to get console colors for a given theme
+  function getConsoleColorsForTheme(theme) {
+    // Default colors (dark theme)
+    let consoleBg = "#21222c";
+    let consoleHeaderBg = "#191a21";
+    let textColor = "#f8f8f2";
+    
+    switch(theme) {
+      case "dracula":
+        consoleBg = "#21222c";
+        consoleHeaderBg = "#191a21";
+        textColor = "#f8f8f2";
+        break;
+      case "monokai":
+        consoleBg = "#272822";
+        consoleHeaderBg = "#1e1f1c";
+        textColor = "#f8f8f2";
+        break;
+      case "material":
+        consoleBg = "#263238";
+        consoleHeaderBg = "#1c262b";
+        textColor = "#eeffff";
+        break;
+      case "nord":
+        consoleBg = "#2e3440";
+        consoleHeaderBg = "#272c36";
+        textColor = "#d8dee9";
+        break;
+      case "solarized-dark":
+        consoleBg = "#002b36";
+        consoleHeaderBg = "#00212b";
+        textColor = "#839496";
+        break;
+      case "solarized-light":
+        consoleBg = "#fdf6e3";
+        consoleHeaderBg = "#eee8d5";
+        textColor = "#657b83";
+        break;
+      case "darcula":
+        consoleBg = "#2b2b2b";
+        consoleHeaderBg = "#1e1e1e";
+        textColor = "#a9b7c6";
+        break;
+      case "eclipse":
+        consoleBg = "#f7f7f7";
+        consoleHeaderBg = "#e7e7e7";
+        textColor = "#333";
+        break;
+      default:
+        // Use default dark theme colors
+        break;
+    }
+    
+    return { 
+      consoleBg, 
+      consoleHeaderBg, 
+      textColor 
+    };
+  }
   
   // We'll assume websockets are managed by the parent App component
   
@@ -143,6 +207,12 @@
   }
   
   onMount(() => {
+    // Load saved editor theme from localStorage
+    const savedTheme = localStorage.getItem('editor-theme');
+    if (savedTheme) {
+      currentEditorTheme = savedTheme;
+    }
+    
     // Add global event listeners for resize operation
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
@@ -1508,7 +1578,10 @@ Master().fadeout(dur=24)
 
         <!-- Editor Theme Selector -->
         <div class="flex items-center gap-2">
-          <CodeMirrorThemeSelector bind:editor={editor} />
+          <CodeMirrorThemeSelector 
+            bind:editor={editor} 
+            on:themeChange={event => currentEditorTheme = event.detail.theme}
+          />
         </div>
       </div>
     </div>
@@ -1616,8 +1689,10 @@ Master().fadeout(dur=24)
       </div>
 
       <!-- Console output - always below editor -->
-      <div class="flex flex-col h-[30vh] bg-neutral text-neutral-content overflow-hidden">
-        <div class="flex justify-between items-center px-4 py-2 bg-neutral-focus text-neutral-content">
+      <div class="flex flex-col h-[30vh] console-background overflow-hidden" 
+           style="background-color: {consoleColors.consoleBg}; color: {consoleColors.textColor};">
+        <div class="flex justify-between items-center px-4 py-2 console-header"
+             style="background-color: {consoleColors.consoleHeaderBg}; color: {consoleColors.textColor};">
           <h3 class="text-sm font-bold"> ฅ^•ﻌ•^ฅ >> output</h3>
           <button
             class="btn btn-xs btn-ghost"
@@ -2205,5 +2280,18 @@ Master().fadeout(dur=24)
   
   .startup-file.tab-active {
     background-color: oklch(var(--p) / 0.3); /* Slightly darker when active */
+  }
+  
+  /* Console styling */
+  .console-background {
+    /* These will be overridden by inline styles */
+    background-color: #21222c; /* Default - matches Dracula darker */
+    color: #f8f8f2; /* Light text for dark backgrounds */
+  }
+  
+  .console-header {
+    /* These will be overridden by inline styles */
+    background-color: #191a21; /* Default - matches Dracula darkest */
+    color: #f8f8f2; /* Light text for dark backgrounds */
   }
 </style>
