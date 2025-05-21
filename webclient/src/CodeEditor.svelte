@@ -1686,12 +1686,12 @@ Master().fadeout(dur=24)
     <!-- Left side: Code editor and console -->
     <div class="flex flex-col flex-1 overflow-hidden">
       <!-- Code editor -->
-      <div class="flex-1 border border-base-300" bind:this={editorContainer}>
+      <div class="flex-none h-[70vh] border border-base-300 overflow-hidden" bind:this={editorContainer}>
         <textarea id="code-editor">{editorContent}</textarea>
       </div>
 
       <!-- Console output - always below editor -->
-      <div class="flex flex-col h-[30vh] console-background overflow-hidden" 
+      <div class="flex flex-col flex-none h-[30vh] console-background overflow-hidden" 
            style="background-color: {consoleColors.consoleBg}; color: {consoleColors.textColor};">
         <div class="flex justify-between items-center px-4 py-2 console-header"
              style="background-color: {consoleColors.consoleHeaderBg}; color: {consoleColors.textColor};">
@@ -2260,6 +2260,12 @@ Master().fadeout(dur=24)
     font-family: 'Fira Code', 'Menlo', 'Monaco', 'Courier New', monospace;
     font-size: 14px;
     line-height: 1.5;
+  }
+  
+  /* Ensure the editor container has proper height constraints */
+  :global(.CodeMirror-scroll) {
+    max-height: 100%;
+    overflow-y: auto !important;
   }
 
   /* Let themes handle gutter colors - default theme fallback */
