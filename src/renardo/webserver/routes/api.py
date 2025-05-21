@@ -9,6 +9,8 @@ import json
 import subprocess
 import platform
 import shutil
+import tomli
+import tomli_w
 
 def register_api_routes(webapp):
     import requests
@@ -1337,4 +1339,94 @@ def register_api_routes(webapp):
             return jsonify({
                 "success": False,
                 "message": f"Error moving user directory: {str(e)}"
+            }), 500
+
+    @webapp.route('/api/settings/toml', methods=['GET'])
+    def get_toml_settings():
+        """
+        Get the raw TOML settings file content
+        
+        Returns:
+            JSON: {"toml": "raw TOML content"}
+        """
+        try:
+            # Get the settings file path
+            settings_file = settings.public_file
+            
+            # Read the raw TOML content
+            if settings_file.exists():
+                toml_content = settings_file.read_text(encoding='utf-8')
+            else:
+                # Return empty TOML if file doesn't exist
+                toml_content = "# Renardo Settings\n"
+                
+            return jsonify({
+                "success": True,
+                "toml": toml_content
+            })
+            
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "message": f"Error reading TOML settings: {str(e)}"
+            }), 500
+
+    @webapp.route('/api/settings/toml', methods=['PUT'])
+    def save_toml_settings():
+        """
+        Save raw TOML settings directly to the settings file
+        
+        Expected JSON body:
+            {"toml": "raw TOML content"}
+        
+        Returns:
+            JSON: Success/error response
+        """
+        try:
+            data = request.get_json()
+            if not data or 'toml' not in data:
+                return jsonify({
+                    "success": False,
+                    "message": "Missing 'toml' field in request body"
+                }), 400
+            
+            toml_content = data['toml']
+            
+            # Validate TOML syntax
+            try:
+                # Parse the TOML to validate syntax
+                parsed_toml = tomli.loads(toml_content)
+            except tomli.TOMLDecodeError as e:
+                return jsonify({
+                    "success": False,
+                    "message": f"TOML syntax error: {str(e)}"
+                }), 400
+            
+            # Get the settings file path
+            settings_file = settings.public_file
+            
+            # Write the TOML content directly to the file
+            settings_file.write_text(toml_content, encoding='utf-8')
+            
+            # Reload settings from the file to update internal state
+            settings.load_from_file()
+            
+            # Broadcast settings update via WebSocket
+            websocket_utils.broadcast_to_clients({
+                "type": "settings_updated",
+                "data": {
+                    "settings": settings._public_settings
+                }
+            })
+            
+            return jsonify({
+                "success": True,
+                "message": "TOML settings saved successfully",
+                "settings": settings._public_settings
+            })
+            
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "message": f"Error saving TOML settings: {str(e)}"
             }), 500
