@@ -7,7 +7,7 @@ generic music resource classes from renardo.lib.music_resource.
 
 import tempfile
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from renardo.lib.InstrumentProxy import InstrumentProxy
 from renardo.lib.music_resource import Instrument, Effect, ResourceType
@@ -20,9 +20,9 @@ class SCEffect(Effect):
     def __init__(
             self,
             shortname: str,
-            fullname: str,
-            description: str,
             code: str,
+            fullname: Optional[str] = None,
+            description: Optional[str] = None,
             arguments: Dict[str, Any] = None,
             bank: str = "undefined",
             category: str = "undefined",
@@ -62,9 +62,9 @@ class SCInstrument(Instrument):
     def __init__(
             self,
             shortname: str,
-            fullname: str,
-            description: str,
             code: str,
+            fullname: Optional[str] = None,
+            description: Optional[str] = None,
             arguments: Dict[str, Any] = None,
             bank: str = "undefined",
             category: str = "undefined",
