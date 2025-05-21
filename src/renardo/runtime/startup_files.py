@@ -34,7 +34,7 @@ def get_startup_file():
     Get the current startup file path, using settings to determine which one to load
     """
     # Check if a specific startup file is specified in settings
-    startup_file_name = settings.get("core.STARTUP_FILE_NAME", "default.py")
+    startup_file_name = settings.get("core.STARTUP_FILE_NAME", "startup.py")
     
     # Create a path to the user's startup_files directory
     user_dir = settings.get_renardo_user_dir()
@@ -50,7 +50,7 @@ def get_startup_file():
         return user_startup_file
     
     # If not found in user dir, create an empty default file
-    if startup_file_name == "default.py":
+    if startup_file_name == "startup.py":
         with open(user_startup_file, 'w') as f:
             f.write("# Renardo startup file\n")
             f.write("# This file is loaded when Renardo starts\n")
@@ -76,7 +76,7 @@ def create_startup_directory():
     startup_files_dir.mkdir(exist_ok=True, parents=True)
     
     # Create a default file if none exists
-    default_file = startup_files_dir / "default.py"
+    default_file = startup_files_dir / "startup.py"
     
     if not default_file.exists():
         with open(default_file, 'w') as f:
