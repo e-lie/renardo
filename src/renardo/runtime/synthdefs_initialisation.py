@@ -14,16 +14,16 @@ for scresource_bank in scresource_library:
     if scresource_bank.name in settings.get("sc_backend.ACTIVATED_SCCODE_BANKS"):
         for instrument_category in scresource_bank.instruments:
             for scresource_file in instrument_category:
-                # load the SCInstrument instance declared in every python resource file found in library
-                scinstrument:SCInstrument = scresource_file.load_resource_from_python()
-                scinstrument.bank = scresource_bank.name
-                scinstrument.category = instrument_category.category
-                scinstrument.load_in_server_from_tempfile()
-                if scinstrument:
+                try:
+                    # load the SCInstrument instance declared in every python resource file found in library
+                    scinstrument:SCInstrument = scresource_file.load_resource_from_python()
+                    scinstrument.bank = scresource_bank.name
+                    scinstrument.category = instrument_category.category
+                    scinstrument.load_in_server_from_tempfile()
                     # define a variable for each scinstrument (callable in the context of a player and returns a InstrumentProxy)
                     globals()[scinstrument.shortname] = scinstrument
-                else:
-                    WarningMsg(f"resource from {scresource_file.path} could not be loaded !")
+                except Exception as e:
+                    print(f"Resource from {scresource_file.path} could not be loaded : {e}")
 
 
 # create the special sccode dir in the user dir if not exist
@@ -49,12 +49,11 @@ for scresource_bank in scresource_library:
     if scresource_bank.name in settings.get("sc_backend.ACTIVATED_SCCODE_BANKS"):
         for effect_category in scresource_bank.effects:
             for scresource_file in effect_category:
-                # load the SCInstrument instance declared in every python resource file found in library
-                sceffect = scresource_file.load_resource_from_python()
-                sceffect.bank = scresource_bank.name
-                sceffect.category = effect_category.category
-                if sceffect:
+                try:
+                    # load the SCInstrument instance declared in every python resource file found in library
+                    sceffect = scresource_file.load_resource_from_python()
+                    sceffect.bank = scresource_bank.name
+                    sceffect.category = effect_category.category
                     effect_manager.new(sceffect)
-                else:
-                    WarningMsg(f"resource from {scresource_file.path} could not be loaded !")
-                # define a variable for each scinstrument (callable in the context of a player and returns a InstrumentProxy)
+                except Exception as e:
+                    print(f"Resource from {scresource_file.path} could not be loaded : {e}")
