@@ -936,6 +936,27 @@ Master().fadeout(dur=24)
   
   async function loadStartupFile(file) {
     try {
+      // Check if this startup file is already open in a tab
+      const existingTab = tabs.find(
+        tab => tab.isStartupFile && tab.startupFilePath === file.path
+      );
+      
+      if (existingTab) {
+        // If the file is already open, just switch to that tab
+        activeTabId = existingTab.id;
+        
+        if (editor) {
+          editor.setValue(existingTab.content);
+          editor.setCursor({ line: 0, ch: 0 });
+          editor.focus();
+        }
+        
+        // Update selected startup file
+        selectedStartupFile = file;
+        return;
+      }
+      
+      // Otherwise, load the file from the server
       const response = await fetch(file.url);
       if (response.ok) {
         const data = await response.json();
@@ -978,6 +999,11 @@ Master().fadeout(dur=24)
     }
     
     try {
+      // Get the latest content from the editor if this is the active buffer
+      if (activeTabId === buffer.id && editor) {
+        buffer.content = editor.getValue();
+      }
+      
       const response = await fetch('/api/settings/user-directory/startup_files/save', {
         method: 'POST',
         headers: {
@@ -991,6 +1017,11 @@ Master().fadeout(dur=24)
       
       const result = await response.json();
       if (result.success) {
+        // Update the buffer in the tabs array
+        tabs = tabs.map(tab => 
+          tab.id === buffer.id ? {...tab, content: buffer.content} : tab
+        );
+        
         // Show success message in console
         addConsoleOutput(`Startup file ${buffer.name} saved`, 'success');
       } else {
@@ -1007,6 +1038,21 @@ Master().fadeout(dur=24)
     if (!fileName) return;
     
     const name = fileName.endsWith('.py') ? fileName : `${fileName}.py`;
+    
+    // Check if a file with this name is already open
+    const existingTabByName = tabs.find(
+      tab => tab.isStartupFile && tab.name === name
+    );
+    
+    if (existingTabByName) {
+      // Just switch to the existing tab
+      activeTabId = existingTabByName.id;
+      if (editor) {
+        editor.setValue(existingTabByName.content);
+        editor.focus();
+      }
+      return;
+    }
     
     try {
       const response = await fetch('/api/settings/user-directory/startup_files/create', {
