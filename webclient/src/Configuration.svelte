@@ -9,7 +9,8 @@
   let error = null;
   let successMessage = '';
   let showAdvancedView = false;
-  let advancedSettingsText = '';
+  let tomlText = '';
+  let tomlValidationError = '';
   
   // User directory state
   let userDirectory = '';
@@ -114,6 +115,11 @@
   
   // Generate list of settings groups dynamically from schema
   $: settingsGroups = [...new Set(Object.values(settingsSchema).map(setting => setting.group))];
+
+  // Load TOML when advanced view is opened
+  $: if (showAdvancedView && !tomlText) {
+    loadTomlSettings();
+  }
   
   // Load user directory
   async function loadUserDirectory() {
@@ -227,8 +233,6 @@
       const data = await response.json();
       if (data.success) {
         settingsData = data.settings;
-        // Initialize the advanced settings text editor
-        advancedSettingsText = JSON.stringify(data.settings, null, 2);
         // Clear modified settings on load
         modifiedSettings = {};
       } else {
@@ -239,6 +243,72 @@
       error = err.message;
     } finally {
       isLoading = false;
+    }
+  }
+  
+  // Load raw TOML settings text
+  async function loadTomlSettings() {
+    try {
+      const response = await fetch('/api/settings/toml');
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch TOML settings: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      if (data.success) {
+        tomlText = data.toml;
+      } else {
+        throw new Error(data.message || 'Failed to load TOML settings');
+      }
+    } catch (err) {
+      console.error('Error loading TOML settings:', err);
+      // Fallback to empty TOML if loading fails
+      tomlText = '';
+    }
+  }
+  
+  // Save TOML settings directly
+  async function saveTomlSettings() {
+    tomlValidationError = '';
+    
+    try {
+      const response = await fetch('/api/settings/toml', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ toml: tomlText })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok || !data.success) {
+        if (data.validation_error) {
+          tomlValidationError = data.validation_error;
+          throw new Error(`TOML Validation Error: ${data.validation_error}`);
+        } else {
+          throw new Error(data.message || 'Failed to save TOML settings');
+        }
+      }
+      
+      // Reload settings after successful save
+      await loadSettings();
+      
+      // Show success message
+      successMessage = 'TOML settings saved successfully';
+      setTimeout(() => {
+        successMessage = '';
+      }, 3000);
+      
+      return true;
+    } catch (err) {
+      console.error('Error saving TOML settings:', err);
+      error = err.message;
+      setTimeout(() => {
+        error = null;
+      }, 5000);
+      return false;
     }
   }
   
@@ -733,26 +803,25 @@
         </div>
       {/each}
     {:else}
-      <!-- Advanced view - editable JSON display -->
+      <!-- Advanced view - editable TOML display -->
       <div class="card bg-base-100 shadow-xl mb-6">
         <div class="card-body">
           <div class="flex justify-between items-center mb-4">
-            <h2 class="card-title">All Settings (JSON Editor)</h2>
+            <h2 class="card-title">All Settings (TOML Editor)</h2>
             
             <div class="flex gap-2">
               <button 
-                class="btn btn-sm btn-primary" 
-                on:click={() => {
-                  try {
-                    const parsedSettings = JSON.parse(advancedSettingsText);
-                    modifiedSettings = { '_json_full_settings': parsedSettings };
-                  } catch (e) {
-                    error = `JSON Parse Error: ${e.message}`;
-                  }
-                }}
-                disabled={!advancedSettingsText || advancedSettingsText === JSON.stringify(settingsData, null, 2)}
+                class="btn btn-sm btn-secondary" 
+                on:click={loadTomlSettings}
               >
-                Apply Changes
+                Reload TOML
+              </button>
+              <button 
+                class="btn btn-sm btn-primary" 
+                on:click={saveTomlSettings}
+                disabled={!tomlText.trim()}
+              >
+                Save TOML
               </button>
             </div>
           </div>
@@ -762,16 +831,28 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
             <div>
               <span class="font-bold">Advanced Mode</span>
-              <p class="text-sm">Edit the JSON with caution. Invalid JSON will not be applied. Click "Apply Changes" to stage your modifications before saving.</p>
+              <p class="text-sm">Edit the TOML configuration directly. Invalid TOML syntax will be validated on the backend before saving.</p>
             </div>
           </div>
           
-          <!-- JSON Editor -->
+          <!-- TOML validation error display -->
+          {#if tomlValidationError}
+            <div class="alert alert-error mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <div>
+                <span class="font-bold">TOML Validation Error</span>
+                <p class="text-sm">{tomlValidationError}</p>
+              </div>
+            </div>
+          {/if}
+          
+          <!-- TOML Editor -->
           <div class="form-control w-full">
             <textarea 
               class="textarea textarea-bordered font-mono text-sm h-[600px]"
-              bind:value={advancedSettingsText}
+              bind:value={tomlText}
               spellcheck="false"
+              placeholder="Loading TOML settings..."
             ></textarea>
           </div>
         </div>
