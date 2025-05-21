@@ -111,6 +111,10 @@
     toggleVimModeIfEditorReady(vimModeEnabled);
   }
   
+  // Create a custom event dispatcher
+  import { createEventDispatcher } from 'svelte';
+  const dispatch = createEventDispatcher();
+
   // Function to change theme
   function setTheme(theme) {
     if (!theme) return;
@@ -127,6 +131,9 @@
       
       // Save to localStorage
       localStorage.setItem(EDITOR_THEME_KEY, theme);
+      
+      // Dispatch a theme change event for parent components
+      dispatch('themeChange', { theme });
     });
   }
   
