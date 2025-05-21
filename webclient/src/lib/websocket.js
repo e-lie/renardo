@@ -11,7 +11,8 @@ export const appState = writable({
     superColliderClasses: false,
     sclangCode: false,
     samples: false,
-    instruments: false
+    instruments: false,
+    startupFiles: false
   },
   // Add runtime status
   runtimeStatus: {
