@@ -4,7 +4,7 @@
 #reaper_instruments = reainstru_factory.create_all_facades_from_reaproject_tracks()
 
 from renardo.runtime.managers_instanciation import reaper_resource_library
-from renardo.reaper_backend import ReaperInstrument
+from renardo.reaper_backend import ReaperInstrument, ensure_16_midi_tracks
 from renardo.settings_manager import settings
 
 
