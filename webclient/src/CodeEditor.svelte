@@ -887,6 +887,24 @@ Master().fadeout(dur=24)
     }
   }
   
+  // Function to open the sessions folder in the OS file browser
+  async function openSessionsFolder() {
+    try {
+      const response = await fetch('/api/settings/user-directory/livecoding-sessions/open', {
+        method: 'POST'
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        console.error('Failed to open sessions folder:', data.message);
+        addConsoleOutput(`Failed to open sessions folder: ${data.message}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error opening sessions folder:', error);
+      addConsoleOutput(`Error opening sessions folder: ${error.message}`, 'error');
+    }
+  }
+  
   // Function to load a session file into the editor
   async function loadSessionFile(file) {
     try {
@@ -1299,7 +1317,20 @@ Master().fadeout(dur=24)
             </div>
           {:else if activeTab === 'sessions'}
             <div>
-              <h3 class="text-lg font-bold mb-4">Sessions</h3>
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold">Sessions</h3>
+                <button
+                  class="btn btn-sm btn-outline"
+                  on:click={openSessionsFolder}
+                  title="Open Sessions Folder in File Explorer"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1H8a3 3 0 00-3 3v1.5a1.5 1.5 0 01-3 0V6z" clip-rule="evenodd" />
+                    <path d="M6 12a2 2 0 012-2h8a2 2 0 012 2v2a2 2 0 01-2 2H2h2a2 2 0 002-2v-2z" />
+                  </svg>
+                  Open Folder
+                </button>
+              </div>
               {#if loadingSessions}
                 <div class="flex justify-center">
                   <span class="loading loading-spinner loading-md"></span>
