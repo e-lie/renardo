@@ -561,10 +561,11 @@ def register_api_routes(webapp):
             if not filename.endswith('.py'):
                 filename += '.py'
                 
-            # Get sessions directory
+            # Get user directory and create livecoding_sessions subdirectory
             from pathlib import Path
             from renardo.settings_manager import settings
-            sessions_dir = settings.get_path("RENARDO_ROOT_PATH") / "sessions"
+            user_dir = settings.get_renardo_user_dir()
+            sessions_dir = user_dir / "livecoding_sessions"
             
             # Create sessions directory if it doesn't exist
             sessions_dir.mkdir(exist_ok=True)
@@ -597,7 +598,8 @@ def register_api_routes(webapp):
         try:
             from pathlib import Path
             from renardo.settings_manager import settings
-            sessions_dir = settings.get_path("RENARDO_ROOT_PATH") / "sessions"
+            user_dir = settings.get_renardo_user_dir()
+            sessions_dir = user_dir / "livecoding_sessions"
             
             # Create sessions directory if it doesn't exist
             sessions_dir.mkdir(exist_ok=True)
@@ -635,7 +637,8 @@ def register_api_routes(webapp):
         try:
             from pathlib import Path
             from renardo.settings_manager import settings
-            sessions_dir = settings.get_path("RENARDO_ROOT_PATH") / "sessions"
+            user_dir = settings.get_renardo_user_dir()
+            sessions_dir = user_dir / "livecoding_sessions"
             
             file_path = sessions_dir / filename
             
