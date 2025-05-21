@@ -52,6 +52,7 @@
 # les trucs à debug
 
 - erreur avec des effets sc sur linux :
+
 *** ERROR: SynthDef M_Equalizer not found
 FAILURE IN SERVER /s_new SynthDef not found
 *** ERROR: SynthDef L_Equalizer not found
@@ -69,7 +70,13 @@ FAILURE IN SERVER /s_new SynthDef not found
 *** ERROR: SynthDef L_Equalizer not found
 FAILURE IN SERVER /s_new SynthDef not found
 
-- ne pas pouvoir executer deux fois le meme code deux fois de suite du tout dans l'editeur est un bug
+- debug instrument args value qui surcharge définitivement la valeur par defaut
+
+pour reproduire simplement b1 >> blip(dur=1) ensuite la dur est a 1 pour toute la session pour tous les players jouant blip
+
+- debug la bonne execution des startup files
+
+- ne pas pouvoir executer deux fois le même code deux fois de suite du tout dans l'editeur est un bug
 - spack param not working
 - d1 >> play("x-o-").every(4, "stutter", 4) -> seems every is not working anymore
 
