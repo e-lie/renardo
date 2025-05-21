@@ -19,7 +19,8 @@ class StateManager:
                 "superColliderClasses": False,
                 "sclangCode": False,
                 "samples": False,
-                "instruments": False
+                "instruments": False,
+                "reaperPack": False
             },
             # Log messages
             "log_messages": []
@@ -146,7 +147,8 @@ class StateManager:
             "superColliderClasses": False,
             "sclangCode": False,
             "samples": False,
-            "instruments": False
+            "instruments": False,
+            "reaperPack": False
         }
         self._state["log_messages"] = []
         return self._state
