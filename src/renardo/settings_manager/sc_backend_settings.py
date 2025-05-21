@@ -28,7 +28,6 @@ settings.set_defaults_from_dict({
         "SC3_PLUGINS": False,
         "INFO_FILE": "Info.scd",
         "RECORD_FILE" : "Record.scd",
-        "STARTUP_FILE" : "Startup.scd",
         "OSC_FUNC_FILE" : "OSCFunc.scd",
         "BUFFERS_FILE" : "Buffers.scd",
         "EFFECTS_FILE": "Effects.scd",
