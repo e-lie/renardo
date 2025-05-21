@@ -71,7 +71,6 @@ class Instrument(MusicResource):
             arguments: Dict[str, Any] = None,
             bank: str = "undefined",
             category: str = "undefined",
-            auto_load: bool = False
     ):
         """
         Initialize an instrument.
@@ -108,9 +107,6 @@ class Instrument(MusicResource):
         if arguments:
             self.defaults.update(arguments)
 
-        if auto_load:
-            self.load()
-
     def __str__(self) -> str:
         return f"Instrument({self.shortname}, {len(self.arguments)} args)"
 
@@ -137,7 +133,6 @@ class Effect(MusicResource):
             bank: str = "undefined",
             category: str = "undefined",
             order: int = 2,
-            auto_load: bool = False
     ):
         """
         Initialize an effect.
@@ -157,8 +152,6 @@ class Effect(MusicResource):
         self.args = arguments or {}
         self.defaults = self.args.copy()
 
-        if auto_load:
-            self.load()
 
     def __str__(self) -> str:
         return f"Effect({self.shortname}, {len(self.arguments)} args)"
