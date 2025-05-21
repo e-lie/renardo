@@ -720,6 +720,39 @@ def register_api_routes(webapp):
                 "success": False,
                 "message": f"Error opening user directory: {str(e)}"
             }), 500
+            
+    @webapp.route('/api/settings/user-directory/livecoding-sessions/open', methods=['POST'])
+    def open_livecoding_sessions_directory():
+        """
+        Open the livecoding_sessions directory in the OS file browser
+        
+        Returns:
+            JSON: Operation status
+        """
+        try:
+            user_dir = settings.get_renardo_user_dir()
+            sessions_dir = user_dir / "livecoding_sessions"
+            
+            # Create the directory if it doesn't exist
+            sessions_dir.mkdir(exist_ok=True)
+            
+            # Platform-specific commands to open directory
+            if platform.system() == 'Windows':
+                subprocess.Popen(['explorer', str(sessions_dir)])
+            elif platform.system() == 'Darwin':  # macOS
+                subprocess.Popen(['open', str(sessions_dir)])
+            else:  # Linux and others
+                subprocess.Popen(['xdg-open', str(sessions_dir)])
+                
+            return jsonify({
+                "success": True,
+                "message": "Livecoding sessions directory opened"
+            })
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "message": f"Error opening livecoding sessions directory: {str(e)}"
+            }), 500
     
     @webapp.route('/api/collections/<collection_type>/<collection_name>/structure', methods=['GET'])
     def get_collection_structure(collection_type, collection_name):
