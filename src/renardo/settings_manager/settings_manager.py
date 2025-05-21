@@ -303,6 +303,8 @@ class SettingsManager:
             return self.get_renardo_user_dir() / self.get("samples.SAMPLES_DIR_NAME")
         elif path_name == "RECORDING_DIR":
             return self.get_renardo_user_dir() / "rec"
+        elif path_name == "STARTUP_FILES_DIR":
+            return self.get_renardo_user_dir() / "startup_files"
         elif path_name == "SCCODE_LIBRARY":
             return self.get_renardo_user_dir() / self.get("sc_backend.SCCODE_LIBRARY_DIR_NAME")
         elif path_name == "SPECIAL_SCCODE_DIR":
@@ -332,7 +334,8 @@ class SettingsManager:
         elif path_name == "FOXDOT_EDITOR_ROOT":
             return self.get_path("RENARDO_ROOT_PATH") / "foxdot_editor"
         elif path_name == "STARTUP_FILE_PATH":
-            return self.get_path("RENARDO_ROOT_PATH") / "Custom" / "startup.py"
+            startup_file_name = self.get("core.STARTUP_FILE_NAME", "default.py")
+            return self.get_path("STARTUP_FILES_DIR") / startup_file_name
 
         else:
             raise KeyError(f"{path_name} does not exist")

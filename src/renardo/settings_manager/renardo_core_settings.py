@@ -8,6 +8,7 @@ import os
 settings.set_defaults_from_dict({
     "core": {
         "INSTANCIATE_FOXDOT_PLAYERS": True,
+        "STARTUP_FILE_NAME": "default.py",
     }
 },
 )
