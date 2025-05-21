@@ -849,7 +849,7 @@
           <!-- TOML Editor -->
           <div class="form-control w-full">
             <textarea 
-              class="textarea textarea-bordered font-mono text-sm h-[600px]"
+              class="textarea textarea-bordered font-mono text-sm h-[600px] w-full"
               bind:value={tomlText}
               spellcheck="false"
               placeholder="Loading TOML settings..."
