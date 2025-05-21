@@ -8,11 +8,11 @@
 - [x] new web UI instead of TUI !!!
 
 - redesign de l'integration reaper
-  - creer les projets from scratch en programmatique
-  - sauvegarder les fxchains comme des reaperResources dans le dossier renardo et les mettre dynamiquement dans le dossier Reaper
+  - [x] creer les projets from scratch en programmatique
+  - [x] sauvegarder les fxchains comme des reaperResources dans le dossier renardo et les mettre dynamiquement dans le dossier Reaper
   - vol param use volume fader + new param fadeamp that is a third param special for fade like methods
 
-- test and finish the SCLang livecoding feature (effects too)
+- test and finish the SCLang livecoding feature
 
 - think about and design the meta language
 
@@ -31,11 +31,13 @@
     - pattern methods
     - global params
 
-- test MIDI matrix for playstrings
-
 # Moins prio
 
+- test MIDI matrix for playstrings
+
 - multiplayers as experimental feature
+
+- test livecoding effects
 
 - pulsardo websocket
 - redesign midi
@@ -49,11 +51,31 @@
 
 # les trucs à debug
 
+- erreur avec des effets sc sur linux :
+*** ERROR: SynthDef M_Equalizer not found
+FAILURE IN SERVER /s_new SynthDef not found
+*** ERROR: SynthDef L_Equalizer not found
+FAILURE IN SERVER /s_new SynthDef not found
+*** ERROR: SynthDef makeSound not found
+FAILURE IN SERVER /s_new SynthDef not found
+*** ERROR: SynthDef startSound not found
+FAILURE IN SERVER /s_new SynthDef not found
+*** ERROR: SynthDef H_Equalizer not found
+FAILURE IN SERVER /s_new SynthDef not found
+*** ERROR: SynthDef output not found
+FAILURE IN SERVER /s_new SynthDef not found
+*** ERROR: SynthDef M_Equalizer not found
+FAILURE IN SERVER /s_new SynthDef not found
+*** ERROR: SynthDef L_Equalizer not found
+FAILURE IN SERVER /s_new SynthDef not found
+
 - ne pas pouvoir executer deux fois le meme code deux fois de suite du tout dans l'editeur est un bug
 - spack param not working
 - d1 >> play("x-o-").every(4, "stutter", 4) -> seems every is not working anymore
 
-- fix / remove / find something else for startup file
+- [x] fix / remove / find something else for startup file
+- open reaper directory, open user dir does nothing on linux !
+- when opened through renardo scide is closed when closing renardo
 
 # trucs cools pour le futur
 
