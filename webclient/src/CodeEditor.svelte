@@ -1040,14 +1040,13 @@ Master().fadeout(dur=24)
   
   async function setDefaultStartupFile(file) {
     try {
-      const response = await fetch('/api/settings/update', {
+      const response = await fetch('/api/settings/startup_files/set_default', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          key: 'core.STARTUP_FILE_NAME',
-          value: file.name
+          filename: file.name
         })
       });
       
