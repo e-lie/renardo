@@ -17,10 +17,17 @@ from renardo.lib.Code import (
     WarningMsg, classes, clean, debug_stdout, error_stack, execute,
     foxdot_func_cmp, foxdot_live_function, foxdot_when_statement,
     get_input, get_now,
-    handle_stdin, instances, livefunction, load_startup_file,
+    handle_stdin, instances, livefunction,
     main_lib, modulo_index, re_player, when,
-    write_to_file, FoxDotCode, functions, FOXDOT_STARTUP
+    write_to_file, FoxDotCode, functions
 )
+
+# Import and initialize startup files system
+from .startup_files import STARTUP_FILE, create_startup_directory, load_startup_file
+create_startup_directory()  # Ensure startup directory exists
+
+# Replace the stub with our real startup file
+main_lib.FOXDOT_STARTUP = STARTUP_FILE
 
 FoxDotCode.namespace = globals()
 

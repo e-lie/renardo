@@ -76,11 +76,18 @@ else:
 
 class _StartupFile:
     """ Manages loading of startup file code """
-    def __init__(self, path):
-        self.set_path(path)
+    def __init__(self, path=None):
+        self.path = None
+        if path is not None:
+            self.set_path(path)
+    
     def set_path(self, path):
         """ Set the path to the startup file """
-        self.path = path if path is None else os.path.realpath(path)
+        if path is None:
+            self.path = None
+        else:
+            self.path = os.path.realpath(path)
+        return self
 
     def load(self):
         """ Load and return the content of the startup file """
@@ -91,11 +98,11 @@ class _StartupFile:
                 file.close()
                 return code
             except (IOError, OSError):
-                WarningMsg("'{}' startup file not found.".format(self.path))
+                WarningMsg(f"'{self.path}' startup file not found.")
         return ""
 
-# Initialize startup file
-FOXDOT_STARTUP = _StartupFile(str(settings.get_path("STARTUP_FILE_PATH")))
+# Initialize startup file - will be replaced by runtime.startup_files module
+FOXDOT_STARTUP = _StartupFile()
         
 class FoxDotCode:
     """ Handles execution of FoxDot code with namespace management """
