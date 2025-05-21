@@ -3,8 +3,9 @@
 b1 >> jbass(degree=[0,5,2], dur=.75)
 
 # ... the jbass part is in Renardo an object called an Instrument
-# Here we will be looking at SCInstrument which the Instrument proposed by the SuperCollider backend of Renardo (ReaperInstrument will be handled pretty be differently)
-# Lets say we would like to create a new bass (copy of FoxDot jbass for the example). We can define directly a new SuperCollider synthdef in a multiline string and use it to create a SCInstrument instance like this
+# Here we will be looking at SCInstrument which the Instrument type proposed by the SuperCollider backend of Renardo (ReaperInstrument will be handled pretty be differently)
+# Lets say we would like to create a new bass (copy of FoxDot jbass for the example).
+# We can define directly a new SuperCollider synthdef in a multiline string and use it to create a SCInstrument instance like this :
 
 jjbass = SCInstrument(shortname="jjbass",code="""
 SynthDef.new(\\jjbass,
@@ -25,7 +26,7 @@ ReplaceOut.ar(bus, osc)}).add;
 
 b1 >> jjbass(degree=[0,5,2], dur=.75)
 
-# Or like this
+# ...or like this :
 
 sccode = """
 SynthDef.new(\\jjbass,
@@ -50,7 +51,7 @@ jjbass = SCInstrument(shortname="jjbass",code=sccode)
 # The pitch should now be up an octave
 
 # If this looks hard to understand for you, don't worry ! SuperCollider language (SCLang) is not easy to approach...
-# A proper tutorial for understanding the basis of SuperCollider synthesis should come soon :)
+# A proper tutorial for understanding the basis of SuperCollider synthesis should come soon here :)
 
 # But not let's look at something crucial for Renardo customization : default values for arguments !
 # SCInstrument objects have an "arguments" field where you can define the default values used by SCIntrument when nothing is given
