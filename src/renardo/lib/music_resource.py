@@ -22,8 +22,8 @@ class MusicResource:
     def __init__(
             self,
             shortname: str,
-            fullname: str,
-            description: str,
+            fullname: Optional[str] = None,
+            description: Optional[str] = None,
             arguments: Dict[str, Any] = None,
             bank: str = "undefined",
             category: str = "undefined"
@@ -40,8 +40,8 @@ class MusicResource:
             category: The category within the bank
         """
         self.shortname = shortname
-        self.fullname = fullname
-        self.description = description
+        self.fullname = fullname or shortname
+        self.description = description or "No description."
         self.arguments = arguments or {}
         self.bank = bank
         self.category = category
@@ -66,8 +66,8 @@ class Instrument(MusicResource):
     def __init__(
             self,
             shortname: str,
-            fullname: str,
-            description: str,
+            fullname: Optional[str] = None,
+            description: Optional[str] = None,
             arguments: Dict[str, Any] = None,
             bank: str = "undefined",
             category: str = "undefined",
@@ -131,8 +131,8 @@ class Effect(MusicResource):
     def __init__(
             self,
             shortname: str,
-            fullname: str,
-            description: str,
+            fullname: Optional[str] = None,
+            description: Optional[str] = None,
             arguments: Dict[str, Any] = None,
             bank: str = "undefined",
             category: str = "undefined",
