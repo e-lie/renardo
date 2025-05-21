@@ -1,5 +1,6 @@
 from .api import register_api_routes
 from .websocket import register_websocket_routes
+from .startup_files_routes import register_startup_files_routes
 
 def init_routes(webapp, sock):
     """
@@ -11,6 +12,9 @@ def init_routes(webapp, sock):
     """
     # Register REST API routes
     register_api_routes(webapp)
+    
+    # Register startup files routes
+    register_startup_files_routes(webapp)
     
     # Register WebSocket routes
     register_websocket_routes(sock)
