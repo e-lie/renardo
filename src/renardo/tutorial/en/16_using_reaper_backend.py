@@ -62,4 +62,22 @@ b1 >> pluckbass([0,0,0,2], dur=[.75,.75,.5])
 # to troubleshoot if this does not work
 # Be sure Renardo.midi is started, the MIDI messages are correctly sent from SuperCollider to Reaper
 # Look for errors in the terminal log of Renardo
-# Troubleshooting documentation page
+# Troubleshooting documentation page (Work in progress)
+
+# Part five - Latency handling
+
+# To synchronize notes from SuperCollider backends and Reaper backends...
+# We can add latency to SuperCollider backend with 
+
+Clock.latency = 0.5
+
+# Then we can adjust negative midi nudge with 
+
+Clock.midi_nudge = -0.16
+
+# Launch two instrument Reaper and SuperCollider to adjuste the value for your machine
+
+b1 >> blip()
+
+b2 >> pluckbass()
+
