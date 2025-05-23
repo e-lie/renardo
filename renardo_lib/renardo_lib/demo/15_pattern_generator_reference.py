@@ -17,6 +17,7 @@ print(PEuclid(3, 8))
 
 
 
+
 ####################
 # PDur
 # PDur(n, k, start=0, dur=0.25)
@@ -202,4 +203,3 @@ print(GeneratorPattern.from_func(some_func)[:10])
 
 # We can use lambdas too
 print(GeneratorPattern.from_func(lambda index: int(index / 4))[:10])
-
