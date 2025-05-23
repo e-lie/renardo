@@ -594,7 +594,7 @@ class Player(Repeatable):
         for key in Player.Attributes():
 
             if key not in ("scale", "dur", "sus", "blur", "amp",
-                            "amplify", "degree", "oct", "bpm"):
+                            "amplify", "degree", "oct", "bpm", "vol"): # fix volume bug
 
                 setattr(self, key, 0)
 
@@ -606,7 +606,8 @@ class Player(Repeatable):
 
             value = FxList.defaults[key]
 
-            setattr(self, key, value)
+            if key not in ("vol"): # fix volume bug
+                setattr(self, key, value)
 
             reset.append(key)
 

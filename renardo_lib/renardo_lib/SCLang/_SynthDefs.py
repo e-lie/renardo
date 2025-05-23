@@ -524,6 +524,9 @@ dafbass.add()
 dblbass = FileSynthDef("dblbass")
 dblbass.add()
 
+dblbass_mod = FileSynthDef("dblbass_mod")
+dblbass_mod.add()
+
 donkysub = FileSynthDef("donkysub")
 donkysub.add()
 
