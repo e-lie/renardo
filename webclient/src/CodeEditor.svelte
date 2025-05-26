@@ -2495,13 +2495,13 @@ Master().fadeout(dur=24)
   
   /* Executed code highlighting */
   :global(.executed-code-highlight) {
-    background-color: rgba(255, 255, 0, 0.3); /* Yellow background with transparency */
+    background-color: rgba(0, 255, 255, 0.3); /* Cyan color with transparency - should work across themes */
     animation: highlight-blink 0.5s ease-in-out;
   }
   
   @keyframes highlight-blink {
-    0% { background-color: rgba(255, 255, 0, 0.6); }
-    50% { background-color: rgba(255, 255, 0, 0.2); }
+    0% { background-color: rgba(0, 255, 255, 0.6); }
+    50% { background-color: rgba(0, 255, 255, 0.2); }
     100% { background-color: transparent; }
   }
 </style>
