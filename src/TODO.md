@@ -12,9 +12,11 @@
   - [x] sauvegarder les fxchains comme des reaperResources dans le dossier renardo et les mettre dynamiquement dans le dossier Reaper
   - vol param use volume fader + new param fadeamp that is a third param special for fade like methods
 
-- test and finish the SCLang livecoding feature
+- [x] test and finish the SCLang livecoding feature
 
 - think about and design the meta language
+  - [ ] create the meeting point schedule feature
+  - [ ] create the comment based macros to program clock schedule without python indented blocks
 
 - live tools in editor
   - configurable clock display
@@ -51,30 +53,14 @@
 
 # les trucs à debug
 
-- erreur avec des effets sc sur linux :
+- debug effects with renardo community sclang bank
 
-*** ERROR: SynthDef M_Equalizer not found
-FAILURE IN SERVER /s_new SynthDef not found
-*** ERROR: SynthDef L_Equalizer not found
-FAILURE IN SERVER /s_new SynthDef not found
-*** ERROR: SynthDef makeSound not found
-FAILURE IN SERVER /s_new SynthDef not found
-*** ERROR: SynthDef startSound not found
-FAILURE IN SERVER /s_new SynthDef not found
-*** ERROR: SynthDef H_Equalizer not found
-FAILURE IN SERVER /s_new SynthDef not found
-*** ERROR: SynthDef output not found
-FAILURE IN SERVER /s_new SynthDef not found
-*** ERROR: SynthDef M_Equalizer not found
-FAILURE IN SERVER /s_new SynthDef not found
-*** ERROR: SynthDef L_Equalizer not found
-FAILURE IN SERVER /s_new SynthDef not found
+- [ ] debug la bonne execution des startup files
 
-- debug instrument args value qui surcharge définitivement la valeur par defaut
+- [ ] configure the ouput with verbosity parameter => create a renardo logger to replace print ?
 
-pour reproduire simplement b1 >> blip(dur=1) ensuite la dur est a 1 pour toute la session pour tous les players jouant blip
+- [ ] make every output of the renardo backend be displayed to the renardo console even delayed output using the logger (Clock.every(4, lambda: print("hello")))
 
-- debug la bonne execution des startup files
 
 - ne pas pouvoir executer deux fois le même code deux fois de suite du tout dans l'editeur est un bug
 - spack param not working
