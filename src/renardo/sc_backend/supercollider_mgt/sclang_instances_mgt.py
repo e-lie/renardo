@@ -195,7 +195,7 @@ class SupercolliderInstance:
         return running
         
     def launch_supercollider_ide(self):
-        """Launch the SuperCollider IDE application
+        """Launch the SuperCollider IDE application detached from the parent process
         
         Returns:
             bool: True if the application was launched successfully, False otherwise
@@ -205,13 +205,28 @@ class SupercolliderInstance:
             
         try:
             if platform == "darwin":  # macOS needs special handling for .app bundles
+                # macOS: open command naturally detaches the process
                 subprocess.Popen(["open", self.sc_app_path])
-            elif platform == "win32" or (isinstance(self.sc_app_path, str) and os.path.exists(self.sc_app_path)):
-                # Windows or Linux with direct path
-                subprocess.Popen([str(self.sc_app_path)])
+            elif platform == "win32":
+                # Windows: detach using CREATE_NEW_PROCESS_GROUP and DETACHED_PROCESS flags
+                subprocess.Popen(
+                    [str(self.sc_app_path)],
+                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    stdin=subprocess.DEVNULL
+                )
             else:
-                # Linux with command in PATH
-                subprocess.Popen([self.sc_app_path])
+                # Linux: use nohup command to detach scide and avoid closing with renardo process
+                import shlex
+                if isinstance(self.sc_app_path, str) and os.path.exists(self.sc_app_path):
+                    # Direct path
+                    cmd = f"nohup {shlex.quote(str(self.sc_app_path))} >/dev/null 2>&1 &"
+                    subprocess.Popen(cmd, shell=True)
+                else:
+                    # Command in PATH
+                    cmd = f"nohup {shlex.quote(self.sc_app_path)} >/dev/null 2>&1 &"
+                    subprocess.Popen(cmd, shell=True)
             return True
         except Exception as e:
             print(f"Error launching SuperCollider IDE: {e}")
