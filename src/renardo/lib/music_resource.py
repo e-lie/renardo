@@ -6,6 +6,7 @@ that can be implemented by different backend systems. The SuperCollider backend 
 in renardo.sc_backend extend these base classes.
 """
 
+import copy
 from enum import Enum
 from typing import Dict, Any, Optional
 
@@ -106,6 +107,15 @@ class Instrument(MusicResource):
         # Update defaults with any provided arguments
         if arguments:
             self.defaults.update(arguments)
+
+    def merge_with_defaults(self, **kwargs):
+        # self.arguments define defaults values for function params
+        # update it with "__call__" time values
+        #kwargs = self.arguments.update(kwargs)
+        defaults = copy.deepcopy(self.arguments)
+        defaults.update(kwargs)
+        return defaults
+
 
     def __str__(self) -> str:
         return f"Instrument({self.shortname}, {len(self.arguments)} args)"

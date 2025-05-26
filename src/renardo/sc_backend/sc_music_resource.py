@@ -5,7 +5,7 @@ This module provides SuperCollider-specific implementations of the
 generic music resource classes from renardo.lib.music_resource.
 """
 
-import copy
+
 import tempfile
 from pathlib import Path
 from typing import Dict, Any, Optional
@@ -96,12 +96,10 @@ class SCInstrument(Instrument):
         # "loop" and similar instruments use a different
         # function signature : first arg is filename and not degree
         instrument_proxy = None
-        # self.arguments define defaults values for function params
-        # update it with "__call__" time values
-        #kwargs = self.arguments.update(kwargs)
-        defaults = copy.deepcopy(self.arguments)
-        defaults.update(kwargs)
-        kwargs = defaults
+
+        # standard handling of default argument values in the parent method
+        kwargs = self.merge_with_defaults(**kwargs)
+
         if self.shortname in ["loop", "stretch"]:
             filename = first_argument
             pos = kwargs["pos"] if "pos" in kwargs.keys() else 0
