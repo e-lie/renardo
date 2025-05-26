@@ -15,6 +15,81 @@ from renardo.sc_backend import TempoClient, ServerManager
 from renardo.settings_manager import settings
 
 
+class PointInTime:
+    """Represents a point in time that can be undefined or defined with a beat value."""
+    
+    def __init__(self, beat=None):
+        self._beat = beat
+        self._schedulables = []
+    
+    @property
+    def is_defined(self):
+        """Returns True if this point in time has a defined beat value."""
+        return self._beat is not None
+    
+    @property
+    def beat(self):
+        """Returns the beat value if defined, otherwise None."""
+        return self._beat
+    
+    @beat.setter
+    def beat(self, value):
+        """Sets the beat value and schedules all pending schedulables."""
+        if self._beat is not None:
+            raise ValueError("PointInTime is already defined")
+        
+        self._beat = value
+        # Schedule all pending schedulables
+        for schedulable in self._schedulables:
+            schedulable.clock.schedule(
+                schedulable.callable_obj,
+                beat=value,
+                args=schedulable.args,
+                kwargs=schedulable.kwargs,
+                is_priority=schedulable.is_priority
+            )
+        # Clear the list after scheduling
+        self._schedulables.clear()
+    
+    def add_schedulable(self, schedulable):
+        """Adds a schedulable to be executed when this point in time is defined."""
+        if self.is_defined:
+            # If already defined, schedule immediately
+            schedulable.clock.schedule(
+                schedulable.callable_obj,
+                beat=self._beat,
+                args=schedulable.args,
+                kwargs=schedulable.kwargs,
+                is_priority=schedulable.is_priority
+            )
+        else:
+            # Store for later scheduling
+            self._schedulables.append(schedulable)
+    
+    def __repr__(self):
+        if self.is_defined:
+            return f"PointInTime(beat={self._beat})"
+        else:
+            return f"PointInTime(undefined, {len(self._schedulables)} pending)"
+
+
+class Schedulable:
+    """Wraps a callable object with its scheduling parameters."""
+    
+    def __init__(self, clock, callable_obj, args=(), kwargs=None, is_priority=False):
+        if kwargs is None:
+            kwargs = {}
+        
+        self.clock = clock
+        self.callable_obj = callable_obj
+        self.args = args
+        self.kwargs = kwargs
+        self.is_priority = is_priority
+    
+    def __repr__(self):
+        return f"Schedulable({self.callable_obj}, args={self.args}, kwargs={self.kwargs}, priority={self.is_priority})"
+
+
 class TempoClock(object):
     tempo_server = None
     tempo_client = None
@@ -42,6 +117,9 @@ class TempoClock(object):
 
         # All other scheduled items go here
         self.items = []
+        
+        # Collection for deferred scheduling when using PointInTime
+        self.to_be_scheduled = []
 
         # General set up
         self.bpm = bpm
@@ -112,32 +190,41 @@ class TempoClock(object):
         cls.server = server
         return
 
-    def schedule(self, obj, beat=None, args=(), kwargs={}, is_priority=False):
+    def schedule(self, callable_obj, beat=None, args=(), kwargs={}, is_priority=False):
         """ TempoClock.schedule(callable, beat=None)
             Add a player / event to the queue """
         # Make sure the object can actually be called
         try:
-            assert callable(obj)
+            assert callable(callable_obj)
         except AssertionError:
-            raise ScheduleError(obj)
+            raise ScheduleError(callable_obj)
 
         # Start the clock ticking if not already
         if self.ticking == False:
             self.start()
+
+        # Handle PointInTime instances
+        if isinstance(beat, PointInTime):
+            schedulable = Schedulable(self, callable_obj, args, kwargs, is_priority)
+            beat.add_schedulable(schedulable)
+            # Add to to_be_scheduled if the PointInTime is not yet defined
+            if not beat.is_defined:
+                self.to_be_scheduled.append(schedulable)
+            return None
 
         # Default is next bar
         if beat is None:
             beat = self.next_bar()
 
         # Keep track of objects in the Clock
-        if obj not in self.playing and isinstance(obj, Player):
-            self.playing.append(obj)
+        if callable_obj not in self.playing and isinstance(callable_obj, Player):
+            self.playing.append(callable_obj)
 
-        if obj not in self.items:
-            self.items.append(obj)
+        if callable_obj not in self.items:
+            self.items.append(callable_obj)
 
         # Add to the queue
-        self.scheduling_queue.add(obj, beat, args, kwargs, is_priority)
+        self.scheduling_queue.add(callable_obj, beat, args, kwargs, is_priority)
         # block.time = self.osc_message_accum
 
         return None
