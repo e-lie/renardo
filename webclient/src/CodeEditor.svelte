@@ -1538,7 +1538,7 @@ Master().fadeout(dur=24)
     }
   }</script>
 
-<div class="flex flex-col h-screen w-full overflow-hidden">
+<div class="flex flex-col w-full overflow-hidden" style="height: {zenMode ? '100vh' : 'calc(100vh - 4rem)'}">
   <!-- Zen mode toggle button -->
   <div class="absolute top-2 right-2 z-50">
     <button
