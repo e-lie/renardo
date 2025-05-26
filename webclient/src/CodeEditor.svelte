@@ -47,6 +47,9 @@
   // Zen mode state
   let zenMode = false;
   
+  // Console minimize state
+  let consoleMinimized = false;
+  
   // Initialization check
   let showInitModal = false;
   let initStatus = {
@@ -828,6 +831,11 @@
     window.dispatchEvent(event);
   }
   
+  // Function to toggle console minimize
+  function toggleConsoleMinimize() {
+    consoleMinimized = !consoleMinimized;
+  }
+  
   // Function to insert preset code at cursor position
   function insertPreset(code) {
     if (!editor) return;
@@ -1550,6 +1558,25 @@ Master().fadeout(dur=24)
       {/if}
     </button>
   </div>
+
+  <!-- Console minimize toggle button -->
+  <div class="absolute bottom-2 left-2 z-50">
+    <button
+      class="btn btn-sm btn-ghost"
+      on:click={toggleConsoleMinimize}
+      title="{consoleMinimized ? 'Expand' : 'Minimize'} Console"
+    >
+      {#if consoleMinimized}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
+        </svg>
+      {:else}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+        </svg>
+      {/if}
+    </button>
+  </div>
   
   <!-- Header with controls -->
   {#if !zenMode}
@@ -1748,7 +1775,8 @@ Master().fadeout(dur=24)
 
       <!-- Console output - always below editor -->
       <div class="flex flex-col flex-none console-background overflow-hidden"
-           style="height: {consoleHeight}%; background-color: {consoleColors.consoleBg}; color: {consoleColors.textColor};">
+           style="height: {consoleMinimized ? '3rem' : consoleHeight + '%'}; background-color: {consoleColors.consoleBg}; color: {consoleColors.textColor};">
+        {#if !consoleMinimized}
         <div class="flex justify-between items-center px-4 py-2 console-header"
              style="background-color: {consoleColors.consoleHeaderBg}; color: {consoleColors.textColor};">
           <h3 class="text-sm font-bold"> ฅ^•ﻌ•^ฅ >> output</h3>
@@ -1763,13 +1791,14 @@ Master().fadeout(dur=24)
             Clear
           </button>
         </div>
+        {/if}
         <div class="overflow-y-auto flex-1 p-4 font-mono text-sm" bind:this={consoleContainer}>
           {#if consoleOutput.length === 0}
             <div class="flex items-center justify-center h-full opacity-50 italic">
-              No output yet. Run some code to see results here.
+              {consoleMinimized ? '' : 'No output yet. Run some code to see results here.'}
             </div>
           {:else}
-            {#each consoleOutput as output}
+            {#each (consoleMinimized ? consoleOutput.slice(-2) : consoleOutput) as output}
               <div class="mb-1 border-b border-base-300 border-opacity-20 pb-1">
                 <span class="{
                   output.level.toLowerCase() === 'info' ? 'text-info' :
