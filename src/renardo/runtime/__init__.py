@@ -63,7 +63,7 @@ Player.set_buffer_manager(buffer_manager)
 from renardo.lib.TempoClock import (
     History,
     SchedulingQueue, QueueBlock, QueueObj, ScheduleError,
-    SoloPlayer, TempoClock, Wrapper,
+    SoloPlayer, TempoClock, Wrapper, PointInTime
 )
 
 from renardo.sc_backend import TempoClient, ServerManager, RequestTimeout
