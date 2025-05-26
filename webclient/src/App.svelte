@@ -171,7 +171,7 @@
 
 <div class="drawer">
   <input id="drawer-toggle" type="checkbox" class="drawer-toggle" /> 
-  <div class="drawer-content flex flex-col">
+  <div class="drawer-content flex flex-col h-screen overflow-hidden">
     <!-- Navbar -->
     {#if !zenMode || currentRoute !== 'editor'}
       <div class="navbar bg-base-300" transition:slide>
@@ -202,7 +202,7 @@
     {/if}
 
     <!-- Main content -->
-    <div class="min-h-screen bg-base-100">
+    <div class="{currentRoute === 'editor' ? 'h-full' : 'min-h-screen'} bg-base-100">
       {#if currentRoute === 'editor'}
         <CodeEditor />
       {:else if currentRoute === 'init'}
