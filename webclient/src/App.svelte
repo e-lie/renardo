@@ -171,7 +171,7 @@
 
 <div class="drawer">
   <input id="drawer-toggle" type="checkbox" class="drawer-toggle" /> 
-  <div class="drawer-content flex flex-col">
+  <div class="drawer-content flex flex-col h-screen overflow-hidden">
     <!-- Navbar -->
     {#if !zenMode || currentRoute !== 'editor'}
       <div class="navbar bg-base-300" transition:slide>
@@ -202,20 +202,26 @@
     {/if}
 
     <!-- Main content -->
-    <div class="min-h-screen bg-base-100">
-      {#if currentRoute === 'editor'}
+    {#if currentRoute === 'editor'}
+      <div class="h-full bg-base-100">
         <CodeEditor />
-      {:else if currentRoute === 'init'}
-        <!-- Component-specific content -->
-        <RenardoInit />
-      {:else if currentRoute === 'collections'}
-        <Collections />
-      {:else if currentRoute === 'config'}
-        <Configuration />
-      {:else if currentRoute === 'scbackend'}
-        <AudioBackend />
-      {/if}
-    </div>
+      </div>
+    {:else}
+      <div class="flex-1 bg-base-100 overflow-y-auto">
+        <div class="min-h-full p-4">
+          {#if currentRoute === 'init'}
+            <!-- Component-specific content -->
+            <RenardoInit />
+          {:else if currentRoute === 'collections'}
+            <Collections />
+          {:else if currentRoute === 'config'}
+            <Configuration />
+          {:else if currentRoute === 'scbackend'}
+            <AudioBackend />
+          {/if}
+        </div>
+      </div>
+    {/if}
   </div>
   
   <!-- Mobile drawer sidebar -->
