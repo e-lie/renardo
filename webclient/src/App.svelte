@@ -202,20 +202,26 @@
     {/if}
 
     <!-- Main content -->
-    <div class="{currentRoute === 'editor' ? 'h-full' : 'min-h-screen'} bg-base-100">
-      {#if currentRoute === 'editor'}
+    {#if currentRoute === 'editor'}
+      <div class="h-full bg-base-100">
         <CodeEditor />
-      {:else if currentRoute === 'init'}
-        <!-- Component-specific content -->
-        <RenardoInit />
-      {:else if currentRoute === 'collections'}
-        <Collections />
-      {:else if currentRoute === 'config'}
-        <Configuration />
-      {:else if currentRoute === 'scbackend'}
-        <AudioBackend />
-      {/if}
-    </div>
+      </div>
+    {:else}
+      <div class="flex-1 bg-base-100 overflow-y-auto">
+        <div class="min-h-full p-4">
+          {#if currentRoute === 'init'}
+            <!-- Component-specific content -->
+            <RenardoInit />
+          {:else if currentRoute === 'collections'}
+            <Collections />
+          {:else if currentRoute === 'config'}
+            <Configuration />
+          {:else if currentRoute === 'scbackend'}
+            <AudioBackend />
+          {/if}
+        </div>
+      </div>
+    {/if}
   </div>
   
   <!-- Mobile drawer sidebar -->
