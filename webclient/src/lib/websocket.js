@@ -282,6 +282,17 @@ function handleMessage(message) {
       break;
       
     case 'code_execution_result':
+      // Dispatch custom event for code execution completion (for highlighting removal)
+      if (typeof window !== 'undefined' && data.requestId) {
+        const event = new CustomEvent('codeExecutionComplete', { 
+          detail: { 
+            requestId: data.requestId, 
+            success: data.success 
+          } 
+        });
+        window.dispatchEvent(event);
+      }
+      
       // Handle code execution result
       if (data.success) {
         // Only add the message if there's actual content to show
