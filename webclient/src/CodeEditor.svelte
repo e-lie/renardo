@@ -50,6 +50,9 @@
   // Console minimize state
   let consoleMinimized = false;
   
+  // Code execution highlighting state
+  let activeHighlights = new Map(); // Map of requestId -> CodeMirror TextMarker
+  
   // Initialization check
   let showInitModal = false;
   let initStatus = {
@@ -508,12 +511,23 @@
     
     document.addEventListener('keydown', handleKeyDown);
     
+    // Listen for code execution completion events
+    const handleCodeExecutionComplete = (event) => {
+      const { requestId } = event.detail;
+      if (requestId) {
+        removeExecutionHighlight(requestId);
+      }
+    };
+    
+    window.addEventListener('codeExecutionComplete', handleCodeExecutionComplete);
+    
     // Clean up on unmount
     return () => {
       unsubscribe();
       document.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('codeExecutionComplete', handleCodeExecutionComplete);
       if (editor) {
         editor.toTextArea(); // Clean up CodeMirror instance
       }
@@ -559,7 +573,7 @@
   }
   
   // Send code to server and handle results
-  function sendCodeToExecute(codeToExecute, executionType = 'paragraph') {
+  function sendCodeToExecute(codeToExecute, executionType = 'paragraph', from = null, to = null) {
     // Don't execute empty code
     if (!codeToExecute || !codeToExecute.trim()) {
       return;
@@ -585,12 +599,20 @@
     // Just send the command to the server for execution
     // The server will return the result which will be displayed
 
+    // Generate unique request ID
+    const requestId = Date.now();
+
+    // Highlight the executed code if range is provided
+    if (from && to && editor) {
+      highlightExecutedCode(from, to, requestId);
+    }
+
     // Send to server with unique request ID to prevent duplicate execution
     sendMessage({
       type: 'execute_code',
       data: {
         code: codeToExecute,
-        requestId: Date.now() // Add unique ID to prevent duplicates
+        requestId: requestId
       }
     });
   }
@@ -606,16 +628,46 @@
     // Get current selection or current paragraph if nothing is selected
     let codeToExecute;
     let executionType;
+    let from, to;
     
     if (editor.somethingSelected()) {
       codeToExecute = editor.getSelection();
       executionType = 'selection';
+      from = editor.getCursor('from');
+      to = editor.getCursor('to');
     } else {
       codeToExecute = getCurrentParagraph();
       executionType = 'paragraph';
+      // Calculate paragraph range
+      const cursor = editor.getCursor();
+      const line = cursor.line;
+      
+      // Find the start of the paragraph
+      let startLine = line;
+      while (startLine > 0) {
+        const prevLine = editor.getLine(startLine - 1);
+        if (!prevLine || prevLine.trim() === '') {
+          break;
+        }
+        startLine--;
+      }
+      
+      // Find the end of the paragraph
+      let endLine = line;
+      const totalLines = editor.lineCount();
+      while (endLine < totalLines - 1) {
+        const nextLine = editor.getLine(endLine + 1);
+        if (!nextLine || nextLine.trim() === '') {
+          break;
+        }
+        endLine++;
+      }
+      
+      from = { line: startLine, ch: 0 };
+      to = { line: endLine, ch: editor.getLine(endLine).length };
     }
     
-    sendCodeToExecute(codeToExecute, executionType);
+    sendCodeToExecute(codeToExecute, executionType, from, to);
   }
   
   // Execute current line - Mode 1: Alt+Enter
@@ -626,8 +678,12 @@
       return;
     }
     
+    const cursor = editor.getCursor();
     const currentLine = getCurrentLine();
-    sendCodeToExecute(currentLine, 'line');
+    const from = { line: cursor.line, ch: 0 };
+    const to = { line: cursor.line, ch: currentLine.length };
+    
+    sendCodeToExecute(currentLine, 'line', from, to);
   }
   
   // This is now a local helper function for UI-only actions (not for code execution)
@@ -834,6 +890,35 @@
   // Function to toggle console minimize
   function toggleConsoleMinimize() {
     consoleMinimized = !consoleMinimized;
+  }
+  
+  // Function to highlight executed code
+  function highlightExecutedCode(from, to, requestId) {
+    if (!editor) return;
+    
+    const marker = editor.markText(from, to, {
+      className: 'executed-code-highlight',
+      clearOnEnter: false
+    });
+    
+    activeHighlights.set(requestId, marker);
+    
+    // Auto-remove highlight after 3 seconds if no response received
+    setTimeout(() => {
+      if (activeHighlights.has(requestId)) {
+        marker.clear();
+        activeHighlights.delete(requestId);
+      }
+    }, 3000);
+  }
+  
+  // Function to remove highlight when response is received
+  function removeExecutionHighlight(requestId) {
+    if (activeHighlights.has(requestId)) {
+      const marker = activeHighlights.get(requestId);
+      marker.clear();
+      activeHighlights.delete(requestId);
+    }
   }
   
   // Function to insert preset code at cursor position
@@ -1593,7 +1678,12 @@ Master().fadeout(dur=24)
         <div class="flex flex-wrap gap-2">
           <button
             class="btn btn-sm btn-success"
-            on:click={() => sendCodeToExecute(editor.getValue(), 'all')}
+            on:click={() => {
+              const allText = editor.getValue();
+              const from = { line: 0, ch: 0 };
+              const to = { line: editor.lineCount() - 1, ch: editor.getLine(editor.lineCount() - 1).length };
+              sendCodeToExecute(allText, 'all', from, to);
+            }}
             title="Run all code in editor"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -2401,5 +2491,17 @@ Master().fadeout(dur=24)
     /* These will be overridden by inline styles */
     background-color: #191a21; /* Default - matches Dracula darkest */
     color: #f8f8f2; /* Light text for dark backgrounds */
+  }
+  
+  /* Executed code highlighting */
+  :global(.executed-code-highlight) {
+    background-color: rgba(255, 255, 0, 0.3); /* Yellow background with transparency */
+    animation: highlight-blink 0.5s ease-in-out;
+  }
+  
+  @keyframes highlight-blink {
+    0% { background-color: rgba(255, 255, 0, 0.6); }
+    50% { background-color: rgba(255, 255, 0, 0.2); }
+    100% { background-color: rgba(255, 255, 0, 0.3); }
   }
 </style>
