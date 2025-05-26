@@ -49,6 +49,8 @@
   
   // Console minimize state
   let consoleMinimized = false;
+  let consoleHeightBeforeMinimize = 30; // Store height before minimizing
+  let minimizedConsoleHeight = 15; // Height percentage when minimized (for ~2 lines)
   
   // Code execution highlighting state
   let activeHighlights = new Map(); // Map of requestId -> CodeMirror TextMarker
@@ -889,7 +891,16 @@
   
   // Function to toggle console minimize
   function toggleConsoleMinimize() {
-    consoleMinimized = !consoleMinimized;
+    if (consoleMinimized) {
+      // Expanding: restore previous height
+      consoleHeight = consoleHeightBeforeMinimize;
+      consoleMinimized = false;
+    } else {
+      // Minimizing: store current height and set to minimized height
+      consoleHeightBeforeMinimize = consoleHeight;
+      consoleHeight = minimizedConsoleHeight;
+      consoleMinimized = true;
+    }
   }
   
   // Function to highlight executed code
@@ -1865,7 +1876,7 @@ Master().fadeout(dur=24)
 
       <!-- Console output - always below editor -->
       <div class="flex flex-col flex-none console-background overflow-hidden"
-           style="height: {consoleMinimized ? '3rem' : consoleHeight + '%'}; background-color: {consoleColors.consoleBg}; color: {consoleColors.textColor};">
+           style="height: {consoleHeight}%; background-color: {consoleColors.consoleBg}; color: {consoleColors.textColor};">
         {#if !consoleMinimized}
         <div class="flex justify-between items-center px-4 py-2 console-header"
              style="background-color: {consoleColors.consoleHeaderBg}; color: {consoleColors.textColor};">
