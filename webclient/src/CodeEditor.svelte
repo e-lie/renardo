@@ -903,13 +903,13 @@
     
     activeHighlights.set(requestId, marker);
     
-    // Auto-remove highlight after 3 seconds if no response received
+    // Remove highlight after animation completes (0.5 seconds)
     setTimeout(() => {
       if (activeHighlights.has(requestId)) {
         marker.clear();
         activeHighlights.delete(requestId);
       }
-    }, 3000);
+    }, 300);
   }
   
   // Function to remove highlight when response is received
@@ -2502,6 +2502,6 @@ Master().fadeout(dur=24)
   @keyframes highlight-blink {
     0% { background-color: rgba(255, 255, 0, 0.6); }
     50% { background-color: rgba(255, 255, 0, 0.2); }
-    100% { background-color: rgba(255, 255, 0, 0.3); }
+    100% { background-color: transparent; }
   }
 </style>
