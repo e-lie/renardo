@@ -447,15 +447,15 @@
     
     // Subscribe to appState changes to update UI
     const unsubscribe = appState.subscribe(state => {
-      // Update console output
-      if (state.consoleOutput && state.consoleOutput.length > 0) {
+      // Update console output (always update, even when empty)
+      if (state.consoleOutput !== undefined) {
         // We're just using the store's version of the console output
         consoleOutput = state.consoleOutput;
 
-        // Check if we should scroll
-        // With this approach, we'll scroll when anything changes
-        // If more fine-grained control is needed, we could store a timestamp
-        scrollToBottom();
+        // Check if we should scroll (only when there's content)
+        if (state.consoleOutput.length > 0) {
+          scrollToBottom();
+        }
       }
       
       // Check initialization status
