@@ -763,7 +763,7 @@ class TempoClock(object):
         bpm_start_beat = next_bar
 
         def func():
-            object.__setattr__(self, "bpm", self._convert_bpm_json(bpm))
+            object.__setattr__(self, "bpm", float(bpm))
             self.last_now_call = self.bpm_start_time = bpm_start_time
             self.bpm_start_beat = bpm_start_beat
 
@@ -814,10 +814,14 @@ class TempoClock(object):
 
     def __setattr__(self, attr, value):
         if attr == "bpm" and self.__setup:
-            # Schedule for next bar
-            start_beat, start_time = self.update_tempo(value)
-            # Also store the new bpm value immediately for get_bpm() calls
-            object.__setattr__(self, "bpm", self._convert_bpm_json(value))
+            # Handle TimeVar bpm differently - set immediately, don't schedule
+            if isinstance(value, TimeVar):
+                object.__setattr__(self, "bpm", value)
+                # Reset timing for TimeVar behavior
+                self.last_now_call = self.get_time()
+            else:
+                # For regular numeric BPM, schedule for next bar - don't set immediately
+                start_beat, start_time = self.update_tempo(value)
         elif attr == "midi_nudge" and self.__setup:
             # Adjust nudge for midi devices
             self.server.set_midi_nudge(value)
@@ -915,10 +919,24 @@ class TempoClock(object):
         return
 
     def _convert_bpm_json(self, bpm):
+        """Convert BPM to JSON format"""
         if isinstance(bpm, (int, float)):
             return float(bpm)
         elif isinstance(bpm, TimeVar):
             return bpm.json_value()
+    
+    def _convert_json_bpm(self, data):
+        """Convert JSON data back to BPM value (including TimeVar objects)"""
+        if isinstance(data, list):
+            # This is a TimeVar encoded as [class_name, values, duration]
+            cls_name = data[0]
+            val = data[1] 
+            dur = data[2]
+            # Import TimeVar dynamically to avoid circular imports
+            return TimeVar(val, dur)
+        else:
+            # Regular numeric value
+            return data
 
     def json_bpm(self):
         """ Returns the bpm in a data type that can be sent over json"""
