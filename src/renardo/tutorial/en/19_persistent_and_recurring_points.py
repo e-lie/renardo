@@ -72,3 +72,63 @@ print(f"Bass drop will repeat every 16 beats")
 # Build-up 8 beats after each drop
 p2 >> pluck([0, 2, 4, 7], dur=1/4, amp=var([0.5, 1], 4))
 d3 >> play("x-x-x-x-", dur=1/2, amp=0.6)
+
+
+# === CLEANING AND CANCELING SCHEDULED EVENTS ===
+
+# All PointInTime classes have a clean() method to remove scheduled operations
+cleanup_point = pit()
+
+def some_function():
+    print("This function was scheduled")
+
+# Schedule something
+Clock.schedule(some_function, cleanup_point)
+print(f"Function scheduled: {cleanup_point}")
+
+# Change your mind and cancel everything
+cleanup_point.clean()
+print(f"After clean(): {cleanup_point}")
+
+# Now even if you set the beat, nothing will happen
+cleanup_point.beat = Clock.now() + 8
+print("Beat set but nothing executes (was cleaned)")
+
+print("--- Practical Cleaning Examples ---")
+
+# Stop a recurring pattern
+drum_pattern_to_stop = rpit(period=4)
+
+# {drum_pattern_to_stop}
+d4 >> play("X-o-", dur=1/2)
+
+# Start the pattern
+drum_pattern_to_stop.beat = Clock.now() + 4
+
+# Later, stop it completely
+drum_pattern_to_stop.clean()
+print("Drum pattern stopped with clean()")
+
+# Reset a persistent trigger for new content
+verse_trigger_reset = ppit()
+
+# {verse_trigger_reset}
+p5 >> pluck([0, 2, 4], dur=1)
+
+# Later, completely change what the verse does
+verse_trigger_reset.clean()
+
+# {verse_trigger_reset}  # Now schedule something completely different
+p5 >> saw([0, 4, 7], dur=1/2, lpf=1000)
+
+print("Verse trigger reset for new content")
+
+print("✓ clean() method provides powerful control over scheduled events!")
+
+print("Summary:")
+print("✓ PointInTime: Single-use scheduling")
+print("✓ PersistentPointInTime: Reusable triggers for song sections") 
+print("✓ RecurringPointInTime: Automatic periodic execution")
+print("✓ All support arithmetic operations with type preservation")
+print("✓ All have clean() method for canceling/resetting scheduled events")
+print("✓ Perfect for live coding performances and complex arrangements")
