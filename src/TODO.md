@@ -10,7 +10,8 @@
 - redesign de l'integration reaper
   - [x] creer les projets from scratch en programmatique
   - [x] sauvegarder les fxchains comme des reaperResources dans le dossier renardo et les mettre dynamiquement dans le dossier Reaper
-  - vol param use volume fader + new param fadeamp that is a third param special for fade like methods
+  - [ ] vol param use volume fader + new param fadeamp that is a third param special for fade like methods
+  - [ ] create a detailed documentation page
 
 - [x] test and finish the SCLang livecoding feature
 
@@ -20,13 +21,10 @@
   - [ ] create the state machine cycle like list class
   - [ ] explore and debug
 
-- live tools in editor
-  - [ ] configurable clock display
-  - player playing list with attribute value display -> add a new dict like class that store the value at every param setting (__setattr__) (less prio)
-  - displaying state of the ppit and rpit (less prio)
-  - finish the bang feature (less prio)
 
-- add collection explorer to look at the 
+- live tools in editor
+  - [x] custom editor fonts + jgs
+  - [ ] configurable clock display
 
 - documentation
   - concepts and architecture
@@ -37,6 +35,13 @@
     - global params
 
 # Moins prio
+
+- live tools in editor
+  - player playing list with attribute value display -> add a new dict like class that store the value at every param setting (__setattr__) (less prio)
+  - displaying state of the ppit and rpit (less prio)
+  - finish the bang feature (less prio)
+
+- add collection explorer to look at the 
 
 - test MIDI matrix for playstrings
 
@@ -60,8 +65,8 @@
 
 - debug effects with renardo community sclang bank
 
+- [ ] debug supercollider startup
 - [ ] debug la bonne execution des startup files
-
 - [x] Clock.bpm =  is broken ?? from which commit on ?
 
 - [ ] editor color scheme = dropdown bugs on reload if not default color scheme (dracula for now)
