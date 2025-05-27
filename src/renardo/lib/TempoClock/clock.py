@@ -763,7 +763,7 @@ class TempoClock(object):
         bpm_start_beat = next_bar
 
         def func():
-            # object.__setattr__(self, "bpm", self._convert_json_bpm(bpm))
+            object.__setattr__(self, "bpm", self._convert_bpm_json(bpm))
             self.last_now_call = self.bpm_start_time = bpm_start_time
             self.bpm_start_beat = bpm_start_beat
 
@@ -816,6 +816,8 @@ class TempoClock(object):
         if attr == "bpm" and self.__setup:
             # Schedule for next bar
             start_beat, start_time = self.update_tempo(value)
+            # Also store the new bpm value immediately for get_bpm() calls
+            object.__setattr__(self, "bpm", self._convert_bpm_json(value))
         elif attr == "midi_nudge" and self.__setup:
             # Adjust nudge for midi devices
             self.server.set_midi_nudge(value)
