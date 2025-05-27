@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte';
+  import FontSelector from './FontSelector.svelte';
   
   // Available themes - these are commonly used CodeMirror themes
   const themes = [
@@ -25,6 +26,9 @@
   
   // Reference to the CodeMirror editor instance
   export let editor = null;
+  
+  // Reference to the FontSelector component
+  let fontSelector;
   
   onMount(() => {
     // Check for theme in localStorage
@@ -109,6 +113,11 @@
     setThemeIfEditorReady(currentTheme);
     toggleLineNumbersIfEditorReady(showLineNumbers);
     toggleVimModeIfEditorReady(vimModeEnabled);
+    
+    // Initialize the font selector with the editor
+    if (fontSelector) {
+      fontSelector.initEditor(editorInstance);
+    }
   }
   
   // Create a custom event dispatcher
@@ -208,6 +217,8 @@
       {/each}
     </select>
   </div>
+  
+  <FontSelector bind:this={fontSelector} />
   
   <label class="flex items-center cursor-pointer">
     <input 
