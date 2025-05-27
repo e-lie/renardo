@@ -20,13 +20,10 @@
   - [ ] create the state machine cycle like list class
   - [ ] explore and debug
 
-- live tools in editor
-  - [ ] configurable clock display
-  - player playing list with attribute value display -> add a new dict like class that store the value at every param setting (__setattr__) (less prio)
-  - displaying state of the ppit and rpit (less prio)
-  - finish the bang feature (less prio)
 
-- add collection explorer to look at the 
+- live tools in editor
+  - [x] custom editor fonts + jgs
+  - [ ] configurable clock display
 
 - documentation
   - concepts and architecture
@@ -37,6 +34,13 @@
     - global params
 
 # Moins prio
+
+- live tools in editor
+  - player playing list with attribute value display -> add a new dict like class that store the value at every param setting (__setattr__) (less prio)
+  - displaying state of the ppit and rpit (less prio)
+  - finish the bang feature (less prio)
+
+- add collection explorer to look at the 
 
 - test MIDI matrix for playstrings
 
