@@ -6,10 +6,9 @@
   
   // Available fonts for code editor
   const fonts = [
-    { name: "Fira Code", value: "fira-code", url: "https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap", css: "'Fira Code', 'Courier New', monospace" },
-    { name: "Source Code Pro", value: "source-code-pro", url: "https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@200;300;400;500;600;700;900&display=swap", css: "'Source Code Pro', 'Courier New', monospace" },
-    { name: "JetBrains Mono", value: "jetbrains-mono", url: "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;200;300;400;500;600;700;800&display=swap", css: "'JetBrains Mono', 'Courier New', monospace" },
-    { name: "Cascadia Code", value: "cascadia-code", url: "https://fonts.googleapis.com/css2?family=Cascadia+Code:wght@200;300;400;500;600;700&display=swap", css: "'Cascadia Code', 'Courier New', monospace" },
+    { name: "Fira Code", value: "fira-code", local: true, css: "'Fira Code', 'Courier New', monospace" },
+    { name: "Source Code Pro", value: "source-code-pro", local: true, css: "'Source Code Pro', 'Courier New', monospace" },
+    { name: "JetBrains Mono", value: "jetbrains-mono", local: true, css: "'JetBrains Mono', 'Courier New', monospace" },
     { name: "Monaco", value: "monaco", css: "monaco, 'Lucida Console', monospace" },
     { name: "Consolas", value: "consolas", css: "consolas, 'Courier New', monospace" },
     { name: "Menlo", value: "menlo", css: "menlo, 'Monaco', 'Courier New', monospace" },
@@ -26,6 +25,9 @@
   export let editor = null;
   
   onMount(() => {
+    // Load local fonts CSS first
+    loadLocalFontsCSS();
+    
     // Check for font in localStorage
     const savedFont = localStorage.getItem(EDITOR_FONT_KEY);
     if (savedFont) {
@@ -41,11 +43,6 @@
   function setFontIfEditorReady(fontValue) {
     const font = fonts.find(f => f.value === fontValue);
     if (!font) return;
-    
-    // Load the font if it has a URL
-    if (font.url) {
-      loadFontCSS(font.url);
-    }
     
     // Apply the font to the editor using CSS injection
     applyFontToCMEditor(font.css);
@@ -64,14 +61,8 @@
     const font = fonts.find(f => f.value === fontValue);
     if (!font) return;
     
-    // Load the font CSS if it has a URL
-    if (font.url) {
-      loadFontCSS(font.url).then(() => {
-        applyFontToEditor(font);
-      });
-    } else {
-      applyFontToEditor(font);
-    }
+    // Apply the font immediately (local fonts are pre-loaded)
+    applyFontToEditor(font);
   }
   
   function applyFontToEditor(font) {
@@ -127,30 +118,24 @@
     }
   }
   
-  // Function to load a font's CSS file from Google Fonts
-  function loadFontCSS(url) {
-    return new Promise((resolve, reject) => {
-      // Check if this CSS file is already loaded
-      const existingLink = document.querySelector(`link[href="${url}"]`);
-      if (existingLink) {
-        resolve();
-        return;
-      }
+  // Function to load local fonts CSS file
+  function loadLocalFontsCSS() {
+    // Check if local fonts CSS is already loaded
+    const existingLink = document.querySelector('link[href="/fonts/code-fonts.css"]');
+    if (existingLink) {
+      return;
+    }
 
-      console.log(`Loading font CSS from: ${url}`);
+    console.log('Loading local code fonts CSS');
 
-      // Load the CSS file
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = url;
-      link.onload = () => resolve();
-      link.onerror = () => {
-        console.error(`Failed to load font CSS: ${url}`);
-        reject(new Error(`Failed to load font: ${url}`));
-      };
+    // Load the local fonts CSS file
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = '/fonts/code-fonts.css';
+    link.onload = () => console.log('Local code fonts loaded successfully');
+    link.onerror = () => console.error('Failed to load local code fonts CSS');
 
-      document.head.appendChild(link);
-    });
+    document.head.appendChild(link);
   }
   
   // Handle font dropdown change
