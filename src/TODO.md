@@ -56,14 +56,13 @@
     - send to external hardware plus
     - handle automatic latency correction per player
 
-
 # les trucs à debug
 
 - debug effects with renardo community sclang bank
 
 - [ ] debug la bonne execution des startup files
 
-- [ ] Clock.bpm =  is broken ?? from which commit on ?
+- [x] Clock.bpm =  is broken ?? from which commit on ?
 
 - [ ] editor color scheme = dropdown bugs on reload if not default color scheme (dracula for now)
 
@@ -76,8 +75,8 @@
 - d1 >> play("x-o-").every(4, "stutter", 4) -> seems every is not working anymore
 
 - [x] fix / remove / find something else for startup file
-- open reaper directory, open user dir does nothing on linux !
-- when opened through renardo scide is closed when closing renardo
+- [ ] open reaper directory, open user dir does nothing on linux !
+- [ ] when opened through renardo scide is closed when closing renardo
 
 # trucs cools pour le futur
 
