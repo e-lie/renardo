@@ -1,8 +1,8 @@
 /* Fira Code Font Family */
 @font-face {
   font-family: 'Fira Code';
-  src: url('./code-fonts/fira-code/FiraCode-Regular.woff2') format('woff2'),
-       url('./code-fonts/fira-code/FiraCode-Regular.ttf') format('truetype');
+  src: url('/fonts/code-fonts/fira-code/FiraCode-Regular.woff2') format('woff2'),
+       url('/fonts/code-fonts/fira-code/FiraCode-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -10,8 +10,8 @@
 
 @font-face {
   font-family: 'Fira Code';
-  src: url('./code-fonts/fira-code/FiraCode-Light.woff2') format('woff2'),
-       url('./code-fonts/fira-code/FiraCode-Light.ttf') format('truetype');
+  src: url('/fonts/code-fonts/fira-code/FiraCode-Light.woff2') format('woff2'),
+       url('/fonts/code-fonts/fira-code/FiraCode-Light.ttf') format('truetype');
   font-weight: 300;
   font-style: normal;
   font-display: swap;
@@ -19,8 +19,8 @@
 
 @font-face {
   font-family: 'Fira Code';
-  src: url('./code-fonts/fira-code/FiraCode-Medium.woff2') format('woff2'),
-       url('./code-fonts/fira-code/FiraCode-Medium.ttf') format('truetype');
+  src: url('/fonts/code-fonts/fira-code/FiraCode-Medium.woff2') format('woff2'),
+       url('/fonts/code-fonts/fira-code/FiraCode-Medium.ttf') format('truetype');
   font-weight: 500;
   font-style: normal;
   font-display: swap;
@@ -28,8 +28,8 @@
 
 @font-face {
   font-family: 'Fira Code';
-  src: url('./code-fonts/fira-code/FiraCode-SemiBold.woff2') format('woff2'),
-       url('./code-fonts/fira-code/FiraCode-SemiBold.ttf') format('truetype');
+  src: url('/fonts/code-fonts/fira-code/FiraCode-SemiBold.woff2') format('woff2'),
+       url('/fonts/code-fonts/fira-code/FiraCode-SemiBold.ttf') format('truetype');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
@@ -37,8 +37,8 @@
 
 @font-face {
   font-family: 'Fira Code';
-  src: url('./code-fonts/fira-code/FiraCode-Bold.woff2') format('woff2'),
-       url('./code-fonts/fira-code/FiraCode-Bold.ttf') format('truetype');
+  src: url('/fonts/code-fonts/fira-code/FiraCode-Bold.woff2') format('woff2'),
+       url('/fonts/code-fonts/fira-code/FiraCode-Bold.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -47,7 +47,7 @@
 /* Source Code Pro Font Family */
 @font-face {
   font-family: 'Source Code Pro';
-  src: url('./code-fonts/source-code-pro/SourceCodePro-Regular.otf') format('opentype');
+  src: url('/fonts/code-fonts/source-code-pro/SourceCodePro-Regular.otf') format('opentype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -55,7 +55,7 @@
 
 @font-face {
   font-family: 'Source Code Pro';
-  src: url('./code-fonts/source-code-pro/SourceCodePro-Light.otf') format('opentype');
+  src: url('/fonts/code-fonts/source-code-pro/SourceCodePro-Light.otf') format('opentype');
   font-weight: 300;
   font-style: normal;
   font-display: swap;
@@ -63,7 +63,7 @@
 
 @font-face {
   font-family: 'Source Code Pro';
-  src: url('./code-fonts/source-code-pro/SourceCodePro-Medium.otf') format('opentype');
+  src: url('/fonts/code-fonts/source-code-pro/SourceCodePro-Medium.otf') format('opentype');
   font-weight: 500;
   font-style: normal;
   font-display: swap;
@@ -71,7 +71,7 @@
 
 @font-face {
   font-family: 'Source Code Pro';
-  src: url('./code-fonts/source-code-pro/SourceCodePro-Semibold.otf') format('opentype');
+  src: url('/fonts/code-fonts/source-code-pro/SourceCodePro-Semibold.otf') format('opentype');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
@@ -79,7 +79,7 @@
 
 @font-face {
   font-family: 'Source Code Pro';
-  src: url('./code-fonts/source-code-pro/SourceCodePro-Bold.otf') format('opentype');
+  src: url('/fonts/code-fonts/source-code-pro/SourceCodePro-Bold.otf') format('opentype');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -87,7 +87,7 @@
 
 @font-face {
   font-family: 'Source Code Pro';
-  src: url('./code-fonts/source-code-pro/SourceCodePro-It.otf') format('opentype');
+  src: url('/fonts/code-fonts/source-code-pro/SourceCodePro-It.otf') format('opentype');
   font-weight: 400;
   font-style: italic;
   font-display: swap;
@@ -96,8 +96,8 @@
 /* JetBrains Mono Font Family */
 @font-face {
   font-family: 'JetBrains Mono';
-  src: url('./code-fonts/jetbrains-mono/JetBrainsMono-Regular.woff2') format('woff2'),
-       url('./code-fonts/jetbrains-mono/JetBrainsMono-Regular.ttf') format('truetype');
+  src: url('/fonts/code-fonts/jetbrains-mono/JetBrainsMono-Regular.woff2') format('woff2'),
+       url('/fonts/code-fonts/jetbrains-mono/JetBrainsMono-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -105,8 +105,8 @@
 
 @font-face {
   font-family: 'JetBrains Mono';
-  src: url('./code-fonts/jetbrains-mono/JetBrainsMono-Light.woff2') format('woff2'),
-       url('./code-fonts/jetbrains-mono/JetBrainsMono-Light.ttf') format('truetype');
+  src: url('/fonts/code-fonts/jetbrains-mono/JetBrainsMono-Light.woff2') format('woff2'),
+       url('/fonts/code-fonts/jetbrains-mono/JetBrainsMono-Light.ttf') format('truetype');
   font-weight: 300;
   font-style: normal;
   font-display: swap;
@@ -114,8 +114,8 @@
 
 @font-face {
   font-family: 'JetBrains Mono';
-  src: url('./code-fonts/jetbrains-mono/JetBrainsMono-Medium.woff2') format('woff2'),
-       url('./code-fonts/jetbrains-mono/JetBrainsMono-Medium.ttf') format('truetype');
+  src: url('/fonts/code-fonts/jetbrains-mono/JetBrainsMono-Medium.woff2') format('woff2'),
+       url('/fonts/code-fonts/jetbrains-mono/JetBrainsMono-Medium.ttf') format('truetype');
   font-weight: 500;
   font-style: normal;
   font-display: swap;
@@ -123,8 +123,8 @@
 
 @font-face {
   font-family: 'JetBrains Mono';
-  src: url('./code-fonts/jetbrains-mono/JetBrainsMono-SemiBold.woff2') format('woff2'),
-       url('./code-fonts/jetbrains-mono/JetBrainsMono-SemiBold.ttf') format('truetype');
+  src: url('/fonts/code-fonts/jetbrains-mono/JetBrainsMono-SemiBold.woff2') format('woff2'),
+       url('/fonts/code-fonts/jetbrains-mono/JetBrainsMono-SemiBold.ttf') format('truetype');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
@@ -132,8 +132,8 @@
 
 @font-face {
   font-family: 'JetBrains Mono';
-  src: url('./code-fonts/jetbrains-mono/JetBrainsMono-Bold.woff2') format('woff2'),
-       url('./code-fonts/jetbrains-mono/JetBrainsMono-Bold.ttf') format('truetype');
+  src: url('/fonts/code-fonts/jetbrains-mono/JetBrainsMono-Bold.woff2') format('woff2'),
+       url('/fonts/code-fonts/jetbrains-mono/JetBrainsMono-Bold.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -141,9 +141,46 @@
 
 @font-face {
   font-family: 'JetBrains Mono';
-  src: url('./code-fonts/jetbrains-mono/JetBrainsMono-Italic.woff2') format('woff2'),
-       url('./code-fonts/jetbrains-mono/JetBrainsMono-Italic.ttf') format('truetype');
+  src: url('/fonts/code-fonts/jetbrains-mono/JetBrainsMono-Italic.woff2') format('woff2'),
+       url('/fonts/code-fonts/jetbrains-mono/JetBrainsMono-Italic.ttf') format('truetype');
   font-weight: 400;
   font-style: italic;
+  font-display: swap;
+}
+
+/* JGS Font Family */
+@font-face {
+  font-family: 'JGS';
+  src: url('/fonts/code-fonts/jgs/jgs_Font.woff2') format('woff2'),
+       url('/fonts/code-fonts/jgs/jgs_Font.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JGS5';
+  src: url('/fonts/code-fonts/jgs/jgs5.woff2') format('woff2'),
+       url('/fonts/code-fonts/jgs/jgs5.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JGS7';
+  src: url('/fonts/code-fonts/jgs/jgs7.woff2') format('woff2'),
+       url('/fonts/code-fonts/jgs/jgs7.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JGS9';
+  src: url('/fonts/code-fonts/jgs/jgs9.woff2') format('woff2'),
+       url('/fonts/code-fonts/jgs/jgs9.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
   font-display: swap;
 }
