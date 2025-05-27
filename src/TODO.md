@@ -15,12 +15,15 @@
 - [x] test and finish the SCLang livecoding feature
 
 - think about and design the meta language
-  - [ ] create the meeting point schedule feature
-  - [ ] create the comment based macros to program clock schedule without python indented blocks
+  - [x] create the meeting point schedule feature
+  - [x] create the comment based macros to program clock schedule without python indented blocks
+  - [ ] create the state machine cycle like list class
+  - [ ] explore and debug
 
 - live tools in editor
-  - configurable clock display
-  - player playing list with attribute value display -> add a new dict like class that store the value at every param setting (__setattr__)
+  - [ ] configurable clock display
+  - player playing list with attribute value display -> add a new dict like class that store the value at every param setting (__setattr__) (less prio)
+  - displaying state of the ppit and rpit (less prio)
   - finish the bang feature (less prio)
 
 - add collection explorer to look at the 
@@ -38,6 +41,9 @@
 - test MIDI matrix for playstrings
 
 - multiplayers as experimental feature
+
+- share to activitypub feature
+- share with the community as potential example (do a new repo per year on the long term ?)
 
 - test livecoding effects
 
@@ -57,10 +63,13 @@
 
 - [ ] debug la bonne execution des startup files
 
+- [ ] Clock.bpm =  is broken ?? from which commit on ?
+
+- [ ] editor color scheme = dropdown bugs on reload if not default color scheme (dracula for now)
+
 - [ ] configure the ouput with verbosity parameter => create a renardo logger to replace print ?
 
 - [ ] make every output of the renardo backend be displayed to the renardo console even delayed output using the logger (Clock.every(4, lambda: print("hello")))
-
 
 - ne pas pouvoir executer deux fois le même code deux fois de suite du tout dans l'editeur est un bug
 - spack param not working
