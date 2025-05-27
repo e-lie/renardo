@@ -371,8 +371,13 @@ if settings.get("reaper_backend.REAPER_BACKEND_ENABLED"):
     create_selected_instruments = ReaperInstrumentFactory(FoxDotCode) # then we can call create_selected_instruments as a function
 
 
-### All aliases (and basic wrapper) should progressively move here
-from .aliases import *
+schedule = Clock.schedule
+now = Clock.now
+mod = Clock.mod
+pit = PointInTime
+ppit = PersistentPointInTime
+rpit = RecurringPointInTime
+
 
 # Start !!!
 Clock.start()
