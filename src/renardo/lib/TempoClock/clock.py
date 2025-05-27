@@ -192,6 +192,27 @@ class PointInTime:
                 
             except Exception as e:
                 print(f"Error resolving derived PointInTime: {e}")
+    
+    def clear(self):
+        """Remove all scheduled operations related to this PointInTime from the clock."""
+        # Clear local schedulables
+        for schedulable in self._schedulables[:]:  # Copy list to avoid modification during iteration
+            # Remove from clock's to_be_scheduled if present
+            if hasattr(schedulable, 'clock') and hasattr(schedulable.clock, 'to_be_scheduled'):
+                try:
+                    schedulable.clock.to_be_scheduled.remove(schedulable)
+                except ValueError:
+                    pass  # Not in list, that's okay
+        
+        # Clear local collections
+        self._schedulables.clear()
+        self._operations.clear()
+        self._derived_points.clear()
+        
+        # Reset to undefined state
+        self._beat = None
+        
+        return self
 
 
 class NumericOperation:
@@ -343,6 +364,27 @@ class PersistentPointInTime(PointInTime):
         else:
             raise TypeError(f"Unsupported operand type for {op_type}: {type(other)}")
     
+    def clear(self):
+        """Remove all scheduled operations for PersistentPointInTime but maintain ability to reschedule."""
+        # Remove from clock's to_be_scheduled 
+        for schedulable in self._schedulables[:]:
+            if hasattr(schedulable, 'clock') and hasattr(schedulable.clock, 'to_be_scheduled'):
+                try:
+                    schedulable.clock.to_be_scheduled.remove(schedulable)
+                except ValueError:
+                    pass
+        
+        # For PersistentPointInTime, we clear schedulables since they've been moved to to_be_scheduled
+        # Operations and derived points are cleared as well
+        self._schedulables.clear()
+        self._operations.clear() 
+        self._derived_points.clear()
+        
+        # Reset to undefined state
+        self._beat = None
+        
+        return self
+    
     def __repr__(self):
         if self.is_defined:
             return f"PersistentPointInTime(beat={self._beat})"
@@ -432,6 +474,32 @@ class RecurringPointInTime(PointInTime):
                 return result
         else:
             raise TypeError(f"Unsupported operand type for {op_type}: {type(other)}")
+    
+    def clear(self):
+        """Remove all scheduled operations for RecurringPointInTime and stop recurring behavior."""
+        # Remove from clock's to_be_scheduled
+        for schedulable in self._schedulables[:]:
+            if hasattr(schedulable, 'clock') and hasattr(schedulable.clock, 'to_be_scheduled'):
+                try:
+                    schedulable.clock.to_be_scheduled.remove(schedulable)
+                except ValueError:
+                    pass
+        
+        # For RecurringPointInTime, we also need to stop the recurring scheduling
+        # This is more complex since the recurring scheduler creates its own scheduled functions
+        # For now, we clear the state and let the user know they need to manually stop players
+        
+        self._schedulables.clear()
+        self._operations.clear()
+        self._derived_points.clear()
+        
+        # Reset to undefined state and stop recurring behavior
+        self._beat = None
+        self._has_been_triggered = False
+        
+        print(f"RecurringPointInTime cleaned. Note: Any currently playing instruments should be stopped manually.")
+        
+        return self
     
     def __repr__(self):
         if self.is_defined:
