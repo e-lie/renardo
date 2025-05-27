@@ -276,6 +276,171 @@ class PointInTimeOperation:
             return f"<beat> {op_symbol} {self.other_point}"
 
 
+class PersistentPointInTime(PointInTime):
+    """A PointInTime that remains schedulable after being triggered."""
+    
+    def __init__(self, beat=None):
+        super().__init__(beat)
+    
+    @PointInTime.beat.setter  
+    def beat(self, value):
+        """Sets the beat value, schedules all pending schedulables, but keeps them for future scheduling."""        
+        # Apply all stored operations to get the final beat value
+        final_value = value
+        for operation in self._operations:
+            final_value = operation.apply(final_value)
+        
+        # Temporarily set beat to trigger normal scheduling
+        self._beat = final_value
+        
+        # Schedule all pending schedulables but keep them in the list
+        for schedulable in self._schedulables:
+            schedulable.clock.schedule(
+                schedulable.callable_obj,
+                beat=final_value,
+                args=schedulable.args,
+                kwargs=schedulable.kwargs,
+                is_priority=schedulable.is_priority
+            )
+            # Keep schedulables in to_be_scheduled for future use
+            if schedulable not in schedulable.clock.to_be_scheduled:
+                schedulable.clock.to_be_scheduled.append(schedulable)
+        
+        # Clear operations but keep schedulables for future scheduling
+        self._operations.clear()
+        
+        # Reset to undefined state for future use
+        self._beat = None
+        
+        # Notify derived points
+        self._notify_derived_points()
+    
+    def _create_operation_result(self, op_type, other, reverse=False):
+        """Override to return PersistentPointInTime instances."""
+        if isinstance(other, (int, float)):
+            if self.is_defined:
+                result_beat = self._apply_numeric_operation(self._beat, op_type, other, reverse)
+                return PersistentPointInTime(result_beat)
+            else:
+                result = PersistentPointInTime()
+                result._operations = self._operations.copy()
+                result._operations.append(NumericOperation(op_type, other, reverse))
+                self._derived_points.append(result)
+                return result
+        elif isinstance(other, PointInTime):
+            if self.is_defined and other.is_defined:
+                result_beat = self._apply_numeric_operation(self._beat, op_type, other._beat, reverse)
+                return PersistentPointInTime(result_beat)
+            else:
+                result = PersistentPointInTime()
+                result._operations = self._operations.copy()
+                result._operations.append(PointInTimeOperation(op_type, other, reverse))
+                if not self.is_defined:
+                    self._derived_points.append(result)
+                if not other.is_defined:
+                    other._derived_points.append(result)
+                return result
+        else:
+            raise TypeError(f"Unsupported operand type for {op_type}: {type(other)}")
+    
+    def __repr__(self):
+        if self.is_defined:
+            return f"PersistentPointInTime(beat={self._beat})"
+        else:
+            ops_str = f", {len(self._operations)} ops" if self._operations else ""
+            return f"PersistentPointInTime(undefined, {len(self._schedulables)} pending{ops_str})"
+
+
+class RecurringPointInTime(PointInTime):
+    """A PointInTime that repeats at regular intervals."""
+    
+    def __init__(self, period, beat=None):
+        super().__init__(beat)
+        self.period = period
+        self._has_been_triggered = False
+    
+    @PointInTime.beat.setter
+    def beat(self, value):
+        """Sets the beat value, schedules callables, and sets up recurring execution."""
+        # Apply all stored operations to get the final beat value
+        final_value = value
+        for operation in self._operations:
+            final_value = operation.apply(final_value)
+        
+        self._beat = final_value
+        
+        # Schedule all pending schedulables
+        for schedulable in self._schedulables:
+            schedulable.clock.schedule(
+                schedulable.callable_obj,
+                beat=final_value,
+                args=schedulable.args,
+                kwargs=schedulable.kwargs,
+                is_priority=schedulable.is_priority
+            )
+            # Keep schedulables in to_be_scheduled for future use
+            if schedulable not in schedulable.clock.to_be_scheduled:
+                schedulable.clock.to_be_scheduled.append(schedulable)
+        
+        # Clear operations on first trigger only
+        if not self._has_been_triggered:
+            self._operations.clear()
+            self._has_been_triggered = True
+        
+        # Schedule the next recurrence
+        if hasattr(self, '_schedulables') and self._schedulables:
+            # Get the clock from the first schedulable
+            clock = self._schedulables[0].clock
+            next_beat = final_value + self.period
+            
+            # Create a function to trigger the next recurrence
+            def trigger_next_recurrence():
+                # Reset and trigger again
+                self._beat = None  # Reset to undefined
+                self.beat = next_beat  # Trigger again
+            
+            # Schedule the next recurrence
+            clock.schedule(trigger_next_recurrence, next_beat)
+        
+        # Notify derived points
+        self._notify_derived_points()
+    
+    def _create_operation_result(self, op_type, other, reverse=False):
+        """Override to return RecurringPointInTime instances."""
+        if isinstance(other, (int, float)):
+            if self.is_defined:
+                result_beat = self._apply_numeric_operation(self._beat, op_type, other, reverse)
+                return RecurringPointInTime(self.period, result_beat)
+            else:
+                result = RecurringPointInTime(self.period)
+                result._operations = self._operations.copy()
+                result._operations.append(NumericOperation(op_type, other, reverse))
+                self._derived_points.append(result)
+                return result
+        elif isinstance(other, PointInTime):
+            if self.is_defined and other.is_defined:
+                result_beat = self._apply_numeric_operation(self._beat, op_type, other._beat, reverse)
+                return RecurringPointInTime(self.period, result_beat)
+            else:
+                result = RecurringPointInTime(self.period)
+                result._operations = self._operations.copy()
+                result._operations.append(PointInTimeOperation(op_type, other, reverse))
+                if not self.is_defined:
+                    self._derived_points.append(result)
+                if not other.is_defined:
+                    other._derived_points.append(result)
+                return result
+        else:
+            raise TypeError(f"Unsupported operand type for {op_type}: {type(other)}")
+    
+    def __repr__(self):
+        if self.is_defined:
+            return f"RecurringPointInTime(beat={self._beat}, period={self.period})"
+        else:
+            ops_str = f", {len(self._operations)} ops" if self._operations else ""
+            return f"RecurringPointInTime(undefined, period={self.period}, {len(self._schedulables)} pending{ops_str})"
+
+
 class Schedulable:
     """Wraps a callable object with its scheduling parameters."""
     
