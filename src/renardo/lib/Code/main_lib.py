@@ -220,7 +220,7 @@ class FoxDotCode:
                 # Evaluate beat expression in current namespace
                 beat_value = eval(beat_expr, self.namespace)
                 
-                # Schedule the function
+                # Schedule using Clock.schedule which handles PointInTime correctly
                 clock.schedule(func, beat_value)
                 
             except Exception as e:
