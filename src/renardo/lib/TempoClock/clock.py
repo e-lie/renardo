@@ -22,6 +22,7 @@ class PointInTime:
         self._beat = beat
         self._schedulables = []
         self._operations = []  # Store operations to apply when beat is defined
+        self._derived_points = []  # Track PointInTime objects that depend on this one
     
     @property
     def is_defined(self):
@@ -57,6 +58,9 @@ class PointInTime:
         # Clear the lists after scheduling
         self._schedulables.clear()
         self._operations.clear()
+        
+        # Notify derived points that might be waiting for this definition
+        self._notify_derived_points()
     
     def add_schedulable(self, schedulable):
         """Adds a schedulable to be executed when this point in time is defined."""
@@ -125,6 +129,8 @@ class PointInTime:
                 result = PointInTime()
                 result._operations = self._operations.copy()
                 result._operations.append(NumericOperation(op_type, other, reverse))
+                # Register this result as dependent on self
+                self._derived_points.append(result)
                 return result
         
         elif isinstance(other, PointInTime):
@@ -138,6 +144,11 @@ class PointInTime:
                 result = PointInTime()
                 result._operations = self._operations.copy()
                 result._operations.append(PointInTimeOperation(op_type, other, reverse))
+                # Register this result as dependent on both points
+                if not self.is_defined:
+                    self._derived_points.append(result)
+                if not other.is_defined:
+                    other._derived_points.append(result)
                 return result
         
         else:
@@ -160,6 +171,27 @@ class PointInTime:
             return left_val / right_val
         else:
             raise ValueError(f"Unknown operation type: {op_type}")
+    
+    def _notify_derived_points(self):
+        """Notify derived PointInTime objects that this point has been defined."""
+        # Simple approach: just trigger any derived points that are waiting
+        for derived_point in self._derived_points[:]:  # Copy list to avoid modification during iteration
+            if not derived_point.is_defined:
+                self._try_resolve_derived_point(derived_point)
+        
+        # Clear the derived points list
+        self._derived_points.clear()
+    
+    def _try_resolve_derived_point(self, derived_point):
+        """Try to resolve a derived point by setting its beat based on this point's beat."""
+        if self.is_defined and not derived_point.is_defined:
+            try:
+                # Set the derived point's beat to trigger its operations
+                # The operations will be applied automatically by the beat setter
+                derived_point.beat = self._beat
+                
+            except Exception as e:
+                print(f"Error resolving derived PointInTime: {e}")
 
 
 class NumericOperation:
