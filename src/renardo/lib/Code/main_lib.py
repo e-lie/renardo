@@ -24,6 +24,9 @@ Base for any self-scheduling objects
 # Player RegEx - used to match player definitions in code
 re_player = re.compile(r"(\s*?)(\w+)\s*?>>\s*?\w+")
 
+# Macro RegEx - used to match scheduling macro definitions
+re_macro = re.compile(r"^\s*#\s*\{(.+?)\}\s*$")
+
 class LiveObject(object):
     """ Base class for any self-scheduling objects """
     foxdot_object = True
@@ -108,6 +111,7 @@ class FoxDotCode:
     """ Handles execution of FoxDot code with namespace management """
     namespace={}  # Global namespace for executed code
     player_line_numbers={}  # Tracks line numbers of player definitions
+    macro_counter = 0  # Counter for generating unique macro function names
 
     @staticmethod
     def _compile(string):
@@ -134,6 +138,93 @@ class FoxDotCode:
         """ Load and execute the startup file """
         code = self.namespace["FOXDOT_STARTUP"].load()
         return self.__call__(code, verbose=False)
+    
+    def parse_macros(self, code):
+        """ Parse and extract scheduling macros from code """
+        lines = code.split('\n')
+        macros = []
+        processed_lines = []
+        current_macro = None
+        current_block = []
+        
+        for line in lines:
+            macro_match = re_macro.match(line)
+            
+            if macro_match:
+                # Save previous macro if exists
+                if current_macro is not None:
+                    macros.append((current_macro, '\n'.join(current_block)))
+                
+                # Start new macro
+                current_macro = macro_match.group(1).strip()
+                current_block = []
+                
+            elif current_macro is not None:
+                # We're inside a macro block
+                if line.strip() == '':
+                    # Empty line ends the macro block
+                    macros.append((current_macro, '\n'.join(current_block)))
+                    current_macro = None
+                    current_block = []
+                    processed_lines.append(line)  # Keep empty line in regular code
+                else:
+                    # Add line to current macro block
+                    current_block.append(line)
+            else:
+                # Regular code line
+                processed_lines.append(line)
+        
+        # Handle last macro if code doesn't end with empty line
+        if current_macro is not None:
+            macros.append((current_macro, '\n'.join(current_block)))
+        
+        return macros, '\n'.join(processed_lines)
+    
+    def create_macro_function(self, block_code):
+        """ Create a dynamic function from a code block """
+        self.macro_counter += 1
+        func_name = f"_macro_func_{self.macro_counter}"
+        
+        # Indent the block code for function body
+        indented_code = '\n'.join('    ' + line for line in block_code.split('\n') if line.strip())
+        
+        func_code = f"""def {func_name}():
+{indented_code}
+"""
+        
+        # Compile and execute the function definition
+        exec(self._compile(func_code), self.namespace)
+        
+        # Return the function object
+        return self.namespace[func_name]
+    
+    def schedule_macros(self, macros):
+        """ Schedule all parsed macros """
+        if not macros:
+            return
+            
+        # Get Clock from namespace
+        clock = self.namespace.get('Clock')
+        if clock is None:
+            print("Warning: Clock not available for macro scheduling")
+            return
+        
+        for beat_expr, block_code in macros:
+            if not block_code.strip():
+                continue
+                
+            try:
+                # Create function from block
+                func = self.create_macro_function(block_code)
+                
+                # Evaluate beat expression in current namespace
+                beat_value = eval(beat_expr, self.namespace)
+                
+                # Schedule the function
+                clock.schedule(func, beat_value)
+                
+            except Exception as e:
+                print(f"Error scheduling macro '{beat_expr}': {e}")
                  
     def __call__(self, code, verbose=True, verbose_error=None):
         """ Takes a string of FoxDot code and executes as Python """
@@ -149,17 +240,29 @@ class FoxDotCode:
         if not code:
             return
 
+        response = ""
+        macros = []
+        processed_code = code
+
         catching_exceptions_in_performance_code = settings.get("core.PERFORMANCE_EXCEPTIONS_CATCHING")
 
         if catching_exceptions_in_performance_code == True: 
             try:
                 if type(code) != CodeType:
                     code = clean(code)
-                    response = stdout(code)
+                    
+                    # Parse macros before execution
+                    macros, processed_code = self.parse_macros(code)
+                    
+                    response = stdout(processed_code)
                     if verbose is True:
                         print(response)
 
-                exec(self._compile(code), self.namespace)
+                # Execute the processed code (without macro lines)
+                exec(self._compile(processed_code), self.namespace)
+                
+                # Schedule the macros
+                self.schedule_macros(macros)
 
             # catch any exception in the executed code 
             except Exception as e:
@@ -170,11 +273,19 @@ class FoxDotCode:
         else: # no exception catching 
             if type(code) != CodeType:
                 code = clean(code)
-                response = stdout(code)
+                
+                # Parse macros before execution
+                macros, processed_code = self.parse_macros(code)
+                
+                response = stdout(processed_code)
                 if verbose is True:
                     print(response)
 
-            exec(self._compile(code), self.namespace)
+            # Execute the processed code (without macro lines)
+            exec(self._compile(processed_code), self.namespace)
+            
+            # Schedule the macros
+            self.schedule_macros(macros)
 
         return response
 
