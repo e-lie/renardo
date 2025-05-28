@@ -705,40 +705,6 @@
       </div>
     </div>
     
-    <!-- Log output for REAPER -->
-    <div class="card bg-base-100 shadow-xl mb-8">
-      <div class="card-body">
-        <h2 class="card-title">REAPER Integration Log</h2>
-
-        <div class="bg-base-300 rounded-lg p-4 h-[300px] overflow-y-auto font-mono text-sm">
-          {#if logMessages.length === 0 || !logMessages.some(msg => 
-            msg.message.includes('REAPER') || 
-            msg.message.includes('reapy') ||
-            msg.message.includes('configuration') ||
-            msg.message.includes('resetting') ||
-            msg.message.includes('Resetting')
-          )}
-            <div class="flex justify-center items-center h-full">
-              <p class="opacity-50 italic">No REAPER integration logs yet. Initialize REAPER integration to see output.</p>
-            </div>
-          {:else}
-            {#each logMessages.filter(msg => 
-              msg.message.includes('REAPER') || 
-              msg.message.includes('reapy') ||
-              msg.message.includes('configuration') ||
-              msg.message.includes('resetting') ||
-              msg.message.includes('Resetting')
-            ) as log}
-              <div class="mb-1 {log.level.toLowerCase() === 'error' ? 'text-error' : log.level.toLowerCase() === 'warn' ? 'text-warning' : log.level.toLowerCase() === 'success' ? 'text-success' : 'text-info'}">
-                <span class="opacity-70 mr-2">[{log.timestamp}]</span>
-                <span class="font-bold mr-2">[{log.level}]</span>
-                <span>{log.message}</span>
-              </div>
-            {/each}
-          {/if}
-        </div>
-      </div>
-    </div>
   {/if}
 
   <!-- Status messages -->
