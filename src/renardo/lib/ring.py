@@ -90,6 +90,24 @@ class Ring:
         """
         self.index = 0
         return self
+    
+    def __eq__(self, other):
+        """
+        Check if two Rings contain the same elements in the same order.
+        
+        Args:
+            other: Another Ring or list-like object to compare with.
+            
+        Returns:
+            bool: True if the elements are the same in the same order, False otherwise.
+        """
+        if isinstance(other, Ring):
+            return self.data == other.data
+        elif hasattr(other, '__len__') and hasattr(other, '__getitem__'):
+            if len(self.data) != len(other):
+                return False
+            return all(self.data[i] == other[i] for i in range(len(self.data)))
+        return False
 
     @classmethod
     def fromList(cls, data):
