@@ -63,7 +63,7 @@
 
 # les trucs à debug
 
-- debug effects with renardo community sclang bank
+- [ ] debug effects with renardo community sclang bank
 
 - [ ] debug supercollider startup
 - [ ] debug la bonne execution des startup files
@@ -75,13 +75,13 @@
 
 - [ ] make every output of the renardo backend be displayed to the renardo console even delayed output using the logger (Clock.every(4, lambda: print("hello")))
 
-- ne pas pouvoir executer deux fois le même code deux fois de suite du tout dans l'editeur est un bug
-- spack param not working
-- d1 >> play("x-o-").every(4, "stutter", 4) -> seems every is not working anymore
+- [ ] ne pas pouvoir executer deux fois le même code deux fois de suite du tout dans l'editeur est un bug
+- [ ] spack param not working
+- [ ] d1 >> play("x-o-").every(4, "stutter", 4) -> seems every is not working anymore
 
 - [x] fix / remove / find something else for startup file
 - [ ] open reaper directory, open user dir does nothing on linux !
-- [ ] when opened through renardo scide is closed when closing renardo
+- [x] when opened through renardo scide is closed when closing renardo
 
 # trucs cools pour le futur
 
