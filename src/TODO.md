@@ -10,7 +10,8 @@
 - redesign de l'integration reaper
   - [x] creer les projets from scratch en programmatique
   - [x] sauvegarder les fxchains comme des reaperResources dans le dossier renardo et les mettre dynamiquement dans le dossier Reaper
-  - vol param use volume fader + new param fadeamp that is a third param special for fade like methods
+  - [ ] vol param use volume fader + new param fadeamp that is a third param special for fade like methods
+  - [ ] create a detailed documentation page
 
 - [x] test and finish the SCLang livecoding feature
 
@@ -64,8 +65,8 @@
 
 - debug effects with renardo community sclang bank
 
+- [ ] debug supercollider startup
 - [ ] debug la bonne execution des startup files
-
 - [x] Clock.bpm =  is broken ?? from which commit on ?
 
 - [ ] editor color scheme = dropdown bugs on reload if not default color scheme (dracula for now)
