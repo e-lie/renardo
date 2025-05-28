@@ -29,7 +29,9 @@ create_startup_directory()  # Ensure startup directory exists
 # Replace the stub with our real startup file
 main_lib.FOXDOT_STARTUP = STARTUP_FILE
 
+# Set up the namespace
 FoxDotCode.namespace = globals()
+FoxDotCode.namespace['FOXDOT_STARTUP'] = STARTUP_FILE
 
 from renardo.runtime.managers_instanciation import (
     settings, Server, sample_pack_library, sample_packs,
@@ -96,6 +98,8 @@ from renardo.lib.Patterns import (
     re_chars, re_curly, re_nests, re_square, shuffle, sliceToRange,
     square_type, sum_delays, as_pattern
 )
+
+from renardo.lib.ring import Ring, R
 
 from renardo.lib.Player import (
     Bang,
