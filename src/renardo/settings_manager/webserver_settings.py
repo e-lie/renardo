@@ -4,14 +4,15 @@ Webserver settings module for Renardo.
 This module defines settings related to the Flask web server
 and the HTTP/WebSocket API.
 """
+
 from .settings_manager import settings
 
 # Define default public settings
 webserver_public_defaults = {
     "webserver": {
         "FLASK_DEBUG": False,  # Set to False by default for production
-        "HOST": "0.0.0.0",     # Listen on all interfaces by default
-        "PORT": 5000,          # Default port
+        "HOST": "0.0.0.0",  # Listen on all interfaces by default
+        "PORT": 12345,  # Default port
         "AUTOCLOSE_WEBCLIENT": True,  # Auto-close browser tabs when webserver stops
     }
 }
@@ -21,7 +22,7 @@ webserver_internal_defaults = {
     "webserver": {
         "STATIC_FOLDER_PATH": "",  # Will be dynamically resolved
         "WEBSOCKET_ROUTE": "/ws",
-        "PING_INTERVAL": 25,         # WebSocket ping interval in seconds
+        "PING_INTERVAL": 25,  # WebSocket ping interval in seconds
     }
 }
 
