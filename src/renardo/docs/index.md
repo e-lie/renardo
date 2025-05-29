@@ -1,39 +1,126 @@
-# Renardo Editor Documentation
+# Pattern Reference
 
-Welcome to the Renardo Editor documentation! This guide will help you understand all the features and capabilities of the Renardo live coding editor.
+Patterns are at the heart of Renardo's music creation system. This guide explains how to use and manipulate patterns effectively.
 
-## What is Renardo?
+## What are Patterns?
 
-Renardo is a live coding environment built for music creation and algorithmic composition. The editor is designed to provide a seamless experience for writing and executing code in real-time, allowing you to create and manipulate sounds on the fly.
+In Renardo, patterns are sequences of values that can be manipulated algorithmically. They are used to create rhythms, melodies, and control various aspects of your music.
 
-## Getting Started
+## Basic Pattern Types
 
-If you're new to Renardo, we recommend starting with the following sections:
+Renardo offers several types of patterns:
 
-- [Editor Basics](./editor/basics/interface.md) - Learn about the editor interface and layout
-- [Keyboard Shortcuts](./editor/keyboard-shortcuts/index.md) - Essential shortcuts to speed up your workflow
-- [Tutorial Files](./editor/basics/tutorials.md) - Explore the included tutorials to learn Renardo syntax
+### P - Standard Pattern
 
-## Key Features
+The basic pattern type, created using the `P` class:
 
-The Renardo Editor includes:
+```python
+# Create a pattern of pitches
+p1 >> pluck(P[0, 1, 2, 3])
 
-- **Multi-tab editing** - Work with multiple code buffers simultaneously
-- **Real-time code execution** - Execute code by line, paragraph, or selection
-- **Integrated console** - See the output of your code executions
-- **Tutorial browser** - Access interactive tutorials
-- **Session management** - Save and load your work
-- **Startup file management** - Configure how Renardo initializes
-- **Customizable interface** - Adjust the editor to your preferences
+# Create a pattern of durations
+p1 >> pluck([0, 1, 2, 3], dur=P[1, 0.5, 0.25, 0.25])
+```
 
-## Documentation Sections
+### PGroup - Embedded Pattern
 
-- [Basics](./editor/basics/index.md) - Core concepts and interface overview
-- [Features](./editor/features/index.md) - Detailed explanations of editor features
-- [Keyboard Shortcuts](./editor/keyboard-shortcuts/index.md) - All available keyboard commands
-- [Customization](./editor/customization/index.md) - How to personalize your editor
-- [API](./editor/api/index.md) - Technical details for advanced users
+PGroups are used to play multiple values simultaneously:
 
-## Feedback and Support
+```python
+# Play chords (multiple notes at once)
+p1 >> pluck([(0, 2, 4), (1, 3, 5)])
 
-If you encounter any issues or have suggestions for improving the editor, please visit our [GitHub repository](https://github.com/Bubobubobubobubo/Renardo) to file an issue or contribute to the project.
+# Equivalent using P and PGroup syntax
+p1 >> pluck(P[P(0, 2, 4), P(1, 3, 5)])
+```
+
+### PStep - Alternating Pattern
+
+PStep patterns alternate between values at different rates:
+
+```python
+# Alternate between two values every cycle
+p1 >> pluck(PStep(4, 0, 2))
+
+# Create more complex alternating patterns
+p1 >> pluck(PStep(3, [0, 1, 2], [3, 4, 5]))
+```
+
+## Pattern Methods
+
+Patterns have numerous methods for algorithmic manipulation:
+
+### Repetition and Expansion
+
+```python
+# Repeat the pattern twice
+p1 >> pluck(P[0, 1, 2, 3].repeat(2))
+
+# Stretch the pattern by repeating each value
+p1 >> pluck(P[0, 1, 2, 3].stretch(2))
+```
+
+### Mathematical Operations
+
+```python
+# Add a value to all elements
+p1 >> pluck(P[0, 1, 2, 3] + 2)  # Results in [2, 3, 4, 5]
+
+# Multiply all elements
+p1 >> pluck(P[0, 1, 2, 3] * 2)  # Results in [0, 2, 4, 6]
+```
+
+### Shuffling and Rearranging
+
+```python
+# Reverse the pattern
+p1 >> pluck(P[0, 1, 2, 3].reverse())
+
+# Shuffle the pattern randomly
+p1 >> pluck(P[0, 1, 2, 3].shuffle())
+```
+
+## Pattern Generation
+
+Renardo includes functions to generate patterns algorithmically:
+
+```python
+# Generate range of values
+p1 >> pluck(PRand(0, 7))  # Random values between 0-7
+
+# Generate random pattern from a list
+p1 >> pluck(PChoice([0, 2, 4, 7]))
+```
+
+## Advanced Pattern Techniques
+
+### Pattern Groups
+
+Combine patterns to create complex sequences:
+
+```python
+# Alternate between two patterns
+pattern = P[0, 1, 2, 3] | P[4, 5, 6, 7]
+
+# Combine patterns sequentially
+pattern = P[0, 1, 2, 3] + P[4, 5, 6, 7]
+```
+
+### Pattern Variables
+
+Create and reuse patterns as variables:
+
+```python
+# Define a pattern variable
+rhythm = P[0.25, 0.5, 0.25]
+
+# Use in multiple players
+p1 >> pluck([0, 1, 2, 3], dur=rhythm)
+p2 >> bass([0, 4], dur=rhythm*2)
+```
+
+## Further Resources
+
+- [Playing Samples](../samples/index.md) - How to use patterns with samples
+- [TimeVar Objects](../timevars/index.md) - Time-varying values in patterns
+- [Pattern Examples](./examples.md) - More complex pattern examples
