@@ -493,6 +493,150 @@ def register_api_routes(webapp):
                 "message": f"Error fetching tutorial files: {str(e)}"
             }), 500
             
+    @webapp.route('/api/documentation/files', methods=['GET'])
+    def get_documentation_files():
+        """
+        Get list of documentation files
+        
+        Returns:
+            JSON: List of documentation file paths
+        """
+        try:
+            from renardo.settings_manager import settings
+            import os
+            from pathlib import Path
+            
+            docs_base_dir = settings.get_path("RENARDO_ROOT_PATH") / "docs"
+            
+            if not docs_base_dir.exists():
+                return jsonify({
+                    "success": False,
+                    "message": "Documentation directory not found",
+                    "files": []
+                })
+            
+            # Get all markdown files recursively
+            files = []
+            
+            for root, _, filenames in os.walk(docs_base_dir):
+                rel_path = os.path.relpath(root, docs_base_dir)
+                
+                for filename in filenames:
+                    if filename.endswith('.md'):
+                        # Create a relative path (for display)
+                        if rel_path == '.':
+                            display_path = filename
+                        else:
+                            display_path = os.path.join(rel_path, filename)
+                        
+                        # Calculate the file path relative to the documentation root
+                        file_path = os.path.join(rel_path, filename)
+                        
+                        # Create the API URL for fetching this file
+                        url = f'/api/documentation/file?path={file_path}'
+                        
+                        # Get the file title (first heading in the file)
+                        file_title = get_file_title(os.path.join(root, filename))
+                        
+                        files.append({
+                            'name': filename,
+                            'title': file_title or display_path.replace('.md', ''),
+                            'path': file_path,
+                            'url': url
+                        })
+            
+            # Sort files by path
+            files.sort(key=lambda x: x['path'])
+            
+            return jsonify({
+                'success': True,
+                'files': files
+            })
+            
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'message': f'Error fetching documentation files: {str(e)}'
+            }), 500
+    
+    @webapp.route('/api/documentation/file', methods=['GET'])
+    def get_documentation_file():
+        """
+        Get the content of a specific documentation file
+        
+        Query params:
+            path (str): Path to the documentation file relative to the docs directory
+        
+        Returns:
+            JSON: Documentation file content
+        """
+        try:
+            path = request.args.get('path', '')
+            
+            if not path:
+                return jsonify({
+                    'success': False,
+                    'message': 'No file path provided'
+                })
+            
+            # Ensure path doesn't contain directory traversal
+            if '..' in path:
+                return jsonify({
+                    'success': False,
+                    'message': 'Invalid file path'
+                })
+            
+            from renardo.settings_manager import settings
+            docs_path = settings.get_path("RENARDO_ROOT_PATH") / "docs"
+            file_path = docs_path / path
+            
+            if not file_path.exists() or not file_path.is_file():
+                return jsonify({
+                    'success': False,
+                    'message': 'File not found'
+                })
+            
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                
+                import markdown
+                # Convert markdown to HTML
+                html_content = markdown.markdown(
+                    content,
+                    extensions=['tables', 'fenced_code', 'codehilite']
+                )
+                
+                return jsonify({
+                    'success': True,
+                    'content': html_content,
+                    'raw_content': content
+                })
+            except Exception as e:
+                return jsonify({
+                    'success': False,
+                    'message': f'Error reading file: {str(e)}'
+                })
+                
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'message': f'Error processing documentation file request: {str(e)}'
+            }), 500
+    
+    def get_file_title(file_path):
+        """Extract the first heading from a markdown file to use as title."""
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if line.startswith('# '):
+                        return line[2:].strip()
+        except:
+            pass
+        
+        return None
+    
     @webapp.route('/api/tutorial/files/<lang>/<filename>', methods=['GET'])
     def get_tutorial_file(lang, filename):
         """
