@@ -10,10 +10,10 @@ def whatever():
 
 Clock.schedule(whatever, pit1)
 
-pit1.beat=Clock.now()+16
+pit1.beat=Clock.now()+16 # the music declared in function whatever will start in 16 beats when you evaluate this line
 
-
-### Start 16 beats before RDV
+### You can also use substraction to start stuff before the point in time
+# This way you can rendez vous at some point in time
 
 def fadeinbloup():
     b1 >> blip().fadein(16)
@@ -24,16 +24,13 @@ Clock.schedule(fadeinbloup, pit2)
 
 pit2.beat=Clock.mod(32)
 
+# Using the new macro langage
 
+## Rather than using Clock.shecule with a function which is hard and long to livecode
+# and introduce a need for python indentation, renardo introduces a new macro langage
+# It is comment based and compiled at evaluation time.
 
-# Tutorial : Using the new macro langage
-
-
-## Rather than using Clock.shecule on a function which is hard to livecode
-# and introduce a nee for indentation, renardo proposes a need macro langage compiled
-# at evaluation time
-
-# The basic syntax is #{ time expression }
+# The basic syntax is #{ moment/beat_number refering to the clock }
 
 # For example the following...
 
