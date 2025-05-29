@@ -11,7 +11,7 @@
   let logMessages = [];
   let isScBackendRunning = false;
   let isRenardoInitialized = false;
-  let customSclangCode = 'Renardo.start(0); Renardo.midi(0);'; // Default code
+  let customSclangCode = 'Renardo.start(); Renardo.midi();'; // Default code
   
   
   // REAPER related state
@@ -512,10 +512,10 @@
           <ol>
             <li>Open SuperCollider (IDE) application</li>
             <li>Execute the following code to start the audio server on the first Audio device:
-              <pre class="bg-base-300 p-2 rounded"><code>Renardo.start(0)</code></pre>
+              <pre class="bg-base-300 p-2 rounded"><code>Renardo.start()</code></pre>
             </li>
             <li>Execute the following code to start the Renardo SuperCollider MIDI on the first MIDI device:
-              <pre class="bg-base-300 p-2 rounded"><code>Renardo.midi(0)</code></pre>
+              <pre class="bg-base-300 p-2 rounded"><code>Renardo.midi()</code></pre>
             </li>
           </ol>
           
@@ -546,7 +546,7 @@
         <p class="text-base-content/70 mb-4">
           Customize the code that will be executed to initialize Renardo in the running SuperCollider instance.
           Default code initializes Renardo without MIDI support.
-          <span class="label-text-alt">Default code: <code class="bg-base-300 p-1 rounded text-xs">Renardo.start(0);  Renardo.midi(0);</code></span>
+          <span class="label-text-alt">Default code: <code class="bg-base-300 p-1 rounded text-xs">Renardo.start();  Renardo.midi();</code></span>
         </p>
         
         {#if isRenardoInitialized}
