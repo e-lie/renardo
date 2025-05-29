@@ -1,4 +1,17 @@
 
+# Renardo Live Coding Editor
+# Type your code here and press Ctrl+Enter to run
+
+rrrpit = rpit(8)
+rrrpit.beat = now()
+
+b1 >> blip(R[2,3,P[2,3], var([2,1,4])])
+
+#{rrrpit}
+b1 >> blip().stop(1.5)
+
+
+
 
 class POne():
     def __init__(self):
