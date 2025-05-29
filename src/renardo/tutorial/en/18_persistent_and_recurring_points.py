@@ -1,4 +1,4 @@
-# Basic PointInTime recap
+### Basic PointInTime recap
 
 # Regular PointInTime can only be used once
 drop_moment = pit()
@@ -12,14 +12,20 @@ drop_moment.beat = Clock.now() + 8
 # After this triggers, drop_moment is "used up" and can't be triggered again
 
 
-# === PERSISTENT POINT IN TIME ===
+
+### Persistent point in time
+
+# Point in time you can reactivate several times (more usefull than)
 
 # Create a persistent point for chorus sections
 chorus_start = ppit() # or PersistentPointInTime()
+
+# Start some basic musical loop
 p2 >> pluck([0,2,2,5],oct=4)
 print(f"Created chorus trigger: {chorus_start}")
 
-# Schedule what happens during chorus
+# Schedule what happens during chorus (wont start the chorus for now)
+
 # {chorus_start}
 p1 >> pluck([0, 2, 4, 2], dur=1/2, amp=0.8).stop(4)
 b1 >> bass([0, 0, 2, 2], dur=2, amp=0.6).stop(4)
@@ -40,9 +46,11 @@ print(f"Second chorus scheduled at beat {Clock.now() + 32}")
 chorus_start.beat = mod(64)
 print(f"Third chorus scheduled at beat {Clock.mod(64)}")
 
-# Each trigger executes the same musical pattern!
+# Each trigger executes the same musical pattern !
 
-# === RECURRING POINT IN TIME ===
+
+
+### Recurring point in time (reexecute the code periodically)
 
 # Create a recurring point for hi-hat patterns every 4 beats
 hihat_pattern = RecurringPointInTime(period=16)
@@ -73,62 +81,19 @@ print(f"Bass drop will repeat every 16 beats")
 p2 >> pluck([0, 2, 4, 7], dur=1/4, amp=var([0.5, 1], 4))
 d3 >> play("x-x-x-x-", dur=1/2, amp=0.6)
 
+### Clearing to cancel scheduled events
 
-# === CLEANING AND CANCELING SCHEDULED EVENTS ===
-
-# All PointInTime classes have a clean() method to remove scheduled operations
-cleanup_point = pit()
-
-def some_function():
-    print("This function was scheduled")
-
-# Schedule something
-Clock.schedule(some_function, cleanup_point)
-print(f"Function scheduled: {cleanup_point}")
-
-# Change your mind and cancel everything
-cleanup_point.clean()
-print(f"After clean(): {cleanup_point}")
-
-# Now even if you set the beat, nothing will happen
-cleanup_point.beat = Clock.now() + 8
-print("Beat set but nothing executes (was cleaned)")
-
-print("--- Practical Cleaning Examples ---")
+# All PointInTime classes have a clear() method to remove scheduled operations
 
 # Stop a recurring pattern
-drum_pattern_to_stop = rpit(period=4)
+reccurent_start_of_drum = rpit(period=8)
 
 # {drum_pattern_to_stop}
 d4 >> play("X-o-", dur=1/2)
 
 # Start the pattern
-drum_pattern_to_stop.beat = Clock.now() + 4
+reccurent_start_of_drum.beat = now() + 4
 
 # Later, stop it completely
-drum_pattern_to_stop.clean()
-print("Drum pattern stopped with clean()")
-
-# Reset a persistent trigger for new content
-verse_trigger_reset = ppit()
-
-# {verse_trigger_reset}
-p5 >> pluck([0, 2, 4], dur=1)
-
-# Later, completely change what the verse does
-verse_trigger_reset.clean()
-
-# {verse_trigger_reset}  # Now schedule something completely different
-p5 >> saw([0, 4, 7], dur=1/2, lpf=1000)
-
-print("Verse trigger reset for new content")
-
-print("✓ clean() method provides powerful control over scheduled events!")
-
-print("Summary:")
-print("✓ PointInTime: Single-use scheduling")
-print("✓ PersistentPointInTime: Reusable triggers for song sections") 
-print("✓ RecurringPointInTime: Automatic periodic execution")
-print("✓ All support arithmetic operations with type preservation")
-print("✓ All have clean() method for canceling/resetting scheduled events")
-print("✓ Perfect for live coding performances and complex arrangements")
+reccurent_start_of_drum.clear()
+print("Drum pattern wont start again with clean()")
