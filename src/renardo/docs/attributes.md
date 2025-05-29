@@ -208,6 +208,6 @@ p1 >> pluck([0, 1, 2, 3], lpf=linvar([500, 5000], 8))
 
 ## Additional Resources
 
-- [Complete Attribute Reference](./complete_reference.md) - All available attributes
+<!-- - [Complete Attribute Reference](./complete_reference.md) - All available attributes -->
 - [Pattern Guide](../patterns/index.md) - More on pattern manipulation
 - [TimeVar Guide](../timevars/index.md) - Using time-varying values with attributes
