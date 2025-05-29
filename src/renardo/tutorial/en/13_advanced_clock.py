@@ -1,4 +1,4 @@
-# Tutorial 13: Advanced Clock
+# Tutorial 13: Advanced Clock (Classic FoxDot Scheduling)
 
 # To see what is scheduled to be played.
 print(Clock)
@@ -48,3 +48,5 @@ p1 >> pluck([0,4]).every(3, "test")
 
 # And cancel it with
 p1.never("test")
+
+
