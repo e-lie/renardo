@@ -427,6 +427,111 @@ def register_api_routes(webapp):
                 "message": f"Error resetting settings: {str(e)}"
             }), 500
             
+    @webapp.route('/api/music-examples/files', methods=['GET'])
+    def get_music_example_files():
+        """
+        Get list of music example files
+        
+        Returns:
+            JSON: List of music example files
+        """
+        try:
+            from renardo.settings_manager import settings
+            import os
+            from pathlib import Path
+            
+            examples_dir = settings.get_path("RENARDO_ROOT_PATH") / "music_examples"
+            
+            if not examples_dir.exists():
+                return jsonify({
+                    "success": False,
+                    "message": "Music examples directory not found",
+                    "files": []
+                })
+            
+            files_data = []
+            for file_path in sorted(examples_dir.glob("*.py")):
+                # Try to extract a description from the first line of the file
+                description = ""
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        first_line = f.readline().strip()
+                        if first_line.startswith('#'):
+                            description = first_line[1:].strip()
+                        else:
+                            # Try to find the first comment line
+                            f.seek(0)
+                            for line in f:
+                                if line.strip().startswith('#'):
+                                    description = line.strip()[1:].strip()
+                                    break
+                except:
+                    pass
+                
+                files_data.append({
+                    "name": file_path.name,
+                    "path": str(file_path),
+                    "url": f"/api/music-examples/files/{file_path.name}",
+                    "description": description
+                })
+            
+            return jsonify({
+                "success": True,
+                "files": files_data
+            })
+            
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "message": f"Error fetching music example files: {str(e)}"
+            }), 500
+    
+    @webapp.route('/api/music-examples/files/<filename>', methods=['GET'])
+    def get_music_example_file(filename):
+        """
+        Get a specific music example file
+        
+        Args:
+            filename (str): Name of the example file
+            
+        Returns:
+            Text: Example file content
+        """
+        try:
+            from renardo.settings_manager import settings
+            from pathlib import Path
+            
+            examples_dir = settings.get_path("RENARDO_ROOT_PATH") / "music_examples"
+            file_path = examples_dir / filename
+            
+            # Security check - ensure the file is within the examples directory
+            if not file_path.resolve().is_relative_to(examples_dir.resolve()):
+                return jsonify({
+                    "success": False,
+                    "message": "Access denied"
+                }), 403
+            
+            # Check if file exists
+            if not file_path.exists():
+                return jsonify({
+                    "success": False,
+                    "message": "Example file not found"
+                }), 404
+            
+            # Read and return the file content
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # Return as plain text
+            from flask import Response
+            return Response(content, mimetype='text/plain')
+            
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "message": f"Error reading example file: {str(e)}"
+            }), 500
+    
     @webapp.route('/api/tutorial/files', methods=['GET'])
     def get_tutorial_files():
         """
