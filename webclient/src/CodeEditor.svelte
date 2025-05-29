@@ -17,6 +17,10 @@
   let currentDocumentationContent = '';
   let selectedDocumentationFile = null;
   
+  // Music examples state
+  let musicExampleFiles = [];
+  let loadingMusicExamples = false;
+  
   // State for vertical split between editor and console
   let consoleHeight = 30; // Default console height as percentage of available height
   let isVerticalResizing = false;
@@ -454,6 +458,11 @@
     // Load documentation files if documentation tab is active
     if (activeTab === 'documentation') {
       loadDocumentationFiles();
+    }
+    
+    // Load music example files if music examples tab is active
+    if (activeTab === 'musicExamples') {
+      loadMusicExampleFiles();
     }
     
     // Subscribe to appState changes to update UI
@@ -1519,6 +1528,55 @@ Master().fadeout(dur=24)
     }
   }
   
+  // Music examples functions
+  async function loadMusicExampleFiles() {
+    loadingMusicExamples = true;
+    try {
+      const response = await fetch('/api/music-examples/files');
+      if (response.ok) {
+        const data = await response.json();
+        musicExampleFiles = data.files || [];
+      } else {
+        console.error('Failed to load music example files');
+        musicExampleFiles = [];
+      }
+    } catch (error) {
+      console.error('Error loading music example files:', error);
+      musicExampleFiles = [];
+    } finally {
+      loadingMusicExamples = false;
+    }
+  }
+  
+  // Function to load a music example file
+  async function loadMusicExampleFile(file) {
+    try {
+      const response = await fetch(file.url);
+      if (response.ok) {
+        const content = await response.text();
+        // Create a new buffer for the example
+        const newBuffer = {
+          id: nextTabId++,
+          name: file.name.replace('.py', ''),
+          content: content,
+          editing: false
+        };
+        tabs = [...tabs, newBuffer];
+        activeTabId = newBuffer.id;
+        
+        if (editor) {
+          editor.setValue(content);
+          editor.setCursor({ line: 0, ch: 0 });
+          editor.focus();
+        }
+      } else {
+        console.error('Failed to load music example file');
+      }
+    } catch (error) {
+      console.error('Error loading music example file:', error);
+    }
+  }
+  
   async function loadDocumentationFile(file) {
     try {
       const response = await fetch(file.url);
@@ -2024,7 +2082,7 @@ Master().fadeout(dur=24)
               </button>
               <button 
                 class="tab {activeTab === 'musicExamples' ? 'tab-active' : ''}" 
-                on:click={() => activeTab = 'musicExamples'}>
+                on:click={() => {activeTab = 'musicExamples'; loadMusicExampleFiles();}}>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z" />
                 </svg>
@@ -2168,8 +2226,44 @@ Master().fadeout(dur=24)
             </div>
           {:else if activeTab === 'musicExamples'}
             <div>
-              <h3 class="text-lg font-bold mb-4">Music Examples</h3>
-              <p class="text-sm opacity-70">Coming soon...</p>
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold">Music Examples</h3>
+              </div>
+              
+              {#if loadingMusicExamples}
+                <div class="flex justify-center items-center p-8">
+                  <div class="loading loading-spinner loading-md"></div>
+                </div>
+              {:else if musicExampleFiles.length === 0}
+                <div class="flex flex-col justify-center items-center p-8">
+                  <p class="text-sm opacity-70 mb-4">No music examples found.</p>
+                  <button 
+                    class="btn btn-sm btn-primary" 
+                    on:click={loadMusicExampleFiles}
+                  >
+                    Reload
+                  </button>
+                </div>
+              {:else}
+                <div class="examples-list space-y-1 px-1">
+                  {#each musicExampleFiles as file}
+                    <button
+                      class="w-full text-left px-3 py-2 rounded hover:bg-base-200 transition-colors"
+                      on:click={() => loadMusicExampleFile(file)}
+                    >
+                      <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-primary" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z" />
+                        </svg>
+                        <span class="text-sm font-medium">{file.name.replace('.py', '')}</span>
+                      </div>
+                      {#if file.description}
+                        <p class="text-xs opacity-70 ml-6 mt-1">{file.description}</p>
+                      {/if}
+                    </button>
+                  {/each}
+                </div>
+              {/if}
             </div>
           {:else if activeTab === 'sessions'}
             <div>
