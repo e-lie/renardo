@@ -11,6 +11,12 @@
   let activeTab = 'tutorial'; // tutorial, sessions, startupFiles, musicExamples, or documentation
   let isResizing = false;
   
+  // Documentation state
+  let documentationFiles = [];
+  let loadingDocumentation = false;
+  let currentDocumentationContent = '';
+  let selectedDocumentationFile = null;
+  
   // State for vertical split between editor and console
   let consoleHeight = 30; // Default console height as percentage of available height
   let isVerticalResizing = false;
@@ -444,6 +450,11 @@
     
     // Load tutorial files on mount since panel is open by default
     loadTutorialFiles();
+    
+    // Load documentation files if documentation tab is active
+    if (activeTab === 'documentation') {
+      loadDocumentationFiles();
+    }
     
     // Subscribe to appState changes to update UI
     const unsubscribe = appState.subscribe(state => {
@@ -1483,6 +1494,53 @@ Master().fadeout(dur=24)
     }
   }
   
+  // Documentation functions
+  async function loadDocumentationFiles() {
+    loadingDocumentation = true;
+    try {
+      const response = await fetch('/api/documentation/files');
+      if (response.ok) {
+        const data = await response.json();
+        documentationFiles = data.files || [];
+        // Set default documentation file
+        if (documentationFiles.length > 0 && !selectedDocumentationFile) {
+          selectedDocumentationFile = documentationFiles.find(file => file.name === 'index.md') || documentationFiles[0];
+          await loadDocumentationFile(selectedDocumentationFile);
+        }
+      } else {
+        console.error('Failed to load documentation files');
+        documentationFiles = [];
+      }
+    } catch (error) {
+      console.error('Error loading documentation files:', error);
+      documentationFiles = [];
+    } finally {
+      loadingDocumentation = false;
+    }
+  }
+  
+  async function loadDocumentationFile(file) {
+    try {
+      const response = await fetch(file.url);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          currentDocumentationContent = data.content;
+          selectedDocumentationFile = file;
+        } else {
+          console.error('Failed to load documentation file:', data.message);
+          currentDocumentationContent = '# Error\n\nFailed to load documentation file.';
+        }
+      } else {
+        console.error('Failed to load documentation file');
+        currentDocumentationContent = '# Error\n\nFailed to load documentation file.';
+      }
+    } catch (error) {
+      console.error('Error loading documentation file:', error);
+      currentDocumentationContent = `# Error\n\nAn error occurred while loading the documentation: ${error.message}`;
+    }
+  }
+  
   // Function to load a session file into the editor
   async function loadSessionFile(file) {
     try {
@@ -1974,7 +2032,7 @@ Master().fadeout(dur=24)
               </button>
               <button 
                 class="tab {activeTab === 'documentation' ? 'tab-active' : ''}" 
-                on:click={() => activeTab = 'documentation'}>
+                on:click={() => {activeTab = 'documentation'; loadDocumentationFiles();}}>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
                 </svg>
@@ -2152,28 +2210,69 @@ Master().fadeout(dur=24)
               {/if}
             </div>
           {:else if activeTab === 'documentation'}
-            <div>
-              <h3 class="text-lg font-bold mb-4">Renardo Documentation</h3>
-              <div class="prose">
-                <h4 class="text-md font-semibold mb-2">Quick Start</h4>
-                <p class="text-sm mb-4">
-                  Renardo is a Python-based live coding environment for creating music in real-time.
-                </p>
-                
-                <h4 class="text-md font-semibold mb-2">Basic Commands</h4>
-                <ul class="text-sm space-y-2">
-                  <li><code class="bg-base-300 px-2 py-1 rounded">d1 >> play("x-o-")</code> - Play a drum pattern</li>
-                  <li><code class="bg-base-300 px-2 py-1 rounded">p1 >> pluck([0,2,4,7])</code> - Play a melody</li>
-                  <li><code class="bg-base-300 px-2 py-1 rounded">p1.stop()</code> - Stop a player</li>
-                  <li><code class="bg-base-300 px-2 py-1 rounded">Clock.clear()</code> - Stop all patterns</li>
-                </ul>
-                
-                <h4 class="text-md font-semibold mt-4 mb-2">Keyboard Shortcuts</h4>
-                <ul class="text-sm space-y-1">
-                  <li><kbd class="kbd kbd-sm">Alt+Enter</kbd> - Execute current line</li>
-                  <li><kbd class="kbd kbd-sm">Ctrl+Enter</kbd> - Execute paragraph or selection</li>
-                  <li><kbd class="kbd kbd-sm">Ctrl+.</kbd> - Stop all music</li>
-                </ul>
+            <div class="h-full flex flex-col">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold">Renardo Documentation</h3>
+                <div class="flex gap-2">
+                  {#if documentationFiles.length > 0}
+                    <button
+                      class="btn btn-sm btn-outline"
+                      on:click={() => loadDocumentationFile(documentationFiles.find(file => file.name === 'index.md') || documentationFiles[0])}
+                      title="Go to Documentation Home"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                      </svg>
+                    </button>
+                  {/if}
+                </div>
+              </div>
+              
+              <div class="doc-container flex flex-1 overflow-hidden">
+                {#if loadingDocumentation}
+                  <div class="w-full flex justify-center items-center">
+                    <div class="loading loading-spinner loading-md"></div>
+                  </div>
+                {:else if documentationFiles.length === 0}
+                  <div class="w-full flex flex-col justify-center items-center">
+                    <p class="text-sm opacity-70 mb-4">No documentation files found.</p>
+                    <button 
+                      class="btn btn-sm btn-primary" 
+                      on:click={loadDocumentationFiles}
+                    >
+                      Load Documentation
+                    </button>
+                  </div>
+                {:else}
+                  <!-- Documentation sidebar -->
+                  <div class="doc-sidebar w-1/4 pr-4 border-r border-base-300 overflow-y-auto">
+                    <ul class="menu menu-sm p-0">
+                      {#each documentationFiles as file}
+                        <li>
+                          <button 
+                            class="text-sm py-1 px-2 {selectedDocumentationFile && selectedDocumentationFile.path === file.path ? 'bg-primary/10 font-medium' : ''}"
+                            on:click={() => loadDocumentationFile(file)}
+                          >
+                            {file.title || file.name.replace('.md', '')}
+                          </button>
+                        </li>
+                      {/each}
+                    </ul>
+                  </div>
+                  
+                  <!-- Documentation content -->
+                  <div class="doc-content w-3/4 pl-4 overflow-y-auto">
+                    {#if currentDocumentationContent}
+                      <div class="prose prose-sm max-w-none dark:prose-invert">
+                        {@html currentDocumentationContent}
+                      </div>
+                    {:else}
+                      <div class="flex justify-center items-center h-full">
+                        <p class="text-sm opacity-70">Select a documentation file to view its contents.</p>
+                      </div>
+                    {/if}
+                  </div>
+                {/if}
               </div>
             </div>
           {/if}
@@ -2514,5 +2613,61 @@ Master().fadeout(dur=24)
     0% { background-color: rgba(0, 255, 255, 0.6); }
     50% { background-color: rgba(0, 255, 255, 0.2); }
     100% { background-color: transparent; }
+  }
+  /* Documentation styles */
+  .doc-container {
+    height: calc(100% - 3rem);
+  }
+  
+  .doc-sidebar, .doc-content {
+    height: 100%;
+    overflow-y: auto;
+  }
+  
+  .doc-content :global(pre) {
+    background-color: rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    border-radius: 0.25rem;
+    overflow-x: auto;
+  }
+  
+  .doc-content :global(code) {
+    background-color: rgba(0, 0, 0, 0.1);
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.125rem;
+    font-family: monospace;
+  }
+  
+  .doc-content :global(h1) {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+  
+  .doc-content :global(h2) {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .doc-content :global(h3) {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .doc-content :global(p) {
+    margin-bottom: 1rem;
+  }
+  
+  .doc-content :global(ul), .doc-content :global(ol) {
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+  }
+  
+  .doc-content :global(li) {
+    margin-bottom: 0.25rem;
   }
 </style>
