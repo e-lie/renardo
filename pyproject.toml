@@ -44,6 +44,7 @@ dependencies = [
     "gunicorn",
     "gevent",
     "gevent-websocket",
+    "markdown>=3.5.1",
     #"renardo-reapy==0.11.0.dev6",
     "python-reapy>=0.10.0",
 ]
