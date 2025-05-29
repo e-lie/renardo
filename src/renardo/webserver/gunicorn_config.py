@@ -12,7 +12,7 @@ from renardo.settings_manager import settings
 debug_mode = settings.get("webserver.FLASK_DEBUG", False)
 
 # Get port and host from settings with fallback to environment variables
-port = int(os.environ.get("PORT", settings.get("webserver.PORT", 5000)))
+port = int(os.environ.get("PORT", settings.get("webserver.PORT", 12345)))
 host = os.environ.get("HOST", settings.get("webserver.HOST", "0.0.0.0"))
 
 # Bind to a socket
@@ -39,32 +39,37 @@ loglevel = "debug" if debug_mode else "warning"
 # Process naming
 proc_name = "renardo_gunicorn"
 
+
 # Server hooks
 def on_starting(server):
     """Called just before the master process is initialized."""
     if debug_mode:
         print("Starting Renardo with Gunicorn")
 
+
 def on_exit(server):
     """Called just before exiting."""
     if debug_mode:
         print("Shutting down Renardo Gunicorn server")
-    
+
     # Send shutdown message to all connected clients
     if settings.get("webserver.AUTOCLOSE_WEBCLIENT", True):
         from renardo.webserver.websocket_utils import broadcast_to_clients
-        broadcast_to_clients({
-            "type": "server_shutdown",
-            "message": "Server is shutting down"
-        })
+
+        broadcast_to_clients(
+            {"type": "server_shutdown", "message": "Server is shutting down"}
+        )
         # Give clients a moment to process the shutdown message
         import time
+
         time.sleep(0.5)
+
 
 def post_fork(server, worker):
     """Called just after a worker has been forked."""
     if debug_mode:
         print(f"Worker spawned (pid: {worker.pid})")
+
 
 def post_worker_init(worker):
     """Called just after a worker has initialized the application."""
