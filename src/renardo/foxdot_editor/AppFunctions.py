@@ -1,23 +1,23 @@
 #!/usr/bin/python
-""" Collection of functions used in the Workspace package """
+"""Collection of functions used in the Workspace package"""
 
 from renardo.foxdot_editor.Format import *
 import sys
 
 
 def stdout(*args):
-    """ Forces prints to stdout and not console """
+    """Forces prints to stdout and not console"""
     sys.__stdout__.write(" ".join([str(s) for s in args]) + "\n")
 
 
 def index(index1, index2=None):
-    if type(index1) == str and index2 is None:
-        return tuple(int(n) for n in index1.split('.'))
-    return str(index1) + '.' + str(index2)
+    if not isinstance(index1, str) and index2 is None:
+        return tuple(int(n) for n in index1.split("."))
+    return str(index1) + "." + str(index2)
 
 
 def empty(string):
-    return len(string.replace(' ', '')) == 0
+    return len(string.replace(" ", "")) == 0
 
 
 def isDelete(char):
@@ -42,8 +42,8 @@ def indented(s):
 
 
 def at_function(index, string):
-    """ Returns true if the index is at a colon in the string """
-    return False if index == 0 else string[index-1] == ":"
+    """Returns true if the index is at a colon in the string"""
+    return False if index == 0 else string[index - 1] == ":"
 
 
 def in_brackets(index, string):
@@ -68,19 +68,23 @@ def in_brackets(index, string):
 
 
 def get_tabspace(s):
-    """ Returns the amount of whitespace at the start of a string """
+    """Returns the amount of whitespace at the start of a string"""
     return indented(s) * " "
 
 
 def open_bracket(text):
-    """ Returns the index of the last open bracket """
+    """Returns the index of the last open bracket"""
     count = dict([(lst, 0) for lst in left_b])
     for i, char in enumerate(text):
         if char in left_b:
             count[char] += 1
         elif char in right_b:
             count[brackets[char]] -= 1
-    open_br = [b for b in count.keys() if (count[b] >= max(count.values()) > 0) and (count[b] % 2 == 1)]
+    open_br = [
+        b
+        for b in count.keys()
+        if (count[b] >= max(count.values()) > 0) and (count[b] % 2 == 1)
+    ]
     pos = [text.rfind(b) for b in open_br]
     if pos:
         return max(pos) + 1
