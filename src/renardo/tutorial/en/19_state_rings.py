@@ -7,12 +7,17 @@ b1 >> blip(R[2,3,P[2,3], var([2,1,4])]) # Will stay on note/degree 2, then when 
 
 # Rings can contain any objects or values
 
-## Rings are meant to be used with recurrent points in time
+## Rings are meant to be used with recurrent or persistent points in time (not working for now)
 
-rpit1 = rpit()
+rpit1 = rpit(16)
+ppit1 = ppit()
 
-#{rpit1}
-b1 >> blip().stop(1.5)
+rpit1.beat = now()
 
+#{ppit1}
+b1 >> blip(R[0,5,10]).stop(1.5)
 
+ppit1.beat = now() + 16
+
+ppit1.beat = now() + 32
 
