@@ -373,6 +373,29 @@ class Player(Repeatable):
         if self.__init:
             # Force the data into a Pattern if the attribute is used with SuperCollider
             if name not in self.__vars:
+                # Special handling for Ring objects
+                from renardo.lib.ring import Ring
+                # Handle Ring objects
+                if isinstance(value, Ring):
+                    # Store Ring objects in a dictionary for future reference
+                    if not hasattr(self, "_rings"):
+                        self.__dict__["_rings"] = {}
+                    if name in self._rings:
+                        # Check if we're setting the same Ring again (using equality comparison)
+                        if hasattr(value, "__eq__") and value == self._rings[name]:
+                            # Get the next value in the cycle from our stored Ring
+                            value = self._rings[name]()
+                    else:
+                        # Get the actual value from the Ring by calling it
+                        actual_value = value()
+                        # Store or update the Ring in our dictionary
+                        self._rings[name] = value
+                        # Use the value from the Ring for the attribute
+                        value = actual_value
+
+                elif hasattr(self, "_rings") and name in self._rings:
+                    # If setting something other than the same Ring, remove from dict
+                    del self._rings[name]
 
                 ### REAPER INTEGRATION HOOK for param set
                 # Apply the parameter in reaper if it exists
