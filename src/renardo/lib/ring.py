@@ -24,24 +24,16 @@ class Ring:
         0
     """
     
-    def __init__(self, data=None):
+    def __init__(self, data):
         """
         Initialize a Ring with the given data.
         
         Args:
             data: List or other iterable to initialize the Ring with.
         """
-        if data is None:
-            self.data = []
-        else:
-            # Handle different input types similar to Pattern
-            if isinstance(data, (str, list, tuple)):
-                self.data = list(data)
-            else:
-                self.data = [data]
-                
+        self.data = data
         # Convert nested data (similar to Pattern)
-        self.data = list(map(convert_nested_data, self.data))
+        # self.data = list(map(convert_nested_data, self.data))
         
         # Index for tracking position in the ring
         self.index = 0

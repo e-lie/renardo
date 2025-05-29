@@ -385,6 +385,13 @@ class Player(Repeatable):
                         if hasattr(value, "__eq__") and value == self._rings[name]:
                             # Get the next value in the cycle from our stored Ring
                             value = self._rings[name]()
+                        else:
+                            # Get the actual value from the Ring by calling it
+                            actual_value = value()
+                            # Store or update the Ring in our dictionary
+                            self._rings[name] = value
+                            # Use the value from the Ring for the attribute
+                            value = actual_value
                     else:
                         # Get the actual value from the Ring by calling it
                         actual_value = value()
