@@ -1,54 +1,37 @@
-### Basic PointInTime recap
-
-# Regular PointInTime can only be used once
-drop_moment = pit()
-b1 >> blip()
-
-# {drop_moment}
-p1 >> saw([0], amp=2)
-d1 >> play("X---", amp=2)
-
-drop_moment.beat = Clock.now() + 8
-# After this triggers, drop_moment is "used up" and can't be triggered again
-
-
-
 ### Persistent point in time
 
-# Point in time you can reactivate several times (more usefull than)
+# A point in time you can reactivate several times (more usefull than single use PointInTime)
 
 # Create a persistent point for chorus sections
-chorus_start = ppit() # or PersistentPointInTime()
+somebreak = ppit() # or PersistentPointInTime()
 
-# Start some basic musical loop
-p2 >> pluck([0,2,2,5],oct=4)
-print(f"Created chorus trigger: {chorus_start}")
+# Start some musical loop
+Clock.bpm=160
+b1 >> blip([0,1,5,[2,[_,1]]], dur=var([.5,.25],8), sus=1, amp=1.5*P[.4,.7,1,.7], lpf=800, oct=[4,5,6])
+k2 >> play("v.(.x)(v*)*v.", dur=.25)
+d2 >> play("{cccc.}", dur=var([2,2/3],[12,4]), rate=(1.2,2.4), lpf=800)
 
-# Schedule what happens during chorus (wont start the chorus for now)
+# Schedule what happens during break
 
-# {chorus_start}
-p1 >> pluck([0, 2, 4, 2], dur=1/2, amp=0.8).stop(4)
-b1 >> bass([0, 0, 2, 2], dur=2, amp=0.6).stop(4)
-d1 >> play("X-o-X-o-", dur=1/2).stop(4)
+# {somebreak} cut drums for 16 beats
+d2.amplify=0 # break (cutting the drum)
+k2.amplify=0
+# {somebreak+16} # Put back the drums 16 beats later
+d2.amplify=1
+k2.amplify=1
 
-# Now you can trigger the chorus multiple times!
+# Now you can trigger the break multiple times!
 
 # First chorus at beat 16
-chorus_start.beat = now() + 16
-print(f"First chorus scheduled at beat {Clock.now() + 16}")
-print(f"Chorus state after trigger: {chorus_start}")  # Should be undefined again
+somebreak.beat = now() + 16
 
-# Wait a bit, then trigger second chorus
-chorus_start.beat = now() + 32
-print(f"Second chorus scheduled at beat {Clock.now() + 32}")
+# Wait a bit, then trigger second break
+somebreak.beat = now() + 16
 
 # And a third time later in the song on a beat multiple of 64
-chorus_start.beat = mod(64)
-print(f"Third chorus scheduled at beat {Clock.mod(64)}")
+somebreak.beat = mod(128)
 
 # Each trigger executes the same musical pattern !
-
-
 
 ### Recurring point in time (reexecute the code periodically)
 
