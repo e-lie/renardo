@@ -25,7 +25,7 @@ Base for any self-scheduling objects
 re_player = re.compile(r"(\s*?)(\w+)\s*?>>\s*?\w+")
 
 # Macro RegEx - used to match scheduling macro definitions
-re_macro = re.compile(r"^\s*#\s*\{(.+?)\}\s*$")
+re_macro = re.compile(r"^\s*#\s*\{(.+?)\}(?:\s+.*)?$")
 
 class LiveObject(object):
     """ Base class for any self-scheduling objects """
@@ -139,92 +139,95 @@ class FoxDotCode:
         code = self.namespace["FOXDOT_STARTUP"].load()
         return self.__call__(code, verbose=False)
     
-    def parse_macros(self, code):
-        """ Parse and extract scheduling macros from code """
+    def transform_macros(self, code):
+        """ Transform scheduling macros directly into Clock.schedule calls in the code
+        
+        IMPROVED IMPLEMENTATION:
+        This function transforms macro syntax into discrete functions and Clock.schedule calls.
+        
+        Benefits of this approach:
+        1. Single-phase execution: All code executes in one pass rather than separate phases
+        2. Consistent namespace: Variables are properly shared between regular code and macros
+        3. Better error handling: Issues are caught during compilation rather than at schedule time
+        4. More intuitive: Transformation clearly shows the generated code equivalent
+        5. Better debugging: Transformed code is more transparent and easier to understand
+        
+        The transformation converts:
+        ```
+        # {beat_expression}
+        code_block
+        code_block
+        ```
+        
+        Into:
+        ```
+        # Auto-generated function for macro at beat_expression
+        def _macro_func_N():
+            code_block
+            code_block
+            
+        # Schedule the function
+        Clock.schedule(_macro_func_N, beat_expression)
+        ```
+        """
         lines = code.split('\n')
-        macros = []
-        processed_lines = []
+        transformed_lines = []
         current_macro = None
         current_block = []
+        macro_counter = 0
         
-        for line in lines:
+        i = 0
+        while i < len(lines):
+            line = lines[i]
             macro_match = re_macro.match(line)
             
             if macro_match:
-                # Save previous macro if exists
-                if current_macro is not None:
-                    macros.append((current_macro, '\n'.join(current_block)))
-                
-                # Start new macro
+                # Start a new macro block
                 current_macro = macro_match.group(1).strip()
                 current_block = []
+                i += 1
                 
-            elif current_macro is not None:
-                # We're inside a macro block
-                if line.strip() == '':
-                    # Empty line ends the macro block
-                    macros.append((current_macro, '\n'.join(current_block)))
-                    current_macro = None
-                    current_block = []
-                    processed_lines.append(line)  # Keep empty line in regular code
-                else:
-                    # Add line to current macro block
-                    current_block.append(line)
-            else:
-                # Regular code line
-                processed_lines.append(line)
-        
-        # Handle last macro if code doesn't end with empty line
-        if current_macro is not None:
-            macros.append((current_macro, '\n'.join(current_block)))
-        
-        return macros, '\n'.join(processed_lines)
-    
-    def create_macro_function(self, block_code):
-        """ Create a dynamic function from a code block """
-        self.macro_counter += 1
-        func_name = f"_macro_func_{self.macro_counter}"
-        
-        # Indent the block code for function body
-        indented_code = '\n'.join('    ' + line for line in block_code.split('\n') if line.strip())
-        
-        func_code = f"""def {func_name}():
-{indented_code}
+                # Collect all lines in the macro block until empty line or new macro
+                while i < len(lines):
+                    # Stop if we hit a new macro block
+                    if re_macro.match(lines[i]):
+                        break
+                    # Stop if we hit an empty line
+                    if lines[i].strip() == '':
+                        i += 1  # Skip the empty line
+                        break
+                    # Otherwise add this line to the current block
+                    current_block.append(lines[i])
+                    i += 1
+                
+                # Generate function and Clock.schedule code if the block is not empty
+                if current_block:
+                    macro_counter += 1
+                    func_name = f"_macro_func_{macro_counter}"
+                    
+                    # Create indented block for function body
+                    indented_block = '\n    '.join(current_block)
+                    if not indented_block.strip():
+                        indented_block = "    pass"
+                    else:
+                        indented_block = '    ' + indented_block
+                    
+                    # Generate the function definition and Clock.schedule call
+                    transformed_code = f"""def {func_name}():
+{indented_block}
+Clock.schedule({func_name}, beat={current_macro})
+
 """
+                    transformed_lines.append(transformed_code)
+                
+                current_macro = None
+                current_block = []
+            else:
+                # Regular code line, keep as is
+                transformed_lines.append(line)
+                i += 1
         
-        # Compile and execute the function definition
-        exec(self._compile(func_code), self.namespace)
-        
-        # Return the function object
-        return self.namespace[func_name]
-    
-    def schedule_macros(self, macros):
-        """ Schedule all parsed macros """
-        if not macros:
-            return
-            
-        # Get Clock from namespace
-        clock = self.namespace.get('Clock')
-        if clock is None:
-            print("Warning: Clock not available for macro scheduling")
-            return
-        
-        for beat_expr, block_code in macros:
-            if not block_code.strip():
-                continue
-                
-            try:
-                # Create function from block
-                func = self.create_macro_function(block_code)
-                
-                # Evaluate beat expression in current namespace
-                beat_value = eval(beat_expr, self.namespace)
-                
-                # Schedule using Clock.schedule which handles PointInTime correctly
-                clock.schedule(func, beat_value)
-                
-            except Exception as e:
-                print(f"Error scheduling macro '{beat_expr}': {e}")
+        return '\n'.join(transformed_lines)
                  
     def __call__(self, code, verbose=True, verbose_error=None):
         """ Takes a string of FoxDot code and executes as Python """
@@ -241,7 +244,6 @@ class FoxDotCode:
             return
 
         response = ""
-        macros = []
         processed_code = code
 
         catching_exceptions_in_performance_code = settings.get("core.PERFORMANCE_EXCEPTIONS_CATCHING")
@@ -251,18 +253,17 @@ class FoxDotCode:
                 if type(code) != CodeType:
                     code = clean(code)
                     
-                    # Parse macros before execution
-                    macros, processed_code = self.parse_macros(code)
+                    # Transform macros directly into equivalent Clock.schedule calls
+                    # This is an improved approach that replaces the old parse_macros/schedule_macros two-phase execution
+                    # with a single-phase execution where macros are transformed into regular code
+                    processed_code = self.transform_macros(code)
                     
                     response = stdout(processed_code)
                     if verbose is True:
                         print(response)
 
-                # Execute the processed code (without macro lines)
+                # Execute the transformed code in a single step
                 exec(self._compile(processed_code), self.namespace)
-                
-                # Schedule the macros
-                self.schedule_macros(macros)
 
             # catch any exception in the executed code 
             except Exception as e:
@@ -274,18 +275,17 @@ class FoxDotCode:
             if type(code) != CodeType:
                 code = clean(code)
                 
-                # Parse macros before execution
-                macros, processed_code = self.parse_macros(code)
+                # Transform macros directly into equivalent Clock.schedule calls
+                # This is an improved approach that replaces the old parse_macros/schedule_macros two-phase execution
+                # with a single-phase execution where macros are transformed into regular code
+                processed_code = self.transform_macros(code)
                 
                 response = stdout(processed_code)
                 if verbose is True:
                     print(response)
 
-            # Execute the processed code (without macro lines)
+            # Execute the transformed code in a single step
             exec(self._compile(processed_code), self.namespace)
-            
-            # Schedule the macros
-            self.schedule_macros(macros)
 
         return response
 
