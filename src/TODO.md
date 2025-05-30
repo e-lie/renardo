@@ -11,6 +11,7 @@
   - [x] creer les projets from scratch en programmatique
   - [x] sauvegarder les fxchains comme des reaperResources dans le dossier renardo et les mettre dynamiquement dans le dossier Reaper
   - [ ] vol param use volume fader + new param fadeamp that is a third param special for fade like methods
+  - Clock.bpm= should do the stuff from change_bpm
   - [ ] create a detailed documentation page
 
 - [x] test and finish the SCLang livecoding feature
@@ -20,6 +21,10 @@
   - [x] create the comment based macros to program clock schedule without python indented blocks
   - [ ] create the state machine cycle like list class
   - [ ] explore and debug
+
+
+- [ ] add a close all buffers button with a warning (Did you save the session)
+- [ ] add configure other editors with multiple tabs and a button that give you configuration for pulsardo
 
 
 - live tools in editor
@@ -64,6 +69,7 @@
 # les trucs à debug
 
 - [ ] debug effects with renardo community sclang bank
+- [ ] when opening same tutorial file or music example it opens multiple tabs
 
 - [ ] debug supercollider startup
 - [ ] debug la bonne execution des startup files
