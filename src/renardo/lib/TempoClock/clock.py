@@ -7,6 +7,7 @@ import sys
 import threading
 
 from .scheduling_queue import SchedulingQueue, SoloPlayer, History, ScheduleError, Wrapper
+from .point_in_time_registry import registry
 
 from renardo.lib.Player import Player
 from renardo.lib.TimeVar import TimeVar
@@ -131,6 +132,8 @@ class PointInTime:
                 result._operations.append(NumericOperation(op_type, other, reverse))
                 # Register this result as dependent on self
                 self._derived_points.append(result)
+                # Register in the global registry
+                registry.register_derived_point(self, result, {'type': 'numeric', 'op': op_type, 'value': other, 'reverse': reverse})
                 return result
         
         elif isinstance(other, PointInTime):
@@ -147,8 +150,12 @@ class PointInTime:
                 # Register this result as dependent on both points
                 if not self.is_defined:
                     self._derived_points.append(result)
+                    # Register in the global registry
+                    registry.register_derived_point(self, result, {'type': 'point', 'op': op_type, 'reverse': reverse})
                 if not other.is_defined:
                     other._derived_points.append(result)
+                    # Register in the global registry
+                    registry.register_derived_point(other, result, {'type': 'point', 'op': op_type, 'reverse': reverse})
                 return result
         
         else:
@@ -174,6 +181,9 @@ class PointInTime:
     
     def _notify_derived_points(self):
         """Notify derived PointInTime objects that this point has been defined."""
+        # Use the global registry to notify derived points
+        registry.notify_derived_points(self, self._beat)
+        
         # Simple approach: just trigger any derived points that are waiting
         for derived_point in self._derived_points[:]:  # Copy list to avoid modification during iteration
             if not derived_point.is_defined:
@@ -203,6 +213,9 @@ class PointInTime:
                     schedulable.clock.to_be_scheduled.remove(schedulable)
                 except ValueError:
                     pass  # Not in list, that's okay
+        
+        # Remove from the global registry
+        registry.remove_point(self)
         
         # Clear local collections
         self._schedulables.clear()
@@ -330,11 +343,11 @@ class PersistentPointInTime(PointInTime):
         # Clear operations but keep schedulables for future scheduling
         self._operations.clear()
         
+        # Notify derived points using the registry
+        registry.notify_derived_points(self, final_value)
+        
         # Reset to undefined state for future use
         self._beat = None
-        
-        # Notify derived points
-        self._notify_derived_points()
     
     def _create_operation_result(self, op_type, other, reverse=False):
         """Override to return PersistentPointInTime instances."""
@@ -347,6 +360,8 @@ class PersistentPointInTime(PointInTime):
                 result._operations = self._operations.copy()
                 result._operations.append(NumericOperation(op_type, other, reverse))
                 self._derived_points.append(result)
+                # Register in the global registry
+                registry.register_derived_point(self, result, {'type': 'numeric', 'op': op_type, 'value': other, 'reverse': reverse})
                 return result
         elif isinstance(other, PointInTime):
             if self.is_defined and other.is_defined:
@@ -358,8 +373,12 @@ class PersistentPointInTime(PointInTime):
                 result._operations.append(PointInTimeOperation(op_type, other, reverse))
                 if not self.is_defined:
                     self._derived_points.append(result)
+                    # Register in the global registry
+                    registry.register_derived_point(self, result, {'type': 'point', 'op': op_type, 'reverse': reverse})
                 if not other.is_defined:
                     other._derived_points.append(result)
+                    # Register in the global registry
+                    registry.register_derived_point(other, result, {'type': 'point', 'op': op_type, 'reverse': reverse})
                 return result
         else:
             raise TypeError(f"Unsupported operand type for {op_type}: {type(other)}")
@@ -373,6 +392,9 @@ class PersistentPointInTime(PointInTime):
                     schedulable.clock.to_be_scheduled.remove(schedulable)
                 except ValueError:
                     pass
+        
+        # Remove from the global registry
+        registry.remove_point(self)
         
         # For PersistentPointInTime, we clear schedulables since they've been moved to to_be_scheduled
         # Operations and derived points are cleared as well
@@ -444,8 +466,8 @@ class RecurringPointInTime(PointInTime):
             # Schedule the next recurrence
             clock.schedule(trigger_next_recurrence, next_beat)
         
-        # Notify derived points
-        self._notify_derived_points()
+        # Notify derived points using the registry
+        registry.notify_derived_points(self, final_value)
     
     def _create_operation_result(self, op_type, other, reverse=False):
         """Override to return RecurringPointInTime instances."""
@@ -458,6 +480,8 @@ class RecurringPointInTime(PointInTime):
                 result._operations = self._operations.copy()
                 result._operations.append(NumericOperation(op_type, other, reverse))
                 self._derived_points.append(result)
+                # Register in the global registry
+                registry.register_derived_point(self, result, {'type': 'numeric', 'op': op_type, 'value': other, 'reverse': reverse})
                 return result
         elif isinstance(other, PointInTime):
             if self.is_defined and other.is_defined:
@@ -469,8 +493,12 @@ class RecurringPointInTime(PointInTime):
                 result._operations.append(PointInTimeOperation(op_type, other, reverse))
                 if not self.is_defined:
                     self._derived_points.append(result)
+                    # Register in the global registry
+                    registry.register_derived_point(self, result, {'type': 'point', 'op': op_type, 'reverse': reverse})
                 if not other.is_defined:
                     other._derived_points.append(result)
+                    # Register in the global registry
+                    registry.register_derived_point(other, result, {'type': 'point', 'op': op_type, 'reverse': reverse})
                 return result
         else:
             raise TypeError(f"Unsupported operand type for {op_type}: {type(other)}")
@@ -484,6 +512,9 @@ class RecurringPointInTime(PointInTime):
                     schedulable.clock.to_be_scheduled.remove(schedulable)
                 except ValueError:
                     pass
+        
+        # Remove from the global registry
+        registry.remove_point(self)
         
         # For RecurringPointInTime, we also need to stop the recurring scheduling
         # This is more complex since the recurring scheduler creates its own scheduled functions
@@ -526,6 +557,7 @@ class Schedulable:
         return f"Schedulable({self.callable_obj}, args={self.args}, kwargs={self.kwargs}, priority={self.is_priority})"
 
 
+# The rest of the TempoClock implementation remains the same...
 class TempoClock(object):
     tempo_server = None
     tempo_client = None
@@ -967,6 +999,7 @@ class TempoClock(object):
 
 
 
+
     # def _adjust_hard_nudge(self):
     #     """ Checks for any drift between the current beat value and the value
     #         expected based on time elapsed and adjusts the hard_nudge value accordingly """
@@ -1053,4 +1086,3 @@ class TempoClock(object):
 
         self.playing = []
         return None
-
