@@ -11,6 +11,9 @@ b1 >> blip([0,1,5,[2,[_,1]]], dur=var([.5,.25],8), sus=1, amp=1.5*P[.4,.7,1,.7],
 k2 >> play("v.(.x)(v*)*v.", dur=.25)
 d2 >> play("{cccc.}", dur=var([2,2/3],[12,4]), rate=(1.2,2.4), lpf=800)
 
+# some metronome for fun
+p7 >> pluck([4,0,0,0], oct=6, lpf=2000)
+
 # Schedule what happens during break
 
 # {somebreak} cut drums for 16 beats
@@ -22,14 +25,12 @@ k2.amplify=1
 
 # Now you can trigger the break multiple times!
 
-# First chorus at beat 16
-somebreak.beat = now() + 16
+# First break in 16 beats after end of bar (4/4 bar)
+somebreak.beat = mod(4) + 16
 
-# Wait a bit, then trigger second break
-somebreak.beat = now() + 16
+# Wait a bit, then trigger second break later
+somebreak.beat = mod(4) + 32
 
-# And a third time later in the song on a beat multiple of 64
-somebreak.beat = mod(128)
 
 # Each trigger executes the same musical pattern !
 

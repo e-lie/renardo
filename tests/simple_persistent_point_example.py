@@ -55,11 +55,13 @@ def simple_example():
     clock.beat = 10
     print(f"Executions after base point: {executions}")
     print(f"Registry derived points: {len(registry.get_derived_points(break_point))}")
+    print(f"Schedulables in break_point: {len(break_point._schedulables)}")
     
     # Advance to derived point
     print("\n--- Advancing to derived point (beat 26) ---")
     clock.beat = 26
     print(f"Executions after derived point: {executions}")
+    print(f"Schedulables in break_point: {len(break_point._schedulables)}")
     
     # Second trigger
     print("\n--- Second trigger at beat 50 ---")
@@ -69,11 +71,13 @@ def simple_example():
     clock.beat = 50
     print(f"Executions after base point: {executions}")
     print(f"Registry derived points: {len(registry.get_derived_points(break_point))}")
+    print(f"Schedulables in break_point: {len(break_point._schedulables)}")
     
     # Advance to derived point again
     print("\n--- Advancing to derived point (beat 66) ---")
     clock.beat = 66
     print(f"Executions after derived point: {executions}")
+    print(f"Schedulables in break_point: {len(break_point._schedulables)}")
     
     # Verify registry status
     print("\n--- Registry Status ---")
