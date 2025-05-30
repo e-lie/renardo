@@ -318,7 +318,10 @@ class PersistentPointInTime(PointInTime):
     
     @PointInTime.beat.setter  
     def beat(self, value):
-        """Sets the beat value, schedules all pending schedulables, but keeps them for future scheduling."""        
+        """
+        Sets the beat value, schedules all pending schedulables, but keeps them for future scheduling.
+        This implementation ensures both direct schedulables and derived points work across multiple triggers.
+        """        
         # Apply all stored operations to get the final beat value
         final_value = value
         for operation in self._operations:
@@ -327,8 +330,9 @@ class PersistentPointInTime(PointInTime):
         # Temporarily set beat to trigger normal scheduling
         self._beat = final_value
         
-        # Schedule all pending schedulables but keep them in the list
-        for schedulable in self._schedulables:
+        # Schedule all pending schedulables but keep them for future scheduling
+        for schedulable in list(self._schedulables):  # Make a copy for safe iteration
+            # Schedule the callable at the specified beat
             schedulable.clock.schedule(
                 schedulable.callable_obj,
                 beat=final_value,
@@ -336,18 +340,28 @@ class PersistentPointInTime(PointInTime):
                 kwargs=schedulable.kwargs,
                 is_priority=schedulable.is_priority
             )
-            # Keep schedulables in to_be_scheduled for future use
-            if schedulable not in schedulable.clock.to_be_scheduled:
-                schedulable.clock.to_be_scheduled.append(schedulable)
-        
-        # Clear operations but keep schedulables for future scheduling
-        self._operations.clear()
         
         # Notify derived points using the registry
         registry.notify_derived_points(self, final_value)
         
-        # Reset to undefined state for future use
+        # Reset to undefined state for future use but keep schedulables and operations
         self._beat = None
+    
+    def add_schedulable(self, schedulable):
+        """Override add_schedulable to ensure persistence"""
+        # For PersistentPointInTime, always add to the list for future use
+        if schedulable not in self._schedulables:
+            self._schedulables.append(schedulable)
+            
+        # If already defined, schedule immediately
+        if self.is_defined:
+            schedulable.clock.schedule(
+                schedulable.callable_obj,
+                beat=self._beat,
+                args=schedulable.args,
+                kwargs=schedulable.kwargs,
+                is_priority=schedulable.is_priority
+            )
     
     def _create_operation_result(self, op_type, other, reverse=False):
         """Override to return PersistentPointInTime instances."""
@@ -434,7 +448,7 @@ class RecurringPointInTime(PointInTime):
         self._beat = final_value
         
         # Schedule all pending schedulables
-        for schedulable in self._schedulables:
+        for schedulable in list(self._schedulables):  # Make a copy for safe iteration
             schedulable.clock.schedule(
                 schedulable.callable_obj,
                 beat=final_value,
@@ -442,9 +456,6 @@ class RecurringPointInTime(PointInTime):
                 kwargs=schedulable.kwargs,
                 is_priority=schedulable.is_priority
             )
-            # Keep schedulables in to_be_scheduled for future use
-            if schedulable not in schedulable.clock.to_be_scheduled:
-                schedulable.clock.to_be_scheduled.append(schedulable)
         
         # Clear operations on first trigger only
         if not self._has_been_triggered:
@@ -468,6 +479,22 @@ class RecurringPointInTime(PointInTime):
         
         # Notify derived points using the registry
         registry.notify_derived_points(self, final_value)
+    
+    def add_schedulable(self, schedulable):
+        """Override add_schedulable to ensure persistence"""
+        # For RecurringPointInTime, always add to the list for future use
+        if schedulable not in self._schedulables:
+            self._schedulables.append(schedulable)
+            
+        # If already defined, schedule immediately
+        if self.is_defined:
+            schedulable.clock.schedule(
+                schedulable.callable_obj,
+                beat=self._beat,
+                args=schedulable.args,
+                kwargs=schedulable.kwargs,
+                is_priority=schedulable.is_priority
+            )
     
     def _create_operation_result(self, op_type, other, reverse=False):
         """Override to return RecurringPointInTime instances."""

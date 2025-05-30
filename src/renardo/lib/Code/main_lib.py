@@ -215,6 +215,7 @@ class FoxDotCode:
                     # Generate the function definition and Clock.schedule call
                     transformed_code = f"""def {func_name}():
 {indented_block}
+
 Clock.schedule({func_name}, beat={current_macro})
 
 """
