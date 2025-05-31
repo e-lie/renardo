@@ -37,7 +37,7 @@
  
 ## Install Renardo as Python Package (to integrate it with a python environment)
 
-- Install `renardo==1.0.0a3` package from PyPI using pip or your prefered python package manager.
+- Install `renardo==1.0.0a4` package from PyPI using pip or your prefered python package manager.
 - Execute `python3 -m renardo`, `py -m renardo` or similar depending on your python setup.
 
 ## Install Development version (to contribute or hack it)
