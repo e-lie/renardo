@@ -74,44 +74,22 @@ class ReaperInstrument(Instrument):
             self,
             shortname: str,
             fxchain_path: str,
+            custom_midi_channel: Optional[int] = None,
+            arguments: Dict[str, Any] = None,
             fullname: Optional[str] = None,
             description: Optional[str] = None,
-            arguments: Dict[str, Any] = None,
             bank: str = "undefined",
             category: str = "undefined",
             midi_map=None, # TODO
             custom_default_sustain=None,
             custom_plugin_name=None,
             custom_track_name=None,
-            custom_midi_channel=None,
             instanciate_plugin=True,
             scan_all_params=True,
     ):
         """
-        Initialize a REAPER instrument.
-
-        Args:
-            shortname: Short name used as identifier (e.g. "piano")
-            fullname: Full descriptive name (e.g. "Concert Piano")
-            description: Longer description of the instrument
-            fxchain_relative_path: Relative path to the REAPER FX chain file
-            arguments: Dictionary of argument names and default values
-            bank: The resource bank this belongs to
-            category: The category within the bank
-            auto_load_to_server: Whether to automatically load the instrument
-            reaproject: The Reaper project instance
-            presets: Preset configurations
-            track_name: Name of the track in Reaper
-            midi_channel: MIDI channel for the instrument
-            midi_map: MIDI mapping configuration
-            sus: Sustain pattern
-            create_instrument: Whether to create the instrument
-            instrument_name: Name of the instrument to create
-            plugin_name: Plugin to use for the instrument
-            plugin_preset: Preset for the plugin
-            instrument_params: Parameters for the instrument
-            scan_all_params: Whether to scan all parameters
-            is_chain: Whether this is a chain of effects
+        Initialize a REAPER instrument in the renardo runtime linked to REAPER
+        and instanciate the corresponding FXChain in REAPER on the right track with right midi channel
         """
         super().__init__(shortname, fullname, description, arguments, bank, category)
 
@@ -119,8 +97,9 @@ class ReaperInstrument(Instrument):
         self.chan_track_names = [f"chan{i+1}" for i in range(16)]
 
         self.fxchain_path = Path(fxchain_path)
+        if not self.fxchain_path.suffix.lower() == ".rfxchain":
+            self.fxchain_path = self.fxchain_path.with_suffix(".RfxChain")
         self.ensure_fxchain_in_reaper()
-
 
         if custom_plugin_name is None:
             self.plugin_name = shortname
@@ -474,6 +453,17 @@ class ReaperInstrument(Instrument):
         Ensure that a FXChain custom or from the ReaperResourceLibrary is present in REAPER's FXChains directory.
         """
         try:
+            # Get the Renardo FXChains directory in REAPER's config
+            config_dir = SettingsManager.get_standard_config_dir()
+            renardo_fxchains_dir = settings.get_path("RENARDO_FXCHAIN_DIR")
+            # Create the renardo_fxchains directory if it doesn't exist
+            renardo_fxchains_dir.mkdir(parents=True, exist_ok=True)
+
+            # If FXChain file is already in reaper folder (not renardo subdir)
+            # Which means we want to load an externally managed FXChain, then nothing to do here
+            if (renardo_fxchains_dir.parent / self.fxchain_path).exists():
+                return True
+
             # if relative (most cases) resolve the path
             # relative to the file creating the ReaperInstrument instance (the caller)
             if not self.fxchain_path.is_absolute():
@@ -499,13 +489,7 @@ class ReaperInstrument(Instrument):
             elif not source_path.exists():
                 raise Exception(f"FXChain file not found: {self.fxchain_path}")
                 return False
-                
-            # Get the Renardo FXChains directory in REAPER's config
-            config_dir = SettingsManager.get_standard_config_dir()
-            renardo_fxchains_dir = settings.get_path("RENARDO_FXCHAIN_DIR")
-            # Create the renardo_fxchains directory if it doesn't exist
-            renardo_fxchains_dir.mkdir(parents=True, exist_ok=True)
-            
+
             # Copy the FXChain file to the renardo_fxchains directory
             dest_path = renardo_fxchains_dir / f"{chain_name}.RfxChain"
             
