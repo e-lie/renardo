@@ -48,6 +48,29 @@ hh >> play("--[--]-", dur=1/4, amp=0.4).stop(2)
 hihat_pattern.beat = now() + 4
 print(f"Hi-hat pattern will repeat every 4 beats starting at {Clock.now() + 4}")
 
+
+#### Double rpit
+
+rpit1 = rpit(16)
+rpit2 = rpit(12)
+
+b1 >> blip(dur=.25, sus=[1,.75,.25], lpf=800, amp=[.3,.7,1,.6])
+
+#{rpit1}
+b1.oct=[5,5,3,7]
+#{rpit2}
+b1.oct=[6,4]
+
+rpit1.beat=now()+4
+rpit2.beat=now()+4
+
+
+
+
+
+
+
+
 # Create a longer recurring pattern for bass drops
 drop_cycle = RecurringPointInTime(period=16)
 
