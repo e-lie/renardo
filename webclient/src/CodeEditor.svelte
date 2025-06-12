@@ -13,6 +13,7 @@
   import SaveSessionModal from './components/modals/SaveSessionModal.svelte';
   import NewBufferModal from './components/modals/NewBufferModal.svelte';
   import CloseBufferModal from './components/modals/CloseBufferModal.svelte';
+  import CodeMirrorThemeSelector from './lib/CodeMirrorThemeSelector.svelte';
   
   // State for right panel
   let rightPanelOpen = true;
@@ -86,6 +87,7 @@
   
   // Editor instance reference
   let editor;
+  let themeSelector;
   let currentEditorTheme = "dracula";
   
   // Console output
@@ -146,6 +148,11 @@
   // Editor event handlers
   function handleEditorReady(event) {
     editor = event.detail.editor;
+    
+    // Initialize theme selector with editor
+    if (themeSelector) {
+      themeSelector.initEditor(editor);
+    }
   }
   
   function handleEditorChange(event) {
@@ -1353,11 +1360,15 @@
         </div>
         
         <div class="flex gap-2">
-          <CodeMirrorThemeSelector bind:currentTheme={currentEditorTheme} onThemeChange={(theme) => {
-            if (editor) {
-              editor.setTheme(theme);
-            }
-          }} />
+          <CodeMirrorThemeSelector 
+            bind:this={themeSelector}
+            on:themeChange={(e) => {
+              currentEditorTheme = e.detail.theme;
+              if (editor) {
+                editor.setTheme(e.detail.theme);
+              }
+            }}
+          />
           
           <button
             class="btn btn-sm btn-outline"
