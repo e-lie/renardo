@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
-  import { appState, initWebSocket, sendMessage } from './lib/websocket.js';
+  import { appState } from './lib/appState.js';
+  import { initWebSocket, sendMessage } from './lib/websocket.js';
   import ThemeSelector from './lib/ThemeSelector.svelte';
 
   // Local state for initialization status

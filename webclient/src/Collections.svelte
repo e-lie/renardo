@@ -1,6 +1,6 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
-  import { appState } from './lib/websocket.js';
+  import { appState } from './lib/appState.js';
   import ExploreCollectionModal from './lib/ExploreCollectionModal.svelte';
   
   // State for collections data
