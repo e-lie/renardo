@@ -85,8 +85,8 @@
   let activeTabId = 1;
   let nextTabId = 2;
   
-  // Editor instance reference
-  let editor;
+  // Editor component and CodeMirror instance references
+  let editorComponent;
   let themeSelector;
   let currentEditorTheme = "dracula";
   
@@ -147,11 +147,10 @@
   
   // Editor event handlers
   function handleEditorReady(event) {
-    editor = event.detail.editor;
-    
-    // Initialize theme selector with editor
+    // The editor component is already stored in editorComponent via bind:this
+    // Initialize theme selector with the raw CodeMirror instance
     if (themeSelector) {
-      themeSelector.initEditor(editor);
+      themeSelector.initEditor(event.detail.editor);
     }
   }
   
@@ -175,9 +174,9 @@
   // Tab management handlers
   function handleSwitchTab(event) {
     activeTabId = event.detail.tabId;
-    if (editor) {
-      editor.setValue(tabs.find(t => t.id === activeTabId).content);
-      editor.focus();
+    if (editorComponent) {
+      editorComponent.setValue(tabs.find(t => t.id === activeTabId).content);
+      editorComponent.focus();
     }
   }
   
@@ -301,10 +300,10 @@
     
     showNewBufferModal = false;
     
-    if (editor) {
-      editor.setValue(newBuffer.content);
-      editor.setCursor({ line: 0, ch: 0 });
-      editor.focus();
+    if (editorComponent) {
+      editorComponent.setValue(newBuffer.content);
+      editorComponent.setCursor({ line: 0, ch: 0 });
+      editorComponent.focus();
     }
   }
   
@@ -379,8 +378,8 @@
 
     const requestId = Date.now();
 
-    if (from && to && editor) {
-      editor.highlightExecutedCode(from, to, requestId);
+    if (from && to && editorComponent) {
+      editorComponent.highlightExecutedCode(from, to, requestId);
     }
 
     sendMessage({
@@ -394,7 +393,7 @@
   
   // Execute code
   function executeCode() {
-    if (!editor) {
+    if (!editorComponent) {
       console.error("CodeMirror editor not initialized!");
       return;
     }
@@ -403,14 +402,14 @@
     let executionType;
     let from, to;
     
-    const selection = editor.getSelection();
+    const selection = editorComponent.getSelection();
     if (selection) {
       codeToExecute = selection.text;
       executionType = 'selection';
       from = selection.from;
       to = selection.to;
     } else {
-      const paragraph = editor.getCurrentParagraph();
+      const paragraph = editorComponent.getCurrentParagraph();
       codeToExecute = paragraph.text;
       executionType = 'paragraph';
       from = paragraph.from;
@@ -422,12 +421,12 @@
   
   // Execute current line
   function executeCurrentLine() {
-    if (!editor) {
+    if (!editorComponent) {
       console.error("CodeMirror editor not initialized!");
       return;
     }
     
-    const line = editor.getCurrentLine();
+    const line = editorComponent.getCurrentLine();
     sendCodeToExecute(line.text, 'line', line.from, line.to);
   }
   
@@ -537,10 +536,10 @@
         tabs = [...tabs, newBuffer];
         activeTabId = newBuffer.id;
         
-        if (editor) {
-          editor.setValue(content);
-          editor.setCursor({ line: 0, ch: 0 });
-          editor.focus();
+        if (editorComponent) {
+          editorComponent.setValue(content);
+          editorComponent.setCursor({ line: 0, ch: 0 });
+          editorComponent.focus();
         }
       } else {
         console.error('Failed to load tutorial file');
@@ -816,10 +815,10 @@
           activeTabId = tabs[0].id;
           nextTabId = newTabId;
           
-          if (editor) {
-            editor.setValue(tabs[0].content);
-            editor.setCursor({ line: 0, ch: 0 });
-            editor.focus();
+          if (editorComponent) {
+            editorComponent.setValue(tabs[0].content);
+            editorComponent.setCursor({ line: 0, ch: 0 });
+            editorComponent.focus();
           }
           
           addConsoleOutput(`Session "${file.name}" loaded successfully`, 'success');
@@ -916,10 +915,10 @@
           tabs = [newBuffer, ...tabs.filter(tab => !tab.isStartupFile)];
           activeTabId = newBuffer.id;
           
-          if (editor) {
-            editor.setValue(data.content);
-            editor.setCursor({ line: 0, ch: 0 });
-            editor.focus();
+          if (editorComponent) {
+            editorComponent.setValue(data.content);
+            editorComponent.setCursor({ line: 0, ch: 0 });
+            editorComponent.focus();
           }
           
           selectedStartupFile = file;
@@ -943,8 +942,8 @@
     }
     
     try {
-      if (activeTabId === buffer.id && editor) {
-        buffer.content = editor.getValue();
+      if (activeTabId === buffer.id && editorComponent) {
+        buffer.content = editorComponent.getValue();
       }
       
       const response = await fetch('/api/settings/user-directory/startup_files/save', {
@@ -986,9 +985,9 @@
     
     if (existingTabByName) {
       activeTabId = existingTabByName.id;
-      if (editor) {
-        editor.setValue(existingTabByName.content);
-        editor.focus();
+      if (editorComponent) {
+        editorComponent.setValue(existingTabByName.content);
+        editorComponent.focus();
       }
       return;
     }
@@ -1143,10 +1142,10 @@
         tabs = [...tabs, newBuffer];
         activeTabId = newBuffer.id;
         
-        if (editor) {
-          editor.setValue(content);
-          editor.setCursor({ line: 0, ch: 0 });
-          editor.focus();
+        if (editorComponent) {
+          editorComponent.setValue(content);
+          editorComponent.setCursor({ line: 0, ch: 0 });
+          editorComponent.focus();
         }
       } else {
         console.error('Failed to load music example file');
@@ -1158,8 +1157,8 @@
   
   // Insert preset code
   function insertPreset(code) {
-    if (editor) {
-      editor.insertAtCursor(code);
+    if (editorComponent) {
+      editorComponent.insertAtCursor(code);
     }
   }
   
@@ -1236,7 +1235,7 @@
         return;
       }
       
-      if (editor && editor.hasFocus && editor.hasFocus()) {
+      if (editorComponent && editorComponent.hasFocus && editorComponent.hasFocus()) {
         return;
       }
       
@@ -1259,8 +1258,8 @@
     // Listen for code execution completion
     const handleCodeExecutionComplete = (event) => {
       const { requestId } = event.detail;
-      if (requestId && editor) {
-        editor.removeExecutionHighlight(requestId);
+      if (requestId && editorComponent) {
+        editorComponent.removeExecutionHighlight(requestId);
       }
     };
     
@@ -1314,8 +1313,8 @@
           <button
             class="btn btn-sm btn-success"
             on:click={() => {
-              if (editor) {
-                const allText = editor.getAllText();
+              if (editorComponent) {
+                const allText = editorComponent.getAllText();
                 sendCodeToExecute(allText.text, 'all', allText.from, allText.to);
               }
             }}
@@ -1364,8 +1363,8 @@
             bind:this={themeSelector}
             on:themeChange={(e) => {
               currentEditorTheme = e.detail.theme;
-              if (editor) {
-                editor.setTheme(e.detail.theme);
+              if (editorComponent) {
+                editorComponent.setTheme(e.detail.theme);
               }
             }}
           />
@@ -1415,7 +1414,7 @@
           content={editorContent}
           theme={currentEditorTheme}
           {activeHighlights}
-          bind:this={editor}
+          bind:this={editorComponent}
           on:ready={handleEditorReady}
           on:change={handleEditorChange}
           on:execute={handleEditorExecute}
