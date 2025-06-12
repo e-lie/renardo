@@ -1318,47 +1318,63 @@
                 sendCodeToExecute(allText.text, 'all', allText.from, allText.to);
               }
             }}
-            title="Run all code (Ctrl+Shift+Enter)"
+            title="Run all code in editor"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
             </svg>
             Run Code
           </button>
+
           <button
-            class="btn btn-sm btn-error"
+            class="btn btn-sm btn-warning"
             on:click={stopMusic}
-            title="Stop all music (Ctrl+.)"
+            title="Stop all music playback"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clip-rule="evenodd" />
             </svg>
-            Stop
+            Stop Music
           </button>
-          
-          <div class="divider divider-horizontal mx-1"></div>
-          
+
           <button
-            class="btn btn-sm btn-outline"
+            class="btn btn-sm btn-primary"
             on:click={saveSession}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z" />
-            </svg>
-            Save Session
-          </button>
-          <button
-            class="btn btn-sm btn-outline"
-            on:click={loadSession}
+            title="Save current code as a session"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
             </svg>
+            Save Session
+          </button>
+
+          <button
+            class="btn btn-sm btn-primary"
+            on:click={loadSession}
+            title="Load a saved session"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+            </svg>
             Load Session
           </button>
+          
+          {#if activeBuffer && activeBuffer.isStartupFile}
+            <button
+              class="btn btn-sm btn-info"
+              on:click={() => saveStartupFile(activeBuffer)}
+              title="Save current startup file"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 012 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+              Save Startup File
+            </button>
+          {/if}
         </div>
-        
-        <div class="flex gap-2">
+
+        <!-- Editor Theme Selector -->
+        <div class="flex items-center gap-2">
           <CodeMirrorThemeSelector 
             bind:this={themeSelector}
             on:themeChange={(e) => {
@@ -1368,22 +1384,6 @@
               }
             }}
           />
-          
-          <button
-            class="btn btn-sm btn-outline"
-            on:click={() => rightPanelOpen = !rightPanelOpen}
-            title="Toggle right panel"
-          >
-            {#if rightPanelOpen}
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10.293 15.707a1 1 0 010-1.414L13.586 11H3a1 1 0 110-2h10.586l-3.293-3.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-              </svg>
-            {:else}
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M9.707 4.293a1 1 0 010 1.414L6.414 9H17a1 1 0 110 2H6.414l3.293 3.293a1 1 0 01-1.414 1.414l-5-5a1 1 0 010-1.414l5-5a1 1 0 011.414 0z" clip-rule="evenodd" />
-              </svg>
-            {/if}
-          </button>
         </div>
       </div>
     </div>
@@ -1399,6 +1399,7 @@
         {tabs}
         {activeTabId}
         {nextTabId}
+        {rightPanelOpen}
         on:switchTab={handleSwitchTab}
         on:startEditingName={handleStartEditingName}
         on:finishEditingName={handleFinishEditingName}
@@ -1406,6 +1407,7 @@
         on:closeBuffer={handleCloseBuffer}
         on:newBuffer={handleNewBuffer}
         on:saveStartupFile={handleSaveStartupFile}
+        on:toggleRightPanel={() => rightPanelOpen = !rightPanelOpen}
       />
       
       <!-- Editor area with dynamic height -->

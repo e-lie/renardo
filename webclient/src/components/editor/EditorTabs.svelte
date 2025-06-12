@@ -4,6 +4,7 @@
   export let tabs = [];
   export let activeTabId = 1;
   export let nextTabId = 2;
+  export let rightPanelOpen = true;
   
   const dispatch = createEventDispatcher();
   
@@ -40,79 +41,86 @@
   function saveStartupFile(buffer) {
     dispatch('saveStartupFile', { buffer });
   }
+  
+  function toggleRightPanel() {
+    dispatch('toggleRightPanel');
+  }
 </script>
 
-<!-- Editor tabs -->
-<div class="tabs tabs-lifted bg-base-300 px-2 pt-2">
-  {#each tabs as buffer}
-    <div class="tab tab-lifted {activeTabId === buffer.id ? 'tab-active' : ''} {buffer.isStartupFile ? 'startup-file' : ''} relative group">
-      {#if !buffer.editing}
-        <button
-          class="flex items-center gap-2 w-full"
-          on:click={() => switchTab(buffer.id)}
-          on:dblclick={() => startEditingBufferName(buffer.id)}
-          title="Double-click to rename"
-        >
+<!-- Buffer tabs -->
+<div class="bg-base-200 px-4 py-0.5">
+  <div class="flex items-center justify-between gap-1 h-8">
+    <div class="flex items-center gap-1">
+    {#each tabs as buffer}
+      <button
+        class="tab tab-lifted {activeTabId === buffer.id ? 'tab-active' : ''} {buffer.isStartupFile ? 'startup-file' : ''}"
+        on:click={() => switchTab(buffer.id)}
+        on:dblclick={() => startEditingBufferName(buffer.id)}
+        title={buffer.isStartupFile ? 'Startup File - Will run when Renardo starts' : buffer.name}
+      >
+        {#if buffer.editing}
+          <input
+            id="buffer-name-input-{buffer.id}"
+            type="text"
+            class="bg-transparent outline-none w-24"
+            bind:value={buffer.editingName}
+            on:keydown={(e) => {
+              if (e.key === 'Enter') {
+                finishEditingBufferName(buffer.id, buffer);
+              } else if (e.key === 'Escape') {
+                cancelEditingBufferName(buffer.id);
+              }
+            }}
+            on:blur={() => finishEditingBufferName(buffer.id, buffer)}
+            on:click|stopPropagation
+          />
+        {:else}
           {#if buffer.isStartupFile}
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 inline-block" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd" />
             </svg>
           {/if}
-          <span>{buffer.name}</span>
-        </button>
-      {:else}
-        <input
-          id="buffer-name-input-{buffer.id}"
-          type="text"
-          class="input input-xs w-full max-w-xs"
-          bind:value={buffer.editingName}
-          on:blur={() => finishEditingBufferName(buffer.id, buffer)}
-          on:keydown={(e) => {
-            if (e.key === 'Enter') {
-              finishEditingBufferName(buffer.id, buffer);
-            } else if (e.key === 'Escape') {
-              cancelEditingBufferName(buffer.id);
-            }
-          }}
-        />
-      {/if}
-      
-      {#if buffer.isStartupFile && activeTabId === buffer.id}
-        <button
-          class="btn btn-xs btn-ghost absolute right-8 opacity-0 group-hover:opacity-100 transition-opacity"
-          on:click|stopPropagation={() => saveStartupFile(buffer)}
-          title="Save Startup File"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z" />
-          </svg>
-        </button>
-      {/if}
-      
-      {#if tabs.length > 1 && !buffer.isStartupFile}
-        <button
-          class="btn btn-xs btn-ghost absolute right-1 opacity-0 group-hover:opacity-100 transition-opacity"
-          on:click|stopPropagation={() => confirmCloseBuffer(buffer.id)}
-          title="Close buffer"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-          </svg>
-        </button>
-      {/if}
+          {buffer.name}
+        {/if}
+        {#if !buffer.isStartupFile && tabs.length > 1}
+          <button
+            class="ml-2 w-4 h-4 rounded-full hover:bg-base-300 flex items-center justify-center text-xs"
+            on:click|stopPropagation={() => confirmCloseBuffer(buffer.id)}
+          >
+            ×
+          </button>
+        {/if}
+      </button>
+    {/each}
+    <button
+      class="tab tab-lifted"
+      on:click={openNewBufferModal}
+      title="New Buffer"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+      </svg>
+    </button>
     </div>
-  {/each}
-  
-  <!-- Add new buffer button -->
-  <button
-    class="tab tab-lifted"
-    on:click={openNewBufferModal}
-    title="Create new buffer"
-  >
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-      <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-    </svg>
-  </button>
+    
+    <!-- Right Panel Toggle -->
+    <button
+      class="btn btn-sm btn-outline"
+      on:click={toggleRightPanel}
+      title="{rightPanelOpen ? 'Close' : 'Open'} side panel"
+    >
+      {#if rightPanelOpen}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+        </svg>
+      {:else}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+        </svg>
+      {/if}
+      {rightPanelOpen ? 'Hide' : 'Show'} Panel
+    </button>
+  </div>
 </div>
 
 <style>
