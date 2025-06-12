@@ -1,7 +1,8 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
   import { fade } from 'svelte/transition';
-  import { appState, sendMessage } from './lib/websocket.js';
+  import { appState } from './lib/appState.js';
+  import { sendMessage } from './lib/websocket.js';
   
   // Local state
   let isLoading = false;
