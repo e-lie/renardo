@@ -251,11 +251,21 @@
     }
   }
   
+  // Get current value
+  export function getValue() {
+    return editor ? editor.getValue() : '';
+  }
+  
   // Focus editor
   export function focus() {
     if (editor) {
       editor.focus();
     }
+  }
+  
+  // Check if editor has focus
+  export function hasFocus() {
+    return editor ? editor.hasFocus() : false;
   }
   
   // Set cursor position
