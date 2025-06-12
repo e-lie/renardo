@@ -11,8 +11,9 @@
   - [x] creer les projets from scratch en programmatique
   - [x] sauvegarder les fxchains comme des reaperResources dans le dossier renardo et les mettre dynamiquement dans le dossier Reaper
   - [ ] vol param use volume fader + new param fadeamp that is a third param special for fade like methods
-  - Clock.bpm= should do the stuff from change_bpm
+  - Clock.bpm = should do the stuff from change_bpm
   - [ ] create a detailed documentation page
+  - [ ] fix the connection bug / finish reaside
 
 - [x] test and finish the SCLang livecoding feature
 
@@ -53,11 +54,13 @@
 - multiplayers as experimental feature
 
 - share to activitypub feature
+
 - share with the community as potential example (do a new repo per year on the long term ?)
 
 - test livecoding effects
 
 - pulsardo websocket
+
 - redesign midi
   - sans reaper
   - MIDIddleware
@@ -93,3 +96,18 @@
 
 - backend pure python avec pyo ou webaudio ?
 - Multiplateform audio routing tool AUDiddleware
+- Sharing on mastodon
+- Shortcut triggered blocks with macro language like crobo
+- Library of code snippets
+- Embedded webaudio backend
+- Embedded supercollider
+- Hy5 background With separated hydra and p5js evaluation
+- Snippets/library for p5js
+- Freeform editor like bruno gola + coding on 3d planes
+- Kabelsalat backend
+- Strange font from lixt
+- Customizable shortcuts
+- New shader primitives for hydra
+- Animated asciiart
+- GLSL with Veda.js ?
+
