@@ -1,7 +1,8 @@
 <script>
   import { onMount } from 'svelte';
   import { fade, slide } from 'svelte/transition';
-  import { appState, initWebSocket, incrementCounter, incrementCounterFallback, sendMessage } from './lib/websocket.js';
+  import { appState } from './lib/appState.js';
+  import { initWebSocket, incrementCounter, incrementCounterFallback, sendMessage } from './lib/websocket.js';
   import RenardoInit from './RenardoInit.svelte';
   import CodeEditor from './CodeEditor.svelte';
   import Collections from './Collections.svelte';

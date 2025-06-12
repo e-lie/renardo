@@ -1,7 +1,8 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
   import { fade, slide } from 'svelte/transition';
-  import { appState, initWebSocket, sendMessage } from './lib/websocket.js';
+  import { appState } from './lib/appState.js';
+  import { initWebSocket, sendMessage } from './lib/websocket.js';
   import CodeMirrorThemeSelector from './lib/CodeMirrorThemeSelector.svelte';
   // We'll load CodeMirror and its dependencies from CDN
   
