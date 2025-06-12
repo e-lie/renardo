@@ -14,6 +14,9 @@ dist
 gunicorn.pid
 .claude
 
+
+MUSIC.md
+
 # Virtual environments
 .venv
 
