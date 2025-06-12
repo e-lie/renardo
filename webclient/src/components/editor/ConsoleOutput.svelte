@@ -131,7 +131,7 @@
     class="flex justify-between items-center px-4 py-1 console-header"
     style="background-color: {consoleColors.consoleHeaderBg};"
   >
-    <h3 class="text-sm font-semibold">Console Output</h3>
+    <h3 class="text-sm font-bold"> ฅ^•ﻌ•^ฅ >> output</h3>
     <div class="flex gap-2">
       <button
         class="btn btn-xs btn-ghost"
