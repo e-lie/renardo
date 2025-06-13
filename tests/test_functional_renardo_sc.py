@@ -52,7 +52,10 @@ class TestSessionManager:
                     
     def _initialize_osc_proxy(self):
         """Initialize and start the OSC proxy."""
-        self.proxy = OSCProxy(listen_port=57110, forward_port=57120)
+        from renardo.settings_manager import settings
+        listen_port = settings.get("sc_backend.PORT")
+        forward_port = settings.get("sc_backend.PORT2")
+        self.proxy = OSCProxy(listen_port=listen_port, forward_port=forward_port)
         self.proxy.start()
         print("OSC Proxy started and ready")
         time.sleep(1)  # Give proxy time to start
