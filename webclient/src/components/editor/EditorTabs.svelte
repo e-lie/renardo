@@ -106,96 +106,101 @@
 
 <!-- Buffer tabs -->
 <div class="bg-base-200 px-2 py-0.5">
-  <div class="flex items-center gap-1 h-8">
-    <!-- Left scroll arrow -->
-    {#if canScrollLeft}
-      <button
-        class="btn btn-xs btn-ghost scroll-arrow-left"
-        on:click={() => scrollTabs('left')}
-        title="Scroll tabs left"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-        </svg>
-      </button>
-    {/if}
-    
-    <!-- Scrollable tabs container -->
-    <div class="flex-1 overflow-hidden">
-      <div 
-        class="flex items-center gap-1 overflow-x-auto scrollbar-hide"
-        bind:this={tabsContainer}
-        on:scroll={checkScrollButtons}
-      >
-        {#each tabs as buffer}
-          <button
-            class="tab tab-lifted flex-shrink-0 {activeTabId === buffer.id ? 'tab-active' : ''} {buffer.isStartupFile ? 'startup-file' : ''}"
-            on:click={() => switchTab(buffer.id)}
-            on:dblclick={() => startEditingBufferName(buffer.id)}
-            title={buffer.isStartupFile ? 'Startup File - Will run when Renardo starts' : buffer.name}
-          >
-            {#if buffer.editing}
-              <input
-                id="buffer-name-input-{buffer.id}"
-                type="text"
-                class="bg-transparent outline-none w-24"
-                bind:value={buffer.editingName}
-                on:keydown={(e) => {
-                  if (e.key === 'Enter') {
-                    finishEditingBufferName(buffer.id, buffer);
-                  } else if (e.key === 'Escape') {
-                    cancelEditingBufferName(buffer.id);
-                  }
-                }}
-                on:blur={() => finishEditingBufferName(buffer.id, buffer)}
-                on:click|stopPropagation
-              />
-            {:else}
-              {#if buffer.isStartupFile}
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 inline-block" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd" />
-                </svg>
-              {/if}
-              {buffer.name}
-            {/if}
-            {#if !buffer.isStartupFile && tabs.length > 1}
-              <button
-                class="ml-2 w-4 h-4 rounded-full hover:bg-base-300 flex items-center justify-center text-xs"
-                on:click|stopPropagation={() => confirmCloseBuffer(buffer.id)}
-              >
-                ×
-              </button>
-            {/if}
-          </button>
-        {/each}
+  <div class="flex items-center justify-between gap-1 h-8">
+    <!-- Left side: tabs and navigation -->
+    <div class="flex items-center gap-1">
+      <!-- Left scroll arrow -->
+      {#if canScrollLeft}
         <button
-          class="tab tab-lifted flex-shrink-0"
-          on:click={openNewBufferModal}
-          title="New Buffer"
+          class="btn btn-xs btn-ghost scroll-arrow-left"
+          on:click={() => scrollTabs('left')}
+          title="Scroll tabs left"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
           </svg>
         </button>
+      {/if}
+      
+      <!-- Scrollable tabs container -->
+      <div class="tabs-wrapper">
+        <div 
+          class="flex items-center gap-1 overflow-x-auto scrollbar-hide"
+          bind:this={tabsContainer}
+          on:scroll={checkScrollButtons}
+        >
+          {#each tabs as buffer}
+            <button
+              class="tab tab-lifted flex-shrink-0 {activeTabId === buffer.id ? 'tab-active' : ''} {buffer.isStartupFile ? 'startup-file' : ''}"
+              on:click={() => switchTab(buffer.id)}
+              on:dblclick={() => startEditingBufferName(buffer.id)}
+              title={buffer.isStartupFile ? 'Startup File - Will run when Renardo starts' : buffer.name}
+            >
+              {#if buffer.editing}
+                <input
+                  id="buffer-name-input-{buffer.id}"
+                  type="text"
+                  class="bg-transparent outline-none w-24"
+                  bind:value={buffer.editingName}
+                  on:keydown={(e) => {
+                    if (e.key === 'Enter') {
+                      finishEditingBufferName(buffer.id, buffer);
+                    } else if (e.key === 'Escape') {
+                      cancelEditingBufferName(buffer.id);
+                    }
+                  }}
+                  on:blur={() => finishEditingBufferName(buffer.id, buffer)}
+                  on:click|stopPropagation
+                />
+              {:else}
+                {#if buffer.isStartupFile}
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 inline-block" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd" />
+                  </svg>
+                {/if}
+                {buffer.name}
+              {/if}
+              {#if !buffer.isStartupFile && tabs.length > 1}
+                <button
+                  class="ml-2 w-4 h-4 rounded-full hover:bg-base-300 flex items-center justify-center text-xs"
+                  on:click|stopPropagation={() => confirmCloseBuffer(buffer.id)}
+                >
+                  ×
+                </button>
+              {/if}
+            </button>
+          {/each}
+        </div>
       </div>
-    </div>
-    
-    <!-- Right scroll arrow -->
-    {#if canScrollRight}
+      
+      <!-- Right scroll arrow -->
+      {#if canScrollRight}
+        <button
+          class="btn btn-xs btn-ghost scroll-arrow-right"
+          on:click={() => scrollTabs('right')}
+          title="Scroll tabs right"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+          </svg>
+        </button>
+      {/if}
+      
+      <!-- New Buffer button - Always visible right after tabs/arrows -->
       <button
-        class="btn btn-xs btn-ghost scroll-arrow-right"
-        on:click={() => scrollTabs('right')}
-        title="Scroll tabs right"
+        class="tab tab-lifted"
+        on:click={openNewBufferModal}
+        title="New Buffer"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+          <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
         </svg>
       </button>
-    {/if}
+    </div>
     
     <!-- Right Panel Toggle -->
     <button
-      class="btn btn-sm btn-outline ml-2"
+      class="btn btn-sm btn-outline"
       on:click={toggleRightPanel}
       title="{rightPanelOpen ? 'Close' : 'Open'} side panel"
     >
@@ -262,5 +267,16 @@
   /* Smooth scroll behavior */
   .overflow-x-auto {
     scroll-behavior: smooth;
+  }
+  
+  /* Tabs wrapper - only takes needed space */
+  .tabs-wrapper {
+    max-width: calc(100vw - 300px); /* Leave space for panel toggle and margins */
+    overflow: hidden;
+  }
+  
+  .tabs-wrapper > div {
+    width: fit-content;
+    max-width: 100%;
   }
 </style>
