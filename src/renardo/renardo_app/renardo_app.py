@@ -257,6 +257,10 @@ class RenardoApp:
             Flask: The Flask webapp instance
         """
         if self.webapp is None:
+            # Ensure SuperCollider classes are up to date before starting webserver
+            from renardo.sc_backend.supercollider_mgt import ensure_sc_classes_are_current
+            ensure_sc_classes_are_current()
+            
             self.webapp = create_webapp()
         return self.webapp
         
