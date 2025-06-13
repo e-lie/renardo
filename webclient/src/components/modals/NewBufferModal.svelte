@@ -29,10 +29,15 @@
     }
   }
   
+  let previousShow = false;
+  
   // Focus input when modal opens
-  $: if (show && inputElement) {
+  $: if (show && inputElement && !previousShow) {
     bufferName = '';
     setTimeout(() => inputElement?.focus(), 100);
+    previousShow = true;
+  } else if (!show) {
+    previousShow = false;
   }
 </script>
 
