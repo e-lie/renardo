@@ -20,4 +20,4 @@ def ensure_sc_classes_are_current():
     if should_update_renardo_sc_classes():
         print("SuperCollider classes are outdated, updating automatically...")
         write_sc_renardo_files_in_user_config()
-        print("SuperCollider classes updated successfully.")
+        print("SuperCollider classes (Renardo.sc, StageLimiter.sc, start_renardo.scd) updated successfully.")

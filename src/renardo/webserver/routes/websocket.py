@@ -85,13 +85,6 @@ def register_websocket_routes(sock):
                             }
                         }))
                     
-                    elif message_type == "init_supercollider_classes":
-                        # Start SC files initialization in a separate thread
-                        threading.Thread(
-                            target=init_supercollider_classes_task, 
-                            args=(ws,)
-                        ).start()
-                        
                     elif message_type == "download_sclang_code":
                         # Start SCLang code download in a separate thread
                         threading.Thread(
@@ -287,7 +280,6 @@ def register_websocket_routes(sock):
 def update_renardo_status():
     """Update the current status of Renardo components"""
     try:
-        state_helper.update_renardo_init_status("superColliderClasses", is_renardo_sc_classes_initialized())
         state_helper.update_renardo_init_status("sclangCode", is_special_sccode_initialized())
         state_helper.update_renardo_init_status("samples", is_default_spack_initialized())
         state_helper.update_renardo_init_status("instruments", is_default_sccode_pack_initialized())
@@ -295,73 +287,11 @@ def update_renardo_status():
     except Exception as e:
         print(f"Error updating Renardo status: {e}")
         # If error, set all to False
-        state_helper.update_renardo_init_status("superColliderClasses", False)
         state_helper.update_renardo_init_status("sclangCode", False)
         state_helper.update_renardo_init_status("samples", False)
         state_helper.update_renardo_init_status("instruments", False)
         state_helper.update_renardo_init_status("reaperPack", False)
 
-def init_supercollider_classes_task(ws):
-    """Initialize SuperCollider classes in a separate thread"""
-    # Create logger
-    logger = WebsocketLogger(ws)
-    
-    try:
-        logger.write_line("Starting SuperCollider classes initialization...")
-        
-        # Check if already initialized
-        if is_renardo_sc_classes_initialized():
-            logger.write_line("SuperCollider classes already initialized", "WARN")
-            
-            # Send completion message to client
-            ws.send(json.dumps({
-                "type": "init_complete",
-                "data": {
-                    "component": "superColliderClasses",
-                    "success": True
-                }
-            }))
-            return
-        
-        # Initialize SuperCollider files
-        logger.write_line("Writing SuperCollider class files...")
-        write_sc_renardo_files_in_user_config()
-        logger.write_line("SuperCollider class files written successfully!", "SUCCESS")
-        
-        # Update status
-        state_helper.update_renardo_init_status("superColliderClasses", True)
-        
-        # Send completion message to client
-        ws.send(json.dumps({
-            "type": "init_complete",
-            "data": {
-                "component": "superColliderClasses",
-                "success": True
-            }
-        }))
-        
-        # Broadcast updated status to all clients
-        websocket_utils.broadcast_to_clients({
-            "type": "renardo_status",
-            "data": {
-                "initStatus": state_helper.get_renardo_status()
-            }
-        })
-    except Exception as e:
-        error_msg = f"Error initializing SuperCollider classes: {str(e)}"
-        print(error_msg)
-        
-        # Log error
-        logger.write_line(error_msg, "ERROR")
-        
-        # Send error message to client
-        try:
-            ws.send(json.dumps({
-                "type": "error",
-                "message": error_msg
-            }))
-        except:
-            pass
 
 
 def start_sc_backend_task(ws, custom_code=None):
