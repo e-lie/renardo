@@ -35,6 +35,8 @@ settings.set_defaults_from_dict({
         "SCCODE_LIBRARY_DIR_NAME": "sccode_library",
         "SPECIAL_SCCODE_DIR_NAME": "special_sccode",
         "DEFAULT_SCCODE_PACK_NAME": "0_foxdot_core",
+        "NUM_OUTPUT_BUS_CHANNELS": 8,
+        "NUM_INPUT_BUS_CHANNELS": 8,
     }
 },
 internal=True
