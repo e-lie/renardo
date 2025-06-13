@@ -165,26 +165,46 @@ def _generate_renardo_sc_class_content():
 def should_update_renardo_sc_classes():
     """Check if the SuperCollider class files need to be updated"""
     renardo_file = SC_USER_EXTENSIONS_DIR / 'Renardo.sc'
+    stagelimiter_file = SC_USER_EXTENSIONS_DIR / 'StageLimiter.sc'
+    start_file = SC_USER_CONFIG_DIR / 'start_renardo.scd'
     
-    # If file doesn't exist, we need to create it
-    if not renardo_file.exists():
+    # If any file doesn't exist, we need to create them
+    if not (renardo_file.exists() and stagelimiter_file.exists() and start_file.exists()):
         return True
     
-    # Read current file content
+    # Check Renardo.sc content
     try:
         with open(renardo_file, 'r') as f:
-            current_content = f.read()
+            current_renardo_content = f.read()
     except (IOError, OSError):
         return True  # If we can't read it, better to regenerate
     
-    # Generate expected content
-    expected_content = _generate_renardo_sc_class_content()
+    # Generate expected content for Renardo.sc
+    expected_renardo_content = _generate_renardo_sc_class_content()
     
-    # Compare content (normalize whitespace)
-    current_normalized = ' '.join(current_content.split())
-    expected_normalized = ' '.join(expected_content.split())
+    # Compare Renardo.sc content (normalize whitespace)
+    current_renardo_normalized = ' '.join(current_renardo_content.split())
+    expected_renardo_normalized = ' '.join(expected_renardo_content.split())
     
-    return current_normalized != expected_normalized
+    if current_renardo_normalized != expected_renardo_normalized:
+        return True
+    
+    # Check other files exist and have some content (basic check)
+    try:
+        with open(stagelimiter_file, 'r') as f:
+            stagelimiter_content = f.read().strip()
+        with open(start_file, 'r') as f:
+            start_content = f.read().strip()
+        
+        # Basic content check - files should not be empty and contain expected keywords
+        if (not stagelimiter_content or 'StageLimiterBis' not in stagelimiter_content or
+            not start_content or 'Renardo.start' not in start_content):
+            return True
+            
+    except (IOError, OSError):
+        return True
+    
+    return False
 
 def write_sc_renardo_files_in_user_config():
     from renardo.settings_manager import settings

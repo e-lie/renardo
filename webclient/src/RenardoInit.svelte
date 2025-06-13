@@ -5,7 +5,6 @@
   import ThemeSelector from './lib/ThemeSelector.svelte';
 
   // Local state for initialization status
-  let scFilesInitialized = false;
   let samplesInitialized = false;
   let instrumentsInitialized = false;
   let sclangCodeInitialized = false;
@@ -19,7 +18,6 @@
     const unsubscribe = appState.subscribe(state => {
       if (state.renardoInit) {
         // Update local state variables from appState
-        scFilesInitialized = state.renardoInit.superColliderClasses;
         samplesInitialized = state.renardoInit.samples;
         instrumentsInitialized = state.renardoInit.instruments;
 
@@ -46,18 +44,6 @@
     };
   });
 
-  // Initialization function for SuperCollider
-  function initSuperColliderClasses() {
-    // Reset any previous error
-    appState.update(state => ({
-      ...state,
-      error: null
-    }));
-
-    return sendMessage({
-      type: 'init_supercollider_classes'
-    });
-  }
 
   // Initialization function for SCLang Code
   function downloadSclangCode() {
@@ -147,14 +133,14 @@
               </svg>
             </div>
             <div class="stat-title">Components Ready</div>
-            <div class="stat-value text-primary">{[scFilesInitialized, sclangCodeInitialized, samplesInitialized, instrumentsInitialized, reaperPackInitialized].filter(Boolean).length}/5</div>
+            <div class="stat-value text-primary">{[sclangCodeInitialized, samplesInitialized, instrumentsInitialized, reaperPackInitialized].filter(Boolean).length}/4</div>
             <div class="stat-desc">Components initialized and ready to use</div>
           </div>
         </div>
       </div>
 
       <!-- Success message when all components are initialized -->
-      {#if scFilesInitialized && sclangCodeInitialized && samplesInitialized && instrumentsInitialized && reaperPackInitialized}
+      {#if sclangCodeInitialized && samplesInitialized && instrumentsInitialized && reaperPackInitialized}
         <div class="alert alert-success">
           <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -169,75 +155,32 @@
   </div>
 
   <!-- Initialization Components -->
-  <div class="collapse collapse-arrow bg-base-200 shadow-md mb-8 {scFilesInitialized && sclangCodeInitialized && samplesInitialized && instrumentsInitialized && reaperPackInitialized ? 'collapse-closed' : 'collapse-open'}">
+  <div class="collapse collapse-arrow bg-base-200 shadow-md mb-8 {sclangCodeInitialized && samplesInitialized && instrumentsInitialized && reaperPackInitialized ? 'collapse-closed' : 'collapse-open'}">
     <input type="checkbox" />
     <div class="collapse-title text-xl font-medium flex items-center">
       <div class="flex items-center gap-3">
-        <div class="{scFilesInitialized && sclangCodeInitialized && samplesInitialized && instrumentsInitialized && reaperPackInitialized ? 'bg-success' : 'bg-base-300'} text-white rounded-full p-1">
+        <div class="{sclangCodeInitialized && samplesInitialized && instrumentsInitialized && reaperPackInitialized ? 'bg-success' : 'bg-base-300'} text-white rounded-full p-1">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
             <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.055 2.264-.22 2.944l-.02.089" />
           </svg>
         </div>
         <span>Initialization Components</span>
       </div>
-      {#if scFilesInitialized && sclangCodeInitialized && samplesInitialized && instrumentsInitialized && reaperPackInitialized}
+      {#if sclangCodeInitialized && samplesInitialized && instrumentsInitialized && reaperPackInitialized}
         <div class="badge badge-success ml-4">All components initialized</div>
       {:else}
-        <div class="badge badge-warning ml-4">Components pending initialization: {5 - [scFilesInitialized, sclangCodeInitialized, samplesInitialized, instrumentsInitialized, reaperPackInitialized].filter(Boolean).length}</div>
+        <div class="badge badge-warning ml-4">Components pending initialization: {4 - [sclangCodeInitialized, samplesInitialized, instrumentsInitialized, reaperPackInitialized].filter(Boolean).length}</div>
       {/if}
     </div>
     <div class="collapse-content">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-        <!-- SuperCollider Classes -->
-        <div class="card bg-base-100 shadow-xl">
-          <div class="card-body">
-            <div class="flex justify-between items-center mb-4">
-              <div class="flex items-center gap-3">
-                <div class="bg-primary text-primary-content rounded-full w-8 h-8 flex items-center justify-center">1</div>
-                <h2 class="card-title title-font">SuperCollider Classes</h2>
-              </div>
-              {#if scFilesInitialized}
-                <div class="badge badge-success gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Initialized
-                </div>
-              {:else}
-                <div class="badge badge-outline gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Pending
-                </div>
-              {/if}
-            </div>
-
-            <p class="text-base-content/70 mb-4">Sets up SuperCollider configuration in your user directory. This is required for sound synthesis.</p>
-
-            <div class="card-actions justify-end">
-              <button
-                class="btn btn-primary"
-                on:click={initSuperColliderClasses}
-                disabled={!$appState.connected || scFilesInitialized}
-              >
-                {#if !scFilesInitialized}
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
-                  </svg>
-                {/if}
-                Initialize SuperCollider
-              </button>
-            </div>
-          </div>
-        </div>
 
         <!-- SCLang Code -->
         <div class="card bg-base-100 shadow-xl">
           <div class="card-body">
             <div class="flex justify-between items-center mb-4">
               <div class="flex items-center gap-3">
-                <div class="bg-secondary text-secondary-content rounded-full w-8 h-8 flex items-center justify-center">2</div>
+                <div class="bg-primary text-primary-content rounded-full w-8 h-8 flex items-center justify-center">1</div>
                 <h2 class="card-title title-font">SCLang Code</h2>
               </div>
               {#if sclangCodeInitialized}
@@ -288,7 +231,7 @@
           <div class="card-body">
             <div class="flex justify-between items-center mb-4">
               <div class="flex items-center gap-3">
-                <div class="bg-accent text-accent-content rounded-full w-8 h-8 flex items-center justify-center">3</div>
+                <div class="bg-accent text-accent-content rounded-full w-8 h-8 flex items-center justify-center">2</div>
                 <h2 class="card-title title-font">Sample Packs</h2>
               </div>
               {#if samplesInitialized}
@@ -338,7 +281,7 @@
           <div class="card-body">
             <div class="flex justify-between items-center mb-4">
               <div class="flex items-center gap-3">
-                <div class="bg-warning text-warning-content rounded-full w-8 h-8 flex items-center justify-center">4</div>
+                <div class="bg-warning text-warning-content rounded-full w-8 h-8 flex items-center justify-center">3</div>
                 <h2 class="card-title title-font">Instruments &amp; Effects</h2>
               </div>
               {#if instrumentsInitialized}
@@ -388,7 +331,7 @@
           <div class="card-body">
             <div class="flex justify-between items-center mb-4">
               <div class="flex items-center gap-3">
-                <div class="bg-error text-error-content rounded-full w-8 h-8 flex items-center justify-center">5</div>
+                <div class="bg-error text-error-content rounded-full w-8 h-8 flex items-center justify-center">4</div>
                 <h2 class="card-title title-font">Reaper Resources</h2>
               </div>
               {#if reaperPackInitialized}
