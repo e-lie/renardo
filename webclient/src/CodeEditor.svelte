@@ -59,7 +59,6 @@
   let bufferToClose = null;
   let showInitModal = false;
   let initStatus = {
-    superColliderClasses: false,
     sclangCode: false,
     samples: false,
     instruments: false,
@@ -267,7 +266,6 @@
     modalDismissed = true;
     
     const missingSteps = [];
-    if (!initStatus.superColliderClasses) missingSteps.push("SuperCollider Classes");
     if (!initStatus.sclangCode) missingSteps.push("SCLang Code");
     if (!initStatus.samples) missingSteps.push("Sample Packs");
     if (!initStatus.instruments) missingSteps.push("Instruments & Effects");
@@ -1246,7 +1244,6 @@
       // Check initialization status
       if (state.renardoInit) {
         initStatus = {
-          superColliderClasses: state.renardoInit.superColliderClasses === true,
           sclangCode: state.renardoInit.sclangCode === true,
           samples: state.renardoInit.samples === true,
           instruments: state.renardoInit.instruments === true,
