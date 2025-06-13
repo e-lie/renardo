@@ -20,7 +20,7 @@ settings.set_defaults_from_dict({
         "OSC_MIDI_ADDRESS": "/foxdot_midi",
         "GET_SC_INFO": True,
         "ADDRESS": 'localhost',
-        "PORT": 57110,
+        "PORT": 23456,
         "PORT2": 57120,
         "FORWARD_PORT": 0,
         "FORWARD_ADDRESS": '',

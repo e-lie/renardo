@@ -177,9 +177,10 @@ def register_websocket_routes(sock):
                     
                     elif message_type == "execute_sc_code":
                         # Handle SuperCollider code execution request
+                        custom_code = message.get("data", {}).get("customCode", None)
                         threading.Thread(
                             target=execute_sc_code_task,
-                            args=(ws, message.get("data", {}).get("customCode", "Renardo.start; Renardo.midi;"))
+                            args=(ws, custom_code)
                         ).start()
                     
                     elif message_type == "stop_sc_backend":
@@ -586,7 +587,7 @@ def send_sc_backend_status(ws):
             pass
 
 
-def execute_sc_code_task(ws, custom_code="Renardo.start; Renardo.midi;"):
+def execute_sc_code_task(ws, custom_code=None):
     """Execute custom code in the running SuperCollider instance"""
     # Create logger
     logger = WebsocketLogger(ws)
@@ -594,6 +595,12 @@ def execute_sc_code_task(ws, custom_code="Renardo.start; Renardo.midi;"):
     try:
         # Import SC backend module
         from renardo.sc_backend.supercollider_mgt.sclang_instances_mgt import SupercolliderInstance
+        from renardo.settings_manager import settings
+        
+        # Set default startup code if none provided
+        if custom_code is None:
+            osc_port = settings.get("sc_backend.PORT")
+            custom_code = f"Renardo.start({osc_port}); Renardo.midi;"
         
         # Check if SC backend is running
         sc_instance = SupercolliderInstance()
