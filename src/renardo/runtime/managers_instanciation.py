@@ -7,6 +7,10 @@ from renardo.gatherer import SCResourceLibrary, ensure_sccode_directories, Reape
 
 from renardo.sc_backend import BufferManager, ServerManager, EffectManager, SCEffect, FileEffect
 
+# Ensure SuperCollider classes are up to date on startup
+from renardo.sc_backend.supercollider_mgt import ensure_sc_classes_are_current
+ensure_sc_classes_are_current()
+
 # DefaultServer = SCLangServerManager(settings.get("sc_backend.ADDRESS"), PORT, settings.get("sc_backend.PORT2"))
 Server = ServerManager(settings.get("sc_backend.ADDRESS"), settings.get("sc_backend.PORT"), settings.get("sc_backend.PORT2"))
 Server.init_connection()
