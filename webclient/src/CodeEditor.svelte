@@ -527,19 +527,37 @@
       const response = await fetch(file.url);
       if (response.ok) {
         const content = await response.text();
-        const newBuffer = {
-          id: nextTabId++,
-          name: file.name.replace('.py', ''),
-          content: content,
-          editing: false
-        };
-        tabs = [...tabs, newBuffer];
-        activeTabId = newBuffer.id;
+        const bufferName = file.name.replace('.py', '');
         
-        if (editorComponent) {
-          editorComponent.setValue(content);
-          editorComponent.setCursor({ line: 0, ch: 0 });
-          editorComponent.focus();
+        // Check if a buffer with the same name and content already exists
+        const existingBuffer = tabs.find(tab => 
+          tab.name === bufferName && tab.content === content
+        );
+        
+        if (existingBuffer) {
+          // If buffer already exists, just switch to it
+          activeTabId = existingBuffer.id;
+          if (editorComponent) {
+            editorComponent.setValue(existingBuffer.content);
+            editorComponent.setCursor({ line: 0, ch: 0 });
+            editorComponent.focus();
+          }
+        } else {
+          // Create new buffer if it doesn't exist
+          const newBuffer = {
+            id: nextTabId++,
+            name: bufferName,
+            content: content,
+            editing: false
+          };
+          tabs = [...tabs, newBuffer];
+          activeTabId = newBuffer.id;
+          
+          if (editorComponent) {
+            editorComponent.setValue(content);
+            editorComponent.setCursor({ line: 0, ch: 0 });
+            editorComponent.focus();
+          }
         }
       } else {
         console.error('Failed to load tutorial file');
@@ -1133,19 +1151,37 @@
       const response = await fetch(file.url);
       if (response.ok) {
         const content = await response.text();
-        const newBuffer = {
-          id: nextTabId++,
-          name: file.name.replace('.py', ''),
-          content: content,
-          editing: false
-        };
-        tabs = [...tabs, newBuffer];
-        activeTabId = newBuffer.id;
+        const bufferName = file.name.replace('.py', '');
         
-        if (editorComponent) {
-          editorComponent.setValue(content);
-          editorComponent.setCursor({ line: 0, ch: 0 });
-          editorComponent.focus();
+        // Check if a buffer with the same name and content already exists
+        const existingBuffer = tabs.find(tab => 
+          tab.name === bufferName && tab.content === content
+        );
+        
+        if (existingBuffer) {
+          // If buffer already exists, just switch to it
+          activeTabId = existingBuffer.id;
+          if (editorComponent) {
+            editorComponent.setValue(existingBuffer.content);
+            editorComponent.setCursor({ line: 0, ch: 0 });
+            editorComponent.focus();
+          }
+        } else {
+          // Create new buffer if it doesn't exist
+          const newBuffer = {
+            id: nextTabId++,
+            name: bufferName,
+            content: content,
+            editing: false
+          };
+          tabs = [...tabs, newBuffer];
+          activeTabId = newBuffer.id;
+          
+          if (editorComponent) {
+            editorComponent.setValue(content);
+            editorComponent.setCursor({ line: 0, ch: 0 });
+            editorComponent.focus();
+          }
         }
       } else {
         console.error('Failed to load music example file');
