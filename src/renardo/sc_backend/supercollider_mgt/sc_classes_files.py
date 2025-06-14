@@ -121,8 +121,14 @@ def _generate_renardo_sc_class_content():
             }}
 
             *start {{
-                arg remote = false;
+                arg remote = false, audio_output_index = -1;
                 this.configure(remote);
+
+                // Set audio output device if specified
+                if (audio_output_index >= 0, {{
+                    server.options.device = ServerOptions.outDevices[audio_output_index];
+                    ("Using audio output device: " ++ ServerOptions.outDevices[audio_output_index]).postln;
+                }});
 
                 server.boot();
 
@@ -135,7 +141,8 @@ def _generate_renardo_sc_class_content():
             }}
 
             *startRemote {{
-                this.start(true);
+                arg audio_output_index = -1;
+                this.start(true, audio_output_index);
             }}
 
             *midi {{
