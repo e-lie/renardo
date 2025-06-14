@@ -236,6 +236,36 @@ def register_websocket_routes(sock):
                             args=(ws,)
                         ).start()
                     
+                    elif message_type == "get_audio_devices":
+                        # Get available audio devices from SuperCollider
+                        threading.Thread(
+                            target=get_audio_devices_task,
+                            args=(ws,)
+                        ).start()
+                    
+                    elif message_type == "get_setting":
+                        # Get a setting value
+                        setting_key = message.get("setting_key")
+                        if setting_key:
+                            handle_get_setting(ws, setting_key)
+                        else:
+                            ws.send(json.dumps({
+                                "type": "error",
+                                "message": "Missing setting_key parameter"
+                            }))
+                    
+                    elif message_type == "set_setting":
+                        # Set a setting value
+                        setting_key = message.get("setting_key")
+                        setting_value = message.get("setting_value")
+                        if setting_key is not None and setting_value is not None:
+                            handle_set_setting(ws, setting_key, setting_value)
+                        else:
+                            ws.send(json.dumps({
+                                "type": "error",
+                                "message": "Missing setting_key or setting_value parameter"
+                            }))
+                    
                     elif message_type == "ping":
                         # Respond to ping with pong to keep connection alive
                         ws.send(json.dumps({
@@ -313,7 +343,14 @@ def start_sc_backend_task(ws, custom_code=None):
             }))
             return
         
-        custom_code = f"Renardo.start(); Renardo.midi();"
+        # Get audio output device setting
+        audio_output_index = settings.get("sc_backend.AUDIO_OUTPUT_DEVICE_INDEX")
+        
+        # Build initialization code with audio device parameter
+        if audio_output_index >= 0:
+            custom_code = f"Renardo.start(audio_output_index: {audio_output_index}); Renardo.midi();"
+        else:
+            custom_code = f"Renardo.start(); Renardo.midi();"
         
         # Update state
         state_helper.update_state("runtime_status", {
@@ -636,6 +673,105 @@ def download_special_sccode_task(ws):
         
         # Log error
         logger.write_line(error_msg, "ERROR")
+        
+        # Send error message to client
+        try:
+            ws.send(json.dumps({
+                "type": "error",
+                "message": error_msg
+            }))
+        except:
+            pass
+
+
+def get_audio_devices_task(ws):
+    """Get available audio devices from SuperCollider"""
+    try:
+        from renardo.sc_backend.supercollider_mgt.sclang_instances_mgt import SupercolliderInstance
+        
+        # Create SC instance
+        sc_instance = SupercolliderInstance()
+        
+        # Get audio devices
+        devices = sc_instance.list_audio_devices()
+        
+        if devices:
+            # Send devices to client
+            ws.send(json.dumps({
+                "type": "audio_devices",
+                "data": devices
+            }))
+        else:
+            # Send error if no devices found or SuperCollider not available
+            ws.send(json.dumps({
+                "type": "error",
+                "message": "Could not detect audio devices. Make sure SuperCollider is installed and accessible."
+            }))
+    
+    except Exception as e:
+        error_msg = f"Error getting audio devices: {str(e)}"
+        print(error_msg)
+        
+        # Send error message to client
+        try:
+            ws.send(json.dumps({
+                "type": "error",
+                "message": error_msg
+            }))
+        except:
+            pass
+
+
+def handle_get_setting(ws, setting_key):
+    """Get a setting value and send it to the client"""
+    try:
+        from renardo.settings_manager import settings
+        
+        setting_value = settings.get(setting_key)
+        
+        # Send setting value to client
+        ws.send(json.dumps({
+            "type": "setting_value",
+            "setting_key": setting_key,
+            "setting_value": setting_value
+        }))
+    
+    except Exception as e:
+        error_msg = f"Error getting setting '{setting_key}': {str(e)}"
+        print(error_msg)
+        
+        # Send error message to client
+        try:
+            ws.send(json.dumps({
+                "type": "error",
+                "message": error_msg
+            }))
+        except:
+            pass
+
+
+def handle_set_setting(ws, setting_key, setting_value):
+    """Set a setting value and save it"""
+    try:
+        from renardo.settings_manager import settings
+        
+        # Set the setting value
+        settings.set(setting_key, setting_value)
+        
+        # Save settings to file
+        settings.save_to_file()
+        
+        # Send confirmation to client
+        ws.send(json.dumps({
+            "type": "setting_updated",
+            "setting_key": setting_key,
+            "setting_value": setting_value,
+            "message": f"Setting '{setting_key}' updated successfully"
+        }))
+    
+    except Exception as e:
+        error_msg = f"Error setting '{setting_key}' to '{setting_value}': {str(e)}"
+        print(error_msg)
         
         # Send error message to client
         try:
