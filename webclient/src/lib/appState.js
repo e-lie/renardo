@@ -18,8 +18,7 @@ export const appState = writable({
   // Add runtime status
   runtimeStatus: {
     scBackendRunning: false,
-    scBackendStartupCode: 'Renardo.start; Renardo.midi;',
-    renardoRuntimeRunning: false
+    scBackendStartupCode: 'Renardo.start; Renardo.midi;'
   },
   // Add log messages array
   logMessages: [],

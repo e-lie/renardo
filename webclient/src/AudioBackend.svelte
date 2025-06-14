@@ -6,13 +6,10 @@
   
   // Local state
   let isLoading = false;
-  let isSCCodeExecuting = false;
   let error = null;
   let successMessage = '';
   let logMessages = [];
   let isScBackendRunning = false;
-  let isRenardoInitialized = false;
-  let customSclangCode = 'Renardo.start(); Renardo.midi();'; // Default code
   
   
   // REAPER related state
@@ -39,7 +36,6 @@
       // Check for SC backend running status if available
       if (state.runtimeStatus && state.runtimeStatus.scBackendRunning !== undefined) {
         isScBackendRunning = state.runtimeStatus.scBackendRunning;
-        isRenardoInitialized = state.runtimeStatus.renardoRuntimeRunning || false;
       }
       
       // Check for last message for handling specific responses
@@ -48,39 +44,14 @@
         
         // Handle SC backend startup response
         if (message.type === 'sc_backend_status') {
-          const wasRunning = isScBackendRunning;
           isScBackendRunning = message.data.running;
-          if (message.data.renardoInitialized !== undefined) {
-            isRenardoInitialized = message.data.renardoInitialized;
-          }
           
-          if (message.data.running && !wasRunning) {
+          if (message.data.running) {
             successMessage = 'SuperCollider backend started successfully';
             setTimeout(() => { successMessage = ''; }, 3000);
-            
-            // Automatically execute initialization code after backend starts
-            if (!isRenardoInitialized) {
-              setTimeout(() => {
-                executeScCode();
-              }, 2000);
-            }
           }
         }
         
-        // Handle SC code execution response
-        if (message.type === 'sc_code_execution_result') {
-          isSCCodeExecuting = false;
-          
-          if (message.data.success) {
-            const output = message.data.message || '';
-            
-            console.log("SuperCollider execution result:", output);
-            
-            // General success message
-            successMessage = message.data.message || 'SuperCollider code executed successfully';
-            setTimeout(() => { successMessage = ''; }, 3000);
-          }
-        }
         
         // Handle SuperCollider IDE launch response
         if (message.type === 'sc_ide_launch_result') {
@@ -225,23 +196,6 @@
     
     // We'll get the response via WebSocket in the subscription
   }
-  
-  // Execute Renardo initialization code in SuperCollider
-  function executeScCode() {
-    isSCCodeExecuting = true;
-    error = null;
-    successMessage = '';
-    
-    sendMessage({
-      type: 'execute_sc_code',
-      data: {
-        customCode: customSclangCode
-      }
-    });
-    
-    // We'll get the response via WebSocket in the subscription
-  }
-  
   
   // Launch SuperCollider IDE
   function launchSupercolliderIDE() {
@@ -434,23 +388,6 @@
                   <span class="relative inline-flex rounded-full h-3 w-3 bg-error"></span>
                 </span>
                 SuperCollider Stopped
-              </div>
-            {/if}
-            
-            {#if isRenardoInitialized}
-              <div class="badge badge-success gap-2">
-                <span class="relative flex h-3 w-3">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-3 w-3 bg-success"></span>
-                </span>
-                Renardo Initialized
-              </div>
-            {:else if isScBackendRunning}
-              <div class="badge badge-warning gap-2">
-                <span class="relative flex h-3 w-3">
-                  <span class="relative inline-flex rounded-full h-3 w-3 bg-warning"></span>
-                </span>
-                Not Initialized
               </div>
             {/if}
           </div>
