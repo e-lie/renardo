@@ -48,14 +48,22 @@
         
         // Handle SC backend startup response
         if (message.type === 'sc_backend_status') {
+          const wasRunning = isScBackendRunning;
           isScBackendRunning = message.data.running;
           if (message.data.renardoInitialized !== undefined) {
             isRenardoInitialized = message.data.renardoInitialized;
           }
           
-          if (message.data.running) {
+          if (message.data.running && !wasRunning) {
             successMessage = 'SuperCollider backend started successfully';
             setTimeout(() => { successMessage = ''; }, 3000);
+            
+            // Automatically execute initialization code after backend starts
+            if (!isRenardoInitialized) {
+              setTimeout(() => {
+                executeScCode();
+              }, 2000);
+            }
           }
         }
         
@@ -540,60 +548,6 @@
       </div>
     </div>
 
-    <!-- Custom initialization code card -->
-    <div class="card bg-base-100 shadow-xl mb-8">
-      <div class="card-body">
-        <h2 class="card-title">Renardo Initialization Code</h2>
-        <p class="text-base-content/70 mb-4">
-          Customize the code that will be executed to initialize Renardo in the running SuperCollider instance.
-          Default code initializes Renardo without MIDI support.
-          <span class="label-text-alt">Default code: <code class="bg-base-300 p-1 rounded text-xs">Renardo.start();  Renardo.midi();</code></span>
-        </p>
-        
-        {#if isRenardoInitialized}
-          <div class="alert alert-success mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <span>Renardo has been initialized in SuperCollider. You're ready to start coding music!</span>
-          </div>
-        {:else if isScBackendRunning}
-          <div class="alert alert-warning mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-            <span>SuperCollider is running but Renardo has not been initialized yet. Click the "Execute Renardo Init Code" button to complete setup.</span>
-          </div>
-        {/if}
-        
-        <div class="form-control">
-          <label for="sclangCode" class="form-control w-full mb-4">
-            <textarea
-              id="sclangCode"
-              class="textarea textarea-bordered font-mono h-32 w-full"
-              bind:value={customSclangCode}
-              placeholder="Enter SuperCollider initialization code..."
-              disabled={isRenardoInitialized || isSCCodeExecuting}
-            ></textarea>
-          </label>
-          
-          <div class="flex justify-end">
-            <button
-              class="btn btn-success btn-lg"
-              on:click={executeScCode}
-              disabled={isSCCodeExecuting || !isScBackendRunning || isRenardoInitialized || !$appState.connected}
-            >
-              {#if isSCCodeExecuting}
-                <span class="loading loading-spinner loading-sm"></span>
-              {:else}
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
-                </svg>
-              {/if}
-              Execute Renardo Init Code
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    
 
     <!-- Log output card -->
     <div class="card bg-base-100 shadow-xl mb-8">
