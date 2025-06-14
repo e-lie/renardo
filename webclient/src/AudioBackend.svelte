@@ -11,6 +11,11 @@
   let logMessages = [];
   let isScBackendRunning = false;
   
+  // Audio device selection state
+  let audioDevices = { output: {}, input: {} };
+  let isLoadingAudioDevices = false;
+  let selectedAudioOutputDevice = -1;
+  
   
   // REAPER related state
   let isReaperInitializing = false;
@@ -162,12 +167,26 @@
         }
         
         
+        // Handle audio device responses
+        if (message.type === 'audio_devices') {
+          audioDevices = message.data;
+          isLoadingAudioDevices = false;
+        }
+        
+        // Handle setting responses
+        if (message.type === 'setting_value') {
+          if (message.setting_key === 'sc_backend.AUDIO_OUTPUT_DEVICE_INDEX') {
+            selectedAudioOutputDevice = message.setting_value;
+          }
+        }
+        
         // Handle errors
         if (message.type === 'error') {
           error = message.message;
           isReaperModalLoading = false;
           isReaperInitializing = false;
           isReinitializingReaper = false;
+          isLoadingAudioDevices = false;
           setTimeout(() => { error = null; }, 5000);
         }
       }
@@ -175,6 +194,9 @@
     
     // Request backend status when component mounts
     checkBackendStatus();
+    
+    // Load audio device settings
+    loadAudioDeviceSettings();
   });
   
   onDestroy(() => {
@@ -321,6 +343,36 @@
     });
   }
   
+  // Audio device functions
+  function loadAudioDevices() {
+    isLoadingAudioDevices = true;
+    error = null;
+    
+    sendMessage({
+      type: 'get_audio_devices'
+    });
+  }
+  
+  function loadAudioDeviceSettings() {
+    // Load current audio device setting
+    sendMessage({
+      type: 'get_setting',
+      setting_key: 'sc_backend.AUDIO_OUTPUT_DEVICE_INDEX'
+    });
+  }
+  
+  function saveAudioOutputDevice() {
+    // Save the selected audio output device setting
+    sendMessage({
+      type: 'set_setting',
+      setting_key: 'sc_backend.AUDIO_OUTPUT_DEVICE_INDEX',
+      setting_value: selectedAudioOutputDevice
+    });
+    
+    successMessage = 'Audio output device setting saved';
+    setTimeout(() => { successMessage = ''; }, 3000);
+  }
+  
 </script>
 
 <div class="container mx-auto px-4 py-8 max-w-6xl">
@@ -435,6 +487,68 @@
             </svg>
             Refresh Status
           </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Audio Device Selection Card -->
+    <div class="card bg-base-100 shadow-xl mb-8">
+      <div class="card-body">
+        <h2 class="card-title">Audio Output Device Configuration</h2>
+        <p class="text-base-content/70 mb-4">
+          Select the audio output device for SuperCollider. This setting will be used when starting the SuperCollider backend.
+        </p>
+        
+        <div class="flex flex-col gap-4">
+          <div class="flex gap-2 items-center">
+            <button
+              class="btn btn-outline btn-sm"
+              on:click={loadAudioDevices}
+              disabled={isLoadingAudioDevices || !$appState.connected}
+            >
+              {#if isLoadingAudioDevices}
+                <span class="loading loading-spinner loading-xs"></span>
+              {:else}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                </svg>
+              {/if}
+              Scan Audio Devices
+            </button>
+            <span class="text-sm text-base-content/70">Click to detect available audio devices</span>
+          </div>
+          
+          <div class="form-control w-full max-w-md">
+            <label class="label">
+              <span class="label-text">Audio Output Device</span>
+            </label>
+            <select 
+              class="select select-bordered w-full" 
+              bind:value={selectedAudioOutputDevice}
+              on:change={saveAudioOutputDevice}
+              disabled={!$appState.connected}
+            >
+              <option value={-1}>System Default</option>
+              {#each Object.entries(audioDevices.output) as [index, deviceName]}
+                <option value={parseInt(index)}>{index}: {deviceName}</option>
+              {/each}
+            </select>
+            <label class="label">
+              <span class="label-text-alt">
+                {selectedAudioOutputDevice === -1 ? 'Using system default audio device' : 
+                 audioDevices.output[selectedAudioOutputDevice] ? 
+                 `Selected: ${audioDevices.output[selectedAudioOutputDevice]}` : 
+                 'Select an audio device above'}
+              </span>
+            </label>
+          </div>
+          
+          {#if Object.keys(audioDevices.output).length === 0 && !isLoadingAudioDevices}
+            <div class="alert alert-info">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              <span>No audio devices detected. Click "Scan Audio Devices" to detect available devices.</span>
+            </div>
+          {/if}
         </div>
       </div>
     </div>
