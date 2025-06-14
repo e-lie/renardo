@@ -11,6 +11,9 @@ settings.set_defaults_from_dict({
         # Indicate to which ouput device should the Renardo supercollider midi connect by default
         # You can list the midi device in the corresponding section of Audio backends > SuperCollider > MIDI.
         # "SUPERCOLLIDER_MIDI_OUTPUT_NUMBER": 0,
+        # Audio output device index for SuperCollider audio server
+        # -1 means use system default, 0+ selects specific device by index
+        "AUDIO_OUTPUT_DEVICE_INDEX": -1,
     }
 },
 )
