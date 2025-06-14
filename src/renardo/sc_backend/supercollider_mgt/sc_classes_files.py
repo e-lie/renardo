@@ -260,8 +260,8 @@ def write_sc_renardo_files_in_user_config():
     '''
 
     renardo_start_code = f'''
-        Renardo.start({osc_port});
-        Renardo.midi;
+        Renardo.start();
+        Renardo.midi();
     '''
 
     with open(SC_USER_EXTENSIONS_DIR / 'StageLimiter.sc', mode="w") as file:

@@ -99,7 +99,6 @@
   
   // Runtime status
   let scBackendRunning = false;
-  let renardoRuntimeRunning = false;
   
   // Resize handlers
   function handleMouseMove(e) {
