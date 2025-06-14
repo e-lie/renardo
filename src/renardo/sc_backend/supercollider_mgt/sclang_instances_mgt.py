@@ -28,20 +28,28 @@ class SupercolliderInstance:
                 self.sc_app_path = sc_dir / "scide.exe"
         
         elif platform == "darwin":  # macOS
-            # Default sclang command
-            self.sclang_exec = ["sclang", '-i', 'scqt']
-            self.check_exec = ["sclang", '-version']
-            
             # Standard macOS application paths
             standard_paths = [
                 "/Applications/SuperCollider.app",
                 os.path.expanduser("~/Applications/SuperCollider.app")
             ]
             
+            # Try to find SuperCollider app and use absolute path to sclang
+            sclang_found = False
             for path in standard_paths:
                 if os.path.exists(path):
                     self.sc_app_path = path
-                    break
+                    sclang_path = os.path.join(path, "Contents/MacOS/sclang")
+                    if os.path.exists(sclang_path):
+                        self.sclang_exec = [sclang_path, '-i', 'scqt']
+                        self.check_exec = [sclang_path, '-version']
+                        sclang_found = True
+                        break
+            
+            # Fallback to system sclang if not found in standard paths
+            if not sclang_found:
+                self.sclang_exec = ["sclang", '-i', 'scqt']
+                self.check_exec = ["sclang", '-version']
         
         else:  # Linux
             self.sclang_exec = ["sclang", '-i', 'scqt']
