@@ -159,6 +159,24 @@ def _generate_renardo_sc_class_content():
                 );
                 ("Sending Renardo MIDI messages to" + MIDIClient.destinations[port].name).postln;
             }}
+
+            *listAudioDevices {{
+                "=== AUDIO DEVICES ===".postln;
+                "".postln;
+                
+                "OUTPUT DEVICES:".postln;
+                ("Number of Devices: " ++ ServerOptions.outDevices.size).postln;
+                ServerOptions.outDevices.do({{ |device, index|
+                    ("   " ++ index ++ " :  " ++ device).postln;
+                }});
+                
+                "".postln;
+                "INPUT DEVICES:".postln;
+                ("Number of Devices: " ++ ServerOptions.inDevices.size).postln;
+                ServerOptions.inDevices.do({{ |device, index|
+                    ("   " ++ index ++ " :  " ++ device).postln;
+                }});
+            }}
         }}
 '''
 
