@@ -177,6 +177,25 @@ def _generate_renardo_sc_class_content():
                     ("   " ++ index ++ " :  " ++ device).postln;
                 }});
             }}
+
+            *listAudioDevicesJson {{
+                var outDevices, inDevices;
+                outDevices = Dictionary.new;
+                inDevices = Dictionary.new;
+                
+                ServerOptions.outDevices.do({{ |device, index|
+                    outDevices.put(index, device);
+                }});
+                
+                ServerOptions.inDevices.do({{ |device, index|
+                    inDevices.put(index, device);
+                }});
+                
+                "RENARDO_AUDIO_DEVICES_START".postln;
+                ("OUT:" ++ outDevices.asCompileString).postln;
+                ("IN:" ++ inDevices.asCompileString).postln;
+                "RENARDO_AUDIO_DEVICES_END".postln;
+            }}
         }}
 '''
 

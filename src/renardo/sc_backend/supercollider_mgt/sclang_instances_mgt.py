@@ -239,3 +239,120 @@ class SupercolliderInstance:
         except Exception as e:
             print(f"Error launching SuperCollider IDE: {e}")
             return False
+
+    def list_audio_devices(self):
+        """Get available audio devices by launching sclang and querying SuperCollider
+        
+        Returns:
+            dict: Dictionary with 'output' and 'input' keys containing device dictionaries
+                  Each device dictionary maps index to device name
+                  Returns None if SuperCollider is not available or query fails
+        """
+        if not self.is_supercollider_ready():
+            return None
+            
+        try:
+            # Launch sclang with a script to query audio devices
+            sc_code = '''
+            Renardo.listAudioDevicesJson;
+            0.exit;
+            '''
+            
+            # Start sclang process
+            process = subprocess.Popen(
+                self.sclang_exec,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+            
+            # Send the code and get output
+            stdout, stderr = process.communicate(input=sc_code, timeout=10)
+            
+            # Parse the output
+            return self._parse_audio_devices_output(stdout)
+            
+        except subprocess.TimeoutExpired:
+            print("Timeout while querying audio devices")
+            if process:
+                process.kill()
+            return None
+        except Exception as e:
+            print(f"Error querying audio devices: {e}")
+            return None
+
+    def _parse_audio_devices_output(self, output):
+        """Parse SuperCollider output to extract audio device information
+        
+        Args:
+            output (str): Raw output from sclang
+            
+        Returns:
+            dict: Dictionary with 'output' and 'input' keys containing device dictionaries
+        """
+        try:
+            lines = output.split('\n')
+            in_device_section = False
+            output_devices = {}
+            input_devices = {}
+            
+            for line in lines:
+                line = line.strip()
+                
+                if line == "RENARDO_AUDIO_DEVICES_START":
+                    in_device_section = True
+                    continue
+                elif line == "RENARDO_AUDIO_DEVICES_END":
+                    break
+                elif not in_device_section:
+                    continue
+                    
+                if line.startswith("OUT:"):
+                    # Parse SuperCollider dictionary format
+                    dict_str = line[4:].strip()
+                    output_devices = self._parse_sc_dictionary(dict_str)
+                elif line.startswith("IN:"):
+                    # Parse SuperCollider dictionary format
+                    dict_str = line[3:].strip()
+                    input_devices = self._parse_sc_dictionary(dict_str)
+            
+            return {
+                'output': output_devices,
+                'input': input_devices
+            }
+            
+        except Exception as e:
+            print(f"Error parsing audio devices output: {e}")
+            return {'output': {}, 'input': {}}
+
+    def _parse_sc_dictionary(self, dict_str):
+        """Parse a SuperCollider dictionary string into a Python dictionary
+        
+        Args:
+            dict_str (str): SuperCollider dictionary format string
+            
+        Returns:
+            dict: Parsed dictionary mapping indices to device names
+        """
+        try:
+            devices = {}
+            
+            # Remove outer parentheses if present
+            if dict_str.startswith('(') and dict_str.endswith(')'):
+                dict_str = dict_str[1:-1]
+            
+            # Split on commas but be careful of commas within quoted strings
+            import re
+            # Find all key-value pairs in format: number -> "string"
+            pattern = r'(\d+)\s*->\s*"([^"]*)"'
+            matches = re.findall(pattern, dict_str)
+            
+            for index_str, device_name in matches:
+                devices[int(index_str)] = device_name
+                
+            return devices
+            
+        except Exception as e:
+            print(f"Error parsing SuperCollider dictionary: {e}")
+            return {}
