@@ -252,26 +252,67 @@ class SupercolliderInstance:
             return None
             
         try:
-            # Launch sclang with a script to query audio devices
-            sc_code = '''
-            Renardo.listAudioDevicesJson;
-            0.exit;
-            '''
-            
-            # Start sclang process
+            # Start sclang process similar to start_sclang_subprocess
             process = subprocess.Popen(
-                self.sclang_exec,
-                stdin=subprocess.PIPE,
+                args=self.sclang_exec,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                text=True
+                stdin=subprocess.PIPE,
+                bufsize=1,  # Line buffered
+                universal_newlines=False  # Use binary mode
             )
             
-            # Send the code and get output
-            stdout, stderr = process.communicate(input=sc_code, timeout=10)
+            # Wait for sclang to initialize
+            import time
+            time.sleep(2)  # Give sclang time to start
+            
+            # Collect output lines until we see the Welcome message
+            output_lines = []
+            while True:
+                try:
+                    line = process.stdout.readline().decode("utf-8", errors="replace")
+                    if not line:
+                        break
+                    output_lines.append(line)
+                    if "Welcome to" in line:
+                        break
+                except:
+                    break
+            
+            # Execute the audio devices query using the escape character method
+            sc_code = "Renardo.listAudioDevicesJson;"
+            raw = sc_code.encode("utf-8") + b"\x1b"
+            process.stdin.write(raw)
+            process.stdin.flush()
+            
+            # Collect output for a short time
+            time.sleep(1)
+            
+            # Read all available output
+            full_output = ""
+            while True:
+                try:
+                    line = process.stdout.readline().decode("utf-8", errors="replace")
+                    if not line:
+                        break
+                    full_output += line
+                    # Check if we've received the end marker
+                    if "RENARDO_AUDIO_DEVICES_END" in line:
+                        break
+                except:
+                    break
+            
+            # Execute exit command
+            exit_code = "0.exit;"
+            raw = exit_code.encode("utf-8") + b"\x1b"
+            process.stdin.write(raw)
+            process.stdin.flush()
+            
+            # Wait for process to exit
+            process.wait(timeout=2)
             
             # Parse the output
-            return self._parse_audio_devices_output(stdout)
+            return self._parse_audio_devices_output(full_output)
             
         except subprocess.TimeoutExpired:
             print("Timeout while querying audio devices")
@@ -280,6 +321,11 @@ class SupercolliderInstance:
             return None
         except Exception as e:
             print(f"Error querying audio devices: {e}")
+            if 'process' in locals():
+                try:
+                    process.kill()
+                except:
+                    pass
             return None
 
     def _parse_audio_devices_output(self, output):
