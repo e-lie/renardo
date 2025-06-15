@@ -377,9 +377,8 @@
 
 <div class="container mx-auto px-4 py-8 max-w-6xl">
   <div class="text-center mb-8">
-    <h1 class="text-3xl font-bold mb-2 title-font">Audio Backends</h1>
     <p class="text-base-content/70">
-      Manage the audio backend systems for Renardo. Each backend offers different capabilities for music creation and production.
+      Manage the audio backends for Renardo. Each backend offers different possibilies for sound synthesis, instruments and effects. See the documentation.
     </p>
   </div>
 
@@ -408,23 +407,75 @@
 
   <!-- SuperCollider Backend Tab -->
   {#if activeTab === 'supercollider'}
-    <div class="bg-base-200 p-4 rounded-lg mb-6">
-      <h2 class="text-2xl font-bold mb-2 flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z" />
-        </svg>
-        SuperCollider Sound Engine
-      </h2>
-      <p class="text-base-content/70 mb-2">
-        SuperCollider is an audio synthesis and algorithmic composition platform. 
-        It's the primary sound engine for Renardo's live coding capabilities.
-      </p>
-    </div>
-    <!-- Backend status card -->
     <div class="card bg-base-100 shadow-xl mb-8">
       <div class="card-body">
         <div class="flex justify-between items-center mb-4">
-          <h2 class="card-title">SuperCollider Backend Status</h2>
+          <p class="text-base-content/70 mb-2">
+            SuperCollider is an audio synthesis and algorithmic composition platform. 
+            It's the primary sound engine for Renardo's live coding capabilities.
+          </p>
+        </div>
+
+        <!-- Audio Output Device Configuration -->
+        <div class="mb-6">
+          <h3 class="text-md font-semibold mb-2">Audio Output Device</h3>
+          <p class="text-base-content/70 text-sm mb-3">
+            Select the audio output device for SuperCollider. This setting will be used when starting the SuperCollider backend.
+          </p>
+          
+          <div class="flex flex-col gap-3">
+            <div class="flex gap-2 items-center">
+              <button
+                class="btn btn-outline btn-sm"
+                on:click={loadAudioDevices}
+                disabled={isLoadingAudioDevices || !$appState.connected}
+              >
+                {#if isLoadingAudioDevices}
+                  <span class="loading loading-spinner loading-xs"></span>
+                {:else}
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                  </svg>
+                {/if}
+                Scan Audio Devices
+              </button>
+              <span class="text-sm text-base-content/70">Click to detect available audio devices</span>
+            </div>
+            
+            <div class="form-control w-full max-w-md">
+              <select 
+                class="select select-bordered w-full" 
+                bind:value={selectedAudioOutputDevice}
+                on:change={saveAudioOutputDevice}
+                disabled={!$appState.connected}
+              >
+                <option value={-1}>System Default</option>
+                {#each Object.entries(audioDevices.output) as [index, deviceName]}
+                  <option value={parseInt(index)}>{index}: {deviceName}</option>
+                {/each}
+              </select>
+              <label class="label">
+                <span class="label-text-alt">
+                  {selectedAudioOutputDevice === -1 ? 'Using system default audio device' : 
+                   audioDevices.output[selectedAudioOutputDevice] ? 
+                   `Selected: ${audioDevices.output[selectedAudioOutputDevice]}` : 
+                   'Select an audio device above'}
+                </span>
+              </label>
+            </div>
+            
+            {#if Object.keys(audioDevices.output).length === 0 && !isLoadingAudioDevices}
+              <div class="alert alert-info">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>No audio devices detected. Click "Scan Audio Devices" to detect available devices.</span>
+              </div>
+            {/if}
+          </div>
+        </div>
+
+        <!-- Backend Control Buttons -->
+        <div>
+          <h2 class="card-title">Backend Status</h2>
           <div class="flex gap-2">
             {#if isScBackendRunning}
               <div class="badge badge-success gap-2">
@@ -443,112 +494,48 @@
               </div>
             {/if}
           </div>
-        </div>
-
-        <div class="flex flex-wrap gap-2">
-          <button
-            class="btn btn-primary"
-            on:click={startScBackend}
-            disabled={isLoading || isScBackendRunning || !$appState.connected}
-          >
-            {#if isLoading && !isScBackendRunning}
-              <span class="loading loading-spinner loading-xs"></span>
-            {:else}
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
-              </svg>
-            {/if}
-            Start SuperCollider Backend
-          </button>
-
-
-          <button
-            class="btn btn-error"
-            on:click={stopScBackend}
-            disabled={isLoading || !isScBackendRunning || !$appState.connected}
-          >
-            {#if isLoading && isScBackendRunning}
-              <span class="loading loading-spinner loading-xs"></span>
-            {:else}
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clip-rule="evenodd" />
-              </svg>
-            {/if}
-            Stop SuperCollider Backend
-          </button>
-
-          <button
-            class="btn btn-outline"
-            on:click={checkBackendStatus}
-            disabled={isLoading || !$appState.connected}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
-            </svg>
-            Refresh Status
-          </button>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Audio Device Selection Card -->
-    <div class="card bg-base-100 shadow-xl mb-8">
-      <div class="card-body">
-        <h2 class="card-title">Audio Output Device Configuration</h2>
-        <p class="text-base-content/70 mb-4">
-          Select the audio output device for SuperCollider. This setting will be used when starting the SuperCollider backend.
-        </p>
-        
-        <div class="flex flex-col gap-4">
-          <div class="flex gap-2 items-center">
+          <div class="flex flex-wrap gap-2">
             <button
-              class="btn btn-outline btn-sm"
-              on:click={loadAudioDevices}
-              disabled={isLoadingAudioDevices || !$appState.connected}
+              class="btn btn-primary"
+              on:click={startScBackend}
+              disabled={isLoading || isScBackendRunning || !$appState.connected}
             >
-              {#if isLoadingAudioDevices}
+              {#if isLoading && !isScBackendRunning}
                 <span class="loading loading-spinner loading-xs"></span>
               {:else}
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
                 </svg>
               {/if}
-              Scan Audio Devices
+              Start SuperCollider Backend
             </button>
-            <span class="text-sm text-base-content/70">Click to detect available audio devices</span>
-          </div>
-          
-          <div class="form-control w-full max-w-md">
-            <label class="label">
-              <span class="label-text">Audio Output Device</span>
-            </label>
-            <select 
-              class="select select-bordered w-full" 
-              bind:value={selectedAudioOutputDevice}
-              on:change={saveAudioOutputDevice}
-              disabled={!$appState.connected}
+
+            <button
+              class="btn btn-error"
+              on:click={stopScBackend}
+              disabled={isLoading || !isScBackendRunning || !$appState.connected}
             >
-              <option value={-1}>System Default</option>
-              {#each Object.entries(audioDevices.output) as [index, deviceName]}
-                <option value={parseInt(index)}>{index}: {deviceName}</option>
-              {/each}
-            </select>
-            <label class="label">
-              <span class="label-text-alt">
-                {selectedAudioOutputDevice === -1 ? 'Using system default audio device' : 
-                 audioDevices.output[selectedAudioOutputDevice] ? 
-                 `Selected: ${audioDevices.output[selectedAudioOutputDevice]}` : 
-                 'Select an audio device above'}
-              </span>
-            </label>
+              {#if isLoading && isScBackendRunning}
+                <span class="loading loading-spinner loading-xs"></span>
+              {:else}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clip-rule="evenodd" />
+                </svg>
+              {/if}
+              Stop SuperCollider Backend
+            </button>
+
+            <button
+              class="btn btn-outline"
+              on:click={checkBackendStatus}
+              disabled={isLoading || !$appState.connected}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+              </svg>
+              Refresh Status
+            </button>
           </div>
-          
-          {#if Object.keys(audioDevices.output).length === 0 && !isLoadingAudioDevices}
-            <div class="alert alert-info">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              <span>No audio devices detected. Click "Scan Audio Devices" to detect available devices.</span>
-            </div>
-          {/if}
         </div>
       </div>
     </div>
