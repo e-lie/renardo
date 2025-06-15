@@ -540,7 +540,31 @@
       </div>
     </div>
     
-    <!-- SuperCollider Documentation -->
+
+    <!-- Log output card -->
+    <div class="card bg-base-100 shadow-xl mb-8">
+      <div class="card-body">
+        <div class="bg-base-300 rounded-lg p-4 h-[300px] overflow-y-auto font-mono text-sm">
+          {#if logMessages.length === 0 || !logMessages.some(msg => msg.message.includes('SC') || msg.message.includes('SuperCollider') || msg.message.includes('sclang'))}
+            <div class="flex justify-center items-center h-full">
+              <p class="opacity-50 italic">No log messages yet. Start the SuperCollider backend to see output.</p>
+            </div>
+          {:else}
+            {#each logMessages.filter(msg => msg.message.includes('SC') || msg.message.includes('SuperCollider') || msg.message.includes('sclang')) as log}
+              <div class="mb-1 {log.level.toLowerCase() === 'error' ? 'text-error' : log.level.toLowerCase() === 'warn' ? 'text-warning' : log.level.toLowerCase() === 'success' ? 'text-success' : 'text-info'}">
+                <span class="opacity-70 mr-2">[{log.timestamp}]</span>
+                <span class="font-bold mr-2">[{log.level}]</span>
+                <span>{log.message}</span>
+              </div>
+            {/each}
+          {/if}
+        </div>
+      </div>
+    </div>
+    
+    
+    
+    <!-- Manual setup with SC IDE -->
     <div class="collapse collapse-arrow bg-base-200 shadow-md mb-8">
       <input type="checkbox" /> 
       <div class="collapse-title text-md font-medium">
@@ -587,28 +611,6 @@
     </div>
 
 
-    <!-- Log output card -->
-    <div class="card bg-base-100 shadow-xl mb-8">
-      <div class="card-body">
-        <h2 class="card-title">SuperCollider Log Output</h2>
-
-        <div class="bg-base-300 rounded-lg p-4 h-[300px] overflow-y-auto font-mono text-sm">
-          {#if logMessages.length === 0 || !logMessages.some(msg => msg.message.includes('SC') || msg.message.includes('SuperCollider') || msg.message.includes('sclang'))}
-            <div class="flex justify-center items-center h-full">
-              <p class="opacity-50 italic">No log messages yet. Start the SuperCollider backend to see output.</p>
-            </div>
-          {:else}
-            {#each logMessages.filter(msg => msg.message.includes('SC') || msg.message.includes('SuperCollider') || msg.message.includes('sclang')) as log}
-              <div class="mb-1 {log.level.toLowerCase() === 'error' ? 'text-error' : log.level.toLowerCase() === 'warn' ? 'text-warning' : log.level.toLowerCase() === 'success' ? 'text-success' : 'text-info'}">
-                <span class="opacity-70 mr-2">[{log.timestamp}]</span>
-                <span class="font-bold mr-2">[{log.level}]</span>
-                <span>{log.message}</span>
-              </div>
-            {/each}
-          {/if}
-        </div>
-      </div>
-    </div>
   {/if}
 
   <!-- REAPER Backend Tab -->
