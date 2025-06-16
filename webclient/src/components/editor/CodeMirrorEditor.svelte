@@ -12,7 +12,9 @@
   let textarea;
   
   // Expose the editor instance for external access
-  export { editor };
+  export function getEditor() {
+    return editor;
+  }
   
   // Function to load a script dynamically
   const loadScript = (src) => {

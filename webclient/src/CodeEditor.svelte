@@ -365,6 +365,12 @@
   function handleEditorSettingsChanged(event) {
     const { theme, font, lineNumbers, vimMode } = event.detail;
     
+    const editor = editorComponent?.getEditor();
+    
+    console.log('Settings changed:', { theme, font, lineNumbers, vimMode });
+    console.log('Editor component:', editorComponent);
+    console.log('Editor instance:', editor);
+    
     // Update theme
     if (theme && theme !== currentEditorTheme) {
       currentEditorTheme = theme;
@@ -373,19 +379,21 @@
       }
     }
     
-    // Apply font changes immediately by dispatching font change event
-    if (font && editorComponent?.editor) {
-      // Apply font via CSS injection (same method as FontSelector)
+    // Apply font changes immediately
+    if (font) {
       applyFontToCodeMirror(font);
     }
     
     // Apply line numbers setting immediately
-    if (editorComponent?.editor) {
-      editorComponent.editor.setOption('lineNumbers', lineNumbers);
+    if (editor) {
+      console.log('Applying line numbers:', lineNumbers);
+      editor.setOption('lineNumbers', lineNumbers);
+      editor.refresh();
     }
     
     // Apply vim mode setting immediately
-    if (editorComponent?.editor) {
+    if (editor) {
+      console.log('Applying vim mode:', vimMode);
       if (vimMode) {
         // Load vim mode if not already loaded
         if (typeof window.CodeMirror?.Vim === 'undefined') {
@@ -394,16 +402,16 @@
           vimScript.onload = () => {
             if (window.CodeMirror?.Vim) {
               window.CodeMirror.Vim.map('jk', '<Esc>', 'insert');
-              editorComponent.editor.setOption('keyMap', 'vim');
+              editor.setOption('keyMap', 'vim');
             }
           };
           document.head.appendChild(vimScript);
         } else {
           window.CodeMirror.Vim.map('jk', '<Esc>', 'insert');
-          editorComponent.editor.setOption('keyMap', 'vim');
+          editor.setOption('keyMap', 'vim');
         }
       } else {
-        editorComponent.editor.setOption('keyMap', 'default');
+        editor.setOption('keyMap', 'default');
       }
     }
   }
@@ -455,9 +463,10 @@
     document.head.appendChild(style);
     
     // Refresh the editor
-    if (editorComponent?.editor) {
+    const editor = editorComponent?.getEditor();
+    if (editor) {
       setTimeout(() => {
-        editorComponent.editor.refresh();
+        editor.refresh();
       }, 100);
     }
   }

@@ -183,8 +183,4 @@
     </div>
   {/if}
   
-  <!-- Help text -->
-  <div class="text-xs text-base-content/60 mt-4 p-2 bg-base-200 rounded">
-    <p><strong>Note:</strong> Settings are automatically applied and saved. Changes will be reflected in the editor immediately.</p>
-  </div>
 </div>
