@@ -57,6 +57,11 @@ export function initWebSocket() {
       type: 'get_state'
     });
     
+    // Request backend OS information
+    sendMessage({
+      type: 'get_backend_os'
+    });
+    
     // Request Renardo initialization status
     sendMessage({
       type: 'get_renardo_status'
@@ -163,6 +168,15 @@ function handleMessage(message) {
         renardoInit: data.renardo_init || state.renardoInit,
         // Update runtime status if available
         runtimeStatus: data.runtime_status || state.runtimeStatus,
+      }));
+      break;
+      
+    case 'backend_os':
+      // Update backend OS information
+      appState.update(state => ({
+        ...state,
+        backendOS: data.backendOS,
+        error: null
       }));
       break;
       

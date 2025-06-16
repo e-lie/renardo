@@ -6,6 +6,8 @@ export const appState = writable({
   welcomeText: 'Loading...',
   connected: false,
   error: null,
+  // Backend OS information
+  backendOS: null,
   // Add Renardo initialization state
   renardoInit: {
     superColliderClasses: false,
