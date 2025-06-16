@@ -378,7 +378,7 @@
 <div class="container mx-auto px-4 py-8 max-w-6xl">
   <div class="text-center mb-8">
     <p class="text-base-content/70">
-      Manage the audio backends for Renardo. Each backend offers different possibilies for sound synthesis, instruments and effects. See the documentation.
+      Manage the audio backends for Renardo. Each backend offers different possibilies for sound synthesis, instruments and effects.
     </p>
   </div>
 
@@ -407,147 +407,118 @@
 
   <!-- SuperCollider Backend Tab -->
   {#if activeTab === 'supercollider'}
-    <div class="card bg-base-100 shadow-xl mb-8">
-      <div class="card-body">
-        <div class="flex justify-between items-center mb-4">
-          <p class="text-base-content/70 mb-2">
-            SuperCollider is an audio synthesis and algorithmic composition platform. 
-            It's the primary sound engine for Renardo's live coding capabilities.
-          </p>
-        </div>
-
-        <!-- Audio Output Device Configuration -->
-        <div class="mb-6">
-          <h3 class="text-md font-semibold mb-2">Audio Output Device</h3>
-          <p class="text-base-content/70 text-sm mb-3">
-            Select the audio output device for SuperCollider. This setting will be used when starting the SuperCollider backend.
-          </p>
-          
-          <div class="flex flex-col gap-3">
-            <div class="flex gap-2 items-center">
-              <button
-                class="btn btn-outline btn-sm"
-                on:click={loadAudioDevices}
-                disabled={isLoadingAudioDevices || !$appState.connected}
-              >
-                {#if isLoadingAudioDevices}
-                  <span class="loading loading-spinner loading-xs"></span>
-                {:else}
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
-                  </svg>
-                {/if}
-                Scan Audio Devices
-              </button>
-              <span class="text-sm text-base-content/70">Click to detect available audio devices</span>
-            </div>
-            
-            <div class="form-control w-full max-w-md">
+    <!-- Main control panel with status indicator -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+      <!-- Left: Audio device selection and controls -->
+      <div class="lg:col-span-2">
+        <div class="card bg-base-100 shadow-xl h-full">
+          <div class="card-body">
+            <div class="flex items-center gap-3 mb-4">
               <select 
-                class="select select-bordered w-full" 
+                class="select select-bordered flex-1" 
                 bind:value={selectedAudioOutputDevice}
                 on:change={saveAudioOutputDevice}
                 disabled={!$appState.connected}
               >
-                <option value={-1}>System Default</option>
+                <option value={-1}>System Default Audio Device</option>
                 {#each Object.entries(audioDevices.output) as [index, deviceName]}
                   <option value={parseInt(index)}>{index}: {deviceName}</option>
                 {/each}
               </select>
-              <label class="label">
-                <span class="label-text-alt">
-                  {selectedAudioOutputDevice === -1 ? 'Using system default audio device' : 
-                   audioDevices.output[selectedAudioOutputDevice] ? 
-                   `Selected: ${audioDevices.output[selectedAudioOutputDevice]}` : 
-                   'Select an audio device above'}
-                </span>
-              </label>
+              <button
+                class="btn btn-circle btn-ghost"
+                on:click={loadAudioDevices}
+                disabled={isLoadingAudioDevices || !$appState.connected}
+                title="Scan Audio Devices"
+              >
+                {#if isLoadingAudioDevices}
+                  <span class="loading loading-spinner loading-sm"></span>
+                {:else}
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                  </svg>
+                {/if}
+              </button>
             </div>
             
-            {#if Object.keys(audioDevices.output).length === 0 && !isLoadingAudioDevices}
-              <div class="alert alert-info">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span>No audio devices detected. Click "Scan Audio Devices" to detect available devices.</span>
-              </div>
-            {/if}
-          </div>
-        </div>
+            <!-- Action buttons -->
+            <div class="flex gap-2">
+              <button
+                class="btn btn-primary flex-1"
+                on:click={startScBackend}
+                disabled={isLoading || isScBackendRunning || !$appState.connected}
+              >
+                {#if isLoading && !isScBackendRunning}
+                  <span class="loading loading-spinner loading-xs"></span>
+                {:else}
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                  </svg>
+                {/if}
+                Start
+              </button>
 
-        <!-- Backend Control Buttons -->
-        <div>
-          <h2 class="card-title">Backend Status</h2>
-          <div class="flex gap-2">
-            {#if isScBackendRunning}
-              <div class="badge badge-success gap-2">
-                <span class="relative flex h-3 w-3">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-3 w-3 bg-success"></span>
-                </span>
-                SuperCollider Running
-              </div>
-            {:else}
-              <div class="badge badge-error gap-2">
-                <span class="relative flex h-3 w-3">
-                  <span class="relative inline-flex rounded-full h-3 w-3 bg-error"></span>
-                </span>
-                SuperCollider Stopped
-              </div>
-            {/if}
-          </div>
-          <div class="flex flex-wrap gap-2">
-            <button
-              class="btn btn-primary"
-              on:click={startScBackend}
-              disabled={isLoading || isScBackendRunning || !$appState.connected}
-            >
-              {#if isLoading && !isScBackendRunning}
-                <span class="loading loading-spinner loading-xs"></span>
-              {:else}
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
-                </svg>
-              {/if}
-              Start SuperCollider Backend
-            </button>
-
-            <button
-              class="btn btn-error"
-              on:click={stopScBackend}
-              disabled={isLoading || !isScBackendRunning || !$appState.connected}
-            >
-              {#if isLoading && isScBackendRunning}
-                <span class="loading loading-spinner loading-xs"></span>
-              {:else}
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clip-rule="evenodd" />
-                </svg>
-              {/if}
-              Stop SuperCollider Backend
-            </button>
-
-            <button
-              class="btn btn-outline"
-              on:click={checkBackendStatus}
-              disabled={isLoading || !$appState.connected}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
-              </svg>
-              Refresh Status
-            </button>
+              <button
+                class="btn btn-error flex-1"
+                on:click={stopScBackend}
+                disabled={isLoading || !isScBackendRunning || !$appState.connected}
+              >
+                {#if isLoading && isScBackendRunning}
+                  <span class="loading loading-spinner loading-xs"></span>
+                {:else}
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clip-rule="evenodd" />
+                  </svg>
+                {/if}
+                Stop
+              </button>
+            </div>
           </div>
         </div>
       </div>
+      
+      <!-- Right: Status indicator -->
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body flex flex-col items-center justify-center">
+          {#if isScBackendRunning}
+            <div class="text-center">
+              <div class="relative mb-3">
+                <span class="relative flex h-16 w-16">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-16 w-16 bg-success"></span>
+                </span>
+              </div>
+              <p class="text-success font-bold">Running</p>
+            </div>
+          {:else}
+            <div class="text-center">
+              <div class="relative mb-3">
+                <span class="relative inline-flex rounded-full h-16 w-16 bg-base-300"></span>
+              </div>
+              <p class="text-base-content/50 font-bold">Stopped</p>
+            </div>
+          {/if}
+          <button
+            class="btn btn-ghost btn-sm mt-2"
+            on:click={checkBackendStatus}
+            disabled={isLoading || !$appState.connected}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+            </svg>
+            Refresh
+          </button>
+        </div>
+      </div>
     </div>
-    
 
-    <!-- Log output card -->
-    <div class="card bg-base-100 shadow-xl mb-8">
-      <div class="card-body">
-        <div class="bg-base-300 rounded-lg p-4 h-[300px] overflow-y-auto font-mono text-sm">
+    <!-- Console/Log output -->
+    <div class="card bg-base-100 shadow-xl mb-6">
+      <div class="card-body p-0">
+        <div class="bg-base-300 rounded-lg p-4 h-[400px] overflow-y-auto font-mono text-sm">
           {#if logMessages.length === 0 || !logMessages.some(msg => msg.message.includes('SC') || msg.message.includes('SuperCollider') || msg.message.includes('sclang'))}
             <div class="flex justify-center items-center h-full">
-              <p class="opacity-50 italic">No log messages yet. Start the SuperCollider backend to see output.</p>
+              <p class="opacity-50 italic">No log messages yet</p>
             </div>
           {:else}
             {#each logMessages.filter(msg => msg.message.includes('SC') || msg.message.includes('SuperCollider') || msg.message.includes('sclang')) as log}
@@ -562,54 +533,39 @@
       </div>
     </div>
     
-    
-    
-    <!-- Manual setup with SC IDE -->
-    <div class="collapse collapse-arrow bg-base-200 shadow-md mb-8">
+    <!-- Manual setup collapsed section -->
+    <div class="collapse bg-base-200 shadow-md">
       <input type="checkbox" /> 
-      <div class="collapse-title text-md font-medium">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div class="collapse-title text-sm font-medium flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        SuperCollider troubleshooting and manual setup
+        Manual launch of the backend
       </div>
       <div class="collapse-content bg-base-100"> 
-        <div class="prose">
+        <div class="prose prose-sm max-w-none">
           <p>
             SuperCollider/sclang can behave in unexpected ways depending on your system configuration, audio setup, 
-            and other software running. If you encounter issues with automatic initialization, you can start the backend manually:
+            and other software running. If you encounter issues with automatic initialization above, you can start the backend manually:
           </p>
-          
           <ol>
-            <li>Open SuperCollider (IDE) application</li>
-            <li>Execute the following code to start the audio server on the first Audio device:
-              <pre class="bg-base-300 p-2 rounded"><code>Renardo.start()</code></pre>
-            </li>
-            <li>Execute the following code to start the Renardo SuperCollider MIDI on the first MIDI device:
-              <pre class="bg-base-300 p-2 rounded"><code>Renardo.midi()</code></pre>
-            </li>
+            <li>Open SuperCollider IDE</li>
+            <li> <button 
+            class="btn btn-sm btn-primary mt-4" 
+            on:click={launchSupercolliderIDE}
+          >
+            Launch SuperCollider IDE
+          </button></li>
+            <li>Run the following code (Ctrl+Enter): </li>
+            <li><code class="bg-base-300 px-2 py-1 rounded">Renardo.listAudioDevices()</code></li>
+            <li><code class="bg-base-300 px-2 py-1 rounded">Renardo.start(audio_device_index: -1)</code>  // (-1 means default device or you can choose a device from the list by index)</li>
+            <li><code class="bg-base-300 px-2 py-1 rounded">Renardo.midi()</code></li>
           </ol>
           
-          <p class="text-sm opacity-75">
-            Note: The parameter "0" in these commands refers to the device index. You can use different indices if you have multiple 
-            audio or MIDI devices and want to use a specific one.
-          </p>
           
-          <div class="flex justify-center mt-6">
-            <button 
-              class="btn btn-primary" 
-              on:click={launchSupercolliderIDE}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
-              </svg>
-              Launch SuperCollider IDE
-            </button>
-          </div>
         </div>
       </div>
     </div>
-
 
   {/if}
 
