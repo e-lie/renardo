@@ -73,6 +73,16 @@ def register_websocket_routes(sock):
                             "data": state_helper.get_state()
                         }))
                     
+                    elif message_type == "get_backend_os":
+                        # Send backend OS information
+                        from sys import platform
+                        ws.send(json.dumps({
+                            "type": "backend_os",
+                            "data": {
+                                "backendOS": platform
+                            }
+                        }))
+                    
                     elif message_type == "get_renardo_status":
                         # Check and update the current status before sending
                         update_renardo_status()
