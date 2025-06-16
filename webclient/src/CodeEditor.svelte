@@ -13,7 +13,6 @@
   import SaveSessionModal from './components/modals/SaveSessionModal.svelte';
   import NewBufferModal from './components/modals/NewBufferModal.svelte';
   import CloseBufferModal from './components/modals/CloseBufferModal.svelte';
-  import CodeMirrorThemeSelector from './lib/CodeMirrorThemeSelector.svelte';
   
   // State for right panel
   let rightPanelOpen = true;
@@ -86,7 +85,6 @@
   
   // Editor component and CodeMirror instance references
   let editorComponent;
-  let themeSelector;
   let currentEditorTheme = "dracula";
   
   // Console output
@@ -146,10 +144,6 @@
   // Editor event handlers
   function handleEditorReady(event) {
     // The editor component is already stored in editorComponent via bind:this
-    // Initialize theme selector with the raw CodeMirror instance
-    if (themeSelector) {
-      themeSelector.initEditor(event.detail.editor);
-    }
   }
   
   function handleEditorChange(event) {
@@ -365,6 +359,116 @@
   
   function handleDocumentationGoHome() {
     loadDocumentationFile(documentationFiles.find(file => file.name === 'index.md') || documentationFiles[0]);
+  }
+  
+  // Handle editor settings changes
+  function handleEditorSettingsChanged(event) {
+    const { theme, font, lineNumbers, vimMode } = event.detail;
+    
+    const editor = editorComponent?.getEditor();
+    
+    console.log('Settings changed:', { theme, font, lineNumbers, vimMode });
+    console.log('Editor component:', editorComponent);
+    console.log('Editor instance:', editor);
+    
+    // Update theme
+    if (theme && theme !== currentEditorTheme) {
+      currentEditorTheme = theme;
+      if (editorComponent) {
+        editorComponent.setTheme(theme);
+      }
+    }
+    
+    // Apply font changes immediately
+    if (font) {
+      applyFontToCodeMirror(font);
+    }
+    
+    // Apply line numbers setting immediately
+    if (editor) {
+      console.log('Applying line numbers:', lineNumbers);
+      editor.setOption('lineNumbers', lineNumbers);
+      editor.refresh();
+    }
+    
+    // Apply vim mode setting immediately
+    if (editor) {
+      console.log('Applying vim mode:', vimMode);
+      if (vimMode) {
+        // Load vim mode if not already loaded
+        if (typeof window.CodeMirror?.Vim === 'undefined') {
+          const vimScript = document.createElement('script');
+          vimScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/keymap/vim.min.js';
+          vimScript.onload = () => {
+            if (window.CodeMirror?.Vim) {
+              window.CodeMirror.Vim.map('jk', '<Esc>', 'insert');
+              editor.setOption('keyMap', 'vim');
+            }
+          };
+          document.head.appendChild(vimScript);
+        } else {
+          window.CodeMirror.Vim.map('jk', '<Esc>', 'insert');
+          editor.setOption('keyMap', 'vim');
+        }
+      } else {
+        editor.setOption('keyMap', 'default');
+      }
+    }
+  }
+  
+  // Apply font to CodeMirror editor (helper function)
+  function applyFontToCodeMirror(fontValue) {
+    const fonts = {
+      'fira-code': "'Fira Code', 'Courier New', monospace",
+      'source-code-pro': "'Source Code Pro', 'Courier New', monospace",
+      'jetbrains-mono': "'JetBrains Mono', 'Courier New', monospace",
+      'jgs': "'JGS', 'Courier New', monospace",
+      'jgs5': "'JGS5', 'Courier New', monospace",
+      'jgs7': "'JGS7', 'Courier New', monospace",
+      'jgs9': "'JGS9', 'Courier New', monospace",
+      'monaco': "monaco, 'Lucida Console', monospace",
+      'consolas': "consolas, 'Courier New', monospace",
+      'menlo': "menlo, 'Monaco', 'Courier New', monospace",
+      'sf-mono': "'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', monospace"
+    };
+    
+    const fontFamily = fonts[fontValue] || fonts['fira-code'];
+    
+    // Remove existing font style
+    const existingStyle = document.getElementById('codemirror-font-style');
+    if (existingStyle) {
+      existingStyle.remove();
+    }
+    
+    // Create new style element
+    const style = document.createElement('style');
+    style.id = 'codemirror-font-style';
+    style.textContent = `
+      .CodeMirror {
+        font-family: ${fontFamily} !important;
+      }
+      .CodeMirror pre,
+      .CodeMirror-line,
+      .CodeMirror-lines,
+      .CodeMirror-code,
+      .CodeMirror-scroll,
+      .CodeMirror-sizer,
+      .CodeMirror-gutter,
+      .CodeMirror-gutters,
+      .CodeMirror-linenumber {
+        font-family: ${fontFamily} !important;
+      }
+    `;
+    
+    document.head.appendChild(style);
+    
+    // Refresh the editor
+    const editor = editorComponent?.getEditor();
+    if (editor) {
+      setTimeout(() => {
+        editor.refresh();
+      }, 100);
+    }
   }
   
   // Send code to server
@@ -1404,19 +1508,6 @@
             </button>
           {/if}
         </div>
-
-        <!-- Editor Theme Selector -->
-        <div class="flex items-center gap-2">
-          <CodeMirrorThemeSelector 
-            bind:this={themeSelector}
-            on:themeChange={(e) => {
-              currentEditorTheme = e.detail.theme;
-              if (editorComponent) {
-                editorComponent.setTheme(e.detail.theme);
-              }
-            }}
-          />
-        </div>
       </div>
     </div>
   </div>
@@ -1524,6 +1615,7 @@
       on:setDefault={handleStartupSetDefault}
       on:reload={handleMusicExampleReload}
       on:goHome={handleDocumentationGoHome}
+      on:settingsChanged={handleEditorSettingsChanged}
     />
   </div>
 
