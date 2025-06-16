@@ -1,7 +1,7 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
   import { slide } from 'svelte/transition';
-  import { appState } from './lib/appState.js';
+  import { appState, stateHelpers } from './lib/appState.js';
   import { sendMessage } from './lib/websocket.js';
   
   // Import components
@@ -14,10 +14,15 @@
   import NewBufferModal from './components/modals/NewBufferModal.svelte';
   import CloseBufferModal from './components/modals/CloseBufferModal.svelte';
   
-  // State for right panel
-  let rightPanelOpen = true;
-  let rightPanelWidth = 384;
-  let activeRightTab = 'tutorial';
+  // Reactive state from appState
+  $: rightPanelOpen = $appState.editor.ui.rightPanelOpen;
+  $: rightPanelWidth = $appState.editor.ui.rightPanelWidth;
+  $: activeRightTab = $appState.editor.ui.activeRightTab;
+  $: consoleHeight = $appState.editor.ui.consoleHeight;
+  $: consoleMinimized = $appState.editor.ui.consoleMinimized;
+  $: zenMode = $appState.editor.ui.zenMode;
+  
+  // Local UI state
   let isResizing = false;
   
   // Documentation state
@@ -30,10 +35,8 @@
   let musicExampleFiles = [];
   let loadingMusicExamples = false;
   
-  // State for vertical split between editor and console
-  let consoleHeight = 30;
+  // Local vertical resizing state
   let isVerticalResizing = false;
-  let consoleMinimized = false;
   
   // Tutorial files state
   let tutorialFiles = [];
@@ -65,8 +68,6 @@
   };
   let modalDismissed = false;
   
-  // Zen mode state
-  let zenMode = false;
   
   // Code execution highlighting state
   let activeHighlights = new Map();
@@ -1331,44 +1332,23 @@
   }
   
   onMount(() => {
-    // Load saved settings
-    const savedTheme = localStorage.getItem('editor-theme');
-    if (savedTheme) {
-      currentEditorTheme = savedTheme;
-    }
+    // Editor settings are now loaded from appState initialization
     
     // Load font CSS on mount
     loadLocalFontsCSS();
     
-    // Load UI display settings
-    const savedActionButtons = localStorage.getItem('editor-show-action-buttons');
-    if (savedActionButtons !== null) {
-      showActionButtons = savedActionButtons !== 'false';
-    }
-    
-    const savedShortcuts = localStorage.getItem('editor-show-shortcuts');
-    if (savedShortcuts !== null) {
-      showShortcuts = savedShortcuts !== 'false';
-    }
+    // UI display settings are now loaded from appState initialization
     
     // Add global event listeners
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
     
-    // Load saved panel width
-    const savedWidth = localStorage.getItem('rightPanelWidth');
-    if (savedWidth) {
-      rightPanelWidth = parseInt(savedWidth, 10);
-    }
+    // UI settings are now loaded from appState initialization
     
-    // Load saved console height
-    const savedConsoleHeight = localStorage.getItem('consoleHeight');
-    if (savedConsoleHeight) {
-      consoleHeight = parseFloat(savedConsoleHeight);
+    // Initialize editor with default startup file (only if session is empty)
+    if (tabs.length === 0) {
+      initializeEditorWithDefaultStartupFile();
     }
-    
-    // Initialize editor with default startup file
-    initializeEditorWithDefaultStartupFile();
     
     // Load tutorial files on mount
     loadTutorialFiles();
@@ -1385,17 +1365,13 @@
     
     // Subscribe to appState changes
     const unsubscribe = appState.subscribe(state => {
-      if (state.consoleOutput !== undefined) {
-        consoleOutput = state.consoleOutput;
-      }
-      
       // Check initialization status
-      if (state.renardoInit) {
+      if (state.renardo?.init) {
         initStatus = {
-          sclangCode: state.renardoInit.sclangCode === true,
-          samples: state.renardoInit.samples === true,
-          instruments: state.renardoInit.instruments === true,
-          reaperPack: state.renardoInit.reaperPack === true
+          sclangCode: state.renardo.init.sclangCode === true,
+          samples: state.renardo.init.samples === true,
+          instruments: state.renardo.init.instruments === true,
+          reaperPack: state.renardo.init.reaperPack === true
         };
         
         const atLeastOneIncomplete = Object.values(initStatus).some(status => status === false);
@@ -1669,10 +1645,10 @@
   </div>
 
   <!-- Error messages -->
-  {#if $appState.error}
+  {#if $appState.connection.error}
     <div class="alert alert-error rounded-none">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-      <span>Error: {$appState.error}</span>
+      <span>Error: {$appState.connection.error}</span>
     </div>
   {/if}
 </div>
