@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store';
+import { writable, get } from 'svelte/store';
 
 // Create stores for application state with thematic subsections
 export const appState = writable({
@@ -142,9 +142,7 @@ export const stateHelpers = {
 
   // Get current state value
   getCurrentState: () => {
-    let currentState;
-    appState.subscribe(state => currentState = state)();
-    return currentState;
+    return get(appState);
   },
 
   // Reset a specific section
@@ -163,8 +161,6 @@ export const stateHelpers = {
     const vimModeEnabled = localStorage.getItem('editor-vim-mode') === 'true';
     const showActionButtons = localStorage.getItem('editor-show-action-buttons') !== 'false';
     const showShortcuts = localStorage.getItem('editor-show-shortcuts') !== 'false';
-    const rightPanelWidth = parseInt(localStorage.getItem('rightPanelWidth'), 10) || 384;
-    const consoleHeight = parseFloat(localStorage.getItem('consoleHeight')) || 30;
 
     stateHelpers.updateNestedSection('editor', 'settings', {
       theme,
@@ -174,29 +170,95 @@ export const stateHelpers = {
       showActionButtons,
       showShortcuts
     });
+  },
+  
+  // Initialize editor UI state from localStorage
+  initializeEditorUI: () => {
+    // Try to load UI state from localStorage first
+    try {
+      const savedUI = localStorage.getItem('editor-ui');
+      if (savedUI) {
+        const parsedUI = JSON.parse(savedUI);
+        stateHelpers.updateNestedSection('editor', 'ui', parsedUI);
+        return;
+      }
+    } catch (error) {
+      console.warn('Failed to load saved UI state:', error);
+    }
+    
+    // Fallback to individual localStorage items or defaults
+    const rightPanelWidth = parseInt(localStorage.getItem('rightPanelWidth'), 10) || 384;
+    const consoleHeight = parseFloat(localStorage.getItem('consoleHeight')) || 30;
+    const rightPanelOpen = localStorage.getItem('rightPanelOpen') !== 'false';
+    const activeRightTab = localStorage.getItem('activeRightTab') || 'tutorial';
+    const consoleMinimized = localStorage.getItem('consoleMinimized') === 'true';
+    const zenMode = localStorage.getItem('zenMode') === 'true';
 
     stateHelpers.updateNestedSection('editor', 'ui', {
+      zenMode,
+      rightPanelOpen,
       rightPanelWidth,
-      consoleHeight
+      activeRightTab,
+      consoleHeight,
+      consoleMinimized
     });
   },
 
-  // Initialize default editor session
+  // Initialize default editor session (only if no session exists)
   initializeEditorSession: () => {
-    const defaultTab = {
-      id: 1,
-      name: 'Untitled',
-      content: '',
-      editing: false,
-      isStartupFile: false
-    };
+    const currentState = get(appState);
+    
+    // Try to load session from localStorage first
+    try {
+      const savedSession = localStorage.getItem('editor-session');
+      if (savedSession) {
+        const parsedSession = JSON.parse(savedSession);
+        if (parsedSession.tabs && parsedSession.tabs.length > 0) {
+          stateHelpers.updateNestedSection('editor', 'session', parsedSession);
+          return;
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load saved session:', error);
+    }
+    
+    // Only initialize with default if there's no existing session and no saved session
+    if (!currentState.editor.session.tabs || currentState.editor.session.tabs.length === 0) {
+      const defaultTab = {
+        id: 1,
+        name: 'Untitled',
+        content: '',
+        editing: false,
+        isStartupFile: false
+      };
 
-    stateHelpers.updateNestedSection('editor', 'session', {
-      tabs: [defaultTab],
-      activeTabId: 1,
-      nextTabId: 2,
-      name: 'Untitled Session',
-      modified: false
-    });
+      stateHelpers.updateNestedSection('editor', 'session', {
+        tabs: [defaultTab],
+        activeTabId: 1,
+        nextTabId: 2,
+        name: 'Untitled Session',
+        modified: false
+      });
+    }
+  },
+  
+  // Save editor session to localStorage
+  saveEditorSession: () => {
+    const currentState = get(appState);
+    try {
+      localStorage.setItem('editor-session', JSON.stringify(currentState.editor.session));
+    } catch (error) {
+      console.warn('Failed to save session:', error);
+    }
+  },
+  
+  // Save editor UI state to localStorage
+  saveEditorUI: () => {
+    const currentState = get(appState);
+    try {
+      localStorage.setItem('editor-ui', JSON.stringify(currentState.editor.ui));
+    } catch (error) {
+      console.warn('Failed to save UI state:', error);
+    }
   }
 };
