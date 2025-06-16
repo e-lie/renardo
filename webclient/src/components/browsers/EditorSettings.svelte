@@ -34,6 +34,8 @@
   let editorFont = 'fira-code';
   let showLineNumbers = true;
   let vimModeEnabled = false;
+  let showActionButtons = true;
+  let showShortcuts = true;
   
   // Loading state
   let isApplyingSettings = false;
@@ -59,6 +61,16 @@
     if (savedVimMode !== null) {
       vimModeEnabled = savedVimMode === 'true';
     }
+    
+    const savedActionButtons = localStorage.getItem('editor-show-action-buttons');
+    if (savedActionButtons !== null) {
+      showActionButtons = savedActionButtons !== 'false';
+    }
+    
+    const savedShortcuts = localStorage.getItem('editor-show-shortcuts');
+    if (savedShortcuts !== null) {
+      showShortcuts = savedShortcuts !== 'false';
+    }
   }
   
   // Apply settings and save to localStorage
@@ -71,13 +83,17 @@
       localStorage.setItem('editor-font-family', editorFont);
       localStorage.setItem('editor-show-line-numbers', showLineNumbers.toString());
       localStorage.setItem('editor-vim-mode', vimModeEnabled.toString());
+      localStorage.setItem('editor-show-action-buttons', showActionButtons.toString());
+      localStorage.setItem('editor-show-shortcuts', showShortcuts.toString());
       
       // Dispatch event to notify parent components
       dispatch('settingsChanged', {
         theme: editorTheme,
         font: editorFont,
         lineNumbers: showLineNumbers,
-        vimMode: vimModeEnabled
+        vimMode: vimModeEnabled,
+        showActionButtons: showActionButtons,
+        showShortcuts: showShortcuts
       });
       
       // Show success feedback briefly
@@ -101,6 +117,14 @@
   }
   
   function handleVimModeChange() {
+    applySettings();
+  }
+  
+  function handleActionButtonsChange() {
+    applySettings();
+  }
+  
+  function handleShortcutsChange() {
     applySettings();
   }
   
@@ -170,6 +194,35 @@
         on:change={handleVimModeChange}
       />
       <span class="label-text font-medium">Enable Vim mode</span>
+    </label>
+  </div>
+  
+  <!-- Display settings section -->
+  <div class="divider text-sm">Display Options</div>
+  
+  <!-- Action buttons toggle -->
+  <div class="form-control">
+    <label class="label cursor-pointer justify-start gap-3">
+      <input 
+        type="checkbox" 
+        class="checkbox checkbox-primary checkbox-sm" 
+        bind:checked={showActionButtons}
+        on:change={handleActionButtonsChange}
+      />
+      <span class="label-text font-medium">Show action buttons</span>
+    </label>
+  </div>
+  
+  <!-- Shortcuts toggle -->
+  <div class="form-control">
+    <label class="label cursor-pointer justify-start gap-3">
+      <input 
+        type="checkbox" 
+        class="checkbox checkbox-primary checkbox-sm" 
+        bind:checked={showShortcuts}
+        on:change={handleShortcutsChange}
+      />
+      <span class="label-text font-medium">Show keyboard shortcuts</span>
     </label>
   </div>
   
