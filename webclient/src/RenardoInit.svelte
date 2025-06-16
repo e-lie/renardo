@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import { appState } from './lib/appState.js';
+  import { appState, stateHelpers } from './lib/appState.js';
   import { initWebSocket, sendMessage } from './lib/websocket.js';
   import ThemeSelector from './lib/ThemeSelector.svelte';
 
@@ -16,22 +16,18 @@
   onMount(() => {
     // Subscribe to appState changes
     const unsubscribe = appState.subscribe(state => {
-      if (state.renardoInit) {
+      if (state.renardo?.init) {
         // Update local state variables from appState
-        samplesInitialized = state.renardoInit.samples;
-        instrumentsInitialized = state.renardoInit.instruments;
-
-        // Handle sclangCode field, which might be missing in older state objects
-        sclangCodeInitialized = state.renardoInit.sclangCode === true;
-        
-        // Handle reaperPack field
-        reaperPackInitialized = state.renardoInit.reaperPack === true;
+        samplesInitialized = state.renardo.init.samples;
+        instrumentsInitialized = state.renardo.init.instruments;
+        sclangCodeInitialized = state.renardo.init.sclangCode === true;
+        reaperPackInitialized = state.renardo.init.reaperPack === true;
       }
     });
 
     // Force request status after a short delay
     setTimeout(() => {
-      if ($appState.connected) {
+      if ($appState.connection.connected) {
         sendMessage({
           type: 'get_renardo_status'
         });
@@ -48,10 +44,7 @@
   // Initialization function for SCLang Code
   function downloadSclangCode() {
     // Reset any previous error
-    appState.update(state => ({
-      ...state,
-      error: null
-    }));
+    stateHelpers.updateNestedSection('connection', '', { error: null });
 
     return sendMessage({
       type: 'download_sclang_code'
@@ -61,10 +54,7 @@
   // Initialization function for Reaper Default Pack
   function initReaperDefaultPack() {
     // Reset any previous error
-    appState.update(state => ({
-      ...state,
-      error: null
-    }));
+    stateHelpers.updateNestedSection('connection', '', { error: null });
 
     // Use fetch instead of websocket for this operation
     return fetch('/api/reaper/initialize_default_pack', {
@@ -77,28 +67,22 @@
     .then(data => {
       if (data.success) {
         // Update app state
-        appState.update(state => ({
-          ...state,
-          renardoInit: {
-            ...state.renardoInit,
-            reaperPack: true
-          }
-        }));
+        stateHelpers.updateNestedSection('renardo', 'init', {
+          reaperPack: true
+        });
       } else {
         // Show error
-        appState.update(state => ({
-          ...state,
+        stateHelpers.updateNestedSection('connection', '', {
           error: data.message || 'Failed to initialize Reaper default pack'
-        }));
+        });
       }
       return data;
     })
     .catch(error => {
       console.error('Error initializing Reaper default pack:', error);
-      appState.update(state => ({
-        ...state,
+      stateHelpers.updateNestedSection('connection', '', {
         error: 'Error initializing Reaper default pack'
-      }));
+      });
     });
   }
 
@@ -207,7 +191,7 @@
                 <button
                   class="btn btn-secondary"
                   on:click={downloadSclangCode}
-                  disabled={!$appState.connected || sclangCodeInitialized}
+                  disabled={!$appState.connection.connected || sclangCodeInitialized}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -358,7 +342,7 @@
                 <button
                   class="btn btn-error"
                   on:click={initReaperDefaultPack}
-                  disabled={!$appState.connected}
+                  disabled={!$appState.connection.connected}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -381,12 +365,12 @@
   </div>
 
   <!-- Error messages -->
-  {#if $appState.error}
+  {#if $appState.connection.error}
     <div class="alert alert-error mb-8">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
-      <span>Error: {$appState.error}</span>
+      <span>Error: {$appState.connection.error}</span>
     </div>
   {/if}
 
@@ -398,7 +382,7 @@
     <div class="card-body">
       <h2 class="card-title text-xl title-font">Explore further >></h2>
       <p class="text-base-content/70 mb-4">
-        {$appState.welcomeText || 'Create music with the Renardo live coding environment'}
+        {$appState.app.welcomeText || 'Create music with the Renardo live coding environment'}
       </p>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

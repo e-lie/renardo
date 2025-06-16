@@ -48,8 +48,11 @@ export function initWebSocket() {
     // Update store to indicate connected status
     appState.update(state => ({
       ...state,
-      connected: true,
-      error: null
+      connection: {
+        ...state.connection,
+        connected: true,
+        error: null
+      }
     }));
     
     // Request initial state
@@ -92,8 +95,11 @@ export function initWebSocket() {
     // Update store to indicate disconnected status with reconnection information
     appState.update(state => ({
       ...state,
-      connected: false,
-      error: 'Connection lost. Reconnecting automatically...'
+      connection: {
+        ...state.connection,
+        connected: false,
+        error: 'Connection lost. Reconnecting automatically...'
+      }
     }));
     
     // Don't reconnect for clean closes with certain codes
@@ -128,7 +134,10 @@ export function initWebSocket() {
     // Update store with error
     appState.update(state => ({
       ...state,
-      error: 'Connection error. Attempting to reconnect...'
+      connection: {
+        ...state.connection,
+        error: 'Connection error. Attempting to reconnect...'
+      }
     }));
   });
   
@@ -152,7 +161,10 @@ function handleMessage(message) {
   // Always store the last message in the state for components to detect specific events
   appState.update(state => ({
     ...state,
-    _lastMessage: message
+    connection: {
+      ...state.connection,
+      _lastMessage: message
+    }
   }));
   
   switch (type) {
@@ -161,13 +173,21 @@ function handleMessage(message) {
       // Update application state
       appState.update(state => ({
         ...state,
-        counter: data.counter,
-        welcomeText: data.welcome_text,
-        error: null,
+        app: {
+          ...state.app,
+          counter: data.counter,
+          welcomeText: data.welcome_text
+        },
+        connection: {
+          ...state.connection,
+          error: null
+        },
         // Update Renardo initialization status if available
-        renardoInit: data.renardo_init || state.renardoInit,
-        // Update runtime status if available
-        runtimeStatus: data.runtime_status || state.runtimeStatus,
+        renardo: {
+          ...state.renardo,
+          init: data.renardo_init || state.renardo.init,
+          runtime: data.runtime_status || state.renardo.runtime
+        }
       }));
       break;
       
@@ -175,8 +195,11 @@ function handleMessage(message) {
       // Update backend OS information
       appState.update(state => ({
         ...state,
-        backendOS: data.backendOS,
-        error: null
+        connection: {
+          ...state.connection,
+          backendOS: data.backendOS,
+          error: null
+        }
       }));
       break;
       
@@ -184,8 +207,14 @@ function handleMessage(message) {
       // Update Renardo initialization status
       appState.update(state => ({
         ...state,
-        renardoInit: data.initStatus || data.data?.initStatus || state.renardoInit,
-        error: null
+        renardo: {
+          ...state.renardo,
+          init: data.initStatus || data.data?.initStatus || state.renardo.init
+        },
+        connection: {
+          ...state.connection,
+          error: null
+        }
       }));
       break;
       
@@ -193,11 +222,17 @@ function handleMessage(message) {
       // Update SC backend runtime status
       appState.update(state => ({
         ...state,
-        runtimeStatus: {
-          ...state.runtimeStatus,
-          scBackendRunning: data.running || false
+        renardo: {
+          ...state.renardo,
+          runtime: {
+            ...state.renardo.runtime,
+            scBackendRunning: data.running || false
+          }
         },
-        error: null
+        connection: {
+          ...state.connection,
+          error: null
+        }
       }));
       break;
       
@@ -217,7 +252,7 @@ function handleMessage(message) {
       // Add new log message to the array
       appState.update(state => {
         // Create a new log messages array with the new message added
-        const updatedLogMessages = [...state.logMessages, {
+        const updatedLogMessages = [...state.renardo.console.logMessages, {
           timestamp: data.timestamp || new Date().toLocaleTimeString(),
           level: data.level || 'INFO',
           message: data.message
@@ -228,7 +263,13 @@ function handleMessage(message) {
         
         return {
           ...state,
-          logMessages: trimmedLogMessages
+          renardo: {
+            ...state.renardo,
+            console: {
+              ...state.renardo.console,
+              logMessages: trimmedLogMessages
+            }
+          }
         };
       });
       break;
@@ -237,8 +278,8 @@ function handleMessage(message) {
       // Add new console output to the array
       appState.update(state => {
         // Check if this is a duplicate message
-        const lastMessage = state.consoleOutput.length > 0
-          ? state.consoleOutput[state.consoleOutput.length - 1]
+        const lastMessage = state.renardo.console.output.length > 0
+          ? state.renardo.console.output[state.renardo.console.output.length - 1]
           : null;
 
         // Skip if this is a duplicate of the last message
@@ -250,7 +291,7 @@ function handleMessage(message) {
         }
 
         // Create a new console output array with the new output added
-        const updatedConsoleOutput = [...state.consoleOutput, {
+        const updatedConsoleOutput = [...state.renardo.console.output, {
           // No timestamp needed
           level: data.level || 'info',
           message: data.message
@@ -261,7 +302,13 @@ function handleMessage(message) {
 
         return {
           ...state,
-          consoleOutput: trimmedConsoleOutput
+          renardo: {
+            ...state.renardo,
+            console: {
+              ...state.renardo.console,
+              output: trimmedConsoleOutput
+            }
+          }
         };
       });
       break;
@@ -286,8 +333,8 @@ function handleMessage(message) {
           // Check if this is a duplicate message
           appState.update(state => {
             // Check if the last message is identical to avoid duplicates
-            const lastMessage = state.consoleOutput.length > 0
-              ? state.consoleOutput[state.consoleOutput.length - 1]
+            const lastMessage = state.renardo.console.output.length > 0
+              ? state.renardo.console.output[state.renardo.console.output.length - 1]
               : null;
 
             // Skip if this is a duplicate of the last message
@@ -299,7 +346,7 @@ function handleMessage(message) {
             }
 
             // It's not a duplicate, so add it
-            const updatedConsoleOutput = [...state.consoleOutput, {
+            const updatedConsoleOutput = [...state.renardo.console.output, {
               // No timestamp needed
               level: 'success',
               message: data.message
@@ -309,8 +356,17 @@ function handleMessage(message) {
 
             return {
               ...state,
-              consoleOutput: trimmedConsoleOutput,
-              error: null
+              renardo: {
+                ...state.renardo,
+                console: {
+                  ...state.renardo.console,
+                  output: trimmedConsoleOutput
+                }
+              },
+              connection: {
+                ...state.connection,
+                error: null
+              }
             };
           });
         }
@@ -318,8 +374,8 @@ function handleMessage(message) {
         // Add error message to console output (errors always show)
         appState.update(state => {
           // Check if this is a duplicate message
-          const lastMessage = state.consoleOutput.length > 0
-            ? state.consoleOutput[state.consoleOutput.length - 1]
+          const lastMessage = state.renardo.console.output.length > 0
+            ? state.renardo.console.output[state.renardo.console.output.length - 1]
             : null;
 
           // Skip if this is a duplicate of the last message
@@ -330,7 +386,7 @@ function handleMessage(message) {
             return state;
           }
 
-          const updatedConsoleOutput = [...state.consoleOutput, {
+          const updatedConsoleOutput = [...state.renardo.console.output, {
             // No timestamp needed
             level: 'error',
             message: data.message || 'Code execution failed'
@@ -340,8 +396,17 @@ function handleMessage(message) {
 
           return {
             ...state,
-            consoleOutput: trimmedConsoleOutput,
-            error: null
+            renardo: {
+              ...state.renardo,
+              console: {
+                ...state.renardo.console,
+                output: trimmedConsoleOutput
+              }
+            },
+            connection: {
+              ...state.connection,
+              error: null
+            }
           };
         });
       }
@@ -350,14 +415,15 @@ function handleMessage(message) {
     case 'init_complete':
       // Update specific init status flag
       appState.update(state => {
-        const updatedRenardoInit = {
-          ...state.renardoInit,
-          [data.component]: data.success
-        };
-        
         return {
           ...state,
-          renardoInit: updatedRenardoInit
+          renardo: {
+            ...state.renardo,
+            init: {
+              ...state.renardo.init,
+              [data.component]: data.success
+            }
+          }
         };
       });
       break;
@@ -367,7 +433,10 @@ function handleMessage(message) {
       console.error('Server error:', errorMessage || error);
       appState.update(state => ({
         ...state,
-        error: errorMessage || error || 'Unknown server error'
+        connection: {
+          ...state.connection,
+          error: errorMessage || error || 'Unknown server error'
+        }
       }));
       break;
       
@@ -407,8 +476,11 @@ function handleMessage(message) {
       // If window.close() doesn't work (some browsers restrict it), update the UI
       appState.update(state => ({
         ...state,
-        connected: false,
-        error: 'Server has stopped. Please restart the server to continue.'
+        connection: {
+          ...state.connection,
+          connected: false,
+          error: 'Server has stopped. Please restart the server to continue.'
+        }
       }));
       break;
       
@@ -472,8 +544,11 @@ export async function incrementCounterFallback() {
     // Update store manually since we're not getting WebSocket updates
     appState.update(state => ({
       ...state,
-      counter: data.counter,
-      welcomeText: data.welcome_text
+      app: {
+        ...state.app,
+        counter: data.counter,
+        welcomeText: data.welcome_text
+      }
     }));
     
     return true;
@@ -482,7 +557,10 @@ export async function incrementCounterFallback() {
     
     appState.update(state => ({
       ...state,
-      error: 'Failed to increment counter. Please try again.'
+      connection: {
+        ...state.connection,
+        error: 'Failed to increment counter. Please try again.'
+      }
     }));
     
     return false;
