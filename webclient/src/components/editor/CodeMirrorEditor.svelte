@@ -11,6 +11,9 @@
   let editor;
   let textarea;
   
+  // Expose the editor instance for external access
+  export { editor };
+  
   // Function to load a script dynamically
   const loadScript = (src) => {
     return new Promise((resolve, reject) => {
