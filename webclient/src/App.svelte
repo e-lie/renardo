@@ -59,6 +59,7 @@
   onMount(() => {
     // Initialize centralized state
     stateHelpers.initializeEditorSettings();
+    stateHelpers.initializeEditorUI();
     stateHelpers.initializeEditorSession();
     
     // Initialize theme from localStorage

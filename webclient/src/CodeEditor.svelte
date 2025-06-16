@@ -22,6 +22,39 @@
   $: consoleMinimized = $appState.editor.ui.consoleMinimized;
   $: zenMode = $appState.editor.ui.zenMode;
   
+  // Session state from appState
+  $: tabs = $appState.editor.session.tabs;
+  $: activeTabId = $appState.editor.session.activeTabId;
+  $: nextTabId = $appState.editor.session.nextTabId;
+  $: currentSession = {
+    name: $appState.editor.session.name,
+    startupFile: $appState.editor.session.startupFile,
+    modified: $appState.editor.session.modified
+  };
+  
+  // Editor settings from appState
+  $: currentEditorTheme = $appState.editor.settings.theme;
+  $: showActionButtons = $appState.editor.settings.showActionButtons;
+  $: showShortcuts = $appState.editor.settings.showShortcuts;
+  
+  // Console output from appState
+  $: consoleOutput = $appState.renardo.console.output;
+  
+  // Auto-save session to localStorage whenever tabs change (but not on initial load)
+  let hasInitialized = false;
+  $: if (tabs && tabs.length > 0 && hasInitialized) {
+    stateHelpers.saveEditorSession();
+  }
+  
+  // Auto-save UI state whenever UI state changes (debounced)
+  let uiSaveTimeout;
+  $: if (hasInitialized && (rightPanelOpen !== undefined || activeRightTab || rightPanelWidth || consoleHeight !== undefined || consoleMinimized !== undefined || zenMode !== undefined)) {
+    if (uiSaveTimeout) clearTimeout(uiSaveTimeout);
+    uiSaveTimeout = setTimeout(() => {
+      stateHelpers.saveEditorUI();
+    }, 300);
+  }
+  
   // Local UI state
   let isResizing = false;
   
@@ -72,28 +105,8 @@
   // Code execution highlighting state
   let activeHighlights = new Map();
   
-  // Session state
-  let currentSession = {
-    name: 'Untitled Session',
-    startupFile: null,
-    modified: false
-  };
-  
-  // State for multi-tab editor
-  let tabs = [];
-  let activeTabId = 1;
-  let nextTabId = 2;
-  
-  // Editor component and CodeMirror instance references
+  // Editor component reference
   let editorComponent;
-  let currentEditorTheme = "dracula";
-  
-  // Console output
-  let consoleOutput = [];
-  
-  // UI display settings
-  let showActionButtons = true;
-  let showShortcuts = true;
   
   // Get the active tab's content
   $: activeBuffer = tabs.find(t => t.id === activeTabId);
@@ -154,8 +167,12 @@
   function handleEditorChange(event) {
     const currentBuffer = tabs.find(t => t.id === activeTabId);
     if (currentBuffer) {
-      currentBuffer.content = event.detail.value;
-      tabs = tabs;
+      const updatedTabs = tabs.map(tab => 
+        tab.id === activeTabId ? { ...tab, content: event.detail.value } : tab
+      );
+      stateHelpers.updateNestedSection('editor', 'session', { tabs: updatedTabs, modified: true });
+      // Save session to localStorage
+      stateHelpers.saveEditorSession();
     }
   }
   
@@ -581,15 +598,18 @@
   
   // Load session
   function loadSession() {
-    rightPanelOpen = true;
-    activeRightTab = 'sessions';
+    stateHelpers.updateNestedSection('editor', 'ui', {
+      rightPanelOpen: true,
+      activeRightTab: 'sessions'
+    });
     loadSessionFiles();
   }
   
   // Toggle zen mode
   function toggleZenMode() {
-    zenMode = !zenMode;
-    const event = new CustomEvent('zenModeChange', { detail: { zenMode } });
+    const newZenMode = !zenMode;
+    stateHelpers.updateNestedSection('editor', 'ui', { zenMode: newZenMode });
+    const event = new CustomEvent('zenModeChange', { detail: { zenMode: newZenMode } });
     window.dispatchEvent(event);
   }
   
@@ -1345,10 +1365,25 @@
     
     // UI settings are now loaded from appState initialization
     
-    // Initialize editor with default startup file (only if session is empty)
-    if (tabs.length === 0) {
-      initializeEditorWithDefaultStartupFile();
-    }
+    // Wait for reactive statements to execute, then check if we need to initialize
+    setTimeout(() => {
+      const currentState = stateHelpers.getCurrentState();
+      if (!currentState.editor.session.tabs || currentState.editor.session.tabs.length === 0) {
+        initializeEditorWithDefaultStartupFile();
+      } else {
+        // If we have existing tabs, make sure the editor shows the active tab content
+        if (editorComponent && currentState.editor.session.tabs.length > 0) {
+          const activeTab = currentState.editor.session.tabs.find(t => t.id === currentState.editor.session.activeTabId);
+          if (activeTab) {
+            editorComponent.setValue(activeTab.content);
+            editorComponent.setCursor({ line: 0, ch: 0 });
+            editorComponent.focus();
+          }
+        }
+      }
+      // Set initialization flag after we've processed the initial state
+      hasInitialized = true;
+    }, 50);
     
     // Load tutorial files on mount
     loadTutorialFiles();
@@ -1425,6 +1460,7 @@
     // Clean up
     return () => {
       unsubscribe();
+      if (uiSaveTimeout) clearTimeout(uiSaveTimeout);
       document.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
@@ -1555,7 +1591,7 @@
         on:closeBuffer={handleCloseBuffer}
         on:newBuffer={handleNewBuffer}
         on:saveStartupFile={handleSaveStartupFile}
-        on:toggleRightPanel={() => rightPanelOpen = !rightPanelOpen}
+        on:toggleRightPanel={() => stateHelpers.updateNestedSection('editor', 'ui', { rightPanelOpen: !rightPanelOpen })}
       />
       
       <!-- Editor area with dynamic height -->
@@ -1606,7 +1642,7 @@
       {currentDocumentationContent}
       {selectedDocumentationFile}
       on:switchTab={handleRightPanelSwitchTab}
-      on:close={() => rightPanelOpen = false}
+      on:close={() => stateHelpers.updateNestedSection('editor', 'ui', { rightPanelOpen: false })}
       on:startResize={() => isResizing = true}
       on:changeLanguage={handleTutorialChangeLanguage}
       on:loadFile={(e) => {
