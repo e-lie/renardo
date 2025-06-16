@@ -9,6 +9,7 @@
   
   let sessionName = '';
   let inputElement;
+  let wasShown = false;
   
   function handleSave() {
     if (sessionName.trim()) {
@@ -29,10 +30,18 @@
     }
   }
   
-  // Focus input when modal opens
+  // Focus input when modal opens (only clear input on first open)
   $: if (show && inputElement) {
-    sessionName = '';
+    if (!wasShown) {
+      sessionName = '';
+      wasShown = true;
+    }
     setTimeout(() => inputElement?.focus(), 100);
+  }
+  
+  // Reset wasShown when modal closes
+  $: if (!show) {
+    wasShown = false;
   }
 </script>
 
