@@ -417,7 +417,12 @@
   }
   
   // Apply font to CodeMirror editor (helper function)
-  function applyFontToCodeMirror(fontValue) {
+  async function applyFontToCodeMirror(fontValue) {
+    console.log('Applying font:', fontValue);
+    
+    // First, ensure the font CSS is loaded
+    await loadLocalFontsCSS();
+    
     const fonts = {
       'fira-code': "'Fira Code', 'Courier New', monospace",
       'source-code-pro': "'Source Code Pro', 'Courier New', monospace",
@@ -433,6 +438,7 @@
     };
     
     const fontFamily = fonts[fontValue] || fonts['fira-code'];
+    console.log('Font family:', fontFamily);
     
     // Remove existing font style
     const existingStyle = document.getElementById('codemirror-font-style');
@@ -461,14 +467,45 @@
     `;
     
     document.head.appendChild(style);
+    console.log('Font style applied');
     
     // Refresh the editor
     const editor = editorComponent?.getEditor();
     if (editor) {
       setTimeout(() => {
         editor.refresh();
+        console.log('Editor refreshed');
       }, 100);
     }
+  }
+  
+  // Load local fonts CSS
+  function loadLocalFontsCSS() {
+    return new Promise((resolve) => {
+      // Check if local fonts CSS is already loaded
+      const existingLink = document.querySelector('link[href="/fonts/code-fonts.css"]');
+      if (existingLink) {
+        resolve();
+        return;
+      }
+
+      console.log('Loading local code fonts CSS');
+
+      // Load the local fonts CSS file
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = '/fonts/code-fonts.css';
+      link.onload = () => {
+        console.log('Local code fonts loaded successfully');
+        resolve();
+      };
+      link.onerror = () => {
+        console.error('Failed to load local code fonts CSS');
+        resolve(); // Still resolve to continue with fallback fonts
+      };
+
+      document.head.appendChild(link);
+    });
   }
   
   // Send code to server
@@ -1305,6 +1342,9 @@
     if (savedTheme) {
       currentEditorTheme = savedTheme;
     }
+    
+    // Load font CSS on mount
+    loadLocalFontsCSS();
     
     // Add global event listeners
     window.addEventListener('mousemove', handleMouseMove);
