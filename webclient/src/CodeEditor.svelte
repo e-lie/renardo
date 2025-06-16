@@ -90,6 +90,10 @@
   // Console output
   let consoleOutput = [];
   
+  // UI display settings
+  let showActionButtons = true;
+  let showShortcuts = true;
+  
   // Get the active tab's content
   $: activeBuffer = tabs.find(t => t.id === activeTabId);
   $: editorContent = activeBuffer ? activeBuffer.content : '';
@@ -363,13 +367,9 @@
   
   // Handle editor settings changes
   function handleEditorSettingsChanged(event) {
-    const { theme, font, lineNumbers, vimMode } = event.detail;
+    const { theme, font, lineNumbers, vimMode, showActionButtons: newShowActionButtons, showShortcuts: newShowShortcuts } = event.detail;
     
     const editor = editorComponent?.getEditor();
-    
-    console.log('Settings changed:', { theme, font, lineNumbers, vimMode });
-    console.log('Editor component:', editorComponent);
-    console.log('Editor instance:', editor);
     
     // Update theme
     if (theme && theme !== currentEditorTheme) {
@@ -386,14 +386,12 @@
     
     // Apply line numbers setting immediately
     if (editor) {
-      console.log('Applying line numbers:', lineNumbers);
       editor.setOption('lineNumbers', lineNumbers);
       editor.refresh();
     }
     
     // Apply vim mode setting immediately
     if (editor) {
-      console.log('Applying vim mode:', vimMode);
       if (vimMode) {
         // Load vim mode if not already loaded
         if (typeof window.CodeMirror?.Vim === 'undefined') {
@@ -414,12 +412,18 @@
         editor.setOption('keyMap', 'default');
       }
     }
+    
+    // Update UI display settings
+    if (newShowActionButtons !== undefined) {
+      showActionButtons = newShowActionButtons;
+    }
+    if (newShowShortcuts !== undefined) {
+      showShortcuts = newShowShortcuts;
+    }
   }
   
   // Apply font to CodeMirror editor (helper function)
   async function applyFontToCodeMirror(fontValue) {
-    console.log('Applying font:', fontValue);
-    
     // First, ensure the font CSS is loaded
     await loadLocalFontsCSS();
     
@@ -438,7 +442,6 @@
     };
     
     const fontFamily = fonts[fontValue] || fonts['fira-code'];
-    console.log('Font family:', fontFamily);
     
     // Remove existing font style
     const existingStyle = document.getElementById('codemirror-font-style');
@@ -467,14 +470,12 @@
     `;
     
     document.head.appendChild(style);
-    console.log('Font style applied');
     
     // Refresh the editor
     const editor = editorComponent?.getEditor();
     if (editor) {
       setTimeout(() => {
         editor.refresh();
-        console.log('Editor refreshed');
       }, 100);
     }
   }
@@ -489,20 +490,13 @@
         return;
       }
 
-      console.log('Loading local code fonts CSS');
 
       // Load the local fonts CSS file
       const link = document.createElement('link');
       link.rel = 'stylesheet';
       link.href = '/fonts/code-fonts.css';
-      link.onload = () => {
-        console.log('Local code fonts loaded successfully');
-        resolve();
-      };
-      link.onerror = () => {
-        console.error('Failed to load local code fonts CSS');
-        resolve(); // Still resolve to continue with fallback fonts
-      };
+      link.onload = () => resolve();
+      link.onerror = () => resolve(); // Still resolve to continue with fallback fonts
 
       document.head.appendChild(link);
     });
@@ -1346,6 +1340,17 @@
     // Load font CSS on mount
     loadLocalFontsCSS();
     
+    // Load UI display settings
+    const savedActionButtons = localStorage.getItem('editor-show-action-buttons');
+    if (savedActionButtons !== null) {
+      showActionButtons = savedActionButtons !== 'false';
+    }
+    
+    const savedShortcuts = localStorage.getItem('editor-show-shortcuts');
+    if (savedShortcuts !== null) {
+      showShortcuts = savedShortcuts !== 'false';
+    }
+    
     // Add global event listeners
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
@@ -1477,14 +1482,8 @@
   {#if !zenMode}
     <div class="bg-base-300 p-4" transition:slide>
     <div class="flex flex-col gap-2">
-      <div class="flex flex-wrap gap-2 text-xs mb-2">
-        <span class="badge badge-sm">Alt+Enter: Run current line</span>
-        <span class="badge badge-sm">Ctrl+Enter: Run paragraph or selection</span>
-        <span class="badge badge-sm">Ctrl+.: Stop all music</span>
-        <span class="badge badge-sm">Run Code button: Run all code</span>
-      </div>
-
       <div class="flex flex-wrap justify-between items-center gap-2">
+        {#if showActionButtons}
         <div class="flex flex-wrap gap-2">
           <button
             class="btn btn-sm btn-success"
@@ -1548,6 +1547,16 @@
             </button>
           {/if}
         </div>
+        {/if}
+        
+        {#if showShortcuts}
+        <div class="flex flex-wrap gap-2 text-xs">
+          <span class="badge badge-sm">Alt+Enter: Run current line</span>
+          <span class="badge badge-sm">Ctrl+Enter: Run paragraph or selection</span>
+          <span class="badge badge-sm">Ctrl+.: Stop all music</span>
+          <span class="badge badge-sm">Run Code button: Run all code</span>
+        </div>
+        {/if}
       </div>
     </div>
   </div>
