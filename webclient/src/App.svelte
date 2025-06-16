@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { fade, slide } from 'svelte/transition';
-  import { appState } from './lib/appState.js';
+  import { appState, stateHelpers } from './lib/appState.js';
   import { initWebSocket, incrementCounter, incrementCounterFallback, sendMessage } from './lib/websocket.js';
   import RenardoInit from './RenardoInit.svelte';
   import CodeEditor from './CodeEditor.svelte';
@@ -57,6 +57,10 @@
   
   // Initialize WebSocket connection on mount
   onMount(() => {
+    // Initialize centralized state
+    stateHelpers.initializeEditorSettings();
+    stateHelpers.initializeEditorSession();
+    
     // Initialize theme from localStorage
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme) {
@@ -66,6 +70,12 @@
       document.documentElement.setAttribute('data-theme', currentTheme);
       localStorage.setItem('theme', currentTheme);
     }
+    
+    // Update app state with theme and route
+    stateHelpers.updateNestedSection('app', '', {
+      theme: currentTheme,
+      currentRoute: currentRoute
+    });
 
     if (webSocketSupported) {
       // Initialize WebSocket connection once for the entire application
@@ -92,8 +102,13 @@
           window.location.hash = 'editor';
         }
 
+        // Update centralized state with new route
+        stateHelpers.updateNestedSection('app', '', {
+          currentRoute: currentRoute
+        });
+
         // When changing routes, always request the latest status
-        if ($appState.connected) {
+        if ($appState.connection.connected) {
           sendMessage({ type: 'get_renardo_status' });
         }
       }
@@ -133,15 +148,13 @@
       }
       const data = await response.json();
       
-      $appState = {
-        ...$appState,
+      stateHelpers.updateSection('app', {
         counter: data.counter,
-        welcomeText: data.welcome_text,
-        error: null
-      };
+        welcomeText: data.welcome_text
+      });
     } catch (error) {
       console.error('Error fetching state:', error);
-      $appState.error = 'Failed to fetch state from server';
+      stateHelpers.updateNestedSection('connection', '', { error: 'Failed to fetch state from server' });
     }
   }
   
@@ -158,6 +171,10 @@
   function navigate(route) {
     window.location.hash = `#${route}`;
     currentRoute = route;
+    // Update centralized state
+    stateHelpers.updateNestedSection('app', '', {
+      currentRoute: route
+    });
   }
 
   // Set theme

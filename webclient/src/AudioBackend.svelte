@@ -1,7 +1,7 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
   import { fade } from 'svelte/transition';
-  import { appState } from './lib/appState.js';
+  import { appState, stateHelpers } from './lib/appState.js';
   import { sendMessage } from './lib/websocket.js';
   
   // Local state
@@ -36,16 +36,16 @@
     // Subscribe to appState changes
     unsubscribe = appState.subscribe(state => {
       // Update log messages from application state
-      logMessages = state.logMessages || [];
+      logMessages = state.renardo?.console?.logMessages || [];
       
       // Check for SC backend running status if available
-      if (state.runtimeStatus && state.runtimeStatus.scBackendRunning !== undefined) {
-        isScBackendRunning = state.runtimeStatus.scBackendRunning;
+      if (state.renardo?.runtime?.scBackendRunning !== undefined) {
+        isScBackendRunning = state.renardo.runtime.scBackendRunning;
       }
       
       // Check for last message for handling specific responses
-      if (state._lastMessage) {
-        const message = state._lastMessage;
+      if (state.connection?._lastMessage) {
+        const message = state.connection._lastMessage;
         
         // Handle SC backend startup response
         if (message.type === 'sc_backend_status') {
@@ -413,13 +413,13 @@
       <div class="lg:col-span-2">
         <div class="card bg-base-100 shadow-xl h-full">
           <div class="card-body">
-            {#if $appState.backendOS !== 'linux'}
+            {#if $appState.connection.backendOS !== 'linux'}
               <div class="flex items-center gap-3 mb-4">
                 <select 
                   class="select select-bordered flex-1" 
                   bind:value={selectedAudioOutputDevice}
                   on:change={saveAudioOutputDevice}
-                  disabled={!$appState.connected}
+                  disabled={!$appState.connection.connected}
                 >
                   <option value={-1}>System Default Audio Device</option>
                   {#each Object.entries(audioDevices.output) as [index, deviceName]}
@@ -429,7 +429,7 @@
                 <button
                   class="btn btn-circle btn-ghost"
                   on:click={loadAudioDevices}
-                  disabled={isLoadingAudioDevices || !$appState.connected}
+                  disabled={isLoadingAudioDevices || !$appState.connection.connected}
                   title="Scan Audio Devices"
                 >
                   {#if isLoadingAudioDevices}
@@ -448,7 +448,7 @@
               <button
                 class="btn btn-primary flex-1"
                 on:click={startScBackend}
-                disabled={isLoading || isScBackendRunning || !$appState.connected}
+                disabled={isLoading || isScBackendRunning || !$appState.connection.connected}
               >
                 {#if isLoading && !isScBackendRunning}
                   <span class="loading loading-spinner loading-xs"></span>
@@ -463,7 +463,7 @@
               <button
                 class="btn btn-error flex-1"
                 on:click={stopScBackend}
-                disabled={isLoading || !isScBackendRunning || !$appState.connected}
+                disabled={isLoading || !isScBackendRunning || !$appState.connection.connected}
               >
                 {#if isLoading && isScBackendRunning}
                   <span class="loading loading-spinner loading-xs"></span>
@@ -503,7 +503,7 @@
           <button
             class="btn btn-ghost btn-sm mt-2"
             on:click={checkBackendStatus}
-            disabled={isLoading || !$appState.connected}
+            disabled={isLoading || !$appState.connection.connected}
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
@@ -559,7 +559,7 @@
             Launch SuperCollider IDE
           </button></li>
             <li>Run the following code (Ctrl+Enter): </li>
-            {#if $appState.backendOS !== 'linux'}
+            {#if $appState.connection.backendOS !== 'linux'}
               <li><code class="bg-base-300 px-2 py-1 rounded">Renardo.listAudioDevices()</code></li>
               <li><code class="bg-base-300 px-2 py-1 rounded">Renardo.start(audio_device_index: -1)</code>  // (-1 means default device or you can choose a device from the list by index)</li>
             {:else}
@@ -647,7 +647,7 @@
           <button
             class="btn btn-warning"
             on:click={reinitializeReaper}
-            disabled={isReinitializingReaper || !$appState.connected}
+            disabled={isReinitializingReaper || !$appState.connection.connected}
           >
             {#if isReinitializingReaper}
               <span class="loading loading-spinner loading-xs"></span>
