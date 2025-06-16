@@ -100,7 +100,7 @@ def initialize_log_observer():
                             "type": "log_message",
                             "data": log
                         })
-                        print(f"Broadcasted log message to {broadcast_count} clients: {log.get('message', '')[:50]}...")
+                        #print(f"Broadcasted log message to {broadcast_count} clients: {log.get('message', '')[:50]}...")
                     
                     # Update log count
                     log_count = current_count
