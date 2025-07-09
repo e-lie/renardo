@@ -99,6 +99,7 @@ class BidirectionalOSCServer(OSCServer):
         except OSCClientError as e:
             if not self._printed_error:
                 print("Error: No connection made to SuperCollider server instance.")
+                print(e)
                 self._printed_error = True
 
     def receive(self, pattern, timeout=2):
