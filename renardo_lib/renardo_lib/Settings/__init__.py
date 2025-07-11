@@ -1,6 +1,7 @@
 import os
 import sys
 import pathlib
+import tempfile
 # Anything that needs to be updated
 from importlib import reload
 from renardo_gatherer.config_dir import get_samples_dir_path
@@ -47,7 +48,7 @@ FOXDOT_LOOP = "_loop_"
 # FOXDOT_LOOP = os.path.realpath(FOXDOT_ROOT+"/../../renardo_samples/_loop_/")
 TUTORIAL_DIR = os.path.realpath(FOXDOT_ROOT + "/demo/")
 RECORDING_DIR = os.path.realpath(FOXDOT_ROOT + "/rec/")
-FOXDOT_TEMP_FILE = os.path.realpath(FOXDOT_EDITOR_ROOT + "/tmp/tempfile.txt")
+FOXDOT_TEMP_FILE = os.path.realpath(tempfile.gettempdir() + "/foxdoteditor-tempfile.txt")
 SCLANG_EXEC = 'sclang.exe' if SYSTEM == WINDOWS else 'sclang'
 
 
