@@ -609,7 +609,7 @@
           <button
             class="btn btn-primary"
             on:click={startReaperInitialization}
-            disabled={isReaperInitializing || !$appState.connected}
+            disabled={isReaperInitializing || !$appState.connection.connected}
           >
             {#if isReaperInitializing}
               <span class="loading loading-spinner loading-xs"></span>
@@ -624,7 +624,7 @@
           <button
             class="btn btn-outline"
             on:click={openReaperUserDir}
-            disabled={!$appState.connected}
+            disabled={!$appState.connection.connected}
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1H8a3 3 0 00-3 3v1.5a1.5 1.5 0 01-3 0V6z" clip-rule="evenodd" />
@@ -636,7 +636,7 @@
           <button
             class="btn btn-primary"
             on:click={launchReaper}
-            disabled={!$appState.connected}
+            disabled={!$appState.connection.connected}
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
