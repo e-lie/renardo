@@ -125,6 +125,10 @@ def clean_project(project):
         except:
             pass
     
+    # Rescan tracks after cleanup to sync cache
+    if hasattr(project, 'rescan_all_tracks'):
+        project.rescan_all_tracks()
+    
     yield project
 
 
