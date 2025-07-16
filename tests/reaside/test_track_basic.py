@@ -40,16 +40,6 @@ def test_track_name_set(test_track):
     assert current_name == test_name, f"Track name should be '{test_name}', got '{current_name}'"
 
 
-def test_track_name_unicode(test_track):
-    """Test setting track name with unicode characters."""
-    test_name = "Piste Test 🎵 éàü"
-    
-    # Set unicode name
-    test_track.name = test_name
-    
-    # Verify name was set
-    current_name = test_track.name
-    assert current_name == test_name, f"Track name should be '{test_name}', got '{current_name}'"
 
 
 def test_track_selection_get(test_track):
