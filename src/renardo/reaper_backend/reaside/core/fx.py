@@ -19,8 +19,13 @@ class ReaFX:
     
     def _init_params(self):
         """Initialize all parameters for this FX."""
+        # Get track object
+        track_obj = self.client.call_reascript_function("GetTrack", 0, self.track_index)
+        if not track_obj:
+            return
+        
         # Get parameter count
-        param_count = self.client.get_fx_param_count(self.track_index, self.fx_index)
+        param_count = self.client.call_reascript_function("TrackFX_GetNumParams", track_obj, self.fx_index)
         
         # Create 'on' parameter for enabled/disabled state
         self.params['on'] = ReaParam(
@@ -34,7 +39,9 @@ class ReaFX:
         
         # Create parameters for each FX parameter
         for i in range(param_count):
-            param_name = self.client.get_fx_param_name(self.track_index, self.fx_index, i)
+            param_name = self.client.call_reascript_function("TrackFX_GetParamName", track_obj, self.fx_index, i, "", 256)
+            if isinstance(param_name, tuple):
+                param_name = param_name[1] if len(param_name) > 1 else f"param_{i}"
             snake_name = self._make_snake_name(param_name)
             
             self.params[snake_name] = ReaParam(
