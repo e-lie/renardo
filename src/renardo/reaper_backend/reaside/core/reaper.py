@@ -11,82 +11,40 @@ class Reaper:
     """Main interface to REAPER."""
     
     def __init__(self, client):
-        """Initialize the Reaper object.
-        
-        Parameters
-        ----------
-        client : ReaperClient
-            Client for communicating with REAPER.
-        """
+        """Initialize the Reaper object."""
         self._client = client
         self._projects = {}  # Cache for Project objects
         
     @property
     def version(self) -> str:
-        """Get REAPER version.
-        
-        Returns
-        -------
-        str
-            REAPER version string.
-        """
+        """Get REAPER version."""
         return self._client.get_reaper_version()
     
     @property
     def position(self) -> float:
-        """Get current cursor position in seconds.
-        
-        Returns
-        -------
-        float
-            Current cursor position in seconds.
-        """
+        """Get current cursor position in seconds."""
         return self._client.get_time_position()
     
     @position.setter
     def position(self, pos: float) -> None:
-        """Set current cursor position.
-        
-        Parameters
-        ----------
-        pos : float
-            Position in seconds.
-        """
+        """Set current cursor position."""
         self._client.goto_time(pos)
     
     @property
     def is_playing(self) -> bool:
-        """Check if REAPER is currently playing.
-        
-        Returns
-        -------
-        bool
-            True if REAPER is playing.
-        """
+        """Check if REAPER is currently playing."""
         play_state = self._client.get_play_state()
         return play_state == 1
     
     @property
     def is_recording(self) -> bool:
-        """Check if REAPER is currently recording.
-        
-        Returns
-        -------
-        bool
-            True if REAPER is recording.
-        """
+        """Check if REAPER is currently recording."""
         play_state = self._client.get_play_state()
         return play_state == 5
     
     @property
     def is_stopped(self) -> bool:
-        """Check if REAPER is currently stopped.
-        
-        Returns
-        -------
-        bool
-            True if REAPER is stopped.
-        """
+        """Check if REAPER is currently stopped."""
         return not self.is_playing and not self.is_recording
     
     def play(self) -> None:
@@ -106,29 +64,12 @@ class Reaper:
         self._client.record()
     
     def perform_action(self, action_id: Union[int, str]) -> bool:
-        """Perform a REAPER action by ID.
-        
-        Parameters
-        ----------
-        action_id : int or str
-            Action ID to perform.
-            
-        Returns
-        -------
-        bool
-            True if action was performed successfully.
-        """
+        """Perform a REAPER action by ID."""
         return self._client.perform_action(action_id)
     
     @property
     def current_project(self):
-        """Get current project.
-        
-        Returns
-        -------
-        Project
-            Current project object.
-        """
+        """Get current project."""
         from .project import Project
         
         # Get current project index - use EnumProjects to check the active project
@@ -158,23 +99,7 @@ class Reaper:
         return self._projects[project_index]
     
     def get_project(self, index: int):
-        """Get project by index.
-        
-        Parameters
-        ----------
-        index : int
-            Project index.
-            
-        Returns
-        -------
-        Project
-            Project object.
-            
-        Raises
-        ------
-        ValueError
-            If project with specified index doesn't exist.
-        """
+        """Get project by index."""
         from .project import Project
         
         # Check if project exists
@@ -195,13 +120,7 @@ class Reaper:
     
     @property
     def projects(self) -> List:
-        """Get list of all projects.
-        
-        Returns
-        -------
-        list of Project
-            List of all open projects.
-        """
+        """Get list of all projects."""
         from .project import Project
         
         projects = []
@@ -233,13 +152,7 @@ class Reaper:
         return projects
     
     def add_project(self) -> 'Project':
-        """Add a new project tab.
-        
-        Returns
-        -------
-        Project
-            New project object.
-        """
+        """Add a new project tab."""
         from .project import Project
         
         # Create new project tab (Action ID: 40859)
@@ -251,26 +164,7 @@ class Reaper:
     def available_fxchains(self, custom_dir: Optional[Union[str, Path]] = None, 
                         include_subdirs: bool = True, 
                         search_pattern: Optional[str] = None) -> Dict[str, Path]:
-        """Get available FX chains in REAPER.
-        
-        Parameters
-        ----------
-        custom_dir : str or Path, optional
-            Custom directory to search for FX chains. If None, searches in REAPER's 
-            default FX chains directory.
-        include_subdirs : bool, optional
-            Whether to include subdirectories in the search. Default is True.
-        search_pattern : str, optional
-            Pattern to filter FX chains by name. Case-insensitive partial matching.
-            
-        Returns
-        -------
-        Dict[str, Path]
-            Dictionary mapping FX chain names to their file paths. 
-            Keys format depends on location:
-            - For top-level files: "filename"
-            - For subdirectory files: "subdirname/filename"
-        """
+        """Get available FX chains in REAPER."""
         fx_chains = {}
         
         # Search in REAPER's default FX chains directory
@@ -310,21 +204,7 @@ class Reaper:
         return fx_chains
         
     def find_fxchain(self, name: str, exact_match: bool = False) -> Optional[Path]:
-        """Find an FX chain by name.
-        
-        Parameters
-        ----------
-        name : str
-            Name of the FX chain to find.
-        exact_match : bool, optional
-            If True, requires an exact match. If False, uses partial matching.
-            Default is False.
-            
-        Returns
-        -------
-        Path or None
-            Path to the FX chain file if found, None otherwise.
-        """
+        """Find an FX chain by name."""
         chains = self.available_fxchains(include_subdirs=True)
         
         # Case for exact match
@@ -349,13 +229,7 @@ class Reaper:
         return None
     
     def _get_reaper_fx_chain_directories(self) -> List[Path]:
-        """Get REAPER's FX chain directories.
-        
-        Returns
-        -------
-        List[Path]
-            List of FX chain directory paths.
-        """
+        """Get REAPER's FX chain directories."""
         directories = []
         
         # Get REAPER resource path
@@ -408,13 +282,7 @@ class Reaper:
         return directories
     
     def _get_reaper_resource_path(self) -> Optional[Path]:
-        """Get REAPER's resource path.
-        
-        Returns
-        -------
-        Path or None
-            Path to REAPER's resource directory, or None if it cannot be determined.
-        """
+        """Get REAPER's resource path."""
         # Try to get the resource path from REAPER
         resource_path_str = self._client.call_reascript_function("GetResourcePath")
         

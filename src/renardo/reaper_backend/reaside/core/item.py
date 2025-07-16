@@ -9,15 +9,7 @@ class Item:
     """REAPER media item."""
     
     def __init__(self, track, index):
-        """Initialize the Item object.
-        
-        Parameters
-        ----------
-        track : Track
-            Track containing this item.
-        index : int
-            Item index (0-based).
-        """
+        """Initialize the Item object."""
         self._track = track
         self._project = track._project
         self._reaper = track._reaper
@@ -28,39 +20,19 @@ class Item:
         
     @property
     def index(self) -> int:
-        """Get item index.
-        
-        Returns
-        -------
-        int
-            Item index (0-based).
-        """
+        """Get item index."""
         return self._index
     
     @property
     def id(self):
-        """Get item ID (MediaItem pointer).
-        
-        This is used internally for API calls.
-        
-        Returns
-        -------
-        int
-            Item ID.
-        """
+        """Get item ID (MediaItem pointer)."""
         if self._id is None:
             self._id = self._client.call_reascript_function("GetTrackMediaItem", self._track.id, self._index)
         return self._id
     
     @property
     def name(self) -> str:
-        """Get item name.
-        
-        Returns
-        -------
-        str
-            Item name. For audio items, this is usually the filename.
-        """
+        """Get item name."""
         notes = self._client.call_reascript_function("GetSetMediaItemInfo_String", self.id, "P_NOTES", "", False)
         if notes:
             return notes
@@ -74,114 +46,52 @@ class Item:
     
     @name.setter
     def name(self, value: str) -> None:
-        """Set item name.
-        
-        This sets the item notes, which REAPER displays as the item name.
-        
-        Parameters
-        ----------
-        value : str
-            New item name.
-        """
+        """Set item name."""
         self._client.call_reascript_function("GetSetMediaItemInfo_String", self.id, "P_NOTES", value, True)
     
     @property
     def position(self) -> float:
-        """Get item position.
-        
-        Returns
-        -------
-        float
-            Item position in seconds.
-        """
+        """Get item position."""
         return self._client.call_reascript_function("GetMediaItemInfo_Value", self.id, "D_POSITION")
     
     @position.setter
     def position(self, value: float) -> None:
-        """Set item position.
-        
-        Parameters
-        ----------
-        value : float
-            New item position in seconds.
-        """
+        """Set item position."""
         self._client.call_reascript_function("SetMediaItemInfo_Value", self.id, "D_POSITION", value)
     
     @property
     def length(self) -> float:
-        """Get item length.
-        
-        Returns
-        -------
-        float
-            Item length in seconds.
-        """
+        """Get item length."""
         return self._client.call_reascript_function("GetMediaItemInfo_Value", self.id, "D_LENGTH")
     
     @length.setter
     def length(self, value: float) -> None:
-        """Set item length.
-        
-        Parameters
-        ----------
-        value : float
-            New item length in seconds.
-        """
+        """Set item length."""
         self._client.call_reascript_function("SetMediaItemInfo_Value", self.id, "D_LENGTH", value)
     
     @property
     def is_selected(self) -> bool:
-        """Check if item is selected.
-        
-        Returns
-        -------
-        bool
-            True if item is selected.
-        """
+        """Check if item is selected."""
         return bool(self._client.call_reascript_function("GetMediaItemInfo_Value", self.id, "B_UISEL"))
     
     @is_selected.setter
     def is_selected(self, value: bool) -> None:
-        """Set item selection state.
-        
-        Parameters
-        ----------
-        value : bool
-            True to select, False to deselect.
-        """
+        """Set item selection state."""
         self._client.call_reascript_function("SetMediaItemSelected", self.id, value)
     
     @property
     def is_muted(self) -> bool:
-        """Check if item is muted.
-        
-        Returns
-        -------
-        bool
-            True if item is muted.
-        """
+        """Check if item is muted."""
         return bool(self._client.call_reascript_function("GetMediaItemInfo_Value", self.id, "B_MUTE"))
     
     @is_muted.setter
     def is_muted(self, value: bool) -> None:
-        """Set item mute state.
-        
-        Parameters
-        ----------
-        value : bool
-            True to mute, False to unmute.
-        """
+        """Set item mute state."""
         self._client.call_reascript_function("SetMediaItemInfo_Value", self.id, "B_MUTE", value)
     
     @property
     def takes(self) -> List:
-        """Get list of all takes in this item.
-        
-        Returns
-        -------
-        list of Take
-            List of all takes in this item.
-        """
+        """Get list of all takes in this item."""
         from .take import Take
         
         takes = []
@@ -197,13 +107,7 @@ class Item:
     
     @property
     def active_take_index(self) -> int:
-        """Get active take index.
-        
-        Returns
-        -------
-        int
-            Index of the active take, or -1 if no takes.
-        """
+        """Get active take index."""
         count = self._client.call_reascript_function("GetMediaItemNumTakes", self.id)
         if count == 0:
             return -1
@@ -222,18 +126,7 @@ class Item:
     
     @active_take_index.setter
     def active_take_index(self, value: int) -> None:
-        """Set active take by index.
-        
-        Parameters
-        ----------
-        value : int
-            Take index to activate.
-            
-        Raises
-        ------
-        ValueError
-            If index is out of range.
-        """
+        """Set active take by index."""
         count = self._client.call_reascript_function("GetMediaItemNumTakes", self.id)
         if value < 0 or value >= count:
             raise ValueError(f"Take index {value} out of range (0-{count-1}).")
@@ -243,13 +136,7 @@ class Item:
     
     @property
     def active_take(self):
-        """Get the active take.
-        
-        Returns
-        -------
-        Take or None
-            Active take, or None if no takes.
-        """
+        """Get the active take."""
         from .take import Take
         
         index = self.active_take_index
@@ -262,23 +149,7 @@ class Item:
         return self._takes[index]
     
     def get_take(self, index: int):
-        """Get take by index.
-        
-        Parameters
-        ----------
-        index : int
-            Take index.
-            
-        Returns
-        -------
-        Take
-            Take object.
-            
-        Raises
-        ------
-        ValueError
-            If take with specified index doesn't exist.
-        """
+        """Get take by index."""
         from .take import Take
         
         # Check if take exists
@@ -293,13 +164,7 @@ class Item:
         return self._takes[index]
     
     def add_take(self):
-        """Add a new empty take to the item.
-        
-        Returns
-        -------
-        Take
-            New take object.
-        """
+        """Add a new empty take to the item."""
         from .take import Take
         
         # Add new take (select item first)
@@ -315,13 +180,7 @@ class Item:
         return self._takes[take_index]
     
     def delete(self) -> bool:
-        """Delete this item.
-        
-        Returns
-        -------
-        bool
-            True if deletion was successful.
-        """
+        """Delete this item."""
         # Select only this item
         self._client.call_reascript_function("SetMediaItemSelected", self.id, True)
         

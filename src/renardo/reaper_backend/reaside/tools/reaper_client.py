@@ -19,23 +19,7 @@ class ReaperClient:
                  osc_receive_port=8001,
                  timeout=2.0,
                  enable_osc=True):
-        """Initialize the unified REAPER client.
-        
-        Parameters
-        ----------
-        host : str
-            The hostname or IP address where REAPER is running.
-        http_port : int
-            The port number for REAPER's web interface.
-        osc_send_port : int
-            The port number to send OSC messages to REAPER.
-        osc_receive_port : int
-            The port number to receive OSC messages from REAPER.
-        timeout : float
-            Timeout in seconds for requests.
-        enable_osc : bool
-            Whether to enable OSC functionality.
-        """
+        """Initialize the unified REAPER client."""
         self.host = host
         self.http_port = http_port
         self.osc_send_port = osc_send_port
@@ -321,19 +305,7 @@ class ReaperClient:
     
     # MIDI note methods
     def send_note_on(self, track_id: int, pitch: int, velocity: int, channel: int = 0):
-        """Send MIDI note on to a track.
-        
-        Parameters
-        ----------
-        track_id : int
-            Track number (1-based)
-        pitch : int
-            MIDI pitch (0-127)
-        velocity : int
-            MIDI velocity (0-127)
-        channel : int, optional
-            MIDI channel (0-15), default 0
-        """
+        """Send MIDI note on to a track."""
         if self.osc_client:
             try:
                 return self.osc_client.send_message(f"/track/{track_id}/note_on", pitch, velocity, channel)
@@ -344,17 +316,7 @@ class ReaperClient:
         return self.send_osc_via_extstate(f"/track/{track_id}/note_on", [pitch, velocity, channel])
     
     def send_note_off(self, track_id: int, pitch: int, channel: int = 0):
-        """Send MIDI note off to a track.
-        
-        Parameters
-        ----------
-        track_id : int
-            Track number (1-based)
-        pitch : int
-            MIDI pitch (0-127)
-        channel : int, optional
-            MIDI channel (0-15), default 0
-        """
+        """Send MIDI note off to a track."""
         if self.osc_client:
             try:
                 return self.osc_client.send_message(f"/track/{track_id}/note_off", pitch, channel)
@@ -365,13 +327,7 @@ class ReaperClient:
         return self.send_osc_via_extstate(f"/track/{track_id}/note_off", [pitch, channel])
     
     def send_all_notes_off(self, track_id: int):
-        """Send all notes off to a track.
-        
-        Parameters
-        ----------
-        track_id : int
-            Track number (1-based)
-        """
+        """Send all notes off to a track."""
         if self.osc_client:
             try:
                 return self.osc_client.send_message(f"/track/{track_id}/all_notes_off")

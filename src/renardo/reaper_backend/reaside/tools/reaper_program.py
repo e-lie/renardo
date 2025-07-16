@@ -1,9 +1,4 @@
-"""
-REAPER launching and stopping utilities for reaside.
-
-This module provides functions for launching and stopping REAPER with the correct environment.
-Cross-platform support for macOS, Windows, and Linux.
-"""
+"""REAPER launching and stopping utilities for reaside."""
 import os
 import subprocess
 import sys
@@ -24,14 +19,7 @@ def is_apple():
 
 
 def get_python_shared_library():
-    """Return path to Python shared library (.dll, .dylib or .so).
-    
-    This is a simplified version that returns a reasonable guess for the Python shared library path.
-    For a more comprehensive solution, see the full implementation in the original repository.
-    
-    Returns:
-        str: Path to the Python shared library
-    """
+    """Return path to Python shared library (.dll, .dylib or .so)."""
     # For this simple implementation, we'll make a reasonable guess based on the Python executable
     if is_windows():
         python_home = str(Path(sys.executable).parent)
@@ -48,20 +36,7 @@ def get_python_shared_library():
 
 
 def start_reaper(detached=True):
-    """
-    Launch REAPER with the correct PYTHONHOME environment variable.
-    
-    Cross-platform implementation supporting:
-    - macOS: Launches from /Applications/REAPER.app
-    - Windows: Launches from standard Program Files location or registry path
-    - Linux: Launches from standard locations or PATH
-    
-    Args:
-        detached (bool): Whether to launch REAPER detached from the current process
-    
-    Returns:
-        tuple: (bool, str, subprocess.Popen) - Success status, PYTHONHOME path used, and the process object if not detached
-    """
+    """Launch REAPER with the correct PYTHONHOME environment variable."""
     try:
         # Get the Python shared library path
         python_lib_path = get_python_shared_library()
@@ -243,14 +218,7 @@ def start_reaper(detached=True):
 
 
 def stop_reaper():
-    """
-    Stop REAPER by finding and terminating REAPER processes.
-    
-    Cross-platform implementation for Windows, macOS, and Linux.
-    
-    Returns:
-        bool: True if REAPER was successfully stopped, False otherwise
-    """
+    """Stop REAPER by finding and terminating REAPER processes."""
     try:
         reaper_processes = []
         
@@ -416,14 +384,7 @@ def stop_reaper():
 
 
 def is_reaper_running():
-    """
-    Check if REAPER is currently running.
-    
-    Cross-platform implementation for Windows, macOS, and Linux.
-    
-    Returns:
-        bool: True if REAPER is running, False otherwise
-    """
+    """Check if REAPER is currently running."""
     try:
         if is_windows():
             # Windows check using tasklist
