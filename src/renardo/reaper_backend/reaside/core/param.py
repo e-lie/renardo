@@ -31,11 +31,13 @@ class ReaParam:
     def _update_value(self):
         """Update parameter value from REAPER."""
         if self.param_index == -1:  # Special case for FX enabled state
-            self.value = float(self.client.get_fx_enabled(self.track_index, self.fx_index))
+            track_obj = self.client.call_reascript_function("GetTrack", 0, self.track_index)
+            if track_obj:
+                self.value = float(self.client.call_reascript_function("TrackFX_GetEnabled", track_obj, self.fx_index))
         else:
-            self.value = self.client.get_fx_param_value(
-                self.track_index, self.fx_index, self.param_index
-            )
+            track_obj = self.client.call_reascript_function("GetTrack", 0, self.track_index)
+            if track_obj:
+                self.value = self.client.call_reascript_function("TrackFX_GetParam", track_obj, self.fx_index, self.param_index)
     
     def get_value(self) -> float:
         """Get current parameter value."""
@@ -45,11 +47,13 @@ class ReaParam:
         """Set parameter value directly in REAPER."""
         self.value = value
         if self.param_index == -1:  # Special case for FX enabled state
-            self.client.set_fx_enabled(self.track_index, self.fx_index, value > 0.5)
+            track_obj = self.client.call_reascript_function("GetTrack", 0, self.track_index)
+            if track_obj:
+                self.client.call_reascript_function("TrackFX_SetEnabled", track_obj, self.fx_index, value > 0.5)
         else:
-            self.client.set_fx_param_value(
-                self.track_index, self.fx_index, self.param_index, value
-            )
+            track_obj = self.client.call_reascript_function("GetTrack", 0, self.track_index)
+            if track_obj:
+                self.client.call_reascript_function("TrackFX_SetParam", track_obj, self.fx_index, self.param_index, value)
     
     def update_value(self):
         """Update parameter value from REAPER."""
