@@ -2,6 +2,7 @@
 
 import logging
 import os
+import re
 from pathlib import Path
 from typing import Optional, List, Union, Dict, Any
 
@@ -17,7 +18,62 @@ class ReaTrack:
         self._client = project._client
         self._index = index
         self._items = {}  # Cache for Item objects
+        self._fx_objects = {}  # Cache for ReaFX objects
+        self._scan_data = None  # Track scan data cache
         
+        # Perform initial scan to populate FX and parameters
+        self._scan_track()
+        
+    def _scan_track(self):
+        """Scan track to populate FX and parameter information."""
+        try:
+            scan_result = self._client.scan_track_complete(self._index)
+            if scan_result and scan_result.get('success'):
+                self._scan_data = scan_result['track']
+                self._populate_fx_objects()
+        except Exception as e:
+            logger.warning(f"Failed to scan track {self._index}: {e}")
+            self._scan_data = None
+    
+    def _populate_fx_objects(self):
+        """Create ReaFX objects from scan data."""
+        if not self._scan_data or 'fx' not in self._scan_data:
+            return
+        
+        from .fx import ReaFX
+        
+        for fx_data in self._scan_data['fx']:
+            fx_index = fx_data['index']
+            fx_name = fx_data['name']
+            
+            # Create ReaFX object with scan data
+            fx_obj = ReaFX(
+                client=self._client,
+                track_index=self._index,
+                fx_index=fx_index,
+                name=fx_name,
+                scan_data=fx_data
+            )
+            
+            # Store by index and snake_case name
+            self._fx_objects[fx_index] = fx_obj
+            snake_name = self._make_snake_name(fx_name)
+            self._fx_objects[snake_name] = fx_obj
+    
+    def _make_snake_name(self, name: str) -> str:
+        """Convert a name to snake_case."""
+        # Remove common prefixes and suffixes
+        name = re.sub(r'^(VST3?i?:?\s*|AU:?\s*|JS:?\s*|VST:?\s*)', '', name)
+        name = re.sub(r'\s*\([^)]*\)\s*$', '', name)  # Remove trailing parentheses
+        
+        # Convert to snake_case
+        name = re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', name)  # camelCase to snake_case
+        name = re.sub(r'[^a-zA-Z0-9_]', '_', name)  # Replace special chars with _
+        name = re.sub(r'_+', '_', name)  # Collapse multiple underscores
+        name = name.strip('_').lower()  # Remove leading/trailing _ and lowercase
+        
+        return name or 'unnamed'
+    
     @property
     def index(self) -> int:
         """Get track index."""
@@ -372,7 +428,13 @@ class ReaTrack:
             logger.debug(f"FX chain added using method {method}")
             
         # Return how many FX were added
-        return fx_count_after - fx_count_before
+        fx_added = fx_count_after - fx_count_before
+        
+        # Rescan track to update FX objects if FX were added
+        if fx_added > 0:
+            self._scan_track()
+        
+        return fx_added
         
     # Add alias for backward compatibility
     add_fx_chain = add_fxchain
@@ -384,6 +446,8 @@ class ReaTrack:
             fx_index = self._client.call_reascript_function("TrackFX_AddByName", self.id, fx_name, False, -1)
             if fx_index >= 0:
                 logger.info(f"Added FX '{fx_name}' to track {self._index + 1} at index {fx_index}")
+                # Rescan track to update FX objects
+                self._scan_track()
                 return True
             else:
                 logger.warning(f"Failed to add FX '{fx_name}' to track {self._index + 1}")
@@ -527,3 +591,43 @@ class ReaTrack:
         except Exception as e:
             logger.error(f"Failed to load FX chain: {e}")
             return False
+    
+    # FX object access methods
+    def get_fx(self, fx_identifier: Union[int, str]) -> Optional['ReaFX']:
+        """Get ReaFX object by index or snake_case name."""
+        return self._fx_objects.get(fx_identifier)
+    
+    def get_fx_by_name(self, name: str) -> Optional['ReaFX']:
+        """Get ReaFX object by original name or snake_case name."""
+        # Try snake_case first
+        snake_name = self._make_snake_name(name)
+        fx = self._fx_objects.get(snake_name)
+        if fx:
+            return fx
+        
+        # Try exact match with original name
+        for fx in self._fx_objects.values():
+            if hasattr(fx, 'name') and fx.name == name:
+                return fx
+        
+        return None
+    
+    def list_fx(self) -> List['ReaFX']:
+        """Get list of all ReaFX objects on this track."""
+        # Return only indexed FX objects (not the string keys)
+        return [fx for key, fx in self._fx_objects.items() if isinstance(key, int)]
+    
+    def rescan_fx(self):
+        """Manually trigger FX rescan."""
+        self._scan_track()
+    
+    def __getattr__(self, name: str):
+        """Allow accessing FX by snake_case name as attributes."""
+        if name.startswith('_'):
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+        
+        fx = self._fx_objects.get(name)
+        if fx:
+            return fx
+        
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
