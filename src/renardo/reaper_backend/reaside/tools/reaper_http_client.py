@@ -26,17 +26,7 @@ class ReaperClient:
     """Client for communicating with REAPER via HTTP API."""
 
     def __init__(self, host="localhost", port=8080, timeout=2.0):
-        """Initialize the REAPER client.
-        
-        Parameters
-        ----------
-        host : str
-            The hostname or IP address where REAPER is running.
-        port : int
-            The port number for REAPER's web interface.
-        timeout : float
-            Timeout in seconds for HTTP requests.
-        """
+        """Initialize the REAPER client."""
         self.host = host
         self.port = port
         self.timeout = timeout
@@ -44,25 +34,7 @@ class ReaperClient:
         self._session_id = str(int(time.time()))
         
     def _make_request(self, url, params=None):
-        """Make an HTTP request to REAPER.
-        
-        Parameters
-        ----------
-        url : str
-            The URL to request.
-        params : dict, optional
-            Optional parameters to include in the request.
-            
-        Returns
-        -------
-        str
-            The response text.
-            
-        Raises
-        ------
-        ReaperHTTPError
-            If the HTTP request fails.
-        """
+        """Make an HTTP request to REAPER."""
         try:
             if params:
                 # Convert params to URL-encoded query string
@@ -80,23 +52,7 @@ class ReaperClient:
             raise ReaperHTTPError(f"Error communicating with REAPER: {str(e)}")
     
     def perform_action(self, action_id):
-        """Perform a REAPER action by ID.
-        
-        Parameters
-        ----------
-        action_id : int or str
-            The action ID to perform.
-            
-        Returns
-        -------
-        bool
-            True if the action was performed successfully.
-            
-        Raises
-        ------
-        ReaperHTTPError
-            If the HTTP request fails.
-        """
+        """Perform a REAPER action by ID."""
         url = f"{self.base_url}{action_id}"
         try:
             self._make_request(url)
@@ -106,25 +62,7 @@ class ReaperClient:
             return False
     
     def get_ext_state(self, section, key):
-        """Get a value from REAPER's ExtState.
-        
-        Parameters
-        ----------
-        section : str
-            The section name.
-        key : str
-            The key name.
-            
-        Returns
-        -------
-        str or dict
-            The value from ExtState, parsed as JSON if possible.
-            
-        Raises
-        ------
-        ReaperHTTPError
-            If the HTTP request fails.
-        """
+        """Get a value from REAPER's ExtState."""
         url = f"{self.base_url}GET/EXTSTATE/{section}/{key}"
         try:
             response = self._make_request(url)
@@ -146,27 +84,7 @@ class ReaperClient:
             raise
     
     def set_ext_state(self, section, key, value):
-        """Set a value in REAPER's ExtState.
-        
-        Parameters
-        ----------
-        section : str
-            The section name.
-        key : str
-            The key name.
-        value : str, dict, or list
-            The value to set. Objects will be converted to JSON.
-            
-        Returns
-        -------
-        bool
-            True if the value was set successfully.
-            
-        Raises
-        ------
-        ReaperHTTPError
-            If the HTTP request fails.
-        """
+        """Set a value in REAPER's ExtState."""
         # Convert value to JSON if it's an object
         if isinstance(value, (dict, list)):
             value = json.dumps(value)
@@ -183,15 +101,7 @@ class ReaperClient:
             return False
     
     def activate_reaside_server(self):
-        """Activate the reaside server if it's not running.
-        
-        Raises
-        ------
-        ReaperAPIError
-            If the server activation fails.
-        ReaperHTTPError
-            If the HTTP request fails.
-        """
+        """Activate the reaside server if it's not running."""
         try:
             # Get the action ID for the reaside server
             action_id = self.get_ext_state("reaside", "activate_reaside_server")
@@ -220,13 +130,7 @@ class ReaperClient:
             raise ReaperAPIError(f"Could not activate reaside server: {str(e)}")
 
     def is_server_running(self):
-        """Check if the reaside server is running.
-        
-        Returns
-        -------
-        bool
-            True if the server is running.
-        """
+        """Check if the reaside server is running."""
         try:
             # Check for instance lock timestamp
             instance_running = self.get_ext_state("reaside", "instance_running")
@@ -245,30 +149,7 @@ class ReaperClient:
             return False
 
     def call_reascript_function(self, function_name, *args):
-        """Call a ReaScript function via the HTTP API.
-        
-        This method stores the function call details in ExtState,
-        triggers the ReaScript execution action, and retrieves the result.
-        
-        Parameters
-        ----------
-        function_name : str
-            The name of the ReaScript function to call.
-        *args
-            Arguments to pass to the function.
-            
-        Returns
-        -------
-        Any
-            The result of the function call.
-            
-        Raises
-        ------
-        ReaperAPIError
-            If the function call fails.
-        ReaperHTTPError
-            If the HTTP request fails.
-        """
+        """Call a ReaScript function via the HTTP API."""
         # First check if REAPER is accessible
         try:
             self._make_request(self.base_url)
@@ -342,13 +223,7 @@ class ReaperClient:
         return result
     
     def ping(self):
-        """Check if REAPER is accessible.
-        
-        Returns
-        -------
-        bool
-            True if REAPER is accessible.
-        """
+        """Check if REAPER is accessible."""
         try:
             self._make_request(self.base_url)
             return True
@@ -356,20 +231,7 @@ class ReaperClient:
             return False
     
     def get_reaper_version(self):
-        """Get REAPER version.
-        
-        Returns
-        -------
-        str
-            The REAPER version string.
-            
-        Raises
-        ------
-        ReaperHTTPError
-            If the HTTP request fails.
-        ReaperAPIError
-            If the API call fails.
-        """
+        """Get REAPER version."""
         try:
             # First try to get from ExtState (faster)
             version = self.get_ext_state("reaside", "version")

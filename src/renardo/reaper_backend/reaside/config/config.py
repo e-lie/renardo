@@ -121,17 +121,7 @@ def is_web_interface_enabled(port=WEB_INTERFACE_PORT):
 
 
 def add_osc_device(resource_path, send_port=OSC_SEND_PORT, receive_port=OSC_RECEIVE_PORT):
-    """Add OSC device configuration to REAPER.
-    
-    Parameters
-    ----------
-    resource_path : str
-        Path to REAPER resource directory.
-    send_port : int, optional
-        Port for sending OSC messages to REAPER.
-    receive_port : int, optional
-        Port for receiving OSC messages from REAPER.
-    """
+    """Add OSC device configuration to REAPER."""
     config = Config(os.path.join(resource_path, "reaper.ini"))
     csurf_count = int(config["reaper"].get("csurf_cnt", "0"))
     
@@ -161,22 +151,7 @@ def add_osc_device(resource_path, send_port=OSC_SEND_PORT, receive_port=OSC_RECE
 
 
 def osc_device_exists(resource_path, send_port=OSC_SEND_PORT, receive_port=OSC_RECEIVE_PORT):
-    """Check if OSC device exists in REAPER configuration.
-    
-    Parameters
-    ----------
-    resource_path : str
-        Path to REAPER resource directory.
-    send_port : int, optional
-        Port for sending OSC messages to REAPER.
-    receive_port : int, optional
-        Port for receiving OSC messages from REAPER.
-        
-    Returns
-    -------
-    bool
-        True if OSC device exists with the specified ports.
-    """
+    """Check if OSC device exists in REAPER configuration."""
     config = Config(os.path.join(resource_path, "reaper.ini"))
     csurf_count = int(config["reaper"].get("csurf_cnt", "0"))
     
@@ -196,23 +171,7 @@ def osc_device_exists(resource_path, send_port=OSC_SEND_PORT, receive_port=OSC_R
 
 
 def add_reascript_lua(resource_path, script_path):
-    """Add Lua ReaScript to *Actions* list in REAPER.
-
-    Works by manually editing ``reaper-kb.ini`` configuration file.
-    Only use this function at setup time to configure REAPER.
-
-    Parameters
-    ----------
-    resource_path : str
-        Path to REAPER resource directory.
-    script_path : str
-        Path to Lua script that will be added.
-
-    Returns
-    -------
-    str
-        Action name for the newly added ReaScript.
-    """
+    """Add Lua ReaScript to *Actions* list in REAPER."""
     script_path = os.path.abspath(script_path)
     if not os.path.exists(script_path):
         raise FileNotFoundError(script_path)
@@ -245,15 +204,7 @@ def add_reascript_lua(resource_path, script_path):
 
 
 def add_web_interface(resource_path, port=WEB_INTERFACE_PORT):
-    """Add a REAPER Web Interface at a specified port.
-
-    Parameters
-    ----------
-    resource_path : str
-        Path to REAPER resource directory.
-    port : int, optional
-        Web interface port. Default=8080.
-    """
+    """Add a REAPER Web Interface at a specified port."""
     if web_interface_exists(resource_path, port):
         return
     
@@ -307,27 +258,7 @@ def web_interface_exists(resource_path, port=WEB_INTERFACE_PORT):
 
 
 def configure_reaper_lua(resource_path=None, install_path=None):
-    """Configure REAPER for reaside using Lua ReaScript.
-    
-    Parameters
-    ----------
-    resource_path : str, optional
-        Path to REAPER resource directory. If not provided, it will be auto-detected.
-    install_path : str, optional
-        Path to reaside ReaScripts. If not provided, it will use the bundled scripts.
-        
-    Returns
-    -------
-    bool
-        True if configuration was successful.
-        
-    Raises
-    ------
-    FileNotFoundError
-        If REAPER resource path couldn't be found or scripts couldn't be installed.
-    RuntimeError
-        If configuration failed.
-    """
+    """Configure REAPER for reaside using Lua ReaScript."""
     if not resource_path:
         resource_path = get_resource_path()
     
@@ -397,13 +328,7 @@ def configure_reaper_lua(resource_path=None, install_path=None):
 
 
 def check_reaper_configuration():
-    """Check if REAPER is properly configured for reaside.
-    
-    Returns
-    -------
-    bool
-        True if REAPER is properly configured.
-    """
+    """Check if REAPER is properly configured for reaside."""
     # Check if web interface is enabled
     if not is_web_interface_enabled():
         return False

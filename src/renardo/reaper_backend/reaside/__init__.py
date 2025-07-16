@@ -1,14 +1,6 @@
-"""
-reaside - Lua-based bootstrapping for REAPER DAW control
-
-This package provides a way to control REAPER from external Python scripts
-without requiring the Python ReaScript API to be enabled in REAPER.
-It uses the HTTP API and a Lua script to bridge the gap, providing access
-to REAPER's functionality through a simple API.
-"""
+"""reaside - Lua-based bootstrapping for REAPER DAW control."""
 
 from .config.config import WEB_INTERFACE_PORT
-from ._version import __version__
 
 import os
 import time
@@ -18,31 +10,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Export main functions
-__all__ = ['configure_reaper', 'connect', 'init_api_bridge', '__version__']
-
 def configure_reaper():
-    """
-    Configure REAPER to allow reaside connections using Lua ReaScript.
-    
-    This function:
-    1. Enables a web interface in REAPER if not already enabled
-    2. Installs the Lua script to REAPER's Scripts directory
-    3. Adds the script to REAPER's action list
-    4. Sets up the necessary external state values
-    
-    Returns
-    -------
-    bool
-        True if configuration was successful.
-        
-    Raises
-    ------
-    FileNotFoundError
-        If REAPER resource path couldn't be found or scripts couldn't be installed.
-    RuntimeError
-        If configuration failed.
-    """
+    """Configure REAPER to allow reaside connections using Lua ReaScript."""
     from .config.config import configure_reaper_lua, get_resource_path
     
     # Get REAPER resource path
@@ -56,7 +25,6 @@ def configure_reaper():
     # Configure REAPER
     try:
         configure_reaper_lua(resource_path)
-        logger.info(f"reaside v{__version__} configured successfully!")
         logger.info("Please restart REAPER for the changes to take effect.")
         return True
     except Exception as e:
@@ -64,36 +32,7 @@ def configure_reaper():
         raise RuntimeError(f"Failed to configure REAPER: {str(e)}")
 
 def init_api_bridge(host="localhost", port=WEB_INTERFACE_PORT, auto_launch=True):
-    """
-    Initialize reaside by launching the ReaScript API bridge in REAPER.
-    
-    This function:
-    1. Connects to REAPER's web interface
-    2. Checks if the API bridge is already running by querying ExtState
-    3. If not running and auto_launch is True, launches the API bridge script
-    4. Returns a boolean indicating whether initialization was successful
-    
-    Parameters
-    ----------
-    host : str, optional
-        Hostname or IP address of the computer running REAPER. Default="localhost".
-    port : int, optional
-        Port of REAPER's web interface. Default=8080.
-    auto_launch : bool, optional
-        Whether to automatically launch the API bridge if not running. Default=True.
-        
-    Returns
-    -------
-    bool
-        True if the API bridge is running and ready.
-        
-    Raises
-    ------
-    ConnectionError
-        If REAPER couldn't be found or connection failed.
-    RuntimeError
-        If reaside isn't properly configured in REAPER.
-    """
+    """Initialize reaside by launching the ReaScript API bridge in REAPER."""
     from .tools.reaper_http_client import ReaperClient as HTTPClient, ReaperNotFoundError, ReaperAPIError
     from .config.config import check_reaper_configuration
     import time
@@ -188,35 +127,7 @@ def init_api_bridge(host="localhost", port=WEB_INTERFACE_PORT, auto_launch=True)
 
 
 def connect(host="localhost", port=WEB_INTERFACE_PORT, auto_init=True):
-    """
-    Connect to REAPER and return a client object.
-    
-    This function:
-    1. Tries to connect to REAPER via its web interface
-    2. If auto_init is True, attempts to initialize the API bridge if not running
-    3. If successful, returns a Reaper object that provides API access
-    
-    Parameters
-    ----------
-    host : str, optional
-        Hostname or IP address of the computer running REAPER. Default="localhost".
-    port : int, optional
-        Port of REAPER's web interface. Default=8080.
-    auto_init : bool, optional
-        Whether to automatically initialize the API bridge if not running. Default=True.
-        
-    Returns
-    -------
-    reaper : Reaper
-        Object providing access to REAPER's API.
-        
-    Raises
-    ------
-    ConnectionError
-        If REAPER couldn't be found or connection failed.
-    RuntimeError
-        If reaside isn't properly configured in REAPER.
-    """
+    """Connect to REAPER and return a client object."""
     from .tools.reaper_client import ReaperClient
     from .tools.reaper_http_client import ReaperNotFoundError, ReaperAPIError
     from .core.reaper import Reaper
