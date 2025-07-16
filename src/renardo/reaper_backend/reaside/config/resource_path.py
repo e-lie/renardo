@@ -8,32 +8,7 @@ import warnings
 
 
 def get_resource_path(detect_portable_install=True):
-    """Return path to REAPER resource directory.
-
-    Parameters
-    ----------
-    detect_portable_install : bool, optional
-        If ``True``, this function will look for a currently running
-        REAPER process and detect whether it is a portable install.
-        If ``False``, configuration files will be looked for in the
-        default locations only, which may result in a
-        ``FileNotFoundError`` if no global REAPER install exists.
-
-    Returns
-    -------
-    path : str
-        Path to REAPER resource directory (contains reaper.ini).
-
-    Raises
-    ------
-    RuntimeError
-        When ``detect_portable_install=True`` and zero or more than one
-        REAPER instances are currently running.
-    FileNotFoundError
-        When ``detect_portable_install=False`` but no global
-        configuration file can be found (which means REAPER has only
-        been installed as portable.)
-    """
+    """Return path to REAPER resource directory."""
     system = platform.system()
     # First look in hard-coded paths
     hardcoded_paths = {

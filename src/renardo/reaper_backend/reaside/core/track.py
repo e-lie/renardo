@@ -11,15 +11,7 @@ class Track:
     """REAPER track."""
     
     def __init__(self, project, index):
-        """Initialize the Track object.
-        
-        Parameters
-        ----------
-        project : Project
-            Project containing this track.
-        index : int
-            Track index (0-based).
-        """
+        """Initialize the Track object."""
         self._project = project
         self._reaper = project._reaper
         self._client = project._client
@@ -28,38 +20,18 @@ class Track:
         
     @property
     def index(self) -> int:
-        """Get track index.
-        
-        Returns
-        -------
-        int
-            Track index (0-based).
-        """
+        """Get track index."""
         return self._index
     
     @property
     def id(self):
-        """Get track ID (MediaTrack pointer).
-        
-        This is used internally for API calls.
-        
-        Returns
-        -------
-        str
-            Track pointer ID.
-        """
+        """Get track ID (MediaTrack pointer)."""
         # Don't cache the track ID since it's now a pointer ID that's managed by Lua script
         return self._client.call_reascript_function("GetTrack", self._project.index, self._index)
     
     @property
     def name(self) -> str:
-        """Get track name.
-        
-        Returns
-        -------
-        str
-            Track name.
-        """
+        """Get track name."""
         # GetTrackName returns (retval, name)
         result = self._client.call_reascript_function("GetTrackName", self.id, "", 1024)
         if isinstance(result, tuple) and len(result) >= 2:
@@ -71,138 +43,66 @@ class Track:
     
     @name.setter
     def name(self, value: str) -> None:
-        """Set track name.
-        
-        Parameters
-        ----------
-        value : str
-            New track name.
-        """
+        """Set track name."""
         self._client.call_reascript_function("GetSetMediaTrackInfo_String", self.id, "P_NAME", value, True)
     
     @property
     def is_selected(self) -> bool:
-        """Check if track is selected.
-        
-        Returns
-        -------
-        bool
-            True if track is selected.
-        """
+        """Check if track is selected."""
         return bool(self._client.call_reascript_function("GetMediaTrackInfo_Value", self.id, "I_SELECTED"))
     
     @is_selected.setter
     def is_selected(self, value: bool) -> None:
-        """Set track selection state.
-        
-        Parameters
-        ----------
-        value : bool
-            True to select, False to deselect.
-        """
+        """Set track selection state."""
         self._client.call_reascript_function("SetTrackSelected", self.id, value)
     
     @property
     def is_muted(self) -> bool:
-        """Check if track is muted.
-        
-        Returns
-        -------
-        bool
-            True if track is muted.
-        """
+        """Check if track is muted."""
         return bool(self._client.call_reascript_function("GetMediaTrackInfo_Value", self.id, "B_MUTE"))
     
     @is_muted.setter
     def is_muted(self, value: bool) -> None:
-        """Set track mute state.
-        
-        Parameters
-        ----------
-        value : bool
-            True to mute, False to unmute.
-        """
+        """Set track mute state."""
         # Use unified client for better performance with OSC if available
         self._client.set_track_mute(self._index + 1, value)  # Convert to 1-based
     
     @property
     def is_soloed(self) -> bool:
-        """Check if track is soloed.
-        
-        Returns
-        -------
-        bool
-            True if track is soloed.
-        """
+        """Check if track is soloed."""
         return bool(self._client.call_reascript_function("GetMediaTrackInfo_Value", self.id, "I_SOLO"))
     
     @is_soloed.setter
     def is_soloed(self, value: bool) -> None:
-        """Set track solo state.
-        
-        Parameters
-        ----------
-        value : bool
-            True to solo, False to unsolo.
-        """
+        """Set track solo state."""
         # Use unified client for better performance with OSC if available
         self._client.set_track_solo(self._index + 1, value)  # Convert to 1-based
     
     @property
     def volume(self) -> float:
-        """Get track volume.
-        
-        Returns
-        -------
-        float
-            Track volume (0.0 to 1.0, where 1.0 is 0 dB).
-        """
+        """Get track volume."""
         return self._client.call_reascript_function("GetMediaTrackInfo_Value", self.id, "D_VOL")
     
     @volume.setter
     def volume(self, value: float) -> None:
-        """Set track volume.
-        
-        Parameters
-        ----------
-        value : float
-            Track volume (0.0 to 1.0, where 1.0 is 0 dB).
-        """
+        """Set track volume."""
         # Use unified client for better performance with OSC if available
         self._client.set_track_volume(self._index + 1, value)  # Convert to 1-based
     
     @property
     def pan(self) -> float:
-        """Get track pan.
-        
-        Returns
-        -------
-        float
-            Track pan (-1.0 to 1.0, where 0.0 is centered).
-        """
+        """Get track pan."""
         return self._client.call_reascript_function("GetMediaTrackInfo_Value", self.id, "D_PAN")
     
     @pan.setter
     def pan(self, value: float) -> None:
-        """Set track pan.
-        
-        Parameters
-        ----------
-        value : float
-            Track pan (-1.0 to 1.0, where 0.0 is centered).
-        """
+        """Set track pan."""
         # Use unified client for better performance with OSC if available
         self._client.set_track_pan(self._index + 1, value)  # Convert to 1-based
     
     @property
     def items(self) -> List:
-        """Get list of all items on this track.
-        
-        Returns
-        -------
-        list of Item
-            List of all items on this track.
-        """
+        """Get list of all items on this track."""
         from .item import Item
         
         items = []
@@ -217,23 +117,7 @@ class Track:
         return items
     
     def get_item(self, index: int):
-        """Get item by index.
-        
-        Parameters
-        ----------
-        index : int
-            Item index (0-based).
-            
-        Returns
-        -------
-        Item
-            Item object.
-            
-        Raises
-        ------
-        ValueError
-            If item with specified index doesn't exist.
-        """
+        """Get item by index."""
         from .item import Item
         
         # Check if item exists
@@ -248,20 +132,7 @@ class Track:
         return self._items[index]
     
     def add_item(self, position: float = 0.0, length: float = 1.0):
-        """Add a new item to the track.
-        
-        Parameters
-        ----------
-        position : float, optional
-            Item position in seconds. Default=0.0.
-        length : float, optional
-            Item length in seconds. Default=1.0.
-            
-        Returns
-        -------
-        Item
-            New item object.
-        """
+        """Add a new item to the track."""
         from .item import Item
         
         # Create new item
@@ -283,20 +154,7 @@ class Track:
         return item
     
     def add_midi_item(self, position: float = 0.0, length: float = 1.0):
-        """Add a new MIDI item to the track.
-        
-        Parameters
-        ----------
-        position : float, optional
-            Item position in seconds. Default=0.0.
-        length : float, optional
-            Item length in seconds. Default=1.0.
-            
-        Returns
-        -------
-        Item
-            New MIDI item object.
-        """
+        """Add a new MIDI item to the track."""
         from .item import Item
         
         # Create new MIDI item
@@ -318,20 +176,7 @@ class Track:
         return item
     
     def add_audio_item(self, file_path: str, position: float = 0.0):
-        """Add a new audio item to the track.
-        
-        Parameters
-        ----------
-        file_path : str
-            Path to audio file.
-        position : float, optional
-            Item position in seconds. Default=0.0.
-            
-        Returns
-        -------
-        Item
-            New audio item object.
-        """
+        """Add a new audio item to the track."""
         from .item import Item
         
         # Create new audio item
@@ -357,29 +202,12 @@ class Track:
         return item
     
     def delete(self) -> bool:
-        """Delete this track.
-        
-        Returns
-        -------
-        bool
-            True if deletion was successful.
-        """
+        """Delete this track."""
         self.is_selected = True
         return self._reaper.perform_action(40005)  # Delete track
         
     def add_chunk_to_track(self, chunk: str) -> bool:
-        """Add a chunk to the track.
-        
-        Parameters
-        ----------
-        chunk : str
-            The REAPER track state chunk string to apply.
-            
-        Returns
-        -------
-        bool
-            True if operation was successful.
-        """
+        """Add a chunk to the track."""
         logger.debug(f"Adding chunk to track {self.index}")
         
         # Using a script-based approach to avoid MediaTrack issues
@@ -410,19 +238,7 @@ class Track:
         return result_str == "true" or result_str == "1"
     
     def add_fxchain(self, chain_path_or_name: Union[str, Path]) -> int:
-        """Add an FX chain to the track.
-        
-        Parameters
-        ----------
-        chain_path_or_name : str or Path
-            Either the path to a REAPER FX chain file (.RfxChain) or the name of a chain
-            to search for in REAPER's FX chain directories.
-            
-        Returns
-        -------
-        int
-            Number of effects added.
-        """
+        """Add an FX chain to the track."""
         chain_path = None
         
         # Convert to Path object if string represents an existing file path
@@ -562,18 +378,7 @@ class Track:
     add_fx_chain = add_fxchain
     
     def add_fx(self, fx_name: str) -> bool:
-        """Add a single FX to the track.
-        
-        Parameters
-        ----------
-        fx_name : str
-            Name of the FX to add (e.g., "ReaSynth", "ReaEQ").
-            
-        Returns
-        -------
-        bool
-            True if FX was added successfully.
-        """
+        """Add a single FX to the track."""
         try:
             # Use TrackFX_AddByName to add the FX
             fx_index = self._client.call_reascript_function("TrackFX_AddByName", self.id, fx_name, False, -1)
@@ -589,29 +394,11 @@ class Track:
     
     # MIDI note methods
     def send_note_on(self, pitch: int, velocity: int = 100, channel: int = 0):
-        """Send MIDI note on to this track.
-        
-        Parameters
-        ----------
-        pitch : int
-            MIDI pitch (0-127)
-        velocity : int, optional
-            MIDI velocity (0-127), default 100
-        channel : int, optional
-            MIDI channel (0-15), default 0
-        """
+        """Send MIDI note on to this track."""
         return self._client.send_note_on(self._index + 1, pitch, velocity, channel)
     
     def send_note_off(self, pitch: int, channel: int = 0):
-        """Send MIDI note off to this track.
-        
-        Parameters
-        ----------
-        pitch : int
-            MIDI pitch (0-127)
-        channel : int, optional
-            MIDI channel (0-15), default 0
-        """
+        """Send MIDI note off to this track."""
         return self._client.send_note_off(self._index + 1, pitch, channel)
     
     def send_all_notes_off(self):
@@ -619,19 +406,7 @@ class Track:
         return self._client.send_all_notes_off(self._index + 1)
     
     def play_note(self, pitch: int, velocity: int = 100, duration: float = 0.5, channel: int = 0):
-        """Play a note for a specific duration.
-        
-        Parameters
-        ----------
-        pitch : int
-            MIDI pitch (0-127)
-        velocity : int, optional
-            MIDI velocity (0-127), default 100
-        duration : float, optional
-            Note duration in seconds, default 0.5
-        channel : int, optional
-            MIDI channel (0-15), default 0
-        """
+        """Play a note for a specific duration."""
         # Send note on
         self.send_note_on(pitch, velocity, channel)
         

@@ -23,19 +23,7 @@ class ReaperOSCClient:
     """Client for communicating with REAPER via OSC."""
 
     def __init__(self, host="localhost", send_port=8000, receive_port=8001, timeout=2.0):
-        """Initialize the REAPER OSC client.
-        
-        Parameters
-        ----------
-        host : str
-            The hostname or IP address where REAPER is running.
-        send_port : int
-            The port number to send OSC messages to REAPER.
-        receive_port : int
-            The port number to receive OSC messages from REAPER.
-        timeout : float
-            Timeout in seconds for OSC operations.
-        """
+        """Initialize the REAPER OSC client."""
         if not OSC_AVAILABLE:
             raise ImportError("python-osc library is required for OSC functionality")
         
@@ -116,15 +104,7 @@ class ReaperOSCClient:
         logger.info("OSC server stopped")
     
     def send_message(self, address: str, *args):
-        """Send an OSC message to REAPER.
-        
-        Parameters
-        ----------
-        address : str
-            The OSC address pattern.
-        *args
-            Arguments to send with the message.
-        """
+        """Send an OSC message to REAPER."""
         try:
             self.client.send_message(address, args)
             logger.debug(f"Sent OSC message: {address} {args}")
@@ -133,24 +113,7 @@ class ReaperOSCClient:
             raise ReaperOSCError(f"Failed to send OSC message: {e}")
     
     def send_message_with_response(self, address: str, response_key: str, *args, timeout: Optional[float] = None) -> Any:
-        """Send an OSC message and wait for a response.
-        
-        Parameters
-        ----------
-        address : str
-            The OSC address pattern.
-        response_key : str
-            The key to identify the response.
-        *args
-            Arguments to send with the message.
-        timeout : float, optional
-            Timeout for waiting for response. Uses instance timeout if not provided.
-            
-        Returns
-        -------
-        Any
-            The response value.
-        """
+        """Send an OSC message and wait for a response."""
         if timeout is None:
             timeout = self.timeout
         
@@ -168,15 +131,7 @@ class ReaperOSCClient:
             raise ReaperOSCError(f"Timeout waiting for response to {address}")
     
     def register_callback(self, address: str, callback: Callable):
-        """Register a callback for incoming OSC messages.
-        
-        Parameters
-        ----------
-        address : str
-            The OSC address pattern to listen for.
-        callback : Callable
-            The callback function to call when a message is received.
-        """
+        """Register a callback for incoming OSC messages."""
         if address not in self.callbacks:
             self.callbacks[address] = []
             # Map the address to our callback handler
@@ -185,15 +140,7 @@ class ReaperOSCClient:
         self.callbacks[address].append(callback)
     
     def unregister_callback(self, address: str, callback: Callable):
-        """Unregister a callback for incoming OSC messages.
-        
-        Parameters
-        ----------
-        address : str
-            The OSC address pattern.
-        callback : Callable
-            The callback function to remove.
-        """
+        """Unregister a callback for incoming OSC messages."""
         if address in self.callbacks:
             try:
                 self.callbacks[address].remove(callback)
@@ -277,123 +224,49 @@ class ReaperOSCClient:
         self.send_message("/transport/record")
     
     def goto_time(self, time_seconds: float):
-        """Go to a specific time position.
-        
-        Parameters
-        ----------
-        time_seconds : float
-            Time position in seconds.
-        """
+        """Go to a specific time position."""
         self.send_message("/time/goto", time_seconds)
     
     def goto_beat(self, beat: float):
-        """Go to a specific beat position.
-        
-        Parameters
-        ----------
-        beat : float
-            Beat position.
-        """
+        """Go to a specific beat position."""
         self.send_message("/beat/goto", beat)
     
     # Track control methods
     def set_track_volume(self, track_id: int, volume: float):
-        """Set track volume.
-        
-        Parameters
-        ----------
-        track_id : int
-            Track ID (1-based).
-        volume : float
-            Volume level (0.0 to 1.0).
-        """
+        """Set track volume."""
         self.send_message(f"/track/{track_id}/volume", volume)
     
     def set_track_pan(self, track_id: int, pan: float):
-        """Set track pan.
-        
-        Parameters
-        ----------
-        track_id : int
-            Track ID (1-based).
-        pan : float
-            Pan position (-1.0 to 1.0).
-        """
+        """Set track pan."""
         self.send_message(f"/track/{track_id}/pan", pan)
     
     def set_track_mute(self, track_id: int, muted: bool):
-        """Set track mute state.
-        
-        Parameters
-        ----------
-        track_id : int
-            Track ID (1-based).
-        muted : bool
-            True to mute, False to unmute.
-        """
+        """Set track mute state."""
         self.send_message(f"/track/{track_id}/mute", 1 if muted else 0)
     
     def set_track_solo(self, track_id: int, solo: bool):
-        """Set track solo state.
-        
-        Parameters
-        ----------
-        track_id : int
-            Track ID (1-based).
-        solo : bool
-            True to solo, False to unsolo.
-        """
+        """Set track solo state."""
         self.send_message(f"/track/{track_id}/solo", 1 if solo else 0)
     
     # Query methods
     def get_track_count(self) -> int:
-        """Get the number of tracks.
-        
-        Returns
-        -------
-        int
-            Number of tracks.
-        """
+        """Get the number of tracks."""
         return self.send_message_with_response("/query/track_count", "track_count")
     
     def get_play_state(self) -> int:
-        """Get the current play state.
-        
-        Returns
-        -------
-        int
-            Play state (0=stopped, 1=playing, 2=paused, 5=recording, 6=record paused).
-        """
+        """Get the current play state."""
         return self.send_message_with_response("/query/play_state", "play_state")
     
     def get_time_position(self) -> float:
-        """Get the current time position.
-        
-        Returns
-        -------
-        float
-            Time position in seconds.
-        """
+        """Get the current time position."""
         return self.send_message_with_response("/query/time_position", "time_position")
     
     def get_beat_position(self) -> float:
-        """Get the current beat position.
-        
-        Returns
-        -------
-        float
-            Beat position.
-        """
+        """Get the current beat position."""
         return self.send_message_with_response("/query/beat_position", "beat_position")
     
     def ping(self) -> bool:
-        """Check if REAPER is responding to OSC messages.
-        
-        Returns
-        -------
-        bool
-            True if REAPER is responding.
-        """
+        """Check if REAPER is responding to OSC messages."""
         try:
             self.send_message_with_response("/ping", "pong", timeout=1.0)
             return True
