@@ -19,7 +19,6 @@ This directory contains comprehensive tests for the reaside module, organized in
 - Project name getting/setting
 - Track count retrieval
 - Master track access
-- Track access bounds checking
 
 #### 3. Basic Track Operations (`test_track_basic.py`)
 - Track creation and deletion
@@ -27,35 +26,19 @@ This directory contains comprehensive tests for the reaside module, organized in
 - Track selection, mute, solo states
 - Track volume and pan controls
 
-#### 4. Track Items (`test_track_items.py`)
-- Adding audio and MIDI items
-- Item positioning and length
-- Item retrieval by index
-- Item cache consistency
-
-#### 5. Track MIDI (`test_track_midi.py`)
-- MIDI note on/off operations
-- Note velocity and channel handling
-- Note duration and timing
-- Multi-track MIDI support
-
-#### 6. Basic FX Operations (`test_fx_basic.py`)
+#### 4. Basic FX Operations (`test_fx_basic.py`)
 - Adding single and multiple FX
 - FX count and name retrieval
 - FX enabled state checking
-- Invalid FX handling
 
-#### 7. FX Objects (`test_fx_objects.py`)
+#### 5. FX Objects (`test_fx_objects.py`)
 - ReaFX object creation
 - Parameter management
 - FX enable/disable operations
-- Multiple FX instances
 
-#### 8. FX Chains (`test_fx_chains.py`)
+#### 6. FX Chains (`test_fx_chains.py`)
 - FX chain save/load functionality
-- File handling and error cases
-- Chain file validation
-- Path type handling
+- Basic file handling
 
 ## Key Fixtures
 
@@ -121,4 +104,5 @@ uv run pytest --cov=renardo.reaper_backend.reaside tests/reaside/
 - All tests use a single REAPER session to improve performance
 - Tests are designed to be independent and can run in any order
 - Temporary files are automatically cleaned up after tests
+- Tests focus on core functionality without complex edge cases
 - Some FX chain functionality is expected to have limited implementation
