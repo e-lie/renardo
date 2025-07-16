@@ -272,7 +272,7 @@ def stop_reaper():
                 if check_process.stdout.strip():
                     # Kill REAPER process
                     subprocess.run(
-                        ["pkill", "-9", "REAPER"],
+                        ["pkill", "REAPER"],
                         capture_output=True,
                         check=False
                     )
@@ -316,27 +316,27 @@ def stop_reaper():
                 )
                 
                 for line in ps_result.stdout.splitlines():
-                    if "/reaper" in line and "oom_reaper" not in line:
+                    if "/reaper" in line and "oom_reaper" not in line and "python" not in line and ".py" not in line:
                         reaper_running = True
                         break
                 
                 if reaper_running:
                     # Kill REAPER processes
                     subprocess.run(
-                        ["pkill", "-9", "-x", "reaper"],
+                        ["pkill", "-x", "reaper"],
                         capture_output=True,
                         check=False
                     )
                     
                     # Also try to kill any REAPER with a path
                     for line in ps_result.stdout.splitlines():
-                        if "/reaper" in line and "oom_reaper" not in line:
+                        if "/reaper" in line and "oom_reaper" not in line and "python" not in line and ".py" not in line:
                             parts = line.split()
                             if len(parts) > 1:
                                 try:
                                     pid = int(parts[1])
                                     subprocess.run(
-                                        ["kill", "-9", str(pid)],
+                                        ["kill", str(pid)],
                                         capture_output=True,
                                         check=False
                                     )
@@ -364,7 +364,7 @@ def stop_reaper():
                     
                     # Check if there are any remaining REAPER processes
                     for line in verify_ps.stdout.splitlines():
-                        if "/reaper" in line and "oom_reaper" not in line:
+                        if "/reaper" in line and "oom_reaper" not in line and "python" not in line and ".py" not in line:
                             still_running = True
                             break
                     
@@ -433,7 +433,7 @@ def is_reaper_running():
                 )
                 
                 for line in ps_result.stdout.splitlines():
-                    if "/reaper" in line and "oom_reaper" not in line:
+                    if "/reaper" in line and "oom_reaper" not in line and "python" not in line and ".py" not in line:
                         reaper_running = True
                         break
             
