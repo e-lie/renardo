@@ -7,7 +7,7 @@ from typing import Optional, List, Union, Dict, Any
 
 logger = logging.getLogger(__name__)
 
-class Track:
+class ReaTrack:
     """REAPER track."""
     
     def __init__(self, project, index):
@@ -103,14 +103,14 @@ class Track:
     @property
     def items(self) -> List:
         """Get list of all items on this track."""
-        from .item import Item
+        from .item import ReaItem
         
         items = []
         count = self._client.call_reascript_function("GetTrackNumMediaItems", self.id)
         
         for i in range(count):
             if i not in self._items:
-                self._items[i] = Item(self, i)
+                self._items[i] = ReaItem(self, i)
                 
             items.append(self._items[i])
             
@@ -118,7 +118,7 @@ class Track:
     
     def get_item(self, index: int):
         """Get item by index."""
-        from .item import Item
+        from .item import ReaItem
         
         # Check if item exists
         count = self._client.call_reascript_function("GetTrackNumMediaItems", self.id)
@@ -127,13 +127,13 @@ class Track:
         
         # Check cache and create Item object if needed
         if index not in self._items:
-            self._items[index] = Item(self, index)
+            self._items[index] = ReaItem(self, index)
             
         return self._items[index]
     
     def add_item(self, position: float = 0.0, length: float = 1.0):
         """Add a new item to the track."""
-        from .item import Item
+        from .item import ReaItem
         
         # Create new item
         self.is_selected = True  # Select this track
@@ -144,7 +144,7 @@ class Track:
         item_index = count - 1
         
         # Create Item object
-        self._items[item_index] = Item(self, item_index)
+        self._items[item_index] = ReaItem(self, item_index)
         
         # Set position and length
         item = self._items[item_index]
@@ -155,7 +155,7 @@ class Track:
     
     def add_midi_item(self, position: float = 0.0, length: float = 1.0):
         """Add a new MIDI item to the track."""
-        from .item import Item
+        from .item import ReaItem
         
         # Create new MIDI item
         self.is_selected = True  # Select this track
@@ -166,7 +166,7 @@ class Track:
         item_index = count - 1
         
         # Create Item object
-        self._items[item_index] = Item(self, item_index)
+        self._items[item_index] = ReaItem(self, item_index)
         
         # Set position and length
         item = self._items[item_index]
@@ -177,7 +177,7 @@ class Track:
     
     def add_audio_item(self, file_path: str, position: float = 0.0):
         """Add a new audio item to the track."""
-        from .item import Item
+        from .item import ReaItem
         
         # Create new audio item
         self.is_selected = True  # Select this track
@@ -193,7 +193,7 @@ class Track:
         item_index = count - 1
         
         # Create Item object
-        self._items[item_index] = Item(self, item_index)
+        self._items[item_index] = ReaItem(self, item_index)
         
         # Set position
         item = self._items[item_index]

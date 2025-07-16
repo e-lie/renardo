@@ -5,7 +5,7 @@ from typing import Optional, List, Union, Dict, Any
 
 logger = logging.getLogger(__name__)
 
-class Take:
+class ReaTake:
     """REAPER media item take."""
     
     def __init__(self, item, index):
