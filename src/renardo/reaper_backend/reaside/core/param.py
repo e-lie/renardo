@@ -16,17 +16,25 @@ class ReaParam:
     """Represents a REAPER FX parameter."""
     
     def __init__(self, client: ReaperClient, track_index: int, fx_index: int, 
-                 param_index: int, name: str, reaper_name: str):
+                 param_index: int, name: str, reaper_name: str, use_osc: bool = True,
+                 initial_value: float = None, min_value: float = 0.0, max_value: float = 1.0):
         """Initialize ReaParam instance."""
         self.client = client
         self.track_index = track_index
         self.fx_index = fx_index
         self.param_index = param_index
-        self.name = name
-        self.reaper_name = reaper_name
-        self.value = 0.0
+        self.name = name  # snake_case name
+        self.reaper_name = reaper_name  # original REAPER name
+        self.use_osc = use_osc
+        self.min_value = min_value
+        self.max_value = max_value
         self.state = ReaParamState.NORMAL
-        self._update_value()
+        
+        if initial_value is not None:
+            self.value = initial_value
+        else:
+            self.value = 0.0
+            self._update_value()
     
     def _update_value(self):
         """Update parameter value from REAPER."""
@@ -41,11 +49,50 @@ class ReaParam:
     
     def get_value(self) -> float:
         """Get current parameter value."""
-        return self.value
+        if self.use_osc and hasattr(self.client, 'osc_client') and self.client.osc_client:
+            # For OSC, we rely on cached values updated by OSC callbacks
+            # This avoids expensive ReaScript calls
+            return self.value
+        else:
+            # Update value from REAPER for non-OSC usage
+            self._update_value()
+            return self.value
+    
+    def update_from_osc(self, value: float):
+        """Update parameter value from OSC callback."""
+        self.value = value
+    
+    def __float__(self) -> float:
+        """Allow parameter to be used as a float."""
+        return self.get_value()
+    
+    def __repr__(self) -> str:
+        return f"ReaParam('{self.name}', {self.value:.3f})"
+    
+    def __str__(self) -> str:
+        return f"{self.reaper_name}: {self.value:.3f}"
     
     def set_value(self, value: float):
         """Set parameter value directly in REAPER."""
+        # Clamp value to valid range
+        value = max(self.min_value, min(self.max_value, value))
         self.value = value
+        
+        if self.use_osc and hasattr(self.client, 'osc_client') and self.client.osc_client:
+            # Try OSC first for better performance
+            try:
+                if self.param_index == -1:  # Special case for FX enabled state
+                    # OSC message for FX enable/disable
+                    self.client.send_osc_message(f"/track/{self.track_index + 1}/fx/{self.fx_index}/enable", int(value > 0.5))
+                else:
+                    # OSC message for parameter value
+                    self.client.send_osc_message(f"/track/{self.track_index + 1}/fx/{self.fx_index}/param/{self.param_index}/value", value)
+                return
+            except Exception as e:
+                # Fallback to ReaScript if OSC fails
+                pass
+        
+        # Use ReaScript as fallback
         if self.param_index == -1:  # Special case for FX enabled state
             track_obj = self.client.call_reascript_function("GetTrack", 0, self.track_index)
             if track_obj:
