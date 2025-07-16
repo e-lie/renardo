@@ -420,3 +420,110 @@ class Track:
         timer = threading.Timer(duration, note_off_timer)
         timer.start()
         return timer
+    
+    def get_fx_count(self) -> int:
+        """Get the number of FX on this track."""
+        return self._client.call_reascript_function("TrackFX_GetCount", self.id)
+    
+    def get_fx_name(self, fx_index: int) -> str:
+        """Get the name of an FX at the given index."""
+        result = self._client.call_reascript_function("TrackFX_GetFXName", self.id, fx_index, "", 256)
+        if isinstance(result, tuple) and len(result) >= 2:
+            return result[1]
+        return result or ""
+    
+    def is_fx_enabled(self, fx_index: int) -> bool:
+        """Check if an FX is enabled."""
+        return self._client.call_reascript_function("TrackFX_GetEnabled", self.id, fx_index)
+    
+    def save_fx_chain(self, chain_path: Union[str, Path]) -> bool:
+        """Save current FX chain to a file."""
+        chain_path = Path(chain_path)
+        
+        # Ensure the directory exists
+        chain_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Use Lua script to save FX chain
+        save_script = f"""
+        local track = reaper.GetTrack(0, {self._index})
+        if not track then
+            reaper.SetExtState("reaside", "save_result", "ERROR:TRACK_NOT_FOUND", false)
+            return
+        end
+        
+        local fx_count = reaper.TrackFX_GetCount(track)
+        if fx_count == 0 then
+            reaper.SetExtState("reaside", "save_result", "ERROR:NO_FX", false)
+            return
+        end
+        
+        -- Get track state chunk
+        local retval, chunk = reaper.GetTrackStateChunk(track, "", 16384, false)
+        if not retval then
+            reaper.SetExtState("reaside", "save_result", "ERROR:CHUNK_FAILED", false)
+            return
+        end
+        
+        -- Extract FX section from chunk
+        local fx_section = ""
+        local in_fx_section = false
+        for line in chunk:gmatch("[^\\n]+") do
+            if line:match("^<FXCHAIN") then
+                in_fx_section = true
+                fx_section = fx_section .. line .. "\\n"
+            elseif line:match("^>") and in_fx_section then
+                fx_section = fx_section .. line .. "\\n"
+                break
+            elseif in_fx_section then
+                fx_section = fx_section .. line .. "\\n"
+            end
+        end
+        
+        -- Write to file
+        local file = io.open("{str(chain_path).replace('\\', '\\\\')}", "w")
+        if file then
+            file:write(fx_section)
+            file:close()
+            reaper.SetExtState("reaside", "save_result", "SUCCESS", false)
+        else
+            reaper.SetExtState("reaside", "save_result", "ERROR:FILE_WRITE", false)
+        end
+        """
+        
+        # Execute the script
+        self._client.set_ext_state("reaside", "temp_script", save_script)
+        self._reaper.perform_action(65535)  # Run ReaScript
+        
+        # Check result
+        import time
+        time.sleep(0.1)
+        result = self._client.get_ext_state("reaside", "save_result")
+        
+        if result == "SUCCESS":
+            logger.info(f"FX chain saved to {chain_path}")
+            return True
+        elif result == "ERROR:TRACK_NOT_FOUND":
+            raise ValueError(f"Track not found at index {self._index}")
+        elif result == "ERROR:NO_FX":
+            raise ValueError("No FX on track to save")
+        elif result == "ERROR:CHUNK_FAILED":
+            raise RuntimeError("Failed to get track state chunk")
+        elif result == "ERROR:FILE_WRITE":
+            raise RuntimeError(f"Failed to write to file {chain_path}")
+        else:
+            raise RuntimeError(f"Unknown error saving FX chain: {result}")
+    
+    def load_fx_chain(self, chain_path: Union[str, Path]) -> bool:
+        """Load FX chain from a file."""
+        chain_path = Path(chain_path)
+        
+        if not chain_path.exists():
+            raise FileNotFoundError(f"FX chain file not found: {chain_path}")
+        
+        # Use the existing add_fxchain method
+        try:
+            fx_added = self.add_fxchain(chain_path)
+            return fx_added > 0
+        except Exception as e:
+            logger.error(f"Failed to load FX chain: {e}")
+            return False

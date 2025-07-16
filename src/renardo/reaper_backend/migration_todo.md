@@ -11,14 +11,6 @@
     - plus besoin de `init_reapy_project` qui a été introduit pour éviter l'import normal de `reapy` puisque le module reaside ne devrait pa déclencher d'appel à reaper tant qu'on ne créé pas une connection et un projet
 
 
-# Notes pratique
-
-- ne pas faire de tests traditionnels (unittest ou pytest)
-- faire des scripts de test
-    - sans gestion des exceptions (try/except)
-    - sans fonctions ni "main" (most basic scripting)
-
-
 # Étapes de la migration
 
 ## 1) finir reaside : ajouter les fonctionnalités manquantes au module, changer quelques détails ajouter des scripts pour tester en vrai
