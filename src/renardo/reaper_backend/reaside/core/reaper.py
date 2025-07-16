@@ -70,7 +70,7 @@ class Reaper:
     @property
     def current_project(self):
         """Get current project."""
-        from .project import Project
+        from .project import ReaProject
         
         # Get current project index - use EnumProjects to check the active project
         try:
@@ -94,13 +94,13 @@ class Reaper:
         
         # Check cache and create Project object if needed
         if project_index not in self._projects:
-            self._projects[project_index] = Project(self, project_index)
+            self._projects[project_index] = ReaProject(self, project_index)
             
         return self._projects[project_index]
     
     def get_project(self, index: int):
         """Get project by index."""
-        from .project import Project
+        from .project import ReaProject
         
         # Check if project exists
         try:
@@ -114,14 +114,14 @@ class Reaper:
         
         # Check cache and create Project object if needed
         if index not in self._projects:
-            self._projects[index] = Project(self, index)
+            self._projects[index] = ReaProject(self, index)
             
         return self._projects[index]
     
     @property
     def projects(self) -> List:
         """Get list of all projects."""
-        from .project import Project
+        from .project import ReaProject
         
         projects = []
         
@@ -138,7 +138,7 @@ class Reaper:
                         
                     # Project exists, add it to our list
                     if index not in self._projects:
-                        self._projects[index] = Project(self, index)
+                        self._projects[index] = ReaProject(self, index)
                     
                     projects.append(self._projects[index])
                     index += 1
@@ -153,7 +153,7 @@ class Reaper:
     
     def add_project(self) -> 'Project':
         """Add a new project tab."""
-        from .project import Project
+        from .project import ReaProject
         
         # Create new project tab (Action ID: 40859)
         self._client.perform_action(40859)

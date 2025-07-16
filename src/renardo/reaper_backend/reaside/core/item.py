@@ -5,7 +5,7 @@ from typing import Optional, List, Union, Dict, Any
 
 logger = logging.getLogger(__name__)
 
-class Item:
+class ReaItem:
     """REAPER media item."""
     
     def __init__(self, track, index):
@@ -92,14 +92,14 @@ class Item:
     @property
     def takes(self) -> List:
         """Get list of all takes in this item."""
-        from .take import Take
+        from .take import ReaTake
         
         takes = []
         count = self._client.call_reascript_function("GetMediaItemNumTakes", self.id)
         
         for i in range(count):
             if i not in self._takes:
-                self._takes[i] = Take(self, i)
+                self._takes[i] = ReaTake(self, i)
                 
             takes.append(self._takes[i])
             
@@ -137,20 +137,20 @@ class Item:
     @property
     def active_take(self):
         """Get the active take."""
-        from .take import Take
+        from .take import ReaTake
         
         index = self.active_take_index
         if index < 0:
             return None
             
         if index not in self._takes:
-            self._takes[index] = Take(self, index)
+            self._takes[index] = ReaTake(self, index)
             
         return self._takes[index]
     
     def get_take(self, index: int):
         """Get take by index."""
-        from .take import Take
+        from .take import ReaTake
         
         # Check if take exists
         count = self._client.call_reascript_function("GetMediaItemNumTakes", self.id)
@@ -159,13 +159,13 @@ class Item:
         
         # Check cache and create Take object if needed
         if index not in self._takes:
-            self._takes[index] = Take(self, index)
+            self._takes[index] = ReaTake(self, index)
             
         return self._takes[index]
     
     def add_take(self):
         """Add a new empty take to the item."""
-        from .take import Take
+        from .take import ReaTake
         
         # Add new take (select item first)
         self.is_selected = True
@@ -176,7 +176,7 @@ class Item:
         take_index = count - 1
         
         # Create and return Take object
-        self._takes[take_index] = Take(self, take_index)
+        self._takes[take_index] = ReaTake(self, take_index)
         return self._takes[take_index]
     
     def delete(self) -> bool:
