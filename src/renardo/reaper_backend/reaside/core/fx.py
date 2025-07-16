@@ -1,5 +1,6 @@
 """REAPER FX management for reaside."""
 
+import re
 from typing import Dict, Any, Optional, List
 from .param import ReaParam
 from ..tools.reaper_client import ReaperClient
@@ -8,17 +9,72 @@ from ..tools.reaper_client import ReaperClient
 class ReaFX:
     """Represents a REAPER FX plugin."""
     
-    def __init__(self, client: ReaperClient, track_index: int, fx_index: int, name: str = None):
+    def __init__(self, client: ReaperClient, track_index: int, fx_index: int, name: str = None, scan_data: Dict = None):
         """Initialize ReaFX instance."""
         self.client = client
         self.track_index = track_index
         self.fx_index = fx_index
         self.name = name or f"fx_{fx_index}"
+        self.reaper_name = name  # Store original REAPER name
+        self.snake_name = self._make_snake_name(name) if name else f"fx_{fx_index}"
         self.params: Dict[str, ReaParam] = {}
-        self._init_params()
+        self.scan_data = scan_data
+        
+        if scan_data:
+            self._init_params_from_scan(scan_data)
+        else:
+            self._init_params()
+    
+    def _make_snake_name(self, name: str) -> str:
+        """Convert a name to snake_case."""
+        if not name:
+            return 'unnamed'
+        
+        # Remove common prefixes and suffixes
+        name = re.sub(r'^(VST3?i?:?\s*|AU:?\s*|JS:?\s*|VST:?\s*)', '', name)
+        name = re.sub(r'\s*\([^)]*\)\s*$', '', name)  # Remove trailing parentheses
+        
+        # Convert to snake_case
+        name = re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', name)  # camelCase to snake_case
+        name = re.sub(r'[^a-zA-Z0-9_]', '_', name)  # Replace special chars with _
+        name = re.sub(r'_+', '_', name)  # Collapse multiple underscores
+        name = name.strip('_').lower()  # Remove leading/trailing _ and lowercase
+        
+        return name or 'unnamed'
+    
+    def _init_params_from_scan(self, scan_data: Dict):
+        """Initialize parameters from scan data (faster)."""
+        # Create 'on' parameter for enabled/disabled state
+        self.params['on'] = ReaParam(
+            client=self.client,
+            track_index=self.track_index,
+            fx_index=self.fx_index,
+            param_index=-1,  # Special index for FX enabled state
+            name='on',
+            reaper_name='FX Enabled',
+            use_osc=True
+        )
+        
+        # Create parameters from scan data
+        for param_data in scan_data.get('params', []):
+            param_name = param_data.get('name', f"param_{param_data['index']}")
+            snake_name = self._make_snake_name(param_name)
+            
+            self.params[snake_name] = ReaParam(
+                client=self.client,
+                track_index=self.track_index,
+                fx_index=self.fx_index,
+                param_index=param_data['index'],
+                name=snake_name,
+                reaper_name=param_name,
+                use_osc=True,
+                initial_value=param_data.get('value', 0.0),
+                min_value=param_data.get('min', 0.0),
+                max_value=param_data.get('max', 1.0)
+            )
     
     def _init_params(self):
-        """Initialize all parameters for this FX."""
+        """Initialize all parameters for this FX (legacy method)."""
         # Get track object
         track_obj = self.client.call_reascript_function("GetTrack", 0, self.track_index)
         if not track_obj:
@@ -34,7 +90,8 @@ class ReaFX:
             fx_index=self.fx_index,
             param_index=-1,  # Special index for FX enabled state
             name='on',
-            reaper_name='FX Enabled'
+            reaper_name='FX Enabled',
+            use_osc=True
         )
         
         # Create parameters for each FX parameter
@@ -50,45 +107,60 @@ class ReaFX:
                 fx_index=self.fx_index,
                 param_index=i,
                 name=snake_name,
-                reaper_name=param_name
+                reaper_name=param_name,
+                use_osc=True
             )
     
-    def _make_snake_name(self, name: str) -> str:
-        """Convert parameter name to snake_case."""
-        import re
-        # Replace spaces, parentheses, slashes, dots with underscores
-        name = re.sub(r'[\s\(\)/\.]', '_', name)
-        # Convert to lowercase
-        name = name.lower()
-        # Remove multiple underscores
-        name = re.sub(r'_+', '_', name)
-        # Remove leading/trailing underscores
-        name = name.strip('_')
-        return name
+    # Parameter access methods
+    def get_param(self, param_name: str) -> Optional[ReaParam]:
+        """Get parameter by snake_case name."""
+        return self.params.get(param_name)
     
-    def get_param(self, name: str) -> Optional[float]:
-        """Get parameter value by name."""
-        if name in self.params:
-            return self.params[name].get_value()
+    def get_param_by_name(self, name: str) -> Optional[ReaParam]:
+        """Get parameter by original name or snake_case name."""
+        # Try snake_case first
+        snake_name = self._make_snake_name(name)
+        param = self.params.get(snake_name)
+        if param:
+            return param
+        
+        # Try exact match with original name
+        for param in self.params.values():
+            if hasattr(param, 'reaper_name') and param.reaper_name == name:
+                return param
+        
         return None
     
-    def set_param(self, name: str, value: float):
-        """Set parameter value directly in REAPER."""
-        if name in self.params:
-            self.params[name].set_value(value)
+    def list_params(self) -> List[ReaParam]:
+        """Get list of all parameters."""
+        return list(self.params.values())
     
-    def update_params(self):
-        """Update all parameters to their current values."""
-        for param in self.params.values():
-            param.update_value()
+    def set_param(self, param_name: str, value: float):
+        """Set parameter value by snake_case name."""
+        param = self.params.get(param_name)
+        if param:
+            param.set_value(value)
+        else:
+            raise ValueError(f"Parameter '{param_name}' not found")
     
-    def get_all_params(self) -> Dict[str, float]:
-        """Get all parameter values with FX name prefix."""
-        result = {}
-        for param_name, param in self.params.items():
-            prefixed_name = f"{self.name}_{param_name}"
-            result[prefixed_name] = param.get_value()
-        return result
+    def get_param_value(self, param_name: str) -> float:
+        """Get parameter value by snake_case name."""
+        param = self.params.get(param_name)
+        if param:
+            return param.get_value()
+        else:
+            raise ValueError(f"Parameter '{param_name}' not found")
+    
+    def __getattr__(self, name: str):
+        """Allow accessing parameters by snake_case name as attributes."""
+        if name.startswith('_'):
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+        
+        param = self.params.get(name)
+        if param:
+            return param
+        
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
     
     def is_enabled(self) -> bool:
         """Check if FX is enabled."""
