@@ -1283,6 +1283,31 @@ wheels = [
 ]
 
 [[package]]
+name = "python-osc"
+version = "1.8.3"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version < '3.10'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/2b/23/2dba900b73bae16117c9d69b44774865392dc30bbc80faa7b5b5fc524fc9/python-osc-1.8.3.tar.gz", hash = "sha256:a5ce1ba56c8d82df51cb3f2946b5dd33a70522791acc4b8564e62d2b20ad9caa", size = 25137, upload-time = "2023-08-05T18:19:45.403Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e4/d6/bff3a75ab880aded4ced078e391265c17fc220fc11cc535de1975513b230/python_osc-1.8.3-py3-none-any.whl", hash = "sha256:6fa7e5cf7690057712c26e5f67a747126e6a5f481a40792aad0f25ac3edee815", size = 33208, upload-time = "2023-08-05T18:19:44.02Z" },
+]
+
+[[package]]
+name = "python-osc"
+version = "1.9.3"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.11'",
+    "python_full_version == '3.10.*'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/1e/6e/770a91c92e4e8db6213764fb78531dd26a4982000d9b325881f3599835e2/python_osc-1.9.3.tar.gz", hash = "sha256:bd0fa40def43ce509894709feb0e18f02192aca192c5e6c8fe2ba69e58f21794", size = 33328, upload-time = "2024-12-23T20:24:50.939Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/57/04/01b3de6a7565cfc20f3bf4fce959b099ad30a08157865436d48cc02f6c08/python_osc-1.9.3-py3-none-any.whl", hash = "sha256:7def2075be72f07bae5a4c1a55cc7d907b247f4a5d910f3159ed30ac2b1f17cc", size = 43808, upload-time = "2024-12-23T20:24:48.358Z" },
+]
+
+[[package]]
 name = "python-reapy"
 version = "0.10.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1349,6 +1374,8 @@ dependencies = [
     { name = "midiutil" },
     { name = "mido" },
     { name = "psutil" },
+    { name = "python-osc", version = "1.8.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "python-osc", version = "1.9.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "python-reapy" },
     { name = "python-rtmidi" },
     { name = "requests" },
@@ -1383,6 +1410,7 @@ requires-dist = [
     { name = "midiutil" },
     { name = "mido", specifier = ">=1.3.3" },
     { name = "psutil" },
+    { name = "python-osc", specifier = ">=1.8.3" },
     { name = "python-reapy", specifier = ">=0.10.0" },
     { name = "python-rtmidi" },
     { name = "requests" },
