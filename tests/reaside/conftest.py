@@ -14,8 +14,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 from renardo.reaper_backend.reaside.tools.reaper_program import start_reaper, stop_reaper, is_reaper_running
 from renardo.reaper_backend.reaside.tools.reaper_client import ReaperClient
 from renardo.reaper_backend.reaside.core.reaper import Reaper
-from renardo.reaper_backend.reaside.core.project import Project
-from renardo.reaper_backend.reaside.core.track import Track
+from renardo.reaper_backend.reaside.core.project import ReaProject
+from renardo.reaper_backend.reaside.core.track import ReaTrack
 from renardo.reaper_backend.reaside.core.fx import ReaFX
 from renardo.reaper_backend.reaside import configure_reaper
 
