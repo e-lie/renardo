@@ -484,6 +484,169 @@ function get_reaper_function(name)
   return func
 end
 
+-- Scan complete track information including FX and parameters
+function scan_track_complete()
+  -- Get scan request
+  local scan_request = get_ext_state(SECTION, "scan_track_request")
+  if not scan_request then
+    return
+  end
+  
+  log("Processing track scan request: " .. tostring(scan_request))
+  
+  -- Parse track index from request
+  local track_index = tonumber(scan_request)
+  if not track_index then
+    log("Invalid track index in scan request")
+    set_ext_state(SECTION, "scan_track_result", {
+      error = "Invalid track index"
+    }, false)
+    reaper.DeleteExtState(SECTION, "scan_track_request", false)
+    return
+  end
+  
+  -- Get track object
+  local track = reaper.GetTrack(0, track_index)
+  if not track then
+    log("Track not found at index " .. track_index)
+    set_ext_state(SECTION, "scan_track_result", {
+      error = "Track not found"
+    }, false)
+    reaper.DeleteExtState(SECTION, "scan_track_request", false)
+    return
+  end
+  
+  log("Scanning track at index " .. track_index)
+  
+  -- Collect track information
+  local track_data = {}
+  
+  -- Basic track info
+  local retval, track_name = reaper.GetTrackName(track, "")
+  track_data.index = track_index
+  track_data.name = track_name
+  
+  -- Track state
+  track_data.volume = reaper.GetMediaTrackInfo_Value(track, "D_VOL")
+  track_data.pan = reaper.GetMediaTrackInfo_Value(track, "D_PAN")
+  track_data.mute = reaper.GetMediaTrackInfo_Value(track, "B_MUTE") > 0
+  track_data.solo = reaper.GetMediaTrackInfo_Value(track, "I_SOLO") > 0
+  track_data.rec_arm = reaper.GetMediaTrackInfo_Value(track, "I_RECARM") > 0
+  track_data.rec_input = reaper.GetMediaTrackInfo_Value(track, "I_RECINPUT")
+  track_data.rec_mode = reaper.GetMediaTrackInfo_Value(track, "I_RECMODE")
+  track_data.rec_mon = reaper.GetMediaTrackInfo_Value(track, "I_RECMON")
+  
+  -- Track color
+  track_data.color = reaper.GetTrackColor(track)
+  
+  -- FX information
+  local fx_count = reaper.TrackFX_GetCount(track)
+  track_data.fx_count = fx_count
+  track_data.fx = {}
+  
+  log("Track has " .. fx_count .. " FX")
+  
+  -- Scan each FX
+  for fx_idx = 0, fx_count - 1 do
+    local fx_info = {}
+    
+    -- FX name
+    local retval, fx_name = reaper.TrackFX_GetFXName(track, fx_idx, "")
+    fx_info.index = fx_idx
+    fx_info.name = fx_name
+    fx_info.enabled = reaper.TrackFX_GetEnabled(track, fx_idx)
+    
+    -- FX preset
+    local retval, preset_name = reaper.TrackFX_GetPreset(track, fx_idx, "")
+    fx_info.preset = preset_name
+    
+    -- Parameter count
+    local param_count = reaper.TrackFX_GetNumParams(track, fx_idx)
+    fx_info.param_count = param_count
+    fx_info.params = {}
+    
+    log("  FX " .. fx_idx .. ": " .. fx_name .. " (" .. param_count .. " params)")
+    
+    -- Scan each parameter
+    for param_idx = 0, param_count - 1 do
+      local param_info = {}
+      
+      -- Parameter name
+      local retval, param_name = reaper.TrackFX_GetParamName(track, fx_idx, param_idx, "", 256)
+      param_info.index = param_idx
+      param_info.name = param_name
+      
+      -- Parameter value
+      local value = reaper.TrackFX_GetParam(track, fx_idx, param_idx)
+      param_info.value = value
+      
+      -- Parameter range and format
+      local retval, minval, maxval = reaper.TrackFX_GetParam(track, fx_idx, param_idx)
+      param_info.min = minval
+      param_info.max = maxval
+      
+      -- Get formatted value
+      local retval, formatted = reaper.TrackFX_GetFormattedParamValue(track, fx_idx, param_idx, "", 256)
+      param_info.formatted = formatted
+      
+      table.insert(fx_info.params, param_info)
+    end
+    
+    table.insert(track_data.fx, fx_info)
+  end
+  
+  -- Send information
+  local send_count = reaper.GetTrackNumSends(track, 0)
+  track_data.send_count = send_count
+  track_data.sends = {}
+  
+  log("Track has " .. send_count .. " sends")
+  
+  -- Scan each send
+  for send_idx = 0, send_count - 1 do
+    local send_info = {}
+    
+    send_info.index = send_idx
+    
+    -- Destination track
+    local dest_track = reaper.GetTrackSendInfo_Value(track, 0, send_idx, "P_DESTTRACK")
+    if dest_track then
+      local retval, dest_name = reaper.GetTrackName(dest_track, "")
+      send_info.dest_name = dest_name
+      
+      -- Find destination track index
+      local track_count = reaper.CountTracks(0)
+      for i = 0, track_count - 1 do
+        if reaper.GetTrack(0, i) == dest_track then
+          send_info.dest_index = i
+          break
+        end
+      end
+    end
+    
+    -- Send parameters
+    send_info.volume = reaper.GetTrackSendInfo_Value(track, 0, send_idx, "D_VOL")
+    send_info.pan = reaper.GetTrackSendInfo_Value(track, 0, send_idx, "D_PAN")
+    send_info.mute = reaper.GetTrackSendInfo_Value(track, 0, send_idx, "B_MUTE") > 0
+    send_info.phase = reaper.GetTrackSendInfo_Value(track, 0, send_idx, "B_PHASE") > 0
+    send_info.mono = reaper.GetTrackSendInfo_Value(track, 0, send_idx, "B_MONO") > 0
+    
+    table.insert(track_data.sends, send_info)
+  end
+  
+  -- Success response
+  local result = {
+    success = true,
+    track = track_data
+  }
+  
+  set_ext_state(SECTION, "scan_track_result", result, false)
+  log("Track scan completed successfully")
+  
+  -- Clear the request
+  reaper.DeleteExtState(SECTION, "scan_track_request", false)
+end
+
 -- Execute a ReaScript function from ExtState
 function execute_function()
   -- Get function call request
@@ -738,6 +901,9 @@ end
 function run_main_loop()
   -- Execute any pending function calls
   execute_function()
+  
+  -- Execute any pending track scans
+  scan_track_complete()
   
   -- Handle OSC communication
   check_osc_messages()
