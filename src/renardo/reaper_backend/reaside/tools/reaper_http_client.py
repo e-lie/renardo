@@ -147,6 +147,36 @@ class ReaperClient:
             
         except ReaperHTTPError:
             return False
+    
+    def scan_track_complete(self, track_index: int) -> dict:
+        """Scan complete track information including FX and parameters."""
+        # Set the track index to scan
+        self.set_ext_state("reaside", "scan_track_request", str(track_index))
+        
+        # Wait for the scan to complete
+        start_time = time.time()
+        timeout = 30.0  # 30 seconds timeout
+        
+        while time.time() - start_time < timeout:
+            result = self.get_ext_state("reaside", "scan_track_result")
+            if result:
+                # Parse the result
+                if isinstance(result, str):
+                    try:
+                        import json
+                        result = json.loads(result)
+                    except json.JSONDecodeError:
+                        pass
+                
+                # Check for errors
+                if isinstance(result, dict) and "error" in result:
+                    raise ReaperAPIError(f"Track scan error: {result['error']}")
+                
+                return result
+            
+            time.sleep(0.1)  # Wait 100ms before checking again
+        
+        raise ReaperAPIError("Track scan timeout - no result received")
 
     def call_reascript_function(self, function_name, *args):
         """Call a ReaScript function via the HTTP API."""

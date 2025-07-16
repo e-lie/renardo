@@ -101,6 +101,10 @@ class ReaperClient:
         """Call a ReaScript function via the HTTP API."""
         return self.http_client.call_reascript_function(function_name, *args)
     
+    def scan_track_complete(self, track_index: int) -> dict:
+        """Scan complete track information including FX and parameters."""
+        return self.http_client.scan_track_complete(track_index)
+    
     def get_reaper_version(self):
         """Get REAPER version."""
         return self.http_client.get_reaper_version()
