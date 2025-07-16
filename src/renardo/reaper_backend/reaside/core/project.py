@@ -5,7 +5,7 @@ from typing import Optional, List, Union, Dict, Any
 
 logger = logging.getLogger(__name__)
 
-class Project:
+class ReaProject:
     """REAPER project."""
     
     def __init__(self, reaper, index):
@@ -83,7 +83,7 @@ class Project:
     @property
     def selected_tracks(self) -> List:
         """Get list of selected tracks."""
-        from .track import Track
+        from .track import ReaTrack
         
         tracks = []
         count = self._client.call_reascript_function("CountSelectedTracks", self._index)
@@ -96,7 +96,7 @@ class Project:
             track_index = int(track_index) - 1
             
             if track_index not in self._tracks:
-                self._tracks[track_index] = Track(self, track_index)
+                self._tracks[track_index] = ReaTrack(self, track_index)
                 
             tracks.append(self._tracks[track_index])
             
@@ -105,14 +105,14 @@ class Project:
     @property
     def tracks(self) -> List:
         """Get list of all tracks."""
-        from .track import Track
+        from .track import ReaTrack
         
         tracks = []
         count = self._client.get_track_count()
         
         for i in range(count):
             if i not in self._tracks:
-                self._tracks[i] = Track(self, i)
+                self._tracks[i] = ReaTrack(self, i)
                 
             tracks.append(self._tracks[i])
             
@@ -120,7 +120,7 @@ class Project:
     
     def get_track(self, index: int):
         """Get track by index."""
-        from .track import Track
+        from .track import ReaTrack
         
         # Check if track exists
         count = self._client.call_reascript_function("CountTracks", self._index)
@@ -129,13 +129,13 @@ class Project:
         
         # Check cache and create Track object if needed
         if index not in self._tracks:
-            self._tracks[index] = Track(self, index)
+            self._tracks[index] = ReaTrack(self, index)
             
         return self._tracks[index]
     
     def get_track_by_name(self, name: str, case_sensitive: bool = False):
         """Get track by name."""
-        from .track import Track
+        from .track import ReaTrack
         
         # Get all tracks
         count = self._client.call_reascript_function("CountTracks", self._index)
@@ -152,7 +152,7 @@ class Project:
                 
             if match:
                 if i not in self._tracks:
-                    self._tracks[i] = Track(self, i)
+                    self._tracks[i] = ReaTrack(self, i)
                     
                 return self._tracks[i]
                 
@@ -160,7 +160,7 @@ class Project:
     
     def add_track(self):
         """Add a new track to the project."""
-        from .track import Track
+        from .track import ReaTrack
         
         # Add new track (Action ID: 40001)
         self._reaper.perform_action(40001)
@@ -170,7 +170,7 @@ class Project:
         track_index = count - 1
         
         # Create and return Track object
-        self._tracks[track_index] = Track(self, track_index)
+        self._tracks[track_index] = ReaTrack(self, track_index)
         return self._tracks[track_index]
     
     def save(self, file_path: Optional[str] = None) -> bool:
