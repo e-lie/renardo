@@ -23,14 +23,28 @@ class Project:
     @property
     def name(self) -> str:
         """Get project name."""
-        # GetProjectName takes project, buf, buf_size
+        # Try to get from project title first
+        result = self._client.call_reascript_function("GetSetProjectInfo_String", 0, "PROJECT_TITLE", "", False)
+        if isinstance(result, tuple) and len(result) >= 2 and result[1]:
+            return result[1]
+            
+        # Fallback to ExtState if available
+        title = self._client.get_ext_state("project", "title")
+        if title:
+            return title
+            
+        # Final fallback to GetProjectName
         name = self._client.call_reascript_function("GetProjectName", self._index, "", 1024)
         return name or "Untitled"
     
     @name.setter
     def name(self, value: str) -> None:
         """Set project name."""
-        self._client.call_reascript_function("GetSetProjectInfo_String", self._index, "PROJECT_NAME", value, True)
+        # Use PROJECT_TITLE to set the project title
+        self._client.call_reascript_function("GetSetProjectInfo_String", 0, "PROJECT_TITLE", value, True)
+        
+        # Also store in ExtState as backup
+        self._client.set_ext_state("project", "title", value)
     
     @property
     def path(self) -> str:
