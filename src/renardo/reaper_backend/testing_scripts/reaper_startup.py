@@ -10,17 +10,13 @@ from renardo.reaper_backend import (
 
 start_reaper()
 
-time.sleep(2)
+time.sleep(3)
 
-print("coucou")
-
-# configure_reaper()
+configure_reaper()
 
 stop_reaper()
 
-print("coucou")
-
-# start_reaper()
+start_reaper()
 
 # reaper = connect()
 
