@@ -9,15 +9,7 @@ class Project:
     """REAPER project."""
     
     def __init__(self, reaper, index):
-        """Initialize the Project object.
-        
-        Parameters
-        ----------
-        reaper : Reaper
-            Reaper instance.
-        index : int
-            Project index.
-        """
+        """Initialize the Project object."""
         self._reaper = reaper
         self._client = reaper._client
         self._index = index
@@ -25,118 +17,58 @@ class Project:
         
     @property
     def index(self) -> int:
-        """Get project index.
-        
-        Returns
-        -------
-        int
-            Project index.
-        """
+        """Get project index."""
         return self._index
     
     @property
     def name(self) -> str:
-        """Get project name.
-        
-        Returns
-        -------
-        str
-            Project name.
-        """
+        """Get project name."""
         # GetProjectName takes project, buf, buf_size
         name = self._client.call_reascript_function("GetProjectName", self._index, "", 1024)
         return name or "Untitled"
     
     @name.setter
     def name(self, value: str) -> None:
-        """Set project name.
-        
-        Parameters
-        ----------
-        value : str
-            New project name.
-        """
+        """Set project name."""
         self._client.call_reascript_function("GetSetProjectInfo_String", self._index, "PROJECT_NAME", value, True)
     
     @property
     def path(self) -> str:
-        """Get project file path.
-        
-        Returns
-        -------
-        str
-            Project file path or empty string if unsaved.
-        """
+        """Get project file path."""
         # GetProjectPath takes project, buf, buf_size
         path = self._client.call_reascript_function("GetProjectPath", self._index, "", 1024)
         return path
     
     @property
     def length(self) -> float:
-        """Get project length in seconds.
-        
-        Returns
-        -------
-        float
-            Project length in seconds.
-        """
+        """Get project length in seconds."""
         return self._client.call_reascript_function("GetProjectLength", self._index)
     
     @property
     def bpm(self) -> float:
-        """Get project tempo.
-        
-        Returns
-        -------
-        float
-            Project tempo in BPM.
-        """
+        """Get project tempo."""
         return self._client.call_reascript_function("GetProjectTimeSignature2", self._index, 0, 0)[0]
     
     @bpm.setter
     def bpm(self, value: float) -> None:
-        """Set project tempo.
-        
-        Parameters
-        ----------
-        value : float
-            New tempo in BPM.
-        """
+        """Set project tempo."""
         self._client.call_reascript_function("SetTempoTimeSigMarker", self._index, -1, 0, -1, -1, value, -1, -1, False)
     
     @property
     def time_signature(self) -> tuple:
-        """Get project time signature.
-        
-        Returns
-        -------
-        tuple
-            Tuple of (numerator, denominator).
-        """
+        """Get project time signature."""
         _, num, denom = self._client.call_reascript_function("GetProjectTimeSignature2", self._index, 0, 0)
         return (num, denom)
     
     @time_signature.setter
     def time_signature(self, value: tuple) -> None:
-        """Set project time signature.
-        
-        Parameters
-        ----------
-        value : tuple
-            Tuple of (numerator, denominator).
-        """
+        """Set project time signature."""
         num, denom = value
         self._client.call_reascript_function("SetTempoTimeSigMarker", self._index, -1, 0, -1, -1, -1, num, denom, False)
     
     @property
     def selected_tracks(self) -> List:
-        """Get list of selected tracks.
-        
-        Returns
-        -------
-        list of Track
-            List of selected tracks.
-        """
+        """Get list of selected tracks."""
         from .track import Track
         
         tracks = []
@@ -158,13 +90,7 @@ class Project:
     
     @property
     def tracks(self) -> List:
-        """Get list of all tracks.
-        
-        Returns
-        -------
-        list of Track
-            List of all tracks in the project.
-        """
+        """Get list of all tracks."""
         from .track import Track
         
         tracks = []
@@ -179,23 +105,7 @@ class Project:
         return tracks
     
     def get_track(self, index: int):
-        """Get track by index.
-        
-        Parameters
-        ----------
-        index : int
-            Track index (0-based).
-            
-        Returns
-        -------
-        Track
-            Track object.
-            
-        Raises
-        ------
-        ValueError
-            If track with specified index doesn't exist.
-        """
+        """Get track by index."""
         from .track import Track
         
         # Check if track exists
@@ -210,20 +120,7 @@ class Project:
         return self._tracks[index]
     
     def get_track_by_name(self, name: str, case_sensitive: bool = False):
-        """Get track by name.
-        
-        Parameters
-        ----------
-        name : str
-            Track name to search for.
-        case_sensitive : bool, optional
-            Whether to perform case-sensitive search. Default=False.
-            
-        Returns
-        -------
-        Track or None
-            Track object if found, None otherwise.
-        """
+        """Get track by name."""
         from .track import Track
         
         # Get all tracks
@@ -248,13 +145,7 @@ class Project:
         return None
     
     def add_track(self):
-        """Add a new track to the project.
-        
-        Returns
-        -------
-        Track
-            New track object.
-        """
+        """Add a new track to the project."""
         from .track import Track
         
         # Add new track (Action ID: 40001)
@@ -269,36 +160,14 @@ class Project:
         return self._tracks[track_index]
     
     def save(self, file_path: Optional[str] = None) -> bool:
-        """Save the project.
-        
-        Parameters
-        ----------
-        file_path : str, optional
-            File path to save the project to. If not provided, uses current path.
-            
-        Returns
-        -------
-        bool
-            True if save was successful.
-        """
+        """Save the project."""
         if file_path:
             return self._client.call_reascript_function("Main_SaveProjectEx", self._index, file_path, False)
         else:
             return self._client.call_reascript_function("Main_SaveProject", self._index, False)
     
     def close(self, save: bool = True) -> bool:
-        """Close the project.
-        
-        Parameters
-        ----------
-        save : bool, optional
-            Whether to save before closing. Default=True.
-            
-        Returns
-        -------
-        bool
-            True if close was successful.
-        """
+        """Close the project."""
         if save:
             self.save()
         
