@@ -15,6 +15,45 @@ class ReaProject:
         self._index = index
         self._tracks = {}  # Cache for Track objects
         
+        # Automatically scan and populate all tracks
+        self._scan_all_tracks()
+        
+    def _scan_all_tracks(self):
+        """Scan all tracks in the project and populate ReaTrack instances."""
+        try:
+            # Get total track count
+            track_count = self._client.call_reascript_function("CountTracks", self._index)
+            
+            if track_count > 0:
+                logger.info(f"Scanning {track_count} tracks in project {self._index}")
+                
+                # Scan each track and populate ReaTrack instances
+                for track_idx in range(track_count):
+                    self._scan_and_populate_track(track_idx)
+                    
+                logger.info(f"Completed scanning {track_count} tracks")
+            else:
+                logger.debug("No tracks found in project")
+                
+        except Exception as e:
+            logger.warning(f"Failed to scan tracks in project {self._index}: {e}")
+    
+    def _scan_and_populate_track(self, track_index: int):
+        """Scan a single track and create ReaTrack instance."""
+        try:
+            from .track import ReaTrack
+            
+            # Create ReaTrack instance (this will automatically scan the track)
+            track = ReaTrack(self, track_index)
+            
+            # Store in cache
+            self._tracks[track_index] = track
+            
+            logger.debug(f"Created ReaTrack for track {track_index}: {track.name}")
+            
+        except Exception as e:
+            logger.warning(f"Failed to scan track {track_index}: {e}")
+    
     @property
     def index(self) -> int:
         """Get project index."""
@@ -105,45 +144,29 @@ class ReaProject:
     @property
     def tracks(self) -> List:
         """Get list of all tracks."""
-        from .track import ReaTrack
-        
-        tracks = []
-        count = self._client.get_track_count()
-        
-        for i in range(count):
-            if i not in self._tracks:
-                self._tracks[i] = ReaTrack(self, i)
-                
-            tracks.append(self._tracks[i])
-            
-        return tracks
+        # Return tracks in index order
+        return [self._tracks[i] for i in sorted(self._tracks.keys())]
     
     def get_track(self, index: int):
         """Get track by index."""
-        from .track import ReaTrack
+        # Check if track exists in cache
+        if index in self._tracks:
+            return self._tracks[index]
         
-        # Check if track exists
+        # Check if track exists in REAPER
         count = self._client.call_reascript_function("CountTracks", self._index)
         if index < 0 or index >= count:
             raise ValueError(f"Track with index {index} doesn't exist.")
         
-        # Check cache and create Track object if needed
-        if index not in self._tracks:
-            self._tracks[index] = ReaTrack(self, index)
-            
+        # Create new track (this will automatically scan it)
+        self._scan_and_populate_track(index)
         return self._tracks[index]
     
     def get_track_by_name(self, name: str, case_sensitive: bool = False):
         """Get track by name."""
-        from .track import ReaTrack
-        
-        # Get all tracks
-        count = self._client.call_reascript_function("CountTracks", self._index)
-        
-        # Search for track by name
-        for i in range(count):
-            track_id = self._client.call_reascript_function("GetTrack", self._index, i)
-            track_name = self._client.call_reascript_function("GetTrackName", track_id, "", 1024)[2]
+        # Search in cached tracks first
+        for track in self._tracks.values():
+            track_name = track.name
             
             if case_sensitive:
                 match = track_name == name
@@ -151,17 +174,12 @@ class ReaProject:
                 match = track_name.lower() == name.lower()
                 
             if match:
-                if i not in self._tracks:
-                    self._tracks[i] = ReaTrack(self, i)
-                    
-                return self._tracks[i]
+                return track
                 
         return None
     
     def add_track(self):
         """Add a new track to the project."""
-        from .track import ReaTrack
-        
         # Add new track (Action ID: 40001)
         self._reaper.perform_action(40001)
         
@@ -169,8 +187,8 @@ class ReaProject:
         count = self._client.call_reascript_function("CountTracks", self._index)
         track_index = count - 1
         
-        # Create and return Track object
-        self._tracks[track_index] = ReaTrack(self, track_index)
+        # Create and return Track object (this will automatically scan it)
+        self._scan_and_populate_track(track_index)
         return self._tracks[track_index]
     
     def save(self, file_path: Optional[str] = None) -> bool:
@@ -186,3 +204,29 @@ class ReaProject:
             self.save()
         
         return self._client.call_reascript_function("Main_OnCommand", 40860, 0)  # Close current project tab
+    
+    def rescan_all_tracks(self):
+        """Manually trigger rescan of all tracks."""
+        self._tracks.clear()
+        self._scan_all_tracks()
+    
+    @property
+    def track_count(self) -> int:
+        """Get the number of tracks in the project."""
+        return len(self._tracks)
+    
+    def list_tracks(self) -> List['ReaTrack']:
+        """Get list of all tracks (same as tracks property)."""
+        return self.tracks
+    
+    def __len__(self) -> int:
+        """Get number of tracks."""
+        return len(self._tracks)
+    
+    def __getitem__(self, index: int) -> 'ReaTrack':
+        """Get track by index using bracket notation."""
+        return self.get_track(index)
+    
+    def __iter__(self):
+        """Iterate over tracks."""
+        return iter(self.tracks)
