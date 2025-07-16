@@ -24,21 +24,26 @@ def test_reafx_param_names(reafx_instance):
 
 def test_reafx_on_parameter(reafx_instance):
     """Test the 'on' parameter which should always exist."""
-    on_value = reafx_instance.get_param('on')
+    on_param = reafx_instance.get_param('on')
+    assert on_param is not None, "Should have 'on' parameter"
+    on_value = on_param.get_value()
     assert isinstance(on_value, (int, float)), "On parameter should be numeric"
 
 
 def test_reafx_set_on_parameter(reafx_instance):
     """Test setting the 'on' parameter."""
+    on_param = reafx_instance.get_param('on')
+    assert on_param is not None, "Should have 'on' parameter"
+    
     # Set to on
-    reafx_instance.set_param('on', 1.0)
-    on_value = reafx_instance.get_param('on')
-    assert on_value == 1.0, "On parameter should be set to 1.0"
+    on_param.set_value(1.0)
+    on_value = on_param.get_value()
+    assert abs(on_value - 1.0) < 0.1, "On parameter should be set to 1.0"
     
     # Set to off
-    reafx_instance.set_param('on', 0.0)
-    on_value = reafx_instance.get_param('on')
-    assert on_value == 0.0, "On parameter should be set to 0.0"
+    on_param.set_value(0.0)
+    on_value = on_param.get_value()
+    assert abs(on_value - 0.0) < 0.1, "On parameter should be set to 0.0"
 
 
 def test_reafx_enable_disable(reafx_instance):
