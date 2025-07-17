@@ -49,7 +49,7 @@ class ReaParam:
     
     def get_value(self) -> float:
         """Get current parameter value."""
-        if self.use_osc and hasattr(self.client, 'osc_client') and self.client.osc_client:
+        if self.use_osc and hasattr(self.client, 'direct_osc_client') and self.client.direct_osc_client:
             # For OSC, we rely on cached values updated by OSC callbacks
             # This avoids expensive ReaScript calls
             return self.value
@@ -78,16 +78,19 @@ class ReaParam:
         value = max(self.min_value, min(self.max_value, value))
         self.value = value
         
-        if self.use_osc and hasattr(self.client, 'osc_client') and self.client.osc_client:
+        if self.use_osc and hasattr(self.client, 'direct_osc_client') and self.client.direct_osc_client:
             # Try OSC first for better performance
             try:
                 if self.param_index == -1:  # Special case for FX enabled state
-                    # OSC message for FX enable/disable (bypass)
-                    self.client.send_osc_message(f"/track/{self.track_index + 1}/fx/{self.fx_index}/bypass", int(value <= 0.5))
-                    print(f"DEBUG: Sent OSC bypass: /track/{self.track_index + 1}/fx/{self.fx_index}/bypass = {int(value <= 0.5)}")
+                    # OSC message for FX enable/disable (bypass) - OSC uses 1-based indexing
+                    osc_address = f"/track/{self.track_index + 1}/fx/{self.fx_index + 1}/bypass"
+                    bypass_value = int(value > 0.5)  # REAPER OSC: 1 = enabled, 0 = bypassed
+                    self.client.send_osc_message(osc_address, bypass_value)
+                    bypass_state = "ENABLED" if bypass_value == 1 else "BYPASSED"
+                    print(f"DEBUG: Sent OSC bypass: {osc_address} = {bypass_value} ({bypass_state})")
                 else:
-                    # OSC message for parameter value (using correct REAPER format)
-                    osc_address = f"/track/{self.track_index + 1}/fx/{self.fx_index}/fxparam/{self.param_index}/value"
+                    # OSC message for parameter value - OSC uses 1-based indexing for FX and params
+                    osc_address = f"/track/{self.track_index + 1}/fx/{self.fx_index + 1}/fxparam/{self.param_index + 1}/value"
                     self.client.send_osc_message(osc_address, value)
                     print(f"DEBUG: Sent OSC: {osc_address} = {value:.3f}")
                 return
