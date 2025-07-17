@@ -22,7 +22,7 @@ class ReaperOSCError(Exception):
 class ReaperOSCClient:
     """Client for communicating with REAPER via OSC."""
 
-    def __init__(self, host="localhost", send_port=8000, receive_port=8001, timeout=2.0):
+    def __init__(self, host="localhost", send_port=8766, receive_port=8767, timeout=2.0):
         """Initialize the REAPER OSC client."""
         if not OSC_AVAILABLE:
             raise ImportError("python-osc library is required for OSC functionality")
@@ -106,7 +106,7 @@ class ReaperOSCClient:
     def send_message(self, address: str, *args):
         """Send an OSC message to REAPER."""
         try:
-            self.client.send_message(address, args)
+            self.client.send_message(address, *args)
             logger.debug(f"Sent OSC message: {address} {args}")
         except Exception as e:
             logger.error(f"Failed to send OSC message {address}: {e}")
