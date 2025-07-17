@@ -84,9 +84,10 @@ class ReaParam:
                 if self.param_index == -1:  # Special case for FX enabled state
                     # OSC message for FX enable/disable (bypass) - OSC uses 1-based indexing
                     osc_address = f"/track/{self.track_index + 1}/fx/{self.fx_index + 1}/bypass"
-                    bypass_value = int(value <= 0.5)  # 0 = enabled, 1 = bypassed
+                    bypass_value = int(value > 0.5)  # REAPER OSC: 1 = enabled, 0 = bypassed
                     self.client.send_osc_message(osc_address, bypass_value)
-                    print(f"DEBUG: Sent OSC bypass: {osc_address} = {bypass_value}")
+                    bypass_state = "ENABLED" if bypass_value == 1 else "BYPASSED"
+                    print(f"DEBUG: Sent OSC bypass: {osc_address} = {bypass_value} ({bypass_state})")
                 else:
                     # OSC message for parameter value - OSC uses 1-based indexing for FX and params
                     osc_address = f"/track/{self.track_index + 1}/fx/{self.fx_index + 1}/fxparam/{self.param_index + 1}/value"
