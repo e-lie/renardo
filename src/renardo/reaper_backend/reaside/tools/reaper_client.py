@@ -15,8 +15,8 @@ class ReaperClient:
     def __init__(self, 
                  host="localhost", 
                  http_port=8080, 
-                 osc_send_port=8000,
-                 osc_receive_port=8001,
+                 osc_send_port=8766,
+                 osc_receive_port=8767,
                  timeout=2.0,
                  enable_osc=True):
         """Initialize the unified REAPER client."""
