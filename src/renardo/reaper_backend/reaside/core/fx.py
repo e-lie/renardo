@@ -132,8 +132,44 @@ class ReaFX:
         return None
     
     def list_params(self) -> List[ReaParam]:
-        """Get list of all parameters."""
-        return list(self.params.values())
+        """Get list of all parameters, ordered with regular parameters first."""
+        # Separate regular parameters from special ones
+        regular_params = []
+        special_params = []
+        
+        for param in self.params.values():
+            if param.param_index >= 0:  # Regular parameter
+                regular_params.append(param)
+            else:  # Special parameter (like 'on' for bypass)
+                special_params.append(param)
+        
+        # Sort regular parameters by their param_index
+        regular_params.sort(key=lambda p: p.param_index)
+        
+        # Return regular parameters first, then special parameters
+        return regular_params + special_params
+    
+    def get_bypass_param(self) -> Optional[ReaParam]:
+        """Get the FX bypass parameter."""
+        return self.params.get('on')
+    
+    def set_enabled(self, enabled: bool):
+        """Set FX enabled state."""
+        bypass_param = self.get_bypass_param()
+        if bypass_param:
+            # For bypass param: 1.0 = enabled, 0.0 = bypassed
+            bypass_param.set_value(1.0 if enabled else 0.0)
+    
+    def is_enabled(self) -> bool:
+        """Check if FX is enabled."""
+        bypass_param = self.get_bypass_param()
+        if bypass_param:
+            value = bypass_param.get_value()
+            if isinstance(value, tuple):
+                value = value[0]
+            return value >= 0.5  # >= 0.5 means enabled
+        return True  # Default to enabled if no bypass param
+    
     
     def set_param(self, param_name: str, value: float):
         """Set parameter value by snake_case name."""
