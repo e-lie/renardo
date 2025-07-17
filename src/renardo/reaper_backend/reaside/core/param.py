@@ -84,13 +84,17 @@ class ReaParam:
                 if self.param_index == -1:  # Special case for FX enabled state
                     # OSC message for FX enable/disable (bypass)
                     self.client.send_osc_message(f"/track/{self.track_index + 1}/fx/{self.fx_index}/bypass", int(value <= 0.5))
+                    print(f"DEBUG: Sent OSC bypass: /track/{self.track_index + 1}/fx/{self.fx_index}/bypass = {int(value <= 0.5)}")
                 else:
                     # OSC message for parameter value (using correct REAPER format)
-                    self.client.send_osc_message(f"/track/{self.track_index + 1}/fx/{self.fx_index}/fxparam/{self.param_index}/value", value)
+                    osc_address = f"/track/{self.track_index + 1}/fx/{self.fx_index}/fxparam/{self.param_index}/value"
+                    self.client.send_osc_message(osc_address, value)
+                    print(f"DEBUG: Sent OSC: {osc_address} = {value:.3f}")
                 return
             except Exception as e:
-                # Fallback to ReaScript if OSC fails
-                pass
+                print(f"DEBUG: OSC failed: {e}")
+                # NO FALLBACK - fail if OSC doesn't work
+                raise Exception(f"OSC parameter update failed: {e}")
         
         # Use ReaScript as fallback
         if self.param_index == -1:  # Special case for FX enabled state
