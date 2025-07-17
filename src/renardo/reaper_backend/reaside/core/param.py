@@ -49,7 +49,7 @@ class ReaParam:
     
     def get_value(self) -> float:
         """Get current parameter value."""
-        if self.use_osc and hasattr(self.client, 'osc_client') and self.client.osc_client:
+        if self.use_osc and hasattr(self.client, 'direct_osc_client') and self.client.direct_osc_client:
             # For OSC, we rely on cached values updated by OSC callbacks
             # This avoids expensive ReaScript calls
             return self.value
@@ -78,7 +78,7 @@ class ReaParam:
         value = max(self.min_value, min(self.max_value, value))
         self.value = value
         
-        if self.use_osc and hasattr(self.client, 'osc_client') and self.client.osc_client:
+        if self.use_osc and hasattr(self.client, 'direct_osc_client') and self.client.direct_osc_client:
             # Try OSC first for better performance
             try:
                 if self.param_index == -1:  # Special case for FX enabled state
