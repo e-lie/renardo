@@ -270,10 +270,16 @@ class ReaperClient:
     
     def send_osc_message(self, address: str, *args):
         """Send an OSC message to REAPER."""
-        if self.osc_client:
-            self.osc_client.send_message(address, *args)
-        else:
-            raise ReaperOSCError("OSC client not available")
+        # Bypass broken reaside OSC and send directly to REAPER
+        try:
+            from pythonosc import udp_client
+            direct_client = udp_client.SimpleUDPClient("127.0.0.1", 8766)
+            direct_client.send_message(address, *args)
+        except ImportError:
+            if self.osc_client:
+                self.osc_client.send_message(address, *args)
+            else:
+                raise ReaperOSCError("OSC client not available")
     
     # Connection testing
     def ping(self) -> bool:
