@@ -32,8 +32,8 @@ if len(fx_list) < 2:
     print("❌ Need at least 2 FX on track")
     exit(1)
 
-fx = fx_list[1]  # FX index 1 (second FX)
-print(f"✅ Found FX 2: {fx.name}")
+fx = fx_list[1]  # Second FX (array index 1)
+print(f"✅ Found second FX: {fx.name}")
 
 # Get parameters
 params = fx.list_params()
@@ -88,8 +88,8 @@ try:
                 t = (freq * current_time) % 1.0
                 value = 0.1 + 0.8 * t
             
-            # Send OSC message
-            osc_address = f"/track/1/fx/1/fxparam/{i}/value"  # FX index 1 = second FX
+            # Send OSC message  
+            osc_address = f"/track/1/fx/2/fxparam/{i}/value"  # FX index 2 = second FX
             osc_client.send_message(osc_address, value)
         
         frame += 1
