@@ -5,9 +5,12 @@ import time
 from typing import Optional, Union, Any, Callable
 
 from .reaper_http_client import ReaperClient as ReaperHTTPClient, ReaperHTTPError, ReaperAPIError, ReaperNotFoundError
-from .reaper_osc_client import ReaperOSCClient, ReaperOSCError, OSC_AVAILABLE
 
 logger = logging.getLogger(__name__)
+
+class ReaperOSCError(Exception):
+    """Exception raised when OSC communication with REAPER fails."""
+    pass
 
 class ReaperClient:
     """Unified client for communicating with REAPER via HTTP and OSC."""
@@ -25,19 +28,20 @@ class ReaperClient:
         self.osc_send_port = osc_send_port
         self.osc_receive_port = osc_receive_port
         self.timeout = timeout
-        self.enable_osc = enable_osc and OSC_AVAILABLE
+        self.enable_osc = enable_osc
         
         # Initialize HTTP client
         self.http_client = ReaperHTTPClient(host, http_port, timeout)
         
-        # Initialize OSC client if available and enabled
-        self.osc_client = None
+        # Initialize direct OSC client (bypassing broken reaside OSC)
+        self.direct_osc_client = None
         if self.enable_osc:
             try:
-                self.osc_client = ReaperOSCClient(host, osc_send_port, osc_receive_port, timeout)
-                logger.info("OSC client initialized")
+                from pythonosc import udp_client
+                self.direct_osc_client = udp_client.SimpleUDPClient(host, osc_send_port)
+                logger.info(f"Direct OSC client initialized (sending to {host}:{osc_send_port})")
             except ImportError as e:
-                logger.warning(f"OSC client not available: {e}")
+                logger.warning(f"python-osc not available: {e}")
                 self.enable_osc = False
         
         # Route optimization: use OSC for real-time operations when possible
@@ -48,19 +52,18 @@ class ReaperClient:
     
     def start_osc_server(self):
         """Start the OSC server for receiving messages from REAPER."""
-        if self.osc_client:
-            self.osc_client.start_server()
+        # OSC server not implemented for direct client (send-only)
+        logger.info("OSC server not needed for direct client (send-only)")
     
     def stop_osc_server(self):
         """Stop the OSC server."""
-        if self.osc_client:
-            self.osc_client.stop_server()
+        # OSC server not implemented for direct client (send-only)
+        pass
     
     def _prefer_osc(self, operation: str) -> bool:
         """Determine if OSC should be preferred for an operation."""
-        return (self.enable_osc and 
-                self.osc_client and 
-                operation in self._osc_preferred_operations)
+        # Simplified: only use direct OSC for sending messages
+        return False  # Always use HTTP for complex operations
     
     def _fallback_to_http(self, operation: str, http_func: Callable, *args, **kwargs):
         """Execute operation with OSC first, fallback to HTTP if needed."""
@@ -269,17 +272,18 @@ class ReaperClient:
             self.osc_client.unregister_callback(address, callback)
     
     def send_osc_message(self, address: str, *args):
-        """Send an OSC message to REAPER."""
-        # Bypass broken reaside OSC and send directly to REAPER
+        """Send an OSC message to REAPER using direct python-osc client."""
         try:
             from pythonosc import udp_client
-            direct_client = udp_client.SimpleUDPClient("127.0.0.1", 8766)
-            direct_client.send_message(address, *args)
+            # Create fresh client each time (exactly like working version)
+            osc_client = udp_client.SimpleUDPClient("127.0.0.1", 8766)
+            osc_client.send_message(address, *args)
+            logger.debug(f"Sent OSC: {address} {args}")
         except ImportError:
-            if self.osc_client:
-                self.osc_client.send_message(address, *args)
-            else:
-                raise ReaperOSCError("OSC client not available")
+            raise ReaperOSCError("python-osc not available")
+        except Exception as e:
+            logger.error(f"Failed to send OSC message {address}: {e}")
+            raise ReaperOSCError(f"Failed to send OSC message: {e}")
     
     # Connection testing
     def ping(self) -> bool:
