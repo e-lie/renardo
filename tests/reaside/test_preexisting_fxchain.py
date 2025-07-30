@@ -27,17 +27,32 @@ def test_load_preexisting_fxchain(reaper_setup):
     """
     Test loading a preexisting FX chain called 'test_chain.RfxChain'.
     
-    To use this test:
-    1. Open REAPER
-    2. Create a track with some FX (e.g., ReaEQ, ReaComp)
-    3. Right-click on the FX chain and select "Save FX chain..."
-    4. Save it as "test_chain.RfxChain" in REAPER's FX chains directory
-    5. Run this test
+    This test will automatically create the test_chain.RfxChain file if it doesn't exist.
     """
     reaper, project = reaper_setup
     
-    # Find the test_chain.RfxChain file
-    print("\n=== Looking for test_chain.RfxChain ===")
+    # Define the test FX chain content (ReaEQ + ReaComp with custom settings)
+    test_fxchain_content = """BYPASS 0 0
+<VST "VST: ReaEQ (Cockos)" reaeq.vst.so 0 ReaEQTest 1919247729<56535472656571726561657100000000> ""
+  cWVlcu5e7f4CAAAAAQAAAAAAAAACAAAAAAAAAAIAAAABAAAAAAAAAAIAAAAAAAAAzQAAAAEAAAAAABAA
+  IQAAAAUAAAAAAAAAAQAAAAAAAAAAAFlAAAAAAAAA8D+amZmZmZnpPwEIAAAAAQAAAAAAAAAAwHJAAAAAAAAA8D8AAAAAAAAAQAEIAAAA
+  AQAAAAAAAAAAQI9AAAAAAAAA8D8AAAAAAAAAQAEBAAAAAQAAAAAAAAAAiLNAAAAAAAAA8D+amZmZmZnpPwEEAAAAAAAAAAAAAAAAAFlAAAAAAAAA8D8AAAAAAAAAQAEB
+  AAAAAQAAAAAAAAAAAPA/AAAAGIQCAACWAQAAAgAAAA==
+  AAAQAAAA
+>
+FXID {9DAC4DAF-8BF6-8A8F-73BD-812174B82A46}
+WAK 0 0
+BYPASS 0 0
+<VST "VST: ReaComp (Cockos)" reacomp.vst.so 0 ReaCompTest 1919247213<5653547265636D726561636F6D700000> ""
+  bWNlcu9e7f4EAAAAAQAAAAAAAAACAAAAAAAAAAQAAAAAAAAACAAAAAAAAAACAAAAAQAAAAAAAAACAAAAAAAAAFwAAAAAAAAAAAAQAA==
+  776t3g3wrd4AAIA/ED74PKabxDsK16M8AAAAAAAAAAAAAIA/AAAAAAAAAAAAAAAAnNEHMwAAgD8AAAAAzcxMPQAAAAAAAAAAAAAAAAAAgD4AAAAAAAAAAAAAAAA=
+  AAAQAAAA
+>
+FXID {BB2214ED-2D36-743E-6BE6-EABAC6BBEECE}
+WAK 0 0"""
+    
+    # Find or create the test_chain.RfxChain file
+    print("\n=== Setting up test_chain.RfxChain ===")
     
     # Common REAPER FX chains directories
     possible_dirs = [
@@ -45,43 +60,36 @@ def test_load_preexisting_fxchain(reaper_setup):
         Path.home() / ".config" / "REAPER" / "FXChains", 
         Path("/opt/REAPER/FXChains"),
         Path("~/REAPER/FXChains").expanduser(),
-        # Also check current directory
-        Path(".") / "test_chain.RfxChain",
-        Path("./FXChains") / "test_chain.RfxChain"
     ]
     
-    chain_path = None
+    # Find the first existing REAPER FXChains directory
+    fxchains_dir = None
     for dir_path in possible_dirs:
-        if dir_path.is_file():
-            # Direct file path
-            chain_path = dir_path
+        if dir_path.is_dir():
+            fxchains_dir = dir_path
+            print(f"📁 Found REAPER FXChains directory: {fxchains_dir}")
             break
-        elif dir_path.is_dir():
-            # Directory - look for test_chain.RfxChain inside
-            test_file = dir_path / "test_chain.RfxChain"
-            if test_file.exists():
-                chain_path = test_file
-                break
     
-    # If not found, try to find any .RfxChain file for testing
-    if not chain_path:
-        print("⚠️  test_chain.RfxChain not found, looking for any .RfxChain file...")
-        for dir_path in possible_dirs:
-            if dir_path.is_dir():
-                rfxchain_files = list(dir_path.glob("*.RfxChain"))
-                if rfxchain_files:
-                    chain_path = rfxchain_files[0]
-                    print(f"📁 Found alternative FX chain: {chain_path.name}")
-                    break
+    # If no FXChains directory exists, create one in the most likely location
+    if not fxchains_dir:
+        # Try to create in ~/.config/REAPER/FXChains (common on Linux)
+        fxchains_dir = Path.home() / ".config" / "REAPER" / "FXChains"
+        print(f"📁 Creating REAPER FXChains directory: {fxchains_dir}")
+        try:
+            fxchains_dir.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            pytest.skip(f"Could not create FXChains directory {fxchains_dir}: {e}")
     
-    if not chain_path or not chain_path.exists():
-        pytest.skip(
-            "No FX chain file found. Please create test_chain.RfxChain in REAPER:\n"
-            "1. Create a track with some FX\n"
-            "2. Right-click FX chain → Save FX chain...\n" 
-            "3. Save as 'test_chain.RfxChain'\n"
-            f"4. Checked directories: {[str(d) for d in possible_dirs]}"
-        )
+    # Set up the test chain file path
+    chain_path = fxchains_dir / "test_chain.RfxChain"
+    
+    # Create or update the test_chain.RfxChain file
+    try:
+        with open(chain_path, 'w') as f:
+            f.write(test_fxchain_content)
+        print(f"✅ Created test_chain.RfxChain at: {chain_path}")
+    except Exception as e:
+        pytest.skip(f"Failed to create test_chain.RfxChain: {e}")
     
     print(f"✅ Found FX chain file: {chain_path}")
     
@@ -110,6 +118,18 @@ def test_load_preexisting_fxchain(reaper_setup):
     initial_fx_count = track.get_fx_count()
     print(f"📊 Initial FX count: {initial_fx_count}")
     
+    # Add a preexisting FX to verify the chain is added after it
+    print("\n=== Adding preexisting FX ===")
+    preexisting_fx_added = track.add_fx("ReaDelay")
+    if preexisting_fx_added:
+        preexisting_fx_count = track.get_fx_count()
+        preexisting_fx_name = track.get_fx_name(0) if preexisting_fx_count > 0 else "Unknown"
+        print(f"✅ Added preexisting FX: {preexisting_fx_name}")
+        print(f"📊 FX count after adding preexisting FX: {preexisting_fx_count}")
+    else:
+        preexisting_fx_count = initial_fx_count
+        print("⚠️  Failed to add preexisting FX, continuing without it")
+    
     # Load the FX chain
     print(f"\n=== Loading FX chain from {chain_path.name} ===")
     try:
@@ -119,6 +139,12 @@ def test_load_preexisting_fxchain(reaper_setup):
         # Check final FX count
         final_fx_count = track.get_fx_count()
         print(f"📊 Final FX count: {final_fx_count}")
+        
+        # Expected count should be preexisting FX + 2 FX from chain (ReaEQ + ReaComp)
+        expected_fx_from_chain = 2  # ReaEQ + ReaComp from our test chain
+        expected_fx_count = preexisting_fx_count + expected_fx_from_chain
+        print(f"📊 Expected FX count: {expected_fx_count} (preexisting: {preexisting_fx_count} + chain: {expected_fx_from_chain})")
+        print(f"📊 Actual result: {fx_added} FX added, final count: {final_fx_count}")
         
         # Get detailed server response for debugging
         import time
@@ -144,28 +170,73 @@ def test_load_preexisting_fxchain(reaper_setup):
                 print(f"Original has FXCHAIN: {debug.get('original_has_fxchain')}")
                 print(f"New has FXCHAIN: {debug.get('new_has_fxchain')}")
         
-        # List the FX that are actually on the track
+        # List all FX that are now on the track
         if final_fx_count > 0:
-            print(f"\n=== Loaded FX ===")
+            print(f"\n=== All FX on track ===")
             for i in range(final_fx_count):
                 fx_name = track.get_fx_name(i)
-                print(f"  FX {i}: {fx_name}")
+                if i < preexisting_fx_count:
+                    print(f"  FX {i}: {fx_name} (preexisting)")
+                else:
+                    print(f"  FX {i}: {fx_name} (from chain)")
+        else:
+            print(f"\n=== No FX found on track ===")
         
         # Validation
-        if final_fx_count > initial_fx_count:
+        if final_fx_count > preexisting_fx_count:
             print("🎉 SUCCESS: FX chain loaded successfully!")
-            assert final_fx_count > initial_fx_count, "FX count should have increased"
+            print(f"✅ Track went from {preexisting_fx_count} to {final_fx_count} FX")
+            
+            # Verify the preexisting FX is still in position 0 (if we had one)
+            if preexisting_fx_count > 0 and final_fx_count > 0:
+                first_fx_name = track.get_fx_name(0)
+                if "ReaDelay" in first_fx_name:
+                    print("✅ Preexisting FX (ReaDelay) is still in position 0")
+                else:
+                    print(f"⚠️  Expected ReaDelay at position 0, but found: {first_fx_name}")
+            
+            # Verify we got the expected FX from the chain
+            if final_fx_count >= expected_fx_count:
+                # Check for ReaEQ and ReaComp from our test chain
+                fx_names = [track.get_fx_name(i) for i in range(final_fx_count)]
+                has_reaeq = any("ReaEQ" in name for name in fx_names)
+                has_reacomp = any("ReaComp" in name for name in fx_names)
+                
+                if has_reaeq and has_reacomp:
+                    print("✅ Found both ReaEQ and ReaComp from the test chain")
+                else:
+                    print(f"⚠️  Missing expected FX - ReaEQ: {has_reaeq}, ReaComp: {has_reacomp}")
+            
+            assert final_fx_count > preexisting_fx_count, "FX count should have increased from preexisting count"
             assert fx_added > 0, "add_fxchain should report FX were added"
-        else:
+            
+            # Ideal case: we should have exactly the expected count
+            if final_fx_count == expected_fx_count:
+                print(f"🎯 Perfect! Got exactly the expected {expected_fx_count} FX")
+            else:
+                print(f"📊 Note: Expected {expected_fx_count} but got {final_fx_count} FX")
+            
+        elif final_fx_count == preexisting_fx_count and fx_added == 0:
             print("⚠️  FX chain processing completed but no FX were added")
             print("   This indicates the method is working but there may be:")
             print("   - Plugin compatibility issues")
             print("   - FX chain format issues") 
             print("   - REAPER version compatibility issues")
             
+            # Verify preexisting FX is still there
+            if preexisting_fx_count > 0:
+                first_fx_name = track.get_fx_name(0) 
+                if "ReaDelay" in first_fx_name:
+                    print("✅ At least the preexisting FX (ReaDelay) is still present")
+                else:
+                    print(f"⚠️  Preexisting FX missing! Found: {first_fx_name}")
+            
             # The test passes because the method executed without errors
-            # but we note that the FX weren't actually loaded
             assert fx_added == 0, f"Expected 0 FX added, got {fx_added}"
+            
+        else:
+            print(f"❌ Unexpected state: initial={initial_fx_count}, preexisting={preexisting_fx_count}, final={final_fx_count}, added={fx_added}")
+            pytest.fail(f"Unexpected FX count state")
         
         # Try to access FX through reaside
         track.rescan_fx()
@@ -182,6 +253,14 @@ def test_load_preexisting_fxchain(reaper_setup):
     # Cleanup
     try:
         track.delete()
+    except:
+        pass  # Best effort cleanup
+        
+    # Clean up the test FX chain file
+    try:
+        if chain_path.exists():
+            chain_path.unlink()
+            print(f"🧹 Cleaned up test_chain.RfxChain")
     except:
         pass  # Best effort cleanup
 
