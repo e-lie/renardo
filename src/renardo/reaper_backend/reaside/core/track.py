@@ -346,7 +346,11 @@ class ReaTrack:
         if isinstance(result, dict):
             if result.get("success"):
                 fx_added = result.get("fx_added", 0)
+                temp_fx_count = result.get("temp_fx_count", 0)
+                moved_fx_count = result.get("moved_fx_count", 0)
+                
                 logger.info(f"Added FX chain '{chain_path.name}' to track {self._index} - {fx_added} FX added")
+                logger.debug(f"Temp track had {temp_fx_count} FX, moved {moved_fx_count} FX")
                 
                 # Rescan track to update FX objects if FX were added
                 if fx_added > 0:
@@ -361,6 +365,10 @@ class ReaTrack:
                     raise FileNotFoundError(f"Could not read FX chain file: {chain_path}")
                 elif error_msg == "Invalid FX chain file format":
                     raise RuntimeError(f"Invalid FX chain file format: {chain_path}")
+                elif error_msg == "Failed to create temporary track":
+                    raise RuntimeError("Failed to create temporary track for FX chain loading")
+                elif error_msg == "Failed to add chunk to temporary track":
+                    raise RuntimeError("Failed to add FX chain chunk to temporary track")
                 else:
                     raise RuntimeError(f"Error adding FX chain: {error_msg}")
         

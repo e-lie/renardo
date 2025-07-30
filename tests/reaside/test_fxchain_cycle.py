@@ -119,12 +119,59 @@ def test_fxchain_full_cycle(reaper_setup):
         # Step 4: Load the FX chain
         print(f"\n=== Step 4: Loading FX chain ===")
         
-        fx_added = new_track.add_fxchain(temp_chain_path)
-        print(f"FX added by add_fxchain: {fx_added}")
+        # Debug: Get more info about the process
+        print(f"Loading FX chain from: {temp_chain_path}")
+        print(f"Target track: {new_track.name} (index: {new_track.index})")
+        
+        # Get initial state for comparison
+        initial_fx_count_reload = new_track.get_fx_count()
+        print(f"Track FX count before loading: {initial_fx_count_reload}")
+        
+        # Test the add_fxchain method with debug info
+        try:
+            fx_added = new_track.add_fxchain(temp_chain_path)
+            print(f"FX added by add_fxchain: {fx_added}")
+        except Exception as e:
+            print(f"Error in add_fxchain: {e}")
+            fx_added = 0
         
         # Verify FX were loaded
         final_fx_count = new_track.get_fx_count()
         print(f"Final FX count: {final_fx_count}")
+        
+        # Debug: Check if track state changed at all
+        if final_fx_count == initial_fx_count_reload:
+            print("⚠️  Track state unchanged - investigating...")
+            
+            # Let's check the server response directly
+            import time
+            time.sleep(0.1)
+            server_result = new_track._client.get_ext_state("reaside", "add_fxchain_result")
+            print(f"Server response: {server_result}")
+            
+            # Show debug info if available
+            if isinstance(server_result, dict) and "debug" in server_result:
+                debug = server_result["debug"]
+                print(f"Debug info:")
+                print(f"  Chunk changed: {debug.get('chunk_changed')}")
+                print(f"  Original chunk length: {debug.get('original_chunk_length')}")
+                print(f"  New chunk length: {debug.get('new_chunk_length')}")
+                print(f"  Chain content length: {debug.get('chain_content_length')}")
+                print(f"  Original has FXCHAIN: {debug.get('original_has_fxchain')}")
+                print(f"  New has FXCHAIN: {debug.get('new_has_fxchain')}")
+                print(f"  Original chunk preview: {debug.get('original_chunk_preview', '')[:100]}...")
+                print(f"  New chunk preview: {debug.get('new_chunk_preview', '')[:100]}...")
+                print(f"  Chain content preview: {debug.get('chain_content_preview', '')[:100]}...")
+            
+            # Check if the file still exists and has content
+            if temp_chain_path.exists():
+                with open(temp_chain_path, 'r') as f:
+                    content = f.read()
+                print(f"File still exists, size: {len(content)} chars")
+                if content:
+                    print(f"File content sample: {content[:100]}...")
+            else:
+                print("⚠️  FX chain file no longer exists!")
         
         # List the loaded FX
         loaded_fx_list = []
