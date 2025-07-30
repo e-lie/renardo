@@ -439,7 +439,7 @@ class ReaTrack:
         """Check if an FX is enabled."""
         return self._client.call_reascript_function("TrackFX_GetEnabled", self.id, fx_index)
     
-    def save_fx_chain(self, chain_path: Union[str, Path]) -> bool:
+    def save_fxchain(self, chain_path: Union[str, Path]) -> bool:
         """Save current FX chain to a file using reaside server."""
         chain_path = Path(chain_path)
         
@@ -482,7 +482,7 @@ class ReaTrack:
         # If we get here, something went wrong
         raise RuntimeError(f"Unknown error saving FX chain: {result}")
     
-    def load_fx_chain(self, chain_path: Union[str, Path]) -> bool:
+    def load_fxchain(self, chain_path: Union[str, Path]) -> bool:
         """Load FX chain from a file."""
         chain_path = Path(chain_path)
         
@@ -496,6 +496,10 @@ class ReaTrack:
         except Exception as e:
             logger.error(f"Failed to load FX chain: {e}")
             return False
+    
+    # Add aliases for backward compatibility
+    save_fx_chain = save_fxchain
+    load_fx_chain = load_fxchain
     
     # FX object access methods
     def get_fx(self, fx_identifier: Union[int, str]) -> Optional['ReaFX']:
