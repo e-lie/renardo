@@ -82,7 +82,7 @@ def test_fxchain_full_cycle(reaper_setup):
     
     try:
         # Save the current FX chain
-        save_success = track.save_fx_chain(temp_chain_path)
+        save_success = track.save_fxchain(temp_chain_path)
         print(f"Save FX chain success: {save_success}")
         assert save_success, "Failed to save FX chain"
         
