@@ -708,12 +708,12 @@ function save_fxchain()
   -- Extract FX section from chunk
   local fx_section = ""
   local in_fx_section = false
-  for line in chunk:gmatch("[^\n]+") do
+  for line in chunk:gmatch("[^\r\n]+") do
     if line:match("^<FXCHAIN") then
       in_fx_section = true
       fx_section = fx_section .. line .. "\n"
     elseif line:match("^>") and in_fx_section then
-      fx_section = fx_section .. line .. "\n"
+      fx_section = fx_section .. line
       break
     elseif in_fx_section then
       fx_section = fx_section .. line .. "\n"
@@ -740,7 +740,67 @@ function save_fxchain()
   reaper.DeleteExtState(SECTION, "save_fxchain_request", false)
 end
 
--- Add FX chain from a file to a track
+-- Helper function to add chunk to track (based on ReaperIntegrationLib)
+function add_chunk_to_track(track, chunk_content)
+  log("Adding chunk to track")
+  
+  local retval, track_xml_chunk = reaper.GetTrackStateChunk(track, "", 999999, false)
+  if not retval then
+    log("Failed to get track state chunk")
+    return false
+  end
+  
+  log("Original track chunk length: " .. #track_xml_chunk)
+  
+  -- Add empty FX chain if it doesn't exist
+  if not track_xml_chunk:find("FXCHAIN") then
+    log("Track has no FXCHAIN - adding empty one")
+    -- Insert empty FXCHAIN before the closing >
+    track_xml_chunk = track_xml_chunk:gsub("(.*)(>\n*)$", "%1\n<FXCHAIN\nSHOW 0\nLASTSEL 0\nDOCKED 0\n>\n%2")
+  end
+  
+  -- Add the chunk content after DOCKED 0
+  if chunk_content and chunk_content ~= "" then
+    log("Adding content after DOCKED 0")
+    track_xml_chunk = track_xml_chunk:gsub("DOCKED 0", "DOCKED 0\n" .. chunk_content)
+  end
+  
+  log("Modified track chunk length: " .. #track_xml_chunk)
+  
+  -- Set the modified chunk back to the track
+  local set_result = reaper.SetTrackStateChunk(track, track_xml_chunk, false)
+  log("SetTrackStateChunk result: " .. tostring(set_result))
+  
+  return set_result
+end
+
+-- Helper function to move FX from one track to another (based on ReaperIntegrationLib)
+function move_fx(source_track, dest_track)
+  log("Moving FX from source track to destination track")
+  
+  local fx_count = reaper.TrackFX_GetCount(source_track)
+  log("Source track has " .. fx_count .. " FX to move")
+  
+  local moved_count = 0
+  
+  -- Move each FX from source to destination
+  for i = fx_count - 1, 0, -1 do  -- Move backwards to maintain indices
+    local success = reaper.TrackFX_CopyToTrack(source_track, i, dest_track, -1, false)
+    if success then
+      log("Moved FX " .. i .. " successfully")
+      -- Delete the FX from source after copying
+      reaper.TrackFX_Delete(source_track, i)
+      moved_count = moved_count + 1
+    else
+      log("Failed to move FX " .. i)
+    end
+  end
+  
+  log("Moved " .. moved_count .. " FX total")
+  return moved_count
+end
+
+-- Add FX chain from a file to a track (based on ReaperIntegrationLib approach)
 function add_fxchain()
   -- Get add request
   local add_request = get_ext_state(SECTION, "add_fxchain_request")
@@ -765,9 +825,9 @@ function add_fxchain()
   
   track_index = tonumber(track_index)
   
-  -- Get track object
-  local track = reaper.GetTrack(0, track_index)
-  if not track then
+  -- Get target track object
+  local target_track = reaper.GetTrack(0, track_index)
+  if not target_track then
     log("Track not found at index " .. track_index)
     set_ext_state(SECTION, "add_fxchain_result", {
       error = "Track not found"
@@ -777,7 +837,8 @@ function add_fxchain()
   end
   
   -- Get FX count before adding the chain
-  local fx_count_before = reaper.TrackFX_GetCount(track)
+  local fx_count_before = reaper.TrackFX_GetCount(target_track)
+  log("Target track has " .. fx_count_before .. " FX initially")
   
   -- Read the FX chain file
   local file = io.open(file_path, "r")
@@ -802,101 +863,90 @@ function add_fxchain()
     return
   end
   
-  -- Validate chain content
-  if not chain_content:find("<FXCHAIN") and not chain_content:find("BYPASS") then
-    log("Invalid FX chain file format")
+  log("Chain content length: " .. #chain_content)
+  log("Chain content preview: " .. chain_content:sub(1, 100) .. "...")
+  
+  -- Use ReaperIntegrationLib approach: create temporary track and move FX
+  log("Creating temporary track for FX chain loading")
+  
+  -- Prevent UI refresh during operation
+  reaper.PreventUIRefresh(1)
+  
+  -- Add empty track at the end to instantiate chain
+  local track_count = reaper.CountTracks(0)
+  reaper.InsertTrackAtIndex(track_count, false)
+  local temp_track = reaper.GetTrack(0, track_count)  -- New track is at the end
+  
+  if not temp_track then
+    log("Failed to create temporary track")
+    reaper.PreventUIRefresh(-1)
     set_ext_state(SECTION, "add_fxchain_result", {
-      error = "Invalid FX chain file format"
+      error = "Failed to create temporary track"
     }, false)
     reaper.DeleteExtState(SECTION, "add_fxchain_request", false)
     return
   end
   
-  -- Get current track state chunk
-  local retval, chunk = reaper.GetTrackStateChunk(track, "", 16384, false)
-  if not retval then
-    log("Failed to get track state chunk")
+  log("Created temporary track")
+  
+  -- Add chain via XML chunk format to temporary track
+  local chunk_success = add_chunk_to_track(temp_track, chain_content)
+  if not chunk_success then
+    log("Failed to add chunk to temporary track")
+    reaper.DeleteTrack(temp_track)
+    reaper.PreventUIRefresh(-1)
     set_ext_state(SECTION, "add_fxchain_result", {
-      error = "Failed to get track chunk"
+      error = "Failed to add chunk to temporary track"
     }, false)
     reaper.DeleteExtState(SECTION, "add_fxchain_request", false)
     return
   end
   
-  -- Modify the chunk to include the FX chain
-  local new_chunk
-  if chunk:find("<FXCHAIN") then
-    -- Find the FXCHAIN section and replace it
-    local fxchain_start = chunk:find("<FXCHAIN")
-    if fxchain_start then
-      -- Find the matching closing > for this FXCHAIN section
-      -- Count nested sections to find the right closing >
-      local pos = fxchain_start
-      local depth = 0
-      while pos <= #chunk do
-        local char = chunk:sub(pos, pos)
-        if char == '<' then
-          depth = depth + 1
-        elseif char == '>' then
-          depth = depth - 1
-          if depth == 0 then
-            -- Found the closing > for the FXCHAIN
-            local fxchain_end = pos + 1
-            new_chunk = chunk:sub(1, fxchain_start - 1) .. chain_content .. chunk:sub(fxchain_end)
-            break
-          end
-        end
-        pos = pos + 1
-      end
-      
-      if not new_chunk then
-        log("Could not find end of FXCHAIN section")
-        set_ext_state(SECTION, "add_fxchain_result", {
-          error = "Could not parse existing FXCHAIN"
-        }, false)
-        reaper.DeleteExtState(SECTION, "add_fxchain_request", false)
-        return
-      end
-    else
-      log("FXCHAIN marker found but could not locate section")
-      set_ext_state(SECTION, "add_fxchain_result", {
-        error = "Could not locate FXCHAIN section"
-      }, false)
-      reaper.DeleteExtState(SECTION, "add_fxchain_request", false)
-      return
-    end
-  else
-    -- Add FX chain to track without existing FXCHAIN
-    if chunk:sub(-1) == '>' then
-      new_chunk = chunk:sub(1, -2) .. "\n" .. chain_content .. "\n>"
-    else
-      new_chunk = chunk .. "\n" .. chain_content
-    end
+  -- Check how many FX were loaded on the temporary track
+  local temp_fx_count = reaper.TrackFX_GetCount(temp_track)
+  log("Temporary track has " .. temp_fx_count .. " FX after loading chain")
+  
+  -- Move FX from temporary track to target track
+  local moved_fx_count = 0
+  if temp_fx_count > 0 then
+    moved_fx_count = move_fx(temp_track, target_track)
   end
   
-  -- Set the modified chunk back to the track
-  local set_result = reaper.SetTrackStateChunk(track, new_chunk, false)
-  if not set_result then
-    log("Failed to set modified track state chunk")
-    set_ext_state(SECTION, "add_fxchain_result", {
-      error = "Failed to set track chunk"
-    }, false)
-    reaper.DeleteExtState(SECTION, "add_fxchain_request", false)
-    return
-  end
+  -- Remove the temporary track
+  reaper.DeleteTrack(temp_track)
   
-  -- Get FX count after adding the chain
-  local fx_count_after = reaper.TrackFX_GetCount(track)
+  -- Re-enable UI refresh
+  reaper.PreventUIRefresh(-1)
+  
+  -- Get final FX count
+  local fx_count_after = reaper.TrackFX_GetCount(target_track)
   local fx_added = fx_count_after - fx_count_before
   
-  log("FX chain added successfully. FX count before: " .. fx_count_before .. ", after: " .. fx_count_after)
+  log("FX chain process completed:")
+  log("  FX count before: " .. fx_count_before)
+  log("  FX count after: " .. fx_count_after)
+  log("  FX added: " .. fx_added)
+  log("  FX moved from temp track: " .. moved_fx_count)
+  
+  -- List the FX that are now on the target track
+  if fx_count_after > 0 then
+    log("Current FX on target track:")
+    for i = 0, fx_count_after - 1 do
+      local retval, fx_name = reaper.TrackFX_GetFXName(target_track, i, "", 256)
+      log("  FX " .. i .. ": " .. tostring(fx_name))
+    end
+  else
+    log("No FX found on target track after adding chain")
+  end
   
   -- Success response
   set_ext_state(SECTION, "add_fxchain_result", {
     success = true,
     fx_added = fx_added,
     fx_count_before = fx_count_before,
-    fx_count_after = fx_count_after
+    fx_count_after = fx_count_after,
+    temp_fx_count = temp_fx_count,
+    moved_fx_count = moved_fx_count
   }, false)
   
   -- Clear the request
