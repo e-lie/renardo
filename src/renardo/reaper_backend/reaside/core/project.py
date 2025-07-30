@@ -230,3 +230,60 @@ class ReaProject:
     def __iter__(self):
         """Iterate over tracks."""
         return iter(self.tracks)
+    
+    def create_standard_midi_track(self, track_num: int):
+        """
+        Create a MIDI track for renardo integration.
+
+        The track is:
+        - Named chan1 to 16 from track_num
+        - Record armed
+        - Set to receive from "All MIDI inputs"
+        - Set to receive from the MIDI channel corresponding to its number
+        - Record mode set to "Stereo Out" (monitors the track output)
+        
+        Args:
+            track_num: MIDI channel number (1-16)
+            
+        Returns:
+            ReaTrack: The created track
+        """
+        # Create track with name "chanX" where X is the channel number
+        track_name = f"chan{track_num}"
+        
+        # Add track and get its index
+        track = self.add_track()
+        track.name = track_name
+        
+        # Set MIDI input to "All MIDI inputs" on the appropriate channel
+        # ReaScript: I_RECINPUT = 4096 + (channel - 1) for "All MIDI inputs" on specific channel
+        midi_input_value = 4096 + (track_num - 1)
+        track_obj = self._client.call_reascript_function("GetTrack", 0, track._index)
+        self._client.call_reascript_function("SetMediaTrackInfo_Value", track_obj, "I_RECINPUT", midi_input_value)
+        
+        # Arm the track for recording
+        track.is_armed = True
+        
+        # Set record mode to "2 = None (monitors input)"
+        self._client.call_reascript_function("SetMediaTrackInfo_Value", track_obj, "I_RECMODE", 2)
+        
+        logger.info(f"Created MIDI track '{track_name}' for channel {track_num}")
+        return track
+    
+    def create_16_midi_tracks(self):
+        """
+        Creates 16 MIDI tracks in REAPER, one for each MIDI channel.
+        
+        Returns:
+            List[ReaTrack]: List of created tracks
+        """
+        logger.info("Creating 16 MIDI tracks for renardo integration")
+        tracks = []
+        
+        # Create 16 tracks, one for each MIDI channel
+        for i in range(1, 17):  # 1 to 16
+            track = self.create_standard_midi_track(i)
+            tracks.append(track)
+            
+        logger.info("Successfully created 16 MIDI tracks")
+        return tracks
