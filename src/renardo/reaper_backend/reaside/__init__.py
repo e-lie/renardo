@@ -6,6 +6,10 @@ import os
 import time
 import logging
 
+from .tools.reaper_client import ReaperClient
+from .core.reaper import Reaper
+from .core.project import ReaProject
+
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
