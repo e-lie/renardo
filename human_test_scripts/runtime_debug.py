@@ -19,7 +19,8 @@ bass303 = ReaperInstrument(
     category='bass'
 )
 
-
-print(bass303)
+b2 >> blip()
+#m1 >> MidiOut([0,2,0,4])
+#b1 >> bass303([0,2,0,4])
 
 time.sleep(10)

@@ -20,6 +20,7 @@ from renardo.lib.Patterns import Pattern
 # Import reaside components
 from renardo.reaper_backend.reaside.core.reaper import Reaper
 from renardo.reaper_backend.reaside.tools.reaper_client import ReaperClient
+from renardo.reaper_backend.reaside.utils import split_param_name, set_fx_parameter, enable_fx
 
 # Use TYPE_CHECKING to avoid circular imports
 #if TYPE_CHECKING:
@@ -130,9 +131,20 @@ class ReaperInstrument(Instrument):
         # Get or create track using reaside
         self._reatrack = self.__class__._project.get_track_by_name(self.track_name)
         if not self._reatrack:
-            # Create the track if it doesn't exist
-            self._reatrack = self.__class__._project.add_track()
-            self._reatrack.name = self.track_name
+            # Create the track if it doesn't exist using standard MIDI track creation
+            if self.track_name.startswith('chan') and self.track_name[4:].isdigit():
+                # Use create_standard_midi_track for chan1-16 tracks
+                track_num = int(self.track_name[4:])
+                if 1 <= track_num <= 16:
+                    self._reatrack = self.__class__._project.create_standard_midi_track(track_num)
+                else:
+                    # Fallback for invalid channel numbers
+                    self._reatrack = self.__class__._project.add_track()
+                    self._reatrack.name = self.track_name
+            else:
+                # Regular track creation for non-standard track names
+                self._reatrack = self.__class__._project.add_track()
+                self._reatrack.name = self.track_name
         
         if custom_default_sustain is not None:
             self._sus = custom_default_sustain
@@ -163,7 +175,7 @@ class ReaperInstrument(Instrument):
         if hasattr(self.__class__, 'instrument_dict'):
             self.instrument_dict[self.shortname] = self
 
-        self.__class__.update_used_track_indexes()
+        #self.__class__.update_used_track_indexes()
 
     def _get_caller_file(self):
         """Get the path of the file that created this object instance."""
@@ -249,34 +261,34 @@ class ReaperInstrument(Instrument):
          - tries to apply all parameters in reaper (track fx and send parameters)
          - then send the rest to FoxDot to control supercollider
         """
-        # TODO: Implement parameter handling with reaside
-        # For now, pass all parameters to remaining_param_dict for FoxDot handling
+        # Handle FX enable/disable parameters first (from runtime_kwargs)
+        for key, value in runtime_kwargs.items():
+            fx_name, param_name = split_param_name(key)
+            if param_name != 'on' and key not in ['dur', 'sus', 'root', 'amp', 'amplify', 'degree', 'scale', 'room', 'crush', 'fmod']:
+                # If FX parameter is being set, enable the FX
+                if fx_name:
+                    enable_fx_param = fx_name + '_on'
+                    param_dict[enable_fx_param] = True
+
+        # Apply parameters to REAPER FX using reaside utilities
         for param_fullname, value in param_dict.items():
-            # Try to apply to reaside FX parameters
-            try:
-                # Split parameter name (fx_name_param_name format)
-                if '_' in param_fullname:
-                    parts = param_fullname.split('_')
-                    if len(parts) >= 2:
-                        fx_name = '_'.join(parts[:-1])
-                        param_name = parts[-1]
-                        
-                        # Try to find FX by name and set parameter
-                        fx_obj = reatrack.get_fx_by_name(fx_name)
-                        if fx_obj and hasattr(fx_obj, 'get_param'):
-                            try:
-                                param = fx_obj.get_param(param_name)
-                                if param:
-                                    param.set_value(value)
-                                    continue  # Successfully set, don't add to remaining
-                            except:
-                                pass
-                
-                # If we get here, parameter wasn't handled by REAPER
-                remaining_param_dict[param_fullname] = value
-                
-            except Exception as e:
-                # If any error occurs, pass to remaining params
+            # Handle special FX enable/disable parameters
+            if param_fullname.endswith('_on'):
+                fx_name = param_fullname[:-3]  # Remove '_on' suffix
+                if enable_fx(reatrack, fx_name, bool(value)):
+                    # Successfully handled FX enable/disable
+                    continue
+                else:
+                    # Pass to remaining params if not handled
+                    remaining_param_dict[param_fullname] = value
+                    continue
+            
+            # Try to set FX parameter using reaside utilities
+            if set_fx_parameter(reatrack, param_fullname, value):
+                # Successfully set parameter in REAPER, don't add to remaining
+                continue
+            else:
+                # Parameter not handled by REAPER, pass to FoxDot
                 remaining_param_dict[param_fullname] = value
 
     def __call__(self, *args, sus=None, **kwargs):
