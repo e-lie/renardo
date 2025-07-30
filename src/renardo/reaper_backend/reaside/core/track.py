@@ -18,8 +18,10 @@ class ReaTrack:
         self._client = project._client
         self._index = index
         self._items = {}  # Cache for Item objects
-        self._fx_objects = {}  # Cache for ReaFX objects
         self._scan_data = None  # Track scan data cache
+        
+        # FX storage - unified dict for both numeric index and snake_name access
+        self.reafxs = {}  # Dict storing ReaFX objects by snake_name AND numeric index
         
         # Perform initial scan to populate FX and parameters
         self._scan_track()
@@ -30,12 +32,12 @@ class ReaTrack:
             scan_result = self._client.scan_track_complete(self._index)
             if scan_result and scan_result.get('success'):
                 self._scan_data = scan_result['track']
-                self._populate_fx_objects()
+                self._populate_reafxs()
         except Exception as e:
             logger.warning(f"Failed to scan track {self._index}: {e}")
             self._scan_data = None
     
-    def _populate_fx_objects(self):
+    def _populate_reafxs(self):
         """Create ReaFX objects from scan data."""
         if not self._scan_data or 'fx' not in self._scan_data:
             return
@@ -55,10 +57,10 @@ class ReaTrack:
                 scan_data=fx_data
             )
             
-            # Store by index and snake_case name
-            self._fx_objects[fx_index] = fx_obj
+            # Store by index and snake_case name in cache
+            self.reafxs[fx_index] = fx_obj
             snake_name = self._make_snake_name(fx_name)
-            self._fx_objects[snake_name] = fx_obj
+            self.reafxs[snake_name] = fx_obj
     
     def _make_snake_name(self, name: str) -> str:
         """Convert a name to snake_case."""
@@ -120,7 +122,7 @@ class ReaTrack:
     @is_muted.setter
     def is_muted(self, value: bool) -> None:
         """Set track mute state."""
-        # Use unified client for better performance with OSC if available
+        # Use client with OSC if available
         self._client.set_track_mute(self._index + 1, value)  # Convert to 1-based
     
     @property
@@ -131,7 +133,7 @@ class ReaTrack:
     @is_soloed.setter
     def is_soloed(self, value: bool) -> None:
         """Set track solo state."""
-        # Use unified client for better performance with OSC if available
+        # Use client with OSC if available
         self._client.set_track_solo(self._index + 1, value)  # Convert to 1-based
     
     @property
@@ -605,18 +607,18 @@ class ReaTrack:
     # FX object access methods
     def get_fx(self, fx_identifier: Union[int, str]) -> Optional['ReaFX']:
         """Get ReaFX object by index or snake_case name."""
-        return self._fx_objects.get(fx_identifier)
+        return self.reafxs.get(fx_identifier)
     
     def get_fx_by_name(self, name: str) -> Optional['ReaFX']:
         """Get ReaFX object by original name or snake_case name."""
         # Try snake_case first
         snake_name = self._make_snake_name(name)
-        fx = self._fx_objects.get(snake_name)
+        fx = self.reafxs.get(snake_name)
         if fx:
             return fx
         
         # Try exact match with original name
-        for fx in self._fx_objects.values():
+        for fx in self.reafxs.values():
             if hasattr(fx, 'name') and fx.name == name:
                 return fx
         
@@ -625,18 +627,51 @@ class ReaTrack:
     def list_fx(self) -> List['ReaFX']:
         """Get list of all ReaFX objects on this track."""
         # Return only indexed FX objects (not the string keys)
-        return [fx for key, fx in self._fx_objects.items() if isinstance(key, int)]
+        return [fx for key, fx in self.reafxs.items() if isinstance(key, int)]
     
     def rescan_fx(self):
         """Manually trigger FX rescan."""
         self._scan_track()
+    
+    def create_reafxs_for_chain(self, chain_name, param_alias_dict={}, scan_all_params=False):
+        """
+        Create ReaFX instances for a given FX chain.
+        
+        This method provides compatibility with the old ReaperIntegrationLib API.
+        
+        Args:
+            chain_name: Name of the FX chain to add
+            param_alias_dict: Dictionary of parameter aliases (not used in reaside)
+            scan_all_params: Whether to scan all parameters (always True in reaside)
+            
+        Returns:
+            List[str]: List of snake_case FX names that were created
+        """
+        # Get current FX count before adding chain
+        fx_count_before = len(self.list_fx())
+        
+        # Add the FX chain
+        fx_count_added = self.add_fxchain(chain_name)
+        
+        # Get the new FX objects (they were automatically scanned)
+        all_fx = self.list_fx()
+        new_fx_list = all_fx[fx_count_before:fx_count_before + fx_count_added]
+        
+        # Return the snake_case names of the new FX
+        chain_reafx_names = []
+        for fx in new_fx_list:
+            # The FX name is already snake_case in reaside
+            snake_name = fx.snake_name
+            chain_reafx_names.append(snake_name)
+            
+        return chain_reafx_names
     
     def __getattr__(self, name: str):
         """Allow accessing FX by snake_case name as attributes."""
         if name.startswith('_'):
             raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
         
-        fx = self._fx_objects.get(name)
+        fx = self.reafxs.get(name)
         if fx:
             return fx
         
