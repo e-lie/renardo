@@ -8,10 +8,10 @@ import time
 def test_project_automatic_track_scanning(clean_project, client):
     """Test that project automatically scans all tracks on creation."""
     # Clean project should have scanned existing tracks
-    assert hasattr(clean_project, '_tracks'), "Project should have tracks cache"
+    assert hasattr(clean_project, 'reatracks'), "Project should have tracks cache"
     
     # Should have at least the master track (or empty project)
-    track_count = len(clean_project._tracks)
+    track_count = len(clean_project.reatracks)
     assert track_count >= 0, "Project should have scanned tracks"
     
     # Track count should match REAPER's count
@@ -102,7 +102,7 @@ def test_project_with_existing_tracks_and_fx(reaper_instance, client):
     new_project = type(project)(reaper_instance, project.index)
     
     # Should have scanned the track with FX
-    assert len(new_project._tracks) > 0, "New project should have scanned existing tracks"
+    assert len(new_project.reatracks) > 0, "New project should have scanned existing tracks"
     
     # Find the FX test track
     fx_track = None
@@ -133,13 +133,13 @@ def test_project_rescan_functionality(clean_project, client):
     track1 = clean_project.add_track()
     track2 = clean_project.add_track()
     
-    original_count = len(clean_project._tracks)
+    original_count = len(clean_project.reatracks)
     
     # Manual rescan
     clean_project.rescan_all_tracks()
     
     # Should have same number of tracks
-    new_count = len(clean_project._tracks)
+    new_count = len(clean_project.reatracks)
     assert new_count == original_count, "Rescan should maintain track count"
     
     # Tracks should still be accessible
