@@ -706,19 +706,88 @@ function save_fxchain()
   end
   
   -- Extract FX section from chunk
+  log("Extracting FXCHAIN section from track chunk")
+  log("Chunk length: " .. #chunk)
+  
   local fx_section = ""
-  local in_fx_section = false
-  for line in chunk:gmatch("[^\r\n]+") do
-    if line:match("^<FXCHAIN") then
-      in_fx_section = true
-      fx_section = fx_section .. line .. "\n"
-    elseif line:match("^>") and in_fx_section then
-      fx_section = fx_section .. line
-      break
-    elseif in_fx_section then
-      fx_section = fx_section .. line .. "\n"
-    end
+  local fxchain_start = chunk:find("<FXCHAIN")
+  
+  if not fxchain_start then
+    log("No FXCHAIN section found in track chunk")
+    set_ext_state(SECTION, "save_fxchain_result", {
+      error = "No FXCHAIN section found"
+    }, false)
+    reaper.DeleteExtState(SECTION, "save_fxchain_request", false)
+    return
   end
+  
+  log("Found FXCHAIN at position: " .. fxchain_start)
+  
+  -- Find the matching closing > for the FXCHAIN section
+  local pos = fxchain_start + 8 -- Start after "<FXCHAIN"
+  local depth = 1
+  local fxchain_end = nil
+  
+  while pos <= #chunk do
+    local char = chunk:sub(pos, pos)
+    if char == '<' then
+      depth = depth + 1
+    elseif char == '>' then
+      depth = depth - 1
+      if depth == 0 then
+        -- Found the closing > for the FXCHAIN
+        fxchain_end = pos
+        log("Found FXCHAIN end at position: " .. fxchain_end)
+        break
+      end
+    end
+    pos = pos + 1
+  end
+  
+  if not fxchain_end then
+    log("Could not find end of FXCHAIN section")
+    set_ext_state(SECTION, "save_fxchain_result", {
+      error = "Could not parse FXCHAIN section"
+    }, false)
+    reaper.DeleteExtState(SECTION, "save_fxchain_request", false)
+    return
+  end
+  
+  -- For .RfxChain format, we need just the inner content (without <FXCHAIN> tags)
+  -- Find the first newline after <FXCHAIN to get the inner content start
+  local newline_after_fxchain = chunk:find("\n", fxchain_start)
+  if not newline_after_fxchain then
+    log("Could not find content after FXCHAIN tag")
+    set_ext_state(SECTION, "save_fxchain_result", {
+      error = "Invalid FXCHAIN format"
+    }, false)
+    reaper.DeleteExtState(SECTION, "save_fxchain_request", false)
+    return
+  end
+  
+  -- Extract inner content (everything between <FXCHAIN\n and the final >)
+  local inner_start = newline_after_fxchain + 1
+  local inner_end = fxchain_end - 1
+  
+  -- Skip the final newline if present
+  while inner_end > inner_start and (chunk:sub(inner_end, inner_end) == '\n' or chunk:sub(inner_end, inner_end) == '\r') do
+    inner_end = inner_end - 1
+  end
+  
+  fx_section = chunk:sub(inner_start, inner_end)
+  
+  -- Validate that we have some content
+  if not fx_section or fx_section:match("^%s*$") then
+    log("FXCHAIN section is empty")
+    set_ext_state(SECTION, "save_fxchain_result", {
+      error = "Empty FXCHAIN section"
+    }, false)
+    reaper.DeleteExtState(SECTION, "save_fxchain_request", false)
+    return
+  end
+  
+  log("Extracted FX section length: " .. #fx_section)
+  log("FX section preview: " .. fx_section:sub(1, 100) .. "...")
   
   -- Write to file
   local file = io.open(file_path, "w")
