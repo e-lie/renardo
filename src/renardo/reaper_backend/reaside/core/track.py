@@ -306,7 +306,7 @@ class ReaTrack:
         return result_str == "true" or result_str == "1"
     
     def add_fxchain(self, chain_path_or_name: Union[str, Path]) -> int:
-        """Add an FX chain to the track."""
+        """Add an FX chain to the track using reaside server."""
         chain_path = None
         
         # Convert to Path object if string represents an existing file path
@@ -327,126 +327,53 @@ class ReaTrack:
         if chain_path is None:
             raise FileNotFoundError(f"FX chain not found: {chain_path_or_name}")
         
-        # Make sure chain_path is a string
-        chain_path_str = str(chain_path)
+        # Create request for the reaside server
+        request = {
+            "track_index": self._index,
+            "file_path": str(chain_path)
+        }
         
-        # Use a completely script-based approach to avoid MediaTrack issues
-        # Store the track index and FX chain path
-        self._client.set_ext_state("reaside", "track_index", str(self._index))
-        self._client.set_ext_state("reaside", "fxchain_path", chain_path_str)
+        # Send request to reaside server
+        self._client.set_ext_state("reaside", "add_fxchain_request", request)
         
-        # Create a comprehensive script that handles everything
-        full_script = f"""
-        -- Get our track
-        local track_index = {self._index}
-        local track = reaper.GetTrack(0, track_index)
-        if not track then
-            reaper.SetExtState("reaside", "fxchain_result", "ERROR:TRACK_NOT_FOUND", false)
-            return
-        end
-        
-        -- Get FX count before adding the chain
-        local fx_count_before = reaper.TrackFX_GetCount(track)
-        
-        -- Select just this track (required for some operations)
-        reaper.Main_OnCommand(40297, 0) -- Track: Unselect all tracks
-        reaper.SetTrackSelected(track, true)
-        
-        -- Get the FX chain path
-        local chain_path = "{chain_path_str.replace('\\', '\\\\')}"
-        local success = 0
-        
-        -- Method 1: Try direct API
-        local result1 = reaper.TrackFX_AddByName(track, chain_path, false, -1)
-        if result1 >= 0 then
-            success = 1
-        else
-            -- Method 2: Try with track state chunk
-            local retval, chunk = reaper.GetTrackStateChunk(track, "", 16384, false)
-            if retval then
-                local file = io.open(chain_path, "r")
-                if file then
-                    local chain_content = file:read("*all")
-                    file:close()
-                    
-                    if chain_content:find("<FXCHAIN") then
-                        -- Insert the FX chain content
-                        if chunk:find("<FXCHAIN") then
-                            local start = chunk:find("<FXCHAIN")
-                            local end_pos = chunk:find(">", chunk:find("</FXCHAIN")) + 1
-                            if end_pos > start then
-                                chunk = chunk:sub(1, start) .. chain_content .. chunk:sub(end_pos)
-                                if reaper.SetTrackStateChunk(track, chunk, false) then
-                                    success = 2
-                                end
-                            end
-                        else
-                            -- Add at the end
-                            chunk = chunk:sub(1, -2) .. "\\n" .. chain_content .. "\\n>"
-                            if reaper.SetTrackStateChunk(track, chunk, false) then
-                                success = 2
-                            end
-                        end
-                    end
-                end
-            end
-            
-            -- Method 3: Try another approach with the chain
-            if success == 0 then
-                -- Try loading the fx chain via action and command ID
-                reaper.Main_OnCommand(41051, 0)  -- Track: Load FX chain
-                -- Can't fully automate file dialog via script, but we tried!
-                success = 3  -- Assume it might work
-            end
-        end
-        
-        -- Get FX count after adding the chain
-        local fx_count_after = reaper.TrackFX_GetCount(track)
-        
-        -- Store the results
-        reaper.SetExtState("reaside", "fx_count_before", tostring(fx_count_before), false)
-        reaper.SetExtState("reaside", "fx_count_after", tostring(fx_count_after), false)
-        reaper.SetExtState("reaside", "fxchain_method", tostring(success), false)
-        """
-        
-        # Execute the script in REAPER
-        self._client.set_ext_state("reaside", "temp_script", full_script)
-        self._reaper.perform_action(65535)  # Run ReaScript: ReaScript_Runner
-        
-        # Give REAPER time to process
+        # Wait for the server to process the request
         import time
         time.sleep(0.3)
         
-        # Retrieve the results
-        fx_count_before_str = self._client.get_ext_state("reaside", "fx_count_before")
-        fx_count_after_str = self._client.get_ext_state("reaside", "fx_count_after")
-        method = self._client.get_ext_state("reaside", "fxchain_method")
+        # Get the result
+        result = self._client.get_ext_state("reaside", "add_fxchain_result")
         
-        # Check for errors
-        result = self._client.get_ext_state("reaside", "fxchain_result")
-        if result and result.startswith("ERROR:"):
-            raise RuntimeError(f"Failed to add FX chain: {result[6:]}")
+        if isinstance(result, dict):
+            if result.get("success"):
+                fx_added = result.get("fx_added", 0)
+                temp_fx_count = result.get("temp_fx_count", 0)
+                moved_fx_count = result.get("moved_fx_count", 0)
+                
+                logger.info(f"Added FX chain '{chain_path.name}' to track {self._index} - {fx_added} FX added")
+                logger.debug(f"Temp track had {temp_fx_count} FX, moved {moved_fx_count} FX")
+                
+                # Rescan track to update FX objects if FX were added
+                if fx_added > 0:
+                    self._scan_track()
+                
+                return fx_added
+            elif result.get("error"):
+                error_msg = result["error"]
+                if error_msg == "Track not found":
+                    raise RuntimeError(f"Track not found at index {self._index}")
+                elif error_msg == "Failed to read FX chain file":
+                    raise FileNotFoundError(f"Could not read FX chain file: {chain_path}")
+                elif error_msg == "Invalid FX chain file format":
+                    raise RuntimeError(f"Invalid FX chain file format: {chain_path}")
+                elif error_msg == "Failed to create temporary track":
+                    raise RuntimeError("Failed to create temporary track for FX chain loading")
+                elif error_msg == "Failed to add chunk to temporary track":
+                    raise RuntimeError("Failed to add FX chain chunk to temporary track")
+                else:
+                    raise RuntimeError(f"Error adding FX chain: {error_msg}")
         
-        # Parse the counts
-        try:
-            fx_count_before = int(fx_count_before_str) if fx_count_before_str else 0
-            fx_count_after = int(fx_count_after_str) if fx_count_after_str else 0
-        except (ValueError, TypeError):
-            logger.warning("Could not parse FX counts from REAPER")
-            return 0
-            
-        # Log which method worked
-        if method:
-            logger.debug(f"FX chain added using method {method}")
-            
-        # Return how many FX were added
-        fx_added = fx_count_after - fx_count_before
-        
-        # Rescan track to update FX objects if FX were added
-        if fx_added > 0:
-            self._scan_track()
-        
-        return fx_added
+        # If we get here, something went wrong
+        raise RuntimeError(f"Unknown error adding FX chain: {result}")
         
     # Add alias for backward compatibility
     add_fx_chain = add_fxchain
@@ -513,81 +440,47 @@ class ReaTrack:
         return self._client.call_reascript_function("TrackFX_GetEnabled", self.id, fx_index)
     
     def save_fx_chain(self, chain_path: Union[str, Path]) -> bool:
-        """Save current FX chain to a file."""
+        """Save current FX chain to a file using reaside server."""
         chain_path = Path(chain_path)
         
         # Ensure the directory exists
         chain_path.parent.mkdir(parents=True, exist_ok=True)
         
-        # Use Lua script to save FX chain
-        save_script = f"""
-        local track = reaper.GetTrack(0, {self._index})
-        if not track then
-            reaper.SetExtState("reaside", "save_result", "ERROR:TRACK_NOT_FOUND", false)
-            return
-        end
+        # Create request for the reaside server
+        request = {
+            "track_index": self._index,
+            "file_path": str(chain_path)
+        }
         
-        local fx_count = reaper.TrackFX_GetCount(track)
-        if fx_count == 0 then
-            reaper.SetExtState("reaside", "save_result", "ERROR:NO_FX", false)
-            return
-        end
+        # Send request to reaside server
+        self._client.set_ext_state("reaside", "save_fxchain_request", request)
         
-        -- Get track state chunk
-        local retval, chunk = reaper.GetTrackStateChunk(track, "", 16384, false)
-        if not retval then
-            reaper.SetExtState("reaside", "save_result", "ERROR:CHUNK_FAILED", false)
-            return
-        end
-        
-        -- Extract FX section from chunk
-        local fx_section = ""
-        local in_fx_section = false
-        for line in chunk:gmatch("[^\\n]+") do
-            if line:match("^<FXCHAIN") then
-                in_fx_section = true
-                fx_section = fx_section .. line .. "\\n"
-            elseif line:match("^>") and in_fx_section then
-                fx_section = fx_section .. line .. "\\n"
-                break
-            elseif in_fx_section then
-                fx_section = fx_section .. line .. "\\n"
-            end
-        end
-        
-        -- Write to file
-        local file = io.open("{str(chain_path).replace('\\', '\\\\')}", "w")
-        if file then
-            file:write(fx_section)
-            file:close()
-            reaper.SetExtState("reaside", "save_result", "SUCCESS", false)
-        else
-            reaper.SetExtState("reaside", "save_result", "ERROR:FILE_WRITE", false)
-        end
-        """
-        
-        # Execute the script
-        self._client.set_ext_state("reaside", "temp_script", save_script)
-        self._reaper.perform_action(65535)  # Run ReaScript
-        
-        # Check result
+        # Wait for the server to process the request
         import time
-        time.sleep(0.1)
-        result = self._client.get_ext_state("reaside", "save_result")
+        time.sleep(0.2)
         
-        if result == "SUCCESS":
-            logger.info(f"FX chain saved to {chain_path}")
-            return True
-        elif result == "ERROR:TRACK_NOT_FOUND":
-            raise ValueError(f"Track not found at index {self._index}")
-        elif result == "ERROR:NO_FX":
-            raise ValueError("No FX on track to save")
-        elif result == "ERROR:CHUNK_FAILED":
-            raise RuntimeError("Failed to get track state chunk")
-        elif result == "ERROR:FILE_WRITE":
-            raise RuntimeError(f"Failed to write to file {chain_path}")
-        else:
-            raise RuntimeError(f"Unknown error saving FX chain: {result}")
+        # Get the result
+        result = self._client.get_ext_state("reaside", "save_fxchain_result")
+        
+        if isinstance(result, dict):
+            if result.get("success"):
+                logger.info(f"FX chain saved to {chain_path}")
+                return True
+            elif result.get("error"):
+                error_msg = result["error"]
+                if error_msg == "Track not found":
+                    raise ValueError(f"Track not found at index {self._index}")
+                elif error_msg == "No FX on track":
+                    raise ValueError("No FX on track to save")
+                elif error_msg == "Failed to get track chunk":
+                    raise RuntimeError("Failed to get track state chunk")
+                elif error_msg == "Failed to write file":
+                    raise RuntimeError(f"Failed to write to file {chain_path}")
+                else:
+                    raise RuntimeError(f"Error saving FX chain: {error_msg}")
+        
+        # If we get here, something went wrong
+        raise RuntimeError(f"Unknown error saving FX chain: {result}")
     
     def load_fx_chain(self, chain_path: Union[str, Path]) -> bool:
         """Load FX chain from a file."""
