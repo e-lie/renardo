@@ -9,7 +9,7 @@ def test_track_automatic_scanning(test_track, client):
     """Test that track automatically scans FX on creation."""
     # Track should have been automatically scanned
     assert hasattr(test_track, '_scan_data'), "Track should have scan data"
-    assert hasattr(test_track, '_fx_objects'), "Track should have FX objects cache"
+    assert hasattr(test_track, 'reafxs'), "Track should have FX objects cache"
     
     # Initially should have no FX
     fx_list = test_track.list_fx()
