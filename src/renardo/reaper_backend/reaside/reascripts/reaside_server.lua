@@ -647,6 +647,262 @@ function scan_track_complete()
   reaper.DeleteExtState(SECTION, "scan_track_request", false)
 end
 
+-- Save FX chain from a track to a file
+function save_fxchain()
+  -- Get save request
+  local save_request = get_ext_state(SECTION, "save_fxchain_request")
+  if not save_request then
+    return
+  end
+  
+  log("Processing save FX chain request: " .. tostring(save_request))
+  
+  -- Parse the request - expect JSON like {"track_index": 0, "file_path": "/path/to/file.RfxChain"}
+  local track_index = save_request:match('"track_index"%s*:%s*(%d+)')
+  local file_path = save_request:match('"file_path"%s*:%s*"([^"]+)"')
+  
+  if not track_index or not file_path then
+    log("Invalid save FX chain request format")
+    set_ext_state(SECTION, "save_fxchain_result", {
+      error = "Invalid request format"
+    }, false)
+    reaper.DeleteExtState(SECTION, "save_fxchain_request", false)
+    return
+  end
+  
+  track_index = tonumber(track_index)
+  
+  -- Get track object
+  local track = reaper.GetTrack(0, track_index)
+  if not track then
+    log("Track not found at index " .. track_index)
+    set_ext_state(SECTION, "save_fxchain_result", {
+      error = "Track not found"
+    }, false)
+    reaper.DeleteExtState(SECTION, "save_fxchain_request", false)
+    return
+  end
+  
+  -- Check if track has FX
+  local fx_count = reaper.TrackFX_GetCount(track)
+  if fx_count == 0 then
+    log("No FX on track to save")
+    set_ext_state(SECTION, "save_fxchain_result", {
+      error = "No FX on track"
+    }, false)
+    reaper.DeleteExtState(SECTION, "save_fxchain_request", false)
+    return
+  end
+  
+  -- Get track state chunk
+  local retval, chunk = reaper.GetTrackStateChunk(track, "", 16384, false)
+  if not retval then
+    log("Failed to get track state chunk")
+    set_ext_state(SECTION, "save_fxchain_result", {
+      error = "Failed to get track chunk"
+    }, false)
+    reaper.DeleteExtState(SECTION, "save_fxchain_request", false)
+    return
+  end
+  
+  -- Extract FX section from chunk
+  local fx_section = ""
+  local in_fx_section = false
+  for line in chunk:gmatch("[^\n]+") do
+    if line:match("^<FXCHAIN") then
+      in_fx_section = true
+      fx_section = fx_section .. line .. "\n"
+    elseif line:match("^>") and in_fx_section then
+      fx_section = fx_section .. line .. "\n"
+      break
+    elseif in_fx_section then
+      fx_section = fx_section .. line .. "\n"
+    end
+  end
+  
+  -- Write to file
+  local file = io.open(file_path, "w")
+  if file then
+    file:write(fx_section)
+    file:close()
+    log("FX chain saved to " .. file_path)
+    set_ext_state(SECTION, "save_fxchain_result", {
+      success = true
+    }, false)
+  else
+    log("Failed to write FX chain file")
+    set_ext_state(SECTION, "save_fxchain_result", {
+      error = "Failed to write file"
+    }, false)
+  end
+  
+  -- Clear the request
+  reaper.DeleteExtState(SECTION, "save_fxchain_request", false)
+end
+
+-- Add FX chain from a file to a track
+function add_fxchain()
+  -- Get add request
+  local add_request = get_ext_state(SECTION, "add_fxchain_request")
+  if not add_request then
+    return
+  end
+  
+  log("Processing add FX chain request: " .. tostring(add_request))
+  
+  -- Parse the request - expect JSON like {"track_index": 0, "file_path": "/path/to/file.RfxChain"}
+  local track_index = add_request:match('"track_index"%s*:%s*(%d+)')
+  local file_path = add_request:match('"file_path"%s*:%s*"([^"]+)"')
+  
+  if not track_index or not file_path then
+    log("Invalid add FX chain request format")
+    set_ext_state(SECTION, "add_fxchain_result", {
+      error = "Invalid request format"
+    }, false)
+    reaper.DeleteExtState(SECTION, "add_fxchain_request", false)
+    return
+  end
+  
+  track_index = tonumber(track_index)
+  
+  -- Get track object
+  local track = reaper.GetTrack(0, track_index)
+  if not track then
+    log("Track not found at index " .. track_index)
+    set_ext_state(SECTION, "add_fxchain_result", {
+      error = "Track not found"
+    }, false)
+    reaper.DeleteExtState(SECTION, "add_fxchain_request", false)
+    return
+  end
+  
+  -- Get FX count before adding the chain
+  local fx_count_before = reaper.TrackFX_GetCount(track)
+  
+  -- Read the FX chain file
+  local file = io.open(file_path, "r")
+  if not file then
+    log("Failed to read FX chain file: " .. file_path)
+    set_ext_state(SECTION, "add_fxchain_result", {
+      error = "Failed to read FX chain file"
+    }, false)
+    reaper.DeleteExtState(SECTION, "add_fxchain_request", false)
+    return
+  end
+  
+  local chain_content = file:read("*all")
+  file:close()
+  
+  if not chain_content or chain_content == "" then
+    log("FX chain file is empty")
+    set_ext_state(SECTION, "add_fxchain_result", {
+      error = "FX chain file is empty"
+    }, false)
+    reaper.DeleteExtState(SECTION, "add_fxchain_request", false)
+    return
+  end
+  
+  -- Validate chain content
+  if not chain_content:find("<FXCHAIN") and not chain_content:find("BYPASS") then
+    log("Invalid FX chain file format")
+    set_ext_state(SECTION, "add_fxchain_result", {
+      error = "Invalid FX chain file format"
+    }, false)
+    reaper.DeleteExtState(SECTION, "add_fxchain_request", false)
+    return
+  end
+  
+  -- Get current track state chunk
+  local retval, chunk = reaper.GetTrackStateChunk(track, "", 16384, false)
+  if not retval then
+    log("Failed to get track state chunk")
+    set_ext_state(SECTION, "add_fxchain_result", {
+      error = "Failed to get track chunk"
+    }, false)
+    reaper.DeleteExtState(SECTION, "add_fxchain_request", false)
+    return
+  end
+  
+  -- Modify the chunk to include the FX chain
+  local new_chunk
+  if chunk:find("<FXCHAIN") then
+    -- Find the FXCHAIN section and replace it
+    local fxchain_start = chunk:find("<FXCHAIN")
+    if fxchain_start then
+      -- Find the matching closing > for this FXCHAIN section
+      -- Count nested sections to find the right closing >
+      local pos = fxchain_start
+      local depth = 0
+      while pos <= #chunk do
+        local char = chunk:sub(pos, pos)
+        if char == '<' then
+          depth = depth + 1
+        elseif char == '>' then
+          depth = depth - 1
+          if depth == 0 then
+            -- Found the closing > for the FXCHAIN
+            local fxchain_end = pos + 1
+            new_chunk = chunk:sub(1, fxchain_start - 1) .. chain_content .. chunk:sub(fxchain_end)
+            break
+          end
+        end
+        pos = pos + 1
+      end
+      
+      if not new_chunk then
+        log("Could not find end of FXCHAIN section")
+        set_ext_state(SECTION, "add_fxchain_result", {
+          error = "Could not parse existing FXCHAIN"
+        }, false)
+        reaper.DeleteExtState(SECTION, "add_fxchain_request", false)
+        return
+      end
+    else
+      log("FXCHAIN marker found but could not locate section")
+      set_ext_state(SECTION, "add_fxchain_result", {
+        error = "Could not locate FXCHAIN section"
+      }, false)
+      reaper.DeleteExtState(SECTION, "add_fxchain_request", false)
+      return
+    end
+  else
+    -- Add FX chain to track without existing FXCHAIN
+    if chunk:sub(-1) == '>' then
+      new_chunk = chunk:sub(1, -2) .. "\n" .. chain_content .. "\n>"
+    else
+      new_chunk = chunk .. "\n" .. chain_content
+    end
+  end
+  
+  -- Set the modified chunk back to the track
+  local set_result = reaper.SetTrackStateChunk(track, new_chunk, false)
+  if not set_result then
+    log("Failed to set modified track state chunk")
+    set_ext_state(SECTION, "add_fxchain_result", {
+      error = "Failed to set track chunk"
+    }, false)
+    reaper.DeleteExtState(SECTION, "add_fxchain_request", false)
+    return
+  end
+  
+  -- Get FX count after adding the chain
+  local fx_count_after = reaper.TrackFX_GetCount(track)
+  local fx_added = fx_count_after - fx_count_before
+  
+  log("FX chain added successfully. FX count before: " .. fx_count_before .. ", after: " .. fx_count_after)
+  
+  -- Success response
+  set_ext_state(SECTION, "add_fxchain_result", {
+    success = true,
+    fx_added = fx_added,
+    fx_count_before = fx_count_before,
+    fx_count_after = fx_count_after
+  }, false)
+  
+  -- Clear the request
+  reaper.DeleteExtState(SECTION, "add_fxchain_request", false)
+end
+
 -- Execute a ReaScript function from ExtState
 function execute_function()
   -- Get function call request
@@ -904,6 +1160,10 @@ function run_main_loop()
   
   -- Execute any pending track scans
   scan_track_complete()
+  
+  -- Execute any pending FX chain operations
+  save_fxchain()
+  add_fxchain()
   
   -- Handle OSC communication
   check_osc_messages()
