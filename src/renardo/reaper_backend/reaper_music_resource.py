@@ -24,41 +24,41 @@ from renardo.lib.Patterns import Pattern
 #    from renardo.gatherer.reaper_resource_management.reaper_resource_library import ReaperResourceLibrary
 
 
-class ReaperEffect(Effect):
-    """Represents a REAPER effect processor."""
+# class ReaperEffect(Effect):
+#     """Represents a REAPER effect processor."""
 
-    def __init__(
-            self,
-            shortname: str,
-            fxchain_relative_path: str,
-            fullname: Optional[str] = None,
-            description: Optional[str] = None,
-            arguments: Dict[str, Any] = None,
-            bank: str = "undefined",
-            category: str = "undefined",
-            order: int = 2,
-    ):
-        """
-        Initialize a REAPER effect.
+#     def __init__(
+#             self,
+#             shortname: str,
+#             fxchain_relative_path: str,
+#             fullname: Optional[str] = None,
+#             description: Optional[str] = None,
+#             arguments: Dict[str, Any] = None,
+#             bank: str = "undefined",
+#             category: str = "undefined",
+#             order: int = 2,
+#     ):
+#         """
+#         Initialize a REAPER effect.
 
-        Args:
-            shortname: Short name used as identifier (e.g. "eq")
-            fullname: Full descriptive name (e.g. "Equalizer")
-            description: Longer description of the effect
-            fxchain_relative_path: Relative path to the REAPER FX chain file
-            arguments: Dictionary of argument names and default values
-            bank: The resource bank this belongs to
-            category: The category within the bank
-            order: Execution order of the effect
-        """
-        super().__init__(shortname, fullname, description, arguments, bank, category, order)
-        self.fxchain_relative_path = fxchain_relative_path
+#         Args:
+#             shortname: Short name used as identifier (e.g. "eq")
+#             fullname: Full descriptive name (e.g. "Equalizer")
+#             description: Longer description of the effect
+#             fxchain_relative_path: Relative path to the REAPER FX chain file
+#             arguments: Dictionary of argument names and default values
+#             bank: The resource bank this belongs to
+#             category: The category within the bank
+#             order: Execution order of the effect
+#         """
+#         super().__init__(shortname, fullname, description, arguments, bank, category, order)
+#         self.fxchain_relative_path = fxchain_relative_path
 
-    def load(self):
-        """Load the effect in REAPER."""
-        # Placeholder for future implementation
-        # This would load the FX chain file into REAPER tracks
-        return None
+#     def load(self):
+#         """Load the effect in REAPER."""
+#         # Placeholder for future implementation
+#         # This would load the FX chain file into REAPER tracks
+#         return None
 
 
 class ReaperInstrument(Instrument):
@@ -96,6 +96,7 @@ class ReaperInstrument(Instrument):
         self.instrument_loaded = False
         self.chan_track_names = [f"chan{i+1}" for i in range(16)]
 
+        # normalize "manual" fxchain name argument
         self.fxchain_path = Path(fxchain_path)
         if not self.fxchain_path.suffix.lower() == ".rfxchain":
             self.fxchain_path = self.fxchain_path.with_suffix(".RfxChain")
@@ -123,7 +124,7 @@ class ReaperInstrument(Instrument):
         else:
             raise Exception("You can't use one of the chanN tracks with custom_track_name")
 
-        self._reatrack = self.__class__._reaproject.get_track(self.track_name)
+        self._reatrack = self.__class__._reaproject.get_track_by_name(self.track_name)
         
         if custom_default_sustain is not None:
             self._sus = custom_default_sustain

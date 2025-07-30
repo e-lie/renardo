@@ -38,8 +38,6 @@ class ReaperInstrumentFactory():
 
     def __init__(self, foxdotcode_instance):
         self._foxdotcode_instance = foxdotcode_instance
-        
-        
 
     def __call__(self):
         self.num_channels_used = 0
