@@ -14,10 +14,13 @@ from renardo.lib.InstrumentProxy import InstrumentProxy
 from renardo.lib.music_resource import Instrument, Effect, ResourceType
 from renardo.settings_manager import settings, SettingsManager
 from renardo.lib.Extensions.MidiMapFactory import MidiMapFactory
-from renardo.reaper_backend.ReaperIntegrationLib.ReaProject import get_reaper_object_and_param_name, set_reaper_param
-from renardo.reaper_backend.ReaperIntegrationLib.functions import split_param_name
 from renardo.sc_backend.Midi import ReaperInstrumentProxy
 from renardo.lib.Patterns import Pattern
+
+# Import reaside components
+from renardo.reaper_backend.reaside.core.reaper import Reaper
+from renardo.reaper_backend.reaside.tools.reaper_client import ReaperClient
+from renardo.reaper_backend.reaside.utils import split_param_name, set_fx_parameter, enable_fx
 
 # Use TYPE_CHECKING to avoid circular imports
 #if TYPE_CHECKING:
@@ -62,9 +65,10 @@ from renardo.lib.Patterns import Pattern
 
 
 class ReaperInstrument(Instrument):
-    """Represents a REAPER instrument."""
+    """Represents a REAPER instrument using reaside."""
     # Class-level attributes (shared across all instances)
-    _reaproject = None
+    _reaper = None  # reaside Reaper instance
+    _project = None  # reaside ReaProject instance
     _presets = {}
     _used_track_indexes: ClassVar[List[int]] = []
     _instru_facades: ClassVar[List['ReaperInstrument']] = []
@@ -124,32 +128,54 @@ class ReaperInstrument(Instrument):
         else:
             raise Exception("You can't use one of the chanN tracks with custom_track_name")
 
-        self._reatrack = self.__class__._reaproject.get_track_by_name(self.track_name)
+        # Get or create track using reaside
+        self._reatrack = self.__class__._project.get_track_by_name(self.track_name)
+        if not self._reatrack:
+            # Create the track if it doesn't exist using standard MIDI track creation
+            if self.track_name.startswith('chan') and self.track_name[4:].isdigit():
+                # Use create_standard_midi_track for chan1-16 tracks
+                track_num = int(self.track_name[4:])
+                if 1 <= track_num <= 16:
+                    self._reatrack = self.__class__._project.create_standard_midi_track(track_num)
+                else:
+                    # Fallback for invalid channel numbers
+                    self._reatrack = self.__class__._project.add_track()
+                    self._reatrack.name = self.track_name
+            else:
+                # Regular track creation for non-standard track names
+                self._reatrack = self.__class__._project.add_track()
+                self._reatrack.name = self.track_name
         
         if custom_default_sustain is not None:
             self._sus = custom_default_sustain
 
         if instanciate_plugin:
-            reafxs_names = self._reatrack.create_reafxs_for_chain(
-                chain_name=self.plugin_name,
-                scan_all_params=scan_all_params
-            )
-            # first added fx is the instrument
-            if reafxs_names:
-                self._reafx_instrument = self._reatrack.reafxs[reafxs_names[0]] 
-            # else:
-            #     self._reafx_instrument = self._reatrack.create_reafx(
-            #         plugin_name, plugin_preset, instrument_name,
-            #         instrument_params, scan_all_params
-            #     )
+            # Use reaside to load the FX chain
+            try:
+                fx_added = self._reatrack.add_fxchain(self.plugin_name)
+                if fx_added > 0:
+                    # Rescan track to get FX objects
+                    self._reatrack.rescan_fx()
+                    # Get the first FX as the instrument
+                    fx_list = self._reatrack.list_fx()
+                    if fx_list:
+                        self._reafx_instrument = fx_list[0]
+                    else:
+                        self._reafx_instrument = None
+                else:
+                    self._reafx_instrument = None
+            except Exception as e:
+                print(f"Failed to load FX chain {self.plugin_name}: {e}")
+                self._reafx_instrument = None
         else:
-            self._reafx_instrument = self._reatrack.reafxs[shortname]
+            # Try to get existing FX by name
+            self._reafx_instrument = self._reatrack.get_fx_by_name(shortname)
 
         # Add to instrument dictionary if one is available
         if hasattr(self.__class__, 'instrument_dict'):
             self.instrument_dict[self.shortname] = self
 
-        self.__class__.update_used_track_indexes()
+        #self.__class__.update_used_track_indexes()
 
     def _get_caller_file(self):
         """Get the path of the file that created this object instance."""
@@ -177,25 +203,36 @@ class ReaperInstrument(Instrument):
         cls.instrument_dict = instrument_dict
         
     @classmethod
-    def set_class_attributes(cls, presets: Mapping, project, resource_library):
-        """Initialize the class-level attributes."""
+    def set_class_attributes(cls, presets: Mapping, reaper_instance=None, project=None, resource_library=None):
+        """Initialize the class-level attributes for reaside."""
         cls._presets = presets
-        cls._reaproject = project
+        cls._reaper = reaper_instance
+        cls._project = project
         cls._used_track_indexes = []
         cls._instru_facades = []
         cls._resource_library = resource_library
+        
+        # If no reaper instance provided, create one
+        if cls._reaper is None:
+            from renardo.reaper_backend.reaside.tools.reaper_client import ReaperClient
+            from renardo.reaper_backend.reaside.core.reaper import Reaper
+            client = ReaperClient()
+            cls._reaper = Reaper(client)
+            cls._project = cls._reaper.current_project
     
     @classmethod
     def update_used_track_indexes(cls):
         """Update the list of track indexes that are currently in use."""
-        if not cls._reaproject:
+        if not cls._project:
             return
         for i in range(16):
             track_name = "chan" + str(i+1)
-            if track_name in cls._reaproject.reatracks:
-                if len(cls._reaproject.reatracks[track_name].reafxs) != 0 and i+1 not in cls._used_track_indexes:
+            track = cls._project.get_track_by_name(track_name)
+            if track:
+                fx_count = track.get_fx_count()
+                if fx_count > 0 and i+1 not in cls._used_track_indexes:
                     cls._used_track_indexes.append(i+1)
-                elif i+1 in cls._used_track_indexes and len(cls._reaproject.reatracks[track_name].reafxs) == 0:
+                elif i+1 in cls._used_track_indexes and fx_count == 0:
                     cls._used_track_indexes = [index for index in cls._used_track_indexes if index != i+1]
     
     def add_effect_plugin(
@@ -208,10 +245,13 @@ class ReaperInstrument(Instrument):
     ):
         """Add an effect plugin to the track."""
         if hasattr(self, '_reatrack'):
-            self._reatrack.create_reafx(
-                plugin_name, plugin_preset, effect_name, effect_params,
-                scan_all_params
-            )
+            # Add FX using reaside
+            success = self._reatrack.add_fx(plugin_name)
+            if success:
+                self._reatrack.rescan_fx()
+                print(f"Added effect {plugin_name} to track {self._reatrack.name}")
+            else:
+                print(f"Failed to add effect {plugin_name} to track {self._reatrack.name}")
     
     def apply_all_existing_reaper_params(self, reatrack, param_dict, remaining_param_dict={}, runtime_kwargs={}):
         """
@@ -221,17 +261,34 @@ class ReaperInstrument(Instrument):
          - tries to apply all parameters in reaper (track fx and send parameters)
          - then send the rest to FoxDot to control supercollider
         """
-        # if there is non default (runtime kwargs) for an fx turn it on (add a new param "fx"_on = True)
+        # Handle FX enable/disable parameters first (from runtime_kwargs)
         for key, value in runtime_kwargs.items():
-            fx_name, rest = split_param_name(key)
-            if rest != 'on' and key not in ['dur', 'sus', 'root', 'amp', 'amplify', 'degree', 'scale', 'room', 'crush', 'fmod']:
-                param_dict[fx_name+'_on'] = True
+            fx_name, param_name = split_param_name(key)
+            if param_name != 'on' and key not in ['dur', 'sus', 'root', 'amp', 'amplify', 'degree', 'scale', 'room', 'crush', 'fmod']:
+                # If FX parameter is being set, enable the FX
+                if fx_name:
+                    enable_fx_param = fx_name + '_on'
+                    param_dict[enable_fx_param] = True
 
+        # Apply parameters to REAPER FX using reaside utilities
         for param_fullname, value in param_dict.items():
-            rea_object, name = get_reaper_object_and_param_name(reatrack, param_fullname)
-            if rea_object is not None:  # means param exists in reaper
-                set_reaper_param(reatrack, param_fullname, value, update_freq=.02)
+            # Handle special FX enable/disable parameters
+            if param_fullname.endswith('_on'):
+                fx_name = param_fullname[:-3]  # Remove '_on' suffix
+                if enable_fx(reatrack, fx_name, bool(value)):
+                    # Successfully handled FX enable/disable
+                    continue
+                else:
+                    # Pass to remaining params if not handled
+                    remaining_param_dict[param_fullname] = value
+                    continue
+            
+            # Try to set FX parameter using reaside utilities
+            if set_fx_parameter(reatrack, param_fullname, value):
+                # Successfully set parameter in REAPER, don't add to remaining
+                continue
             else:
+                # Parameter not handled by REAPER, pass to FoxDot
                 remaining_param_dict[param_fullname] = value
 
     def __call__(self, *args, sus=None, **kwargs):
@@ -247,7 +304,7 @@ class ReaperInstrument(Instrument):
             InstrumentProxy or ReaperInstrumentProxy: A proxy configured with this instrument
         """
         # If using original behavior (no REAPER project)
-        if not hasattr(self, '_reaproject') or not self._reaproject:
+        if not hasattr(self, '_project') or not self._project:
             # Use original InstrumentProxy behavior
             degree = args[0] if args else None
             return InstrumentProxy(self.shortname, degree, kwargs)
@@ -262,7 +319,10 @@ class ReaperInstrument(Instrument):
         if preset_name in self._presets.keys():
             config_defaults = config_defaults | self._presets[preset_name]
 
-        for fx_name in self._reatrack.reafxs.keys():
+        # Get FX objects from reaside track
+        fx_objects = self._reatrack.list_fx()
+        for fx_obj in fx_objects:
+            fx_name = fx_obj.snake_name  # Use snake_name for consistency
             preset_name = fx_name + "_default"
             #by default all fxs are off
             if 'fx_reset' in kwargs and kwargs['fx_reset']:
@@ -294,7 +354,9 @@ class ReaperInstrument(Instrument):
         """Clean up when the instrument is deleted."""
         if hasattr(self, '_reatrack') and hasattr(self, '_reafx_instrument'):
             try:
-                self._reatrack.delete_reafx(self._reafx_instrument.fx.index, self._reafx_instrument.name)
+                # TODO: Implement FX deletion with reaside
+                # For now, just cleanup references
+                self._reafx_instrument = None
             except:
                 print(f"Error deleting fx bound to ReaperInstrument")
                 
@@ -316,32 +378,50 @@ class ReaperInstrument(Instrument):
         Returns:
             Dict: Dictionary of created instrument facades
         """
-        if not cls._reaproject:
+        if not cls._project:
             print("REAPER project not initialized.")
             return {}
             
         instrument_dict = {}
-        # Process bus tracks
-        for reatrack in cls._reaproject.bus_tracks:
-            instrument_dict[reatrack.name[1:]] = cls.create_instrument_facade(
-                track_name=reatrack.name, 
-                midi_channel=-1
-            )
-
-        # Process instrument tracks
-        for i, track in enumerate(cls._reaproject.instrument_tracks):
-            if len(track.reafxs.values()) > 0:
+        
+        # Get all tracks from the project
+        all_tracks = cls._project.list_tracks()
+        
+        for track in all_tracks:
+            track_name = track.name
+            
+            # Skip if track name doesn't match expected patterns
+            if not (track_name.startswith('chan') or track_name.startswith('bus')):
+                continue
+                
+            fx_list = track.list_fx()
+            if len(fx_list) > 0:
                 # First fx is usually the synth/instrument that gives the name
-                instrument_name = list(track.reafxs.values())[0].name 
+                instrument_name = fx_list[0].snake_name
             else:
                 # If no fx exists, use the track name
-                instrument_name = track.name 
+                instrument_name = track_name
+                
+            # Determine MIDI channel
+            if track_name.startswith('chan'):
+                try:
+                    midi_channel = int(track_name[4:])
+                except ValueError:
+                    midi_channel = -1
+            else:
+                midi_channel = -1
                 
             instrument_kwargs = {
-                "track_name": track.name,
-                "midi_channel": i + 1,
+                "track_name": track_name,
+                "midi_channel": midi_channel,
             }
-            instrument_dict[instrument_name] = cls.create_instrument_facade(**instrument_kwargs)
+            
+            try:
+                facade = cls.create_instrument_facade(**instrument_kwargs)
+                if facade:
+                    instrument_dict[instrument_name] = facade
+            except Exception as e:
+                print(f"Failed to create facade for track {track_name}: {e}")
             
         return instrument_dict
         
@@ -362,7 +442,7 @@ class ReaperInstrument(Instrument):
         Returns:
             ReaperInstrument: A new instrument instance
         """
-        if not cls._reaproject:
+        if not cls._project:
             print("REAPER project not initialized.")
             return None
             
@@ -401,20 +481,15 @@ class ReaperInstrument(Instrument):
         try:
             instrument = ReaperInstrument(
                 shortname=name,
+                fxchain_path=plugin_name,  # Use plugin_name as fxchain path
+                custom_midi_channel=midi_channel,
+                arguments=params,
                 fullname=name,
                 description=f"ReaperInstrument for {name}",
-                fxchain_relative_path="",
-                reaproject=cls._reaproject,
-                presets=cls._presets,
-                track_name=track_name,
-                midi_channel=midi_channel,
-                create_instrument=True,
-                instrument_name=name,
-                plugin_name=plugin_name,
-                plugin_preset=preset,
-                instrument_params=params,
-                scan_all_params=scan_all_params,
-                is_chain=is_chain
+                custom_plugin_name=plugin_name,
+                custom_track_name=track_name,
+                instanciate_plugin=True,
+                scan_all_params=scan_all_params
             )
             cls._instru_facades.append(instrument)
             return instrument
@@ -447,7 +522,7 @@ class ReaperInstrument(Instrument):
             except Exception as e:
                 print(f"Error adding chain {chain}: {e}")
                 
-        return tuple([facade.out for facade in facades])
+        return tuple(facades)
 
     def ensure_fxchain_in_reaper(self):
         """
