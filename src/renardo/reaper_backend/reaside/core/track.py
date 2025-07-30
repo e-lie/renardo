@@ -135,6 +135,16 @@ class ReaTrack:
         self._client.set_track_solo(self._index + 1, value)  # Convert to 1-based
     
     @property
+    def is_armed(self) -> bool:
+        """Check if track is record armed."""
+        return bool(self._client.call_reascript_function("GetMediaTrackInfo_Value", self.id, "I_RECARM"))
+    
+    @is_armed.setter
+    def is_armed(self, value: bool) -> None:
+        """Set track record arm state."""
+        self._client.call_reascript_function("SetMediaTrackInfo_Value", self.id, "I_RECARM", 1 if value else 0)
+    
+    @property
     def volume(self) -> float:
         """Get track volume."""
         return self._client.call_reascript_function("GetMediaTrackInfo_Value", self.id, "D_VOL")
