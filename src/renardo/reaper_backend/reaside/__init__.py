@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 def configure_reaper():
     """Configure REAPER to allow reaside connections using Lua ReaScript."""
-    from .config.config import configure_reaper_lua, get_resource_path
+    from .config import configure_lua_reascript, get_resource_path
     
     # Get REAPER resource path
     try:
@@ -28,7 +28,7 @@ def configure_reaper():
     
     # Configure REAPER
     try:
-        configure_reaper_lua(resource_path)
+        configure_lua_reascript(resource_path)
         logger.info("Please restart REAPER for the changes to take effect.")
         return True
     except Exception as e:
