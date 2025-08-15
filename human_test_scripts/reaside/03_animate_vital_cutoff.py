@@ -15,7 +15,7 @@ print("=== Vital Filter Cutoff Animation ===")
 
 # Initialize reaside with OSC
 client = ReaperClient(enable_osc=True, osc_send_port=8766, osc_receive_port=8767)
-client.start_osc_server()
+
 print("✅ ReaperClient initialized with OSC")
 
 # Get project and first track
