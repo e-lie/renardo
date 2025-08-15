@@ -257,7 +257,7 @@ def web_interface_exists(resource_path, port=WEB_INTERFACE_PORT):
     return False
 
 
-def configure_reaper_lua(resource_path=None, install_path=None):
+def configure_lua_reascript(resource_path=None, install_path=None):
     """Configure REAPER for reaside using Lua ReaScript."""
     if not resource_path:
         resource_path = get_resource_path()
