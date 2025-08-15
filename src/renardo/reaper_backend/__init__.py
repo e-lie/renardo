@@ -2,6 +2,8 @@ from renardo.reaper_backend.reaper_music_resource import ReaperInstrument
 from renardo.reaper_backend.ReaperIntegration import init_reapy_project
 from renardo.reaper_backend.reaper_simple_lib import ensure_16_midi_tracks
 
-from renardo.reaper_backend.reaside.tools.reaper_program import start_reaper, stop_reaper
-from renardo.reaper_backend.reaside.tools.reaper_client import ReaperClient
-from renardo.reaper_backend.reaside import configure_reaper
+from renardo.reaper_backend.reaside import (
+    start_reaper, stop_reaper,
+    ReaperClient,
+    configure_reaper
+)
