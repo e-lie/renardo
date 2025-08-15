@@ -50,16 +50,6 @@ class ReaperClient:
             'time_position', 'beat_position', 'play_state'
         }
     
-    def start_osc_server(self):
-        """Start the OSC server for receiving messages from REAPER."""
-        # OSC server not implemented for direct client (send-only)
-        logger.info("OSC server not needed for direct client (send-only)")
-    
-    def stop_osc_server(self):
-        """Stop the OSC server."""
-        # OSC server not implemented for direct client (send-only)
-        pass
-    
     def _prefer_osc(self, operation: str) -> bool:
         """Determine if OSC should be preferred for an operation."""
         # Simplified: only use direct OSC for sending messages
