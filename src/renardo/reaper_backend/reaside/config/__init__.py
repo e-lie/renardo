@@ -2,6 +2,6 @@
 
 from .config import (
     WEB_INTERFACE_PORT,
-    configure_reaper_lua as configure_reaper
+    configure_lua_reascript
 )
 from .resource_path import get_resource_path
