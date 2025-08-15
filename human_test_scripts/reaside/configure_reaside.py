@@ -1,6 +1,5 @@
 
-from renardo.reaper_backend.reaside.tools.reaper_client import ReaperClient
-from renardo.reaper_backend.reaside import configure_reaper
+from renardo.reaper_backend.reaside import ReaperClient, configure_reaper
 
 
 

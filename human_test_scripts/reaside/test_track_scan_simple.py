@@ -9,8 +9,7 @@ import json
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from renardo.reaper_backend.reaside.tools.reaper_client import ReaperClient
-from renardo.reaper_backend.reaside.core.reaper import Reaper
+from renardo.reaper_backend.reaside import ReaperClient, Reaper
 
 print("=== Simple Track Scan Test ===")
 
