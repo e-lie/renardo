@@ -4,4 +4,4 @@ from renardo.reaper_backend.reaper_simple_lib import ensure_16_midi_tracks
 
 from renardo.reaper_backend.reaside.tools.reaper_program import start_reaper, stop_reaper
 from renardo.reaper_backend.reaside.tools.reaper_client import ReaperClient
-from renardo.reaper_backend.reaside import configure_reaper, connect
+from renardo.reaper_backend.reaside import configure_reaper
