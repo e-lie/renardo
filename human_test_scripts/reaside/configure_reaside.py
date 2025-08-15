@@ -1,13 +1,11 @@
 
 from renardo.reaper_backend.reaside.tools.reaper_client import ReaperClient
-from renardo.reaper_backend.reaside import connect, configure_reaper
-
+from renardo.reaper_backend.reaside import configure_reaper
 
 
 
 configure_reaper()
 
-connect()
 
 # print("=== Simple Track Scan Test ===")
 
