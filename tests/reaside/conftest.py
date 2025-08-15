@@ -11,13 +11,11 @@ from pathlib import Path
 # Add src to path to import renardo modules
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from renardo.reaper_backend.reaside.tools.reaper_program import start_reaper, stop_reaper, is_reaper_running
-from renardo.reaper_backend.reaside.tools.reaper_client import ReaperClient
-from renardo.reaper_backend.reaside.core.reaper import Reaper
-from renardo.reaper_backend.reaside.core.project import ReaProject
-from renardo.reaper_backend.reaside.core.track import ReaTrack
-from renardo.reaper_backend.reaside.core.fx import ReaFX
-from renardo.reaper_backend.reaside import configure_reaper
+from renardo.reaper_backend.reaside import (
+    start_reaper, stop_reaper, is_reaper_running,
+    ReaperClient, Reaper, ReaProject, ReaTrack, ReaFX,
+    configure_reaper
+)
 
 
 # Module-level variables for REAPER session

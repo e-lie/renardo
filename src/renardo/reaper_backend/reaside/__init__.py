@@ -6,9 +6,13 @@ import os
 import time
 import logging
 
+# Export all main components at package level
+from .tools.reaper_program import start_reaper, stop_reaper, is_reaper_running
 from .tools.reaper_client import ReaperClient
 from .core.reaper import Reaper
 from .core.project import ReaProject
+from .core.track import ReaTrack
+from .core.fx import ReaFX
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
