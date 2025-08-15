@@ -336,7 +336,6 @@ set_server_manager(Server)
 
 set_main_clock(Clock)
 
-
 if settings.get("core.INSTANCIATE_FOXDOT_PLAYERS"):
     def instantiate_player_objects():
         """ Instantiates all two-character variable Player Objects """
