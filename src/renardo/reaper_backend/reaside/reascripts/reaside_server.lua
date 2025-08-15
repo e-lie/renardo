@@ -17,7 +17,7 @@ Installation:
 ]]
 
 -- Configuration
-local DEBUG = true  -- Set to true to enable debug logging
+local DEBUG = false  -- Set to true to enable debug logging
 local SECTION = "reaside"
 local REAPER_VERSION = reaper.GetAppVersion()
 
