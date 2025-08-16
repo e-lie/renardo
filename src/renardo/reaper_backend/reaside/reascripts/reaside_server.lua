@@ -186,86 +186,6 @@ function handle_osc_message(address, args)
   elseif address == "/ping" then
     send_osc_message("/response/pong", "pong")
     
-  -- MIDI Note operations
-  elseif address:match("^/track/(%d+)/note_on$") and #args >= 2 then
-    local track_id = tonumber(address:match("^/track/(%d+)/note_on$"))
-    local pitch = tonumber(args[1])
-    local velocity = tonumber(args[2])
-    local channel = tonumber(args[3]) or 0  -- Default to channel 0
-    if track_id and pitch and velocity then
-      local track = reaper.GetTrack(0, track_id - 1)  -- Convert to 0-based
-      if track then
-        -- Ensure track is properly configured for Virtual MIDI Keyboard
-        local rec_input = reaper.GetMediaTrackInfo_Value(track, "I_RECINPUT")
-        if rec_input ~= 6112 then
-          log("Track " .. track_id .. " input was " .. rec_input .. ", setting to Virtual MIDI Keyboard (6112)")
-          reaper.SetMediaTrackInfo_Value(track, "I_RECINPUT", 6112)
-        end
-        
-        -- Ensure track is record armed
-        local rec_arm = reaper.GetMediaTrackInfo_Value(track, "I_RECARM")
-        if rec_arm ~= 1 then
-          reaper.SetMediaTrackInfo_Value(track, "I_RECARM", 1)
-        end
-        
-        -- Ensure input monitoring is on
-        local rec_mon = reaper.GetMediaTrackInfo_Value(track, "I_RECMON")
-        if rec_mon ~= 1 then
-          reaper.SetMediaTrackInfo_Value(track, "I_RECMON", 1)
-        end
-        
-        -- Send MIDI note on directly to track
-        local msg1 = 0x90 | channel  -- Note on + channel
-        local msg2 = pitch
-        local msg3 = velocity
-        
-        -- Use StuffMIDIMessage to virtual input
-        reaper.StuffMIDIMessage(0, msg1, msg2, msg3)
-        
-        -- Update track display
-        reaper.TrackList_AdjustWindows(false)
-        reaper.UpdateArrange()
-        
-        log("Sent MIDI Note On: Track " .. track_id .. ", Pitch " .. pitch .. ", Velocity " .. velocity .. " (Channel " .. channel .. ")")
-      else
-        log("ERROR: Track " .. track_id .. " not found!")
-      end
-    end
-    
-  elseif address:match("^/track/(%d+)/note_off$") and #args >= 1 then
-    local track_id = tonumber(address:match("^/track/(%d+)/note_off$"))
-    local pitch = tonumber(args[1])
-    local channel = tonumber(args[2]) or 0  -- Default to channel 0
-    if track_id and pitch then
-      local track = reaper.GetTrack(0, track_id - 1)  -- Convert to 0-based
-      if track then
-        -- Send MIDI note off directly to track
-        local msg1 = 0x80 | channel  -- Note off + channel
-        local msg2 = pitch
-        local msg3 = 0  -- Release velocity
-        
-        reaper.StuffMIDIMessage(0, msg1, msg2, msg3)
-        reaper.TrackList_AdjustWindows(false)
-        reaper.UpdateArrange()
-        
-        log("Sent MIDI Note Off: Track " .. track_id .. ", Pitch " .. pitch .. " (Channel " .. channel .. ")")
-      else
-        log("ERROR: Track " .. track_id .. " not found!")
-      end
-    end
-    
-  elseif address:match("^/track/(%d+)/all_notes_off$") then
-    local track_id = tonumber(address:match("^/track/(%d+)/all_notes_off$"))
-    if track_id then
-      local track = reaper.GetTrack(0, track_id - 1)  -- Convert to 0-based
-      if track then
-        -- Send All Notes Off (CC 123)
-        for channel = 0, 15 do
-          reaper.StuffMIDIMessage(0, 0xB0 | channel, 123, 0)
-        end
-        log("Sent All Notes Off: Track " .. track_id)
-      end
-    end
     
   else
     log("Unknown OSC address: " .. address)
@@ -1343,9 +1263,9 @@ function main()
   end
   
   -- Show confirmation message
-  reaper.ShowConsoleMsg("reaside HTTP API Bridge initialized and running!\n")
-  reaper.ShowConsoleMsg("REAPER version: " .. REAPER_VERSION .. "\n")
-  reaper.ShowConsoleMsg("Keep this script running for reaside to work.\n")
+  log("reaside HTTP API Bridge initialized and running!")
+  log("REAPER version: " .. REAPER_VERSION)
+  log("Keep this script running for reaside to work.")
   
   -- Start the continuous monitoring loop
   run_main_loop()
