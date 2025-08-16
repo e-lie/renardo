@@ -189,7 +189,19 @@ def test_fxchain_full_cycle(reaper_setup):
         # The basic validation: we should have loaded some FX
         if fx_added > 0:
             assert final_fx_count > 0, "No FX were loaded from the chain"
+            
+            # Validate FX count matches
+            assert final_fx_count == fx_count_after_add, f"Expected {fx_count_after_add} FX, got {final_fx_count}"
+            
+            # Validate FX order is preserved
+            assert len(loaded_fx_list) == len(fx_list), f"FX count mismatch: expected {len(fx_list)}, got {len(loaded_fx_list)}"
+            
+            for i, (original_fx, loaded_fx) in enumerate(zip(fx_list, loaded_fx_list)):
+                assert original_fx == loaded_fx, f"FX order mismatch at position {i}: expected '{original_fx}', got '{loaded_fx}'"
+                print(f"  ✅ Position {i}: {original_fx} == {loaded_fx}")
+            
             print("✅ FX chain cycle completed successfully!")
+            print("✅ FX count and order preserved correctly!")
             
             # Try to access the FX through reaside's FX objects
             new_track.rescan_fx()  # Force rescan
@@ -225,6 +237,94 @@ def test_fxchain_full_cycle(reaper_setup):
                 os.unlink(temp_chain_path)
         except:
             pass  # Best effort cleanup
+
+
+def test_fxchain_order_preservation(reaper_setup):
+    """
+    Test specifically that FX order is preserved when saving and loading FX chains.
+    Uses 3 common FX to test ordering with more complexity.
+    """
+    reaper, project, track = reaper_setup
+    
+    print(f"\n=== Testing FX Chain Order Preservation ===")
+    
+    # Test with 3 FX in a specific order
+    fx_sequence = ["ReaEQ", "ReaComp", "ReaVerb"]
+    
+    # Step 1: Add FX in order
+    print(f"Adding FX in order: {fx_sequence}")
+    added_fx = []
+    
+    for i, fx_name in enumerate(fx_sequence):
+        success = track.add_fx(fx_name)
+        if success:
+            added_fx_name = track.get_fx_name(i)
+            added_fx.append(added_fx_name)
+            print(f"  Position {i}: Added '{fx_name}' -> '{added_fx_name}'")
+        else:
+            print(f"  Failed to add {fx_name}")
+    
+    # Skip test if no FX were added
+    if not added_fx:
+        pytest.skip("No FX were added - cannot test order preservation")
+    
+    print(f"Successfully added {len(added_fx)} FX: {added_fx}")
+    
+    # Step 2: Save FX chain
+    with tempfile.NamedTemporaryFile(suffix='.RfxChain', delete=False) as temp_file:
+        temp_chain_path = Path(temp_file.name)
+    
+    try:
+        save_success = track.save_fxchain(temp_chain_path)
+        assert save_success, "Failed to save FX chain"
+        print(f"✅ Saved FX chain with {len(added_fx)} FX")
+        
+        # Step 3: Clear track and create new one
+        track_name = track.name
+        track.delete()
+        
+        new_track = project.add_track()
+        new_track.name = track_name + " (Order Test)"
+        
+        # Step 4: Load FX chain
+        fx_added = new_track.add_fxchain(temp_chain_path)
+        print(f"FX added from chain: {fx_added}")
+        
+        # Step 5: Verify order
+        final_fx_count = new_track.get_fx_count()
+        reloaded_fx = []
+        
+        for i in range(final_fx_count):
+            fx_name = new_track.get_fx_name(i)
+            reloaded_fx.append(fx_name)
+        
+        print(f"Original order: {added_fx}")
+        print(f"Reloaded order: {reloaded_fx}")
+        
+        # Assertions
+        assert len(reloaded_fx) == len(added_fx), f"FX count changed: {len(added_fx)} -> {len(reloaded_fx)}"
+        
+        order_preserved = True
+        for i, (original, reloaded) in enumerate(zip(added_fx, reloaded_fx)):
+            if original != reloaded:
+                print(f"❌ Position {i}: '{original}' != '{reloaded}'")
+                order_preserved = False
+            else:
+                print(f"✅ Position {i}: '{original}' == '{reloaded}'")
+        
+        assert order_preserved, f"FX order not preserved: {added_fx} -> {reloaded_fx}"
+        print("✅ FX order perfectly preserved!")
+        
+        # Update track reference for cleanup
+        track = new_track
+        
+    finally:
+        # Cleanup
+        try:
+            if temp_chain_path.exists():
+                os.unlink(temp_chain_path)
+        except:
+            pass
 
 
 if __name__ == "__main__":
