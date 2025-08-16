@@ -772,17 +772,20 @@ function move_fx(source_track, dest_track)
   
   local moved_count = 0
   
-  -- Move each FX from source to destination
-  for i = fx_count - 1, 0, -1 do  -- Move backwards to maintain indices
-    local success = reaper.TrackFX_CopyToTrack(source_track, i, dest_track, -1, false)
+  -- Move each FX from source to destination in correct order
+  for i = 0, fx_count - 1 do
+    local success = reaper.TrackFX_CopyToTrack(source_track, i, dest_track, i, false)
     if success then
-      log("Moved FX " .. i .. " successfully")
-      -- Delete the FX from source after copying
-      reaper.TrackFX_Delete(source_track, i)
+      log("Moved FX " .. i .. " to position " .. i .. " successfully")
       moved_count = moved_count + 1
     else
       log("Failed to move FX " .. i)
     end
+  end
+  
+  -- Now delete all FX from source track (backwards to avoid index issues)
+  for i = fx_count - 1, 0, -1 do
+    reaper.TrackFX_Delete(source_track, i)
   end
   
   log("Moved " .. moved_count .. " FX total")
