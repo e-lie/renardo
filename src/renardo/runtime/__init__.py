@@ -366,8 +366,7 @@ if settings.get("reaper_backend.REAPER_BACKEND_ENABLED"):
     from renardo.runtime.managers_instanciation import reaper_resource_library
     from renardo.reaper_backend import ReaperInstrument #, init_reapy_project
     #reaproject = init_reapy_project(Clock)
-    reaper_client = ReaperClient(enable_osc=True, osc_send_port=8766, osc_receive_port=8767)
-    reaper_client.start_osc_server()
+    reaper_client = ReaperClient()
     reaper_instance = Reaper(reaper_client)
     reaproject: ReaProject = reaper_instance.current_project
     ReaperInstrument.set_class_attributes(
