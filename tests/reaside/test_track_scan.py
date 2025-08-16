@@ -88,8 +88,8 @@ def test_scan_track_complete_performance(clean_project, client):
     track = clean_project.add_track()
     track.name = "Performance Test Track"
     
-    # Add various FX types
-    fx_list = ["ReaEQ", "ReaComp", "ReaVerb", "ReaDelay", "ReaGate", "ReaLimit"]
+    # Add various FX types (using only valid REAPER FX names)
+    fx_list = ["ReaEQ", "ReaComp", "ReaVerb", "ReaDelay", "ReaGate"]
     
     for fx_name in fx_list:
         success = track.add_fx(fx_name)
