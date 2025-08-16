@@ -13,8 +13,7 @@ from renardo.reaper_backend.reaside import ReaperClient, Reaper
 
 print("=== Vital Filter Cutoff Animation ===")
 
-# Initialize reaside with OSC
-client = ReaperClient(enable_osc=True, osc_send_port=8766, osc_receive_port=8767)
+client = ReaperClient()
 
 print("✅ ReaperClient initialized with OSC")
 
