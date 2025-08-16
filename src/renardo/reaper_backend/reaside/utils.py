@@ -78,8 +78,21 @@ def find_fx_by_param_name(track, param_fullname: str):
     """
     fx_name, param_name = split_param_name(param_fullname)
     
+    # If no fx_name is specified, use the first FX on the track
     if not fx_name:
-        return None, None
+        fx_list = track.list_fx()
+        if fx_list:
+            fx_obj = fx_list[0]  # Use first FX
+            # Try to find parameter using param_name (not literal "gain")
+            try:
+                if hasattr(fx_obj, 'get_param'):
+                    param_obj = fx_obj.get_param(param_name)
+                    return fx_obj, param_obj
+            except:
+                pass
+            return fx_obj, None
+        else:
+            return None, None
     
     # Try to find FX by name (try both original and normalized names)
     fx_obj = track.get_fx_by_name(fx_name)
