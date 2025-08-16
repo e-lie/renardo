@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 
 # Default ports
 WEB_INTERFACE_PORT = 8080
-OSC_SEND_PORT = 8000  # Port for sending OSC messages to REAPER
-OSC_RECEIVE_PORT = 8001  # Port for receiving OSC messages from REAPER
+OSC_SEND_PORT = 8767  # Port for sending OSC messages to REAPER
+OSC_RECEIVE_PORT = 8766  # Port for receiving OSC messages from REAPER
 
 # API Paths
 REASCRIPT_PATH = os.path.join('Scripts', 'reaside')
@@ -144,8 +144,8 @@ def add_osc_device(resource_path, send_port=OSC_SEND_PORT, receive_port=OSC_RECE
     csurf_count += 1
     config["reaper"]["csurf_cnt"] = str(csurf_count)
     key = f"csurf_{csurf_count - 1}"
-    # OSC format: "OSC [mode] [local_ip] [local_port] [remote_ip] [remote_port] [pattern_config] [feedback_enable]"
-    config["reaper"][key] = f"OSC 0 127.0.0.1 {receive_port} 127.0.0.1 {send_port} '' 1"
+    # OSC format: "OSC [name] [local_ip] [local_port] [remote_ip] [remote_port] [pattern_config] [feedback_enable]"
+    config["reaper"][key] = f"OSC renardo 127.0.0.1 {receive_port} 127.0.0.1 {send_port} '' 1"
     config.write()
     logger.info(f"Added OSC device with send port {send_port} and receive port {receive_port}")
 
