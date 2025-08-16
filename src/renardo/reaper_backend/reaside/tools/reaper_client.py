@@ -164,24 +164,3 @@ class ReaperClient:
             'http': self.http_client.ping()
         }
     
-    # MIDI note methods (via ExtState only)
-    def send_note_on(self, track_id: int, pitch: int, velocity: int, channel: int = 0):
-        """Send MIDI note on to a track."""
-        return self.send_osc_via_extstate(f"/track/{track_id}/note_on", [pitch, velocity, channel])
-    
-    def send_note_off(self, track_id: int, pitch: int, channel: int = 0):
-        """Send MIDI note off to a track."""
-        return self.send_osc_via_extstate(f"/track/{track_id}/note_off", [pitch, channel])
-    
-    def send_all_notes_off(self, track_id: int):
-        """Send all notes off to a track."""
-        return self.send_osc_via_extstate(f"/track/{track_id}/all_notes_off", [])
-    
-    def send_osc_via_extstate(self, address: str, args: list):
-        """Send OSC message via ExtState fallback."""
-        message_data = {
-            "address": address,
-            "args": args,
-            "timestamp": time.time()
-        }
-        return self.set_ext_state("reaside_osc", "incoming", message_data)

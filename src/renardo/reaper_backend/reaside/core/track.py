@@ -395,34 +395,7 @@ class ReaTrack:
             logger.error(f"Error adding FX '{fx_name}': {e}")
             return False
     
-    # MIDI note methods
-    def send_note_on(self, pitch: int, velocity: int = 100, channel: int = 0):
-        """Send MIDI note on to this track."""
-        return self._client.send_note_on(self._index + 1, pitch, velocity, channel)
-    
-    def send_note_off(self, pitch: int, channel: int = 0):
-        """Send MIDI note off to this track."""
-        return self._client.send_note_off(self._index + 1, pitch, channel)
-    
-    def send_all_notes_off(self):
-        """Send all notes off to this track."""
-        return self._client.send_all_notes_off(self._index + 1)
-    
-    def play_note(self, pitch: int, velocity: int = 100, duration: float = 0.5, channel: int = 0):
-        """Play a note for a specific duration."""
-        # Send note on
-        self.send_note_on(pitch, velocity, channel)
-        
-        # Schedule note off (non-blocking)
-        import threading
-        def note_off_timer():
-            import time
-            time.sleep(duration)
-            self.send_note_off(pitch, channel)
-        
-        timer = threading.Timer(duration, note_off_timer)
-        timer.start()
-        return timer
+    # FX methods
     
     def get_fx_count(self) -> int:
         """Get the number of FX on this track."""
