@@ -14,6 +14,9 @@ from renardo.lib.TimeVar import TimeVar
 from renardo.sc_backend.Midi import MidiIn, MIDIDeviceNotFound
 from renardo.sc_backend import TempoClient, ServerManager
 from renardo.settings_manager import settings
+from renardo.logger import get_logger
+
+logger = get_logger('lib.TempoClock.clock')
 
 
 class PointInTime:
@@ -1121,11 +1124,11 @@ class TempoClock(object):
                 binding_count = timevar_manager.get_binding_count()
                 if binding_count > 0:
                     timevar_manager.clear_all_bindings()
-                    print(f"Cleared {binding_count} reaside TimeVar bindings")
+                    logger.info(f"Cleared {binding_count} reaside TimeVar bindings")
             except ImportError:
                 # reaside not available, skip silently
                 pass
             except Exception as e:
                 # Log but don't break Clock.clear()
-                print(f"Warning: Failed to clear reaside TimeVar bindings: {e}")
+                logger.warning(f"Failed to clear reaside TimeVar bindings: {e}")
             return None
