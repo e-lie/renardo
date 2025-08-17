@@ -8,12 +8,12 @@ import random
 import string
 import shutil
 import platform
-import logging
+from renardo.logger import get_logger
 import urllib.request
 import urllib.error
 from pathlib import Path
 
-logger = logging.getLogger(__name__)
+logger = get_logger('reaside.config.config')
 
 # Default ports
 WEB_INTERFACE_PORT = 8080

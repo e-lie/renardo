@@ -1,9 +1,9 @@
 """Take-related functionality module."""
 
-import logging
+from renardo.logger import get_logger
 from typing import Optional, List, Union, Dict, Any
 
-logger = logging.getLogger(__name__)
+logger = get_logger('reaside.core.take')
 
 class ReaTake:
     """REAPER media item take."""
