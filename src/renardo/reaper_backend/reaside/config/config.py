@@ -133,12 +133,22 @@ def add_osc_device(resource_path, send_port=OSC_SEND_PORT, receive_port=OSC_RECE
         string = config["reaper"][key]
         if string.startswith("OSC"):  # It's an OSC device
             existing_config = string.split(" ")
-            if len(existing_config) >= 7:
-                existing_send = existing_config[4]
-                existing_receive = existing_config[6]
-                if existing_send == str(send_port) and existing_receive == str(receive_port):
-                    logger.info(f"OSC device already exists with ports {send_port}/{receive_port}")
-                    return
+            if len(existing_config) >= 2:
+                existing_name = existing_config[1]
+                # Check if this is a "renardo" OSC device
+                if existing_name == "renardo":
+                    if len(existing_config) >= 7:
+                        existing_send = existing_config[4]
+                        existing_receive = existing_config[6]
+                        if existing_send == str(send_port) and existing_receive == str(receive_port):
+                            logger.info(f"OSC device 'renardo' already exists with ports {send_port}/{receive_port}")
+                            return
+                        else:
+                            # Found renardo device but with different ports, update it
+                            logger.info(f"Updating existing OSC device 'renardo' ports from {existing_send}/{existing_receive} to {send_port}/{receive_port}")
+                            config["reaper"][key] = f"OSC renardo 127.0.0.1 {receive_port} 127.0.0.1 {send_port} '' 1"
+                            config.write()
+                            return
     
     # Add new OSC device
     csurf_count += 1
@@ -162,11 +172,66 @@ def osc_device_exists(resource_path, send_port=OSC_SEND_PORT, receive_port=OSC_R
         string = config["reaper"][key]
         if string.startswith("OSC"):  # It's an OSC device
             config_parts = string.split(" ")
-            if len(config_parts) >= 7:
-                existing_send = config_parts[4]
-                existing_receive = config_parts[6]
-                if existing_send == str(send_port) and existing_receive == str(receive_port):
-                    return True
+            if len(config_parts) >= 2:
+                existing_name = config_parts[1]
+                # Check specifically for "renardo" OSC device
+                if existing_name == "renardo":
+                    if len(config_parts) >= 7:
+                        existing_send = config_parts[4]
+                        existing_receive = config_parts[6]
+                        if existing_send == str(send_port) and existing_receive == str(receive_port):
+                            return True
+    return False
+
+
+def clean_duplicate_osc_devices(resource_path):
+    """Remove duplicate 'renardo' OSC devices, keeping only the first one."""
+    config = Config(os.path.join(resource_path, "reaper.ini"))
+    csurf_count = int(config["reaper"].get("csurf_cnt", "0"))
+    
+    renardo_devices = []
+    other_devices = []
+    
+    # Collect all devices and identify renardo ones
+    for i in range(csurf_count):
+        key = f"csurf_{i}"
+        if key not in config["reaper"]:
+            continue
+        string = config["reaper"][key]
+        if string.startswith("OSC"):
+            config_parts = string.split(" ")
+            if len(config_parts) >= 2 and config_parts[1] == "renardo":
+                renardo_devices.append((key, string))
+            else:
+                other_devices.append((key, string))
+        else:
+            other_devices.append((key, string))
+    
+    # If we have multiple renardo devices, clean them up
+    if len(renardo_devices) > 1:
+        logger.info(f"Found {len(renardo_devices)} duplicate 'renardo' OSC devices, cleaning up...")
+        
+        # Remove all csurf entries
+        for i in range(csurf_count):
+            key = f"csurf_{i}"
+            if key in config["reaper"]:
+                del config["reaper"][key]
+        
+        # Re-add other devices first
+        for i, (_, device_string) in enumerate(other_devices):
+            config["reaper"][f"csurf_{i}"] = device_string
+        
+        # Add only the first renardo device
+        if renardo_devices:
+            config["reaper"][f"csurf_{len(other_devices)}"] = renardo_devices[0][1]
+            logger.info("Kept the first 'renardo' OSC device, removed duplicates")
+        
+        # Update count
+        config["reaper"]["csurf_cnt"] = str(len(other_devices) + (1 if renardo_devices else 0))
+        config.write()
+        
+        return True
+    
     return False
 
 
@@ -292,6 +357,10 @@ def configure_lua_reascript(resource_path=None, install_path=None):
     # Add web interface if needed
     logger.info("Setting up REAPER web interface...")
     add_web_interface(resource_path, WEB_INTERFACE_PORT)
+    
+    # Clean up any duplicate OSC devices first
+    logger.info("Checking for duplicate OSC devices...")
+    clean_duplicate_osc_devices(resource_path)
     
     # Add OSC device if needed
     logger.info("Setting up REAPER OSC device...")
