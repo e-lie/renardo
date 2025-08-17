@@ -4,7 +4,7 @@ from .config.config import WEB_INTERFACE_PORT
 
 import os
 import time
-import logging
+from renardo.logger import get_logger
 
 # Export all main components at package level
 from .tools.reaper_program import start_reaper, stop_reaper, is_reaper_running
@@ -14,9 +14,11 @@ from .core.project import ReaProject
 from .core.track import ReaTrack
 from .core.fx import ReaFX
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Set up logging using renardo logger
+from renardo.logger import configure_logging
+import logging
+configure_logging(level=logging.INFO)
+logger = get_logger('reaside')
 
 def configure_reaper():
     """Configure REAPER to allow reaside connections using Lua ReaScript."""

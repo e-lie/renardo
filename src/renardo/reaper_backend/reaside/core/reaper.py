@@ -1,11 +1,11 @@
 """Core REAPER functionality module."""
 
-import logging
+from renardo.logger import get_logger
 import os
 from pathlib import Path
 from typing import Optional, List, Union, Dict, Any
 
-logger = logging.getLogger(__name__)
+logger = get_logger('reaside.core.reaper')
 
 class Reaper:
     """Main interface to REAPER."""
