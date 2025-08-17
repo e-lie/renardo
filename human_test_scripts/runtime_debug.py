@@ -14,7 +14,10 @@ bass303 = ReaperInstrument(
     category='bass'
 )
 
-b1 >> bass303([0,4,5,3], cutoff=var([0,1]), delay_mix=1)
+b1 >> bass303([0,4,5,3], cutoff=linvar([0,1]), delay_mix=1)
+
+
+
 Clock.clear()
 b1 >> bass303([0,4,5,3], cutoff=var([0,1]))
 
