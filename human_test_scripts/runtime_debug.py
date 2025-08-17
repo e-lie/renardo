@@ -1,13 +1,8 @@
 
 import time
+
+
 from renardo.runtime import *
-
-#b1 >> blip(P[0,2,0,5]+P*(0,2), dur=.5, amp=[.3,.7,1], sus=1)+var([0,1,2,4,5],[1,2])
-#b2 >> blip(P[0,2,0,5], dur=.5, amp=[.3,.7,1], sus=1, oct=3)+var([0,1,2,4,5],[1,2])
-
-reaproject: ReaProject
-
-#reaproject.create_16_midi_tracks()
 
 bass303 = ReaperInstrument(
     shortname='bass303',
@@ -19,10 +14,16 @@ bass303 = ReaperInstrument(
     category='bass'
 )
 
-b1 >> bass303([0,2,0,4], bass303_cutoff=.1)
+b1 >> bass303([0,4,5,3], cutoff=var([0,1]))
+Clock.clear()
+b1 >> bass303([0,4,5,3], cutoff=var([0,1]))
 
 b2 >> blip()
 #m1 >> MidiOut([0,2,0,4])
 
 
 time.sleep(10)
+
+reaproject: ReaProject
+
+#reaproject.create_16_midi_tracks()
