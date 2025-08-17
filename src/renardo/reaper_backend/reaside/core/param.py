@@ -93,8 +93,14 @@ class ReaParam:
             timevar_manager.unbind_param(self)
         
         # Normal float value handling
+        self._set_value_internal(float(value))
+    
+    def _set_value_internal(self, value: float):
+        """
+        Internal method to set value without TimeVar detection.
+        Used by TimeVarManager to avoid infinite loops.
+        """
         # Clamp value to valid range
-        value = float(value)
         value = max(self.min_value, min(self.max_value, value))
         self.value = value
         
@@ -132,20 +138,35 @@ class ReaParam:
     
     def _is_timevar(self, value) -> bool:
         """
-        Check if a value is a TimeVar-like object.
+        Check if a value is a TimeVar-like object for continuous modulation.
         
         Args:
             value: Value to check
             
         Returns:
-            True if value appears to be a TimeVar
+            True if value appears to be a TimeVar for continuous modulation
         """
-        # Check for common TimeVar methods/attributes
-        if hasattr(value, 'now') or hasattr(value, 'current_value'):
+        # Don't treat basic types as TimeVar
+        if isinstance(value, (int, float, bool, str)):
+            return False
+        
+        # Support renardo's TimeVar (var, linvar, expvar, sinvar)
+        if hasattr(value, '__class__'):
+            module = getattr(value.__class__, '__module__', '')
+            class_name = value.__class__.__name__
+            
+            # Check for renardo TimeVar classes
+            if 'renardo.lib.TimeVar' in module or class_name == 'TimeVar':
+                # Make sure it has the now() method for evaluation
+                if hasattr(value, 'now'):
+                    return True
+        
+        # Check if it's specifically marked as a TimeVar for reaside
+        if hasattr(value, '_is_reaside_timevar'):
             return True
         
-        # Check if it's from the renardo TimeVar module
-        if hasattr(value, '__class__') and 'TimeVar' in value.__class__.__name__:
+        # Check for any object with now() method that looks like a TimeVar
+        if hasattr(value, 'now') and callable(getattr(value, 'now')):
             return True
         
         return False
@@ -245,7 +266,13 @@ class ReaSend(ReaParam):
             timevar_manager.unbind_param(self)
         
         # Normal float value handling
-        value = float(value)
+        self._set_value_internal(float(value))
+    
+    def _set_value_internal(self, value: float):
+        """
+        Internal method to set value without TimeVar detection.
+        Used by TimeVarManager to avoid infinite loops.
+        """
         self.value = value
         if self.param_type == "volume":
             self.client.set_send_volume(self.track_index, self.send_index, value)
