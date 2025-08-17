@@ -256,8 +256,8 @@ class ReaProject:
         track.name = track_name
         
         # Set MIDI input to "All MIDI inputs" on the appropriate channel
-        # ReaScript: I_RECINPUT = 4096 + (channel - 1) for "All MIDI inputs" on specific channel
-        midi_input_value = 4096 + (track_num - 1)
+        # ReaScript: I_RECINPUT = 4096 + channel for "All MIDI inputs" on specific channel
+        midi_input_value = 4096 + track_num
         track_obj = self._client.call_reascript_function("GetTrack", 0, track._index)
         self._client.call_reascript_function("SetMediaTrackInfo_Value", track_obj, "I_RECINPUT", midi_input_value)
         
