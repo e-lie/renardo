@@ -5,9 +5,9 @@ import time
 import weakref
 from typing import Dict, Tuple, Optional, Any, Callable
 from dataclasses import dataclass
-import logging
+from renardo.logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger('reaside.core.timevar_manager')
 
 
 @dataclass

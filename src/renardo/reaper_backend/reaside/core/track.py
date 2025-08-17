@@ -1,12 +1,12 @@
 """Track-related functionality module."""
 
-import logging
+from renardo.logger import get_logger
 import os
 import re
 from pathlib import Path
 from typing import Optional, List, Union, Dict, Any
 
-logger = logging.getLogger(__name__)
+logger = get_logger('reaside.core.track')
 
 class ReaTrack:
     """REAPER track."""
