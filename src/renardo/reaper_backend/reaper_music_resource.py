@@ -295,14 +295,39 @@ class ReaperInstrument(Instrument):
                             max_value=12.0
                         )
                         
-                        # Override the set_value method to convert dB to linear and use OSC
+                        # Override the set_value method to convert dB to fader position
                         def set_track_volume_db(val):
                             db_value = float(val)
-                            # Convert dB to linear (REAPER's internal representation)
-                            if db_value <= -150.0:
-                                linear_value = 0.0
+                            # Convert dB to REAPER fader position (piecewise linear)
+                            # Known points: 0.5=-20.4dB, 0.828=-6dB, 0.9118=-3dB, 1.0=0dB, 1.0933=+3dB, 1.1905=+6dB, 1.4=+12dB
+                            if db_value <= -150:
+                                fader_position = 0.0
+                            elif db_value <= -20.4:
+                                # Linear interpolation from 0 to 0.5 for -150 to -20.4 dB
+                                fader_position = 0.5 * (db_value + 150) / (150 - 20.4)
+                            elif db_value <= -6:
+                                # Linear interpolation from 0.5 to 0.828 for -20.4 to -6 dB
+                                fader_position = 0.5 + (0.828 - 0.5) * (db_value + 20.4) / (-6 + 20.4)
+                            elif db_value <= -3:
+                                # Linear interpolation from 0.828 to 0.9118 for -6 to -3 dB
+                                fader_position = 0.828 + (0.9118 - 0.828) * (db_value + 6) / (-3 + 6)
+                            elif db_value <= 0:
+                                # Linear interpolation from 0.9118 to 1.0 for -3 to 0 dB
+                                fader_position = 0.9118 + (1.0 - 0.9118) * (db_value + 3) / 3.0
+                            elif db_value <= 3:
+                                # Linear interpolation from 1.0 to 1.0933 for 0 to +3 dB
+                                fader_position = 1.0 + (1.0933 - 1.0) * db_value / 3.0
+                            elif db_value <= 6:
+                                # Linear interpolation from 1.0933 to 1.1905 for +3 to +6 dB
+                                fader_position = 1.0933 + (1.1905 - 1.0933) * (db_value - 3) / 3.0
+                            elif db_value <= 12:
+                                # Linear interpolation from 1.1905 to 1.4 for +6 to +12 dB
+                                fader_position = 1.1905 + (1.4 - 1.1905) * (db_value - 6) / 6.0
                             else:
-                                linear_value = math.pow(10.0, db_value / 20.0)
+                                fader_position = 1.4  # Cap at +12 dB
+                            
+                            # Apply the same 0.716 factor as volin
+                            linear_value = fader_position * 0.716
                             
                             # Try OSC first for better performance 
                             if hasattr(reatrack._client, 'send_osc_message'):
@@ -320,13 +345,39 @@ class ReaperInstrument(Instrument):
                         volume_param.set_value(value)
                         continue
                     else:
-                        # Static value, convert dB to linear
+                        # Static value, convert dB to fader position
                         import math
                         db_value = float(value)
-                        if db_value <= -150.0:
-                            linear_value = 0.0
+                        # Convert dB to REAPER fader position (piecewise linear)
+                        # Known points: 0.5=-20.4dB, 0.828=-6dB, 0.9118=-3dB, 1.0=0dB, 1.0933=+3dB, 1.1905=+6dB, 1.4=+12dB
+                        if db_value <= -150:
+                            fader_position = 0.0
+                        elif db_value <= -20.4:
+                            # Linear interpolation from 0 to 0.5 for -150 to -20.4 dB
+                            fader_position = 0.5 * (db_value + 150) / (150 - 20.4)
+                        elif db_value <= -6:
+                            # Linear interpolation from 0.5 to 0.828 for -20.4 to -6 dB
+                            fader_position = 0.5 + (0.828 - 0.5) * (db_value + 20.4) / (-6 + 20.4)
+                        elif db_value <= -3:
+                            # Linear interpolation from 0.828 to 0.9118 for -6 to -3 dB
+                            fader_position = 0.828 + (0.9118 - 0.828) * (db_value + 6) / (-3 + 6)
+                        elif db_value <= 0:
+                            # Linear interpolation from 0.9118 to 1.0 for -3 to 0 dB
+                            fader_position = 0.9118 + (1.0 - 0.9118) * (db_value + 3) / 3.0
+                        elif db_value <= 3:
+                            # Linear interpolation from 1.0 to 1.0933 for 0 to +3 dB
+                            fader_position = 1.0 + (1.0933 - 1.0) * db_value / 3.0
+                        elif db_value <= 6:
+                            # Linear interpolation from 1.0933 to 1.1905 for +3 to +6 dB
+                            fader_position = 1.0933 + (1.1905 - 1.0933) * (db_value - 3) / 3.0
+                        elif db_value <= 12:
+                            # Linear interpolation from 1.1905 to 1.4 for +6 to +12 dB
+                            fader_position = 1.1905 + (1.4 - 1.1905) * (db_value - 6) / 6.0
                         else:
-                            linear_value = math.pow(10.0, db_value / 20.0)
+                            fader_position = 1.4  # Cap at +12 dB
+                        
+                        # Apply the same 0.716 factor as volin
+                        linear_value = fader_position * 0.716
                         
                         if hasattr(reatrack._client, 'send_osc_message'):
                             # OSC address for track volume (1-based track indexing)
