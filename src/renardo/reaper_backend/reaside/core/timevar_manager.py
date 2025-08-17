@@ -158,12 +158,15 @@ class TimeVarManager:
                     try:
                         # Get current value from TimeVar
                         current_value = self._evaluate_timevar(binding.timevar)
-
-                        logger.debug(f"current_calue: {current_value}")
                         
                         # Only update if value changed significantly
                         if binding.last_value is None or abs(current_value - binding.last_value) > 0.001:
-                            param.set_value(current_value)
+                            # Use internal method to avoid re-triggering TimeVar detection
+                            if hasattr(param, '_set_value_internal'):
+                                param._set_value_internal(current_value)
+                            else:
+                                # Fallback for objects without the internal method
+                                param.value = current_value
                             binding.last_value = current_value
                             
                     except Exception as e:
@@ -189,20 +192,35 @@ class TimeVarManager:
         Returns:
             Current value as float
         """
-        # Check if it has a now() method (typical for TimeVar)
-        if hasattr(timevar, 'now'):
-            return float(timevar.now())
-        
-        # Check if it has a current_value() method
-        if hasattr(timevar, 'current_value'):
-            return float(timevar.current_value())
-        
-        # Check if it has __call__ method
-        if callable(timevar):
-            return float(timevar())
-        
-        # Try to convert directly to float
-        return float(timevar)
+        try:
+            # Check if it has a now() method (typical for TimeVar)
+            if hasattr(timevar, 'now'):
+                result = timevar.now()
+                # Handle lists/arrays by taking first element
+                if isinstance(result, (list, tuple)) and len(result) > 0:
+                    result = result[0]
+                return float(result)
+            
+            # Check if it has a current_value() method
+            if hasattr(timevar, 'current_value'):
+                result = timevar.current_value()
+                if isinstance(result, (list, tuple)) and len(result) > 0:
+                    result = result[0]
+                return float(result)
+            
+            # Check if it has __call__ method
+            if callable(timevar):
+                result = timevar()
+                if isinstance(result, (list, tuple)) and len(result) > 0:
+                    result = result[0]
+                return float(result)
+            
+            # Try to convert directly to float
+            return float(timevar)
+            
+        except Exception as e:
+            logger.warning(f"Failed to evaluate TimeVar: {e}, using default value 0.5")
+            return 0.5
     
     def get_binding_count(self) -> int:
         """Get the current number of active bindings."""
