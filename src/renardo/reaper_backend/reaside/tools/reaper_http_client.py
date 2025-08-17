@@ -6,9 +6,9 @@ import urllib.parse
 import urllib.request
 from urllib.error import URLError
 from socket import timeout
-import logging
+from renardo.logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger('reaside.tools.reaper_http_client')
 
 class ReaperHTTPError(Exception):
     """Exception raised when HTTP communication with REAPER fails."""

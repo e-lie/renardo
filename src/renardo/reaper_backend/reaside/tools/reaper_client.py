@@ -1,11 +1,11 @@
 """REAPER client for HTTP communication."""
 
-import logging
+from renardo.logger import get_logger
 import time
 
 from .reaper_http_client import ReaperClient as ReaperHTTPClient, ReaperHTTPError, ReaperAPIError, ReaperNotFoundError
 
-logger = logging.getLogger(__name__)
+logger = get_logger('reaside.tools.reaper_client')
 
 class ReaperOSCError(Exception):
     """Exception raised when OSC communication with REAPER fails."""

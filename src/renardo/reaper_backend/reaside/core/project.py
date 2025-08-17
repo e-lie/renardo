@@ -1,9 +1,9 @@
 """Project-related functionality module."""
 
-import logging
+from renardo.logger import get_logger
 from typing import Optional, List, Union, Dict, Any
 
-logger = logging.getLogger(__name__)
+logger = get_logger('reaside.core.project')
 
 class ReaProject:
     """REAPER project."""
