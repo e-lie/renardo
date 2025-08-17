@@ -365,7 +365,7 @@ class ReaperInstrument(Instrument):
                         
                         # Override the set_value method to use OSC for track volume
                         def set_track_volume_linear(val):
-                            linear_value = float(val)
+                            linear_value = float(val) * 0.716  # Factor so volin=1 is 0dB in REAPER
                             # Try OSC first for better performance 
                             if hasattr(reatrack._client, 'send_osc_message'):
                                 # OSC address for track volume (1-based track indexing)
@@ -382,8 +382,8 @@ class ReaperInstrument(Instrument):
                         volume_param.set_value(value)
                         continue
                     else:
-                        # Static value, use as-is (already linear 0-1)
-                        linear_value = float(value)
+                        # Static value, multiply by 0.716 so volin=1 is 0dB in REAPER
+                        linear_value = float(value) * 0.716
                         if hasattr(reatrack._client, 'send_osc_message'):
                             # OSC address for track volume (1-based track indexing)
                             osc_address = f"/track/{reatrack.index + 1}/volume"
