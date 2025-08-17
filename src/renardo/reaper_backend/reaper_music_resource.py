@@ -592,52 +592,58 @@ class ReaperInstrument(Instrument):
             logger.error(f"Error injecting FXChain '{chain_name}' in REAPER: {e}")
             return False
 
-    def list_parameters(self) -> Dict[str, Dict[str, str]]:
+    def list_parameters(self, filter: str = None) -> None:
         """
-        List all parameters for all FX loaded in the track.
+        List all parameters for all FX loaded in the track as snake_case names.
+        Parameters are prefixed by FX name except for the first FX.
         
-        Returns:
-            Dict[str, Dict[str, str]]: Dictionary with FX names as keys, containing
-                                     parameter dictionaries {snake_case_name: reaper_name}
+        Args:
+            filter: Optional string to filter parameter names containing this substring
         
-        Example:
-            {
-                'bass303': {
-                    'on': 'FX Enabled',
-                    'cutoff': 'Cutoff',
-                    'resonance': 'Resonance',
-                    'envelope_mod': 'Envelope Mod'
-                },
-                'reverb': {
-                    'on': 'FX Enabled',
-                    'room_size': 'Room Size',
-                    'damping': 'Damping'
-                }
-            }
+        Prints a single-line comma-separated list of parameter names:
+        - First FX: "cutoff", "resonance", "envelope_mod"  
+        - Other FX: "delay_mix", "delay_feedback", "reverb_room_size"
+        
+        Example output:
+            bass303: cutoff, envelope_mod, on, resonance, delay_feedback, delay_mix, delay_on
+            bass303 (filtered by 'cut'): cutoff
         """
         if not hasattr(self, '_reatrack') or not self._reatrack:
             logger.warning(f"No track available for instrument {self.shortname}")
-            return {}
-        
-        parameters = {}
+            return
         
         try:
             # Get all FX from the track
             fx_list = self._reatrack.list_fx()
             
-            for fx in fx_list:
+            all_params = []
+            
+            for fx_index, fx in enumerate(fx_list):
                 fx_name = fx.snake_name
-                parameters[fx_name] = {}
+                is_first_fx = (fx_index == 0)
                 
                 # Add all parameters for this FX
-                for param_name, param_obj in fx.params.items():
-                    parameters[fx_name][param_name] = param_obj.reaper_name
-                
-                logger.debug(f"Listed {len(fx.params)} parameters for FX '{fx_name}'")
+                for param_name in fx.params.keys():
+                    if is_first_fx:
+                        # First FX: just the parameter name
+                        full_param_name = param_name
+                    else:
+                        # Other FX: prefix with FX name
+                        full_param_name = f"{fx_name}_{param_name}"
+                    
+                    # Apply filter if provided
+                    if filter is None or filter.lower() in full_param_name.lower():
+                        all_params.append(full_param_name)
             
-            logger.info(f"Found {len(fx_list)} FX with parameters in track '{self.track_name}'")
-            return parameters
+            # Print the list on one line
+            if all_params:
+                sorted_params = sorted(all_params)
+                params_str = ", ".join(sorted_params)
+                filter_msg = f" (filtered by '{filter}')" if filter else ""
+                print(f"{self.shortname}{filter_msg}: {params_str}")
+            else:
+                filter_msg = f" matching '{filter}'" if filter else ""
+                print(f"{self.shortname}: No parameters{filter_msg} found")
             
         except Exception as e:
             logger.error(f"Error listing parameters for instrument {self.shortname}: {e}")
-            return {}
