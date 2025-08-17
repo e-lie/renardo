@@ -16,6 +16,9 @@ from renardo.settings_manager import settings, SettingsManager
 from renardo.lib.Extensions.MidiMapFactory import MidiMapFactory
 from renardo.sc_backend.Midi import ReaperInstrumentProxy
 from renardo.lib.Patterns import Pattern
+from renardo.logger import get_logger
+
+logger = get_logger('reaper_backend.music_resource')
 
 # Import reaside components
 from renardo.reaper_backend.reaside.core.reaper import Reaper
@@ -165,7 +168,7 @@ class ReaperInstrument(Instrument):
                 else:
                     self._reafx_instrument = None
             except Exception as e:
-                print(f"Failed to load FX chain {self.plugin_name}: {e}")
+                logger.error(f"Failed to load FX chain {self.plugin_name}: {e}")
                 self._reafx_instrument = None
         else:
             # Try to get existing FX by name
@@ -189,7 +192,7 @@ class ReaperInstrument(Instrument):
     def find_available_midi_channel(cls):
         free_midi_channels = [index for index in range(1, 17) if index not in cls._used_track_indexes]
         if not free_midi_channels:
-            print("No free track indexes available.")
+            logger.error("No free track indexes available.")
             return None
         return free_midi_channels[0]
 
@@ -249,9 +252,9 @@ class ReaperInstrument(Instrument):
             success = self._reatrack.add_fx(plugin_name)
             if success:
                 self._reatrack.rescan_fx()
-                print(f"Added effect {plugin_name} to track {self._reatrack.name}")
+                logger.info(f"Added effect {plugin_name} to track {self._reatrack.name}")
             else:
-                print(f"Failed to add effect {plugin_name} to track {self._reatrack.name}")
+                logger.error(f"Failed to add effect {plugin_name} to track {self._reatrack.name}")
     
     def apply_all_existing_reaper_params(self, reatrack, param_dict, remaining_param_dict={}, runtime_kwargs={}):
         """
@@ -462,7 +465,7 @@ class ReaperInstrument(Instrument):
             cls.update_used_track_indexes()
             free_indexes = [index for index in range(1,17) if index not in cls._used_track_indexes]
             if not free_indexes:
-                print("No free track indexes available.")
+                logger.error("No free track indexes available.")
                 return None
                 
             free_index = free_indexes[0]
@@ -577,14 +580,14 @@ class ReaperInstrument(Instrument):
                     dest_content = dest_file.read()
                 
                 if source_content == dest_content:
-                    print(f"FXChain '{chain_name}' already up to date in REAPER")
+                    logger.info(f"FXChain '{chain_name}' already up to date in REAPER")
                     return True
             
             # Copy the file
             shutil.copy2(source_path, dest_path)
-            print(f"FXChain '{chain_name}' installed to REAPER: {dest_path}")
+            logger.info(f"FXChain '{chain_name}' installed to REAPER: {dest_path}")
             return True
             
         except Exception as e:
-            print(f"Error injecting FXChain '{chain_name}' in REAPER: {e}")
+            logger.error(f"Error injecting FXChain '{chain_name}' in REAPER: {e}")
             return False

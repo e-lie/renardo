@@ -5,8 +5,35 @@ Provides consistent logging across all modules with configurable levels and form
 
 import logging
 import sys
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Union
 from pathlib import Path
+
+
+def _get_log_level_from_string(level: Union[str, int]) -> int:
+    """Convert string log level to logging constant."""
+    if isinstance(level, int):
+        return level
+    
+    level_map = {
+        'DEBUG': logging.DEBUG,
+        'INFO': logging.INFO,
+        'WARNING': logging.WARNING,
+        'ERROR': logging.ERROR,
+        'CRITICAL': logging.CRITICAL
+    }
+    
+    return level_map.get(level.upper(), logging.INFO)
+
+
+def _get_default_log_level() -> int:
+    """Get default log level from settings manager."""
+    try:
+        from renardo.settings_manager import settings
+        level_str = settings.get("core.DEFAULT_LOG_LEVEL", "INFO")
+        return _get_log_level_from_string(level_str)
+    except ImportError:
+        # Fallback if settings manager is not available
+        return logging.WARNING
 
 
 class RenardoFormatter(logging.Formatter):
@@ -77,13 +104,13 @@ class RenardoLogger:
             return
         
         self._initialized = True
-        self._default_level = logging.INFO
+        self._default_level = _get_default_log_level()
         self._use_colors = True
         self._show_module = True
         self._configured = False
     
     def configure(self, 
-                  level: int = logging.INFO,
+                  level: Optional[Union[int, str]] = None,
                   use_colors: bool = True,
                   show_module: bool = True,
                   log_file: Optional[Path] = None) -> None:
@@ -91,11 +118,16 @@ class RenardoLogger:
         Configure the global logging settings.
         
         Args:
-            level: Default logging level
+            level: Default logging level (string or int). If None, uses settings default.
             use_colors: Whether to use colors in console output
             show_module: Whether to show module names
             log_file: Optional file to write logs to
         """
+        if level is None:
+            level = _get_default_log_level()
+        else:
+            level = _get_log_level_from_string(level)
+        
         self._default_level = level
         self._use_colors = use_colors
         self._show_module = show_module
@@ -234,7 +266,7 @@ def get_logger(name: str) -> logging.Logger:
     return _logger_manager.get_logger(name)
 
 
-def configure_logging(level: int = logging.INFO,
+def configure_logging(level: Optional[Union[int, str]] = None,
                      use_colors: bool = True,
                      show_module: bool = True,
                      log_file: Optional[Path] = None) -> None:
@@ -242,29 +274,33 @@ def configure_logging(level: int = logging.INFO,
     Configure global logging settings.
     
     Args:
-        level: Default logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+        level: Default logging level (string or int). If None, uses settings default.
         use_colors: Whether to use colors in console output
         show_module: Whether to show module names in log messages
         log_file: Optional file to write logs to
     
     Example:
-        configure_logging(level=logging.DEBUG, log_file=Path("renardo.log"))
+        configure_logging(level="DEBUG", log_file=Path("renardo.log"))
+        configure_logging(level=logging.WARNING)
+        configure_logging()  # Uses settings default (WARNING)
     """
     _logger_manager.configure(level, use_colors, show_module, log_file)
 
 
-def set_log_level(level: int, module: Optional[str] = None) -> None:
+def set_log_level(level: Union[int, str], module: Optional[str] = None) -> None:
     """
     Set logging level for all modules or a specific module.
     
     Args:
-        level: New logging level
+        level: New logging level (string or int)
         module: Specific module name, or None for all modules
     
     Example:
-        set_log_level(logging.DEBUG, 'reaside')  # Debug only for reaside
-        set_log_level(logging.WARNING)           # Warning level for all
+        set_log_level("DEBUG", 'reaside')       # Debug only for reaside
+        set_log_level("WARNING")                # Warning level for all
+        set_log_level(logging.WARNING)          # Same as above
     """
+    level = _get_log_level_from_string(level)
     _logger_manager.set_level(level, module)
 
 
