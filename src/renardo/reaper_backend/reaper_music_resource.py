@@ -591,3 +591,53 @@ class ReaperInstrument(Instrument):
         except Exception as e:
             logger.error(f"Error injecting FXChain '{chain_name}' in REAPER: {e}")
             return False
+
+    def list_parameters(self) -> Dict[str, Dict[str, str]]:
+        """
+        List all parameters for all FX loaded in the track.
+        
+        Returns:
+            Dict[str, Dict[str, str]]: Dictionary with FX names as keys, containing
+                                     parameter dictionaries {snake_case_name: reaper_name}
+        
+        Example:
+            {
+                'bass303': {
+                    'on': 'FX Enabled',
+                    'cutoff': 'Cutoff',
+                    'resonance': 'Resonance',
+                    'envelope_mod': 'Envelope Mod'
+                },
+                'reverb': {
+                    'on': 'FX Enabled',
+                    'room_size': 'Room Size',
+                    'damping': 'Damping'
+                }
+            }
+        """
+        if not hasattr(self, '_reatrack') or not self._reatrack:
+            logger.warning(f"No track available for instrument {self.shortname}")
+            return {}
+        
+        parameters = {}
+        
+        try:
+            # Get all FX from the track
+            fx_list = self._reatrack.list_fx()
+            
+            for fx in fx_list:
+                fx_name = fx.snake_name
+                parameters[fx_name] = {}
+                
+                # Add all parameters for this FX
+                for param_name, param_obj in fx.params.items():
+                    parameters[fx_name][param_name] = param_obj.reaper_name
+                
+                logger.debug(f"Listed {len(fx.params)} parameters for FX '{fx_name}'")
+            
+            logger.info(f"Found {len(fx_list)} FX with parameters in track '{self.track_name}'")
+            return parameters
+            
+        except Exception as e:
+            logger.error(f"Error listing parameters for instrument {self.shortname}: {e}")
+            return {}
