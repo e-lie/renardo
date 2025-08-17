@@ -4,6 +4,9 @@ from typing import Optional, Union, Any
 from enum import Enum
 from ..tools.reaper_client import ReaperClient
 from .timevar_manager import get_timevar_manager
+from renardo.logger import get_logger
+
+logger = get_logger('reaside.core.param')
 
 
 class ReaParamState(Enum):
@@ -114,13 +117,13 @@ class ReaParam:
                 osc_success = self.client.send_osc_message(osc_address, bypass_value)
                 if osc_success:
                     bypass_state = "ENABLED" if bypass_value == 1 else "BYPASSED"
-                    print(f"DEBUG: Sent OSC bypass: {osc_address} = {bypass_value} ({bypass_state})")
+                    logger.debug(f"Sent OSC bypass: {osc_address} = {bypass_value} ({bypass_state})")
             else:
                 # OSC message for parameter value - OSC uses 1-based indexing for FX and params
                 osc_address = f"/track/{self.track_index + 1}/fx/{self.fx_index + 1}/fxparam/{self.param_index + 1}/value"
                 osc_success = self.client.send_osc_message(osc_address, value)
                 if osc_success:
-                    print(f"DEBUG: Sent OSC: {osc_address} = {value:.3f}")
+                    logger.debug(f"Sent OSC: {osc_address} = {value:.3f}")
             
             # If OSC succeeded, we're done
             if osc_success:
