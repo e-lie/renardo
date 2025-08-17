@@ -275,6 +275,131 @@ class ReaperInstrument(Instrument):
 
         # Apply parameters to REAPER FX using reaside utilities
         for param_fullname, value in param_dict.items():
+            # Handle special track volume parameter (dB)
+            if param_fullname == 'vol':
+                try:
+                    # Check if it's a TimeVar that needs continuous updates
+                    if hasattr(value, 'now') or hasattr(value, '_is_timevar') or str(type(value)).find('TimeVar') != -1:
+                        # Create a ReaParam for track volume with TimeVar support
+                        from .reaside.core.param import ReaParam
+                        import math
+                        volume_param = ReaParam(
+                            client=reatrack._client,
+                            track_index=reatrack.index,
+                            fx_index=-1,  # Special: track parameter, not FX
+                            param_index=-2,  # Special index for track volume
+                            name='vol',
+                            reaper_name='Track Volume (dB)',
+                            use_osc=True,
+                            min_value=-150.0,  # dB range
+                            max_value=12.0
+                        )
+                        
+                        # Override the set_value method to convert dB to linear and use OSC
+                        def set_track_volume_db(val):
+                            db_value = float(val)
+                            # Convert dB to linear (REAPER's internal representation)
+                            if db_value <= -150.0:
+                                linear_value = 0.0
+                            else:
+                                linear_value = math.pow(10.0, db_value / 20.0)
+                            
+                            # Try OSC first for better performance 
+                            if hasattr(reatrack._client, 'send_osc_message'):
+                                # OSC address for track volume (1-based track indexing)
+                                osc_address = f"/track/{reatrack.index + 1}/volume"
+                                osc_success = reatrack._client.send_osc_message(osc_address, linear_value)
+                                if osc_success:
+                                    logger.debug(f"Sent OSC track volume: {osc_address} = {linear_value:.3f} (from {db_value:.1f} dB)")
+                                    return
+                            
+                            # Fallback to direct track volume setting
+                            reatrack.volume = linear_value
+                        
+                        volume_param._set_value_internal = lambda val: set_track_volume_db(val)
+                        volume_param.set_value(value)
+                        continue
+                    else:
+                        # Static value, convert dB to linear
+                        import math
+                        db_value = float(value)
+                        if db_value <= -150.0:
+                            linear_value = 0.0
+                        else:
+                            linear_value = math.pow(10.0, db_value / 20.0)
+                        
+                        if hasattr(reatrack._client, 'send_osc_message'):
+                            # OSC address for track volume (1-based track indexing)
+                            osc_address = f"/track/{reatrack.index + 1}/volume"
+                            osc_success = reatrack._client.send_osc_message(osc_address, linear_value)
+                            if osc_success:
+                                logger.debug(f"Sent OSC track volume: {osc_address} = {linear_value:.3f} (from {db_value:.1f} dB)")
+                                continue
+                        
+                        # Fallback to direct track volume setting
+                        reatrack.volume = linear_value
+                        continue
+                except Exception as e:
+                    logger.error(f"Failed to set track volume: {e}")
+                    remaining_param_dict[param_fullname] = value
+                    continue
+            
+            # Handle special track volume parameter (linear 0-1)
+            if param_fullname == 'volin':
+                try:
+                    # Check if it's a TimeVar that needs continuous updates
+                    if hasattr(value, 'now') or hasattr(value, '_is_timevar') or str(type(value)).find('TimeVar') != -1:
+                        # Create a ReaParam for track volume with TimeVar support
+                        from .reaside.core.param import ReaParam
+                        volume_param = ReaParam(
+                            client=reatrack._client,
+                            track_index=reatrack.index,
+                            fx_index=-1,  # Special: track parameter, not FX
+                            param_index=-3,  # Special index for linear track volume
+                            name='volin',
+                            reaper_name='Track Volume (Linear)',
+                            use_osc=True,
+                            min_value=0.0,
+                            max_value=1.0
+                        )
+                        
+                        # Override the set_value method to use OSC for track volume
+                        def set_track_volume_linear(val):
+                            linear_value = float(val)
+                            # Try OSC first for better performance 
+                            if hasattr(reatrack._client, 'send_osc_message'):
+                                # OSC address for track volume (1-based track indexing)
+                                osc_address = f"/track/{reatrack.index + 1}/volume"
+                                osc_success = reatrack._client.send_osc_message(osc_address, linear_value)
+                                if osc_success:
+                                    logger.debug(f"Sent OSC track volume: {osc_address} = {linear_value:.3f}")
+                                    return
+                            
+                            # Fallback to direct track volume setting
+                            reatrack.volume = linear_value
+                        
+                        volume_param._set_value_internal = lambda val: set_track_volume_linear(val)
+                        volume_param.set_value(value)
+                        continue
+                    else:
+                        # Static value, use as-is (already linear 0-1)
+                        linear_value = float(value)
+                        if hasattr(reatrack._client, 'send_osc_message'):
+                            # OSC address for track volume (1-based track indexing)
+                            osc_address = f"/track/{reatrack.index + 1}/volume"
+                            osc_success = reatrack._client.send_osc_message(osc_address, linear_value)
+                            if osc_success:
+                                logger.debug(f"Sent OSC track volume: {osc_address} = {linear_value:.3f}")
+                                continue
+                        
+                        # Fallback to direct track volume setting
+                        reatrack.volume = linear_value
+                        continue
+                except Exception as e:
+                    logger.error(f"Failed to set track volume: {e}")
+                    remaining_param_dict[param_fullname] = value
+                    continue
+            
             # Handle special FX enable/disable parameters
             if param_fullname.endswith('_on'):
                 fx_name = param_fullname[:-3]  # Remove '_on' suffix
