@@ -14,7 +14,11 @@ bass303 = ReaperInstrument(
     category='bass'
 )
 
-b1 >> bass303([0,4,5,3], cutoff=linvar([0,1]), delay_mix=1)
+b1 >> bass303([0,4,5,3], vol=linvar([-6,3]))
+
+
+b1 >> bass303([0,4,5,3], cutoff=linvar([0,1]), delay_mix=linvar([1,0]), rea_eq_freq_low_shelf=linvar([0,1]))
+
 
 
 

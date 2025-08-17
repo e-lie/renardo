@@ -123,6 +123,10 @@ class ReaperInstrument(Instrument):
         else:
             raise Exception(f"No available MIDI channel found for {shortname}")  
         
+        # Reserve this channel immediately to prevent conflicts
+        if self._midi_channel not in self.__class__._used_track_indexes:
+            self.__class__._used_track_indexes.append(self._midi_channel)
+        
         # set track_name
         if custom_track_name is None:
             self.track_name = f"chan{self._midi_channel}"
@@ -177,8 +181,9 @@ class ReaperInstrument(Instrument):
         # Add to instrument dictionary if one is available
         if hasattr(self.__class__, 'instrument_dict'):
             self.instrument_dict[self.shortname] = self
-
-        #self.__class__.update_used_track_indexes()
+        
+        # Add to class instances list for tracking
+        self.__class__._instru_facades.append(self)
 
     def _get_caller_file(self):
         """Get the path of the file that created this object instance."""
@@ -461,19 +466,51 @@ class ReaperInstrument(Instrument):
             **remaining_param_dict,
         )
     
+    def cleanup(self):
+        """Manually clean up the instrument and remove its track."""
+        try:
+            # Remove from class instances list
+            if self in self.__class__._instru_facades:
+                self.__class__._instru_facades.remove(self)
+            
+            # Remove from instrument dictionary
+            if hasattr(self.__class__, 'instrument_dict') and hasattr(self, 'shortname'):
+                if self.shortname in self.instrument_dict:
+                    del self.instrument_dict[self.shortname]
+            
+            # Delete the track in REAPER if it exists
+            if hasattr(self, '_reatrack') and self._reatrack:
+                try:
+                    # Clear all FX from the track first
+                    fx_count = self._reatrack.get_fx_count()
+                    for i in range(fx_count - 1, -1, -1):  # Remove from end to start
+                        track_obj = self._reatrack._client.call_reascript_function("GetTrack", 0, self._reatrack.index)
+                        if track_obj:
+                            self._reatrack._client.call_reascript_function("TrackFX_Delete", track_obj, i)
+                    
+                    # Delete the track itself
+                    self._reatrack.delete()
+                    logger.info(f"Deleted track {self.track_name} for instrument {self.shortname}")
+                except Exception as e:
+                    logger.warning(f"Could not delete track for instrument {self.shortname}: {e}")
+            
+            # Release the MIDI channel
+            if hasattr(self, '_midi_channel') and self._midi_channel in self.__class__._used_track_indexes:
+                self.__class__._used_track_indexes.remove(self._midi_channel)
+                logger.debug(f"Released MIDI channel {self._midi_channel} for instrument {self.shortname}")
+            
+            # Clear references
+            if hasattr(self, '_reafx_instrument'):
+                self._reafx_instrument = None
+            if hasattr(self, '_reatrack'):
+                self._reatrack = None
+                
+        except Exception as e:
+            logger.error(f"Error cleaning up ReaperInstrument {getattr(self, 'shortname', 'unknown')}: {e}")
+
     def __del__(self):
         """Clean up when the instrument is deleted."""
-        if hasattr(self, '_reatrack') and hasattr(self, '_reafx_instrument'):
-            try:
-                # TODO: Implement FX deletion with reaside
-                # For now, just cleanup references
-                self._reafx_instrument = None
-            except:
-                print(f"Error deleting fx bound to ReaperInstrument")
-                
-        # Call parent destructor if it exists
-        if hasattr(super(), '__del__'):
-            super().__del__()
+        self.cleanup()
 
     def load(self):
         """Load the instrument in REAPER."""
