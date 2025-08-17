@@ -1,4 +1,4 @@
-import logging
+from renardo.logger import configure_logging
 
 #base = set(dir())
 #from renardo.lib.runtime import *
@@ -308,7 +308,7 @@ FoxDot = _util()
 # Define _ as a shorthand alias
 _ = None
 
-logging.basicConfig(level=logging.ERROR)
+configure_logging()
 when.set_namespace(FoxDotCode) # experimental
 
 
