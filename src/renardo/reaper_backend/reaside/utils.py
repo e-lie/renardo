@@ -3,6 +3,9 @@ Utility functions for reaside.
 """
 
 from typing import Tuple, Optional
+from renardo.logger import get_logger
+
+logger = get_logger('reaside.utils')
 
 
 def split_param_name(param_fullname: str) -> Tuple[Optional[str], Optional[str]]:
@@ -183,12 +186,17 @@ def enable_fx(track, fx_name: str, enabled: bool = True) -> bool:
     
     if fx_obj:
         try:
-            # TODO: Implement FX enable/disable when reaside supports it
-            # For now, return True to indicate we found the FX
-            print(f"{'Enabling' if enabled else 'Disabling'} FX {fx_name} (not yet implemented)")
-            return True
+            # Use the existing 'on' parameter that's automatically created for each FX
+            if 'on' in fx_obj.params:
+                # Set the enabled state (1.0 for enabled, 0.0 for disabled)
+                fx_obj.params['on'].set_value(1.0 if enabled else 0.0)
+                return True
+            else:
+                logger.error(f"FX {fx_name} does not have an 'on' parameter")
+                return False
+            
         except Exception as e:
-            print(f"Failed to {'enable' if enabled else 'disable'} FX {fx_name}: {e}")
+            logger.error(f"Failed to {'enable' if enabled else 'disable'} FX {fx_name}: {e}")
             return False
     
     return False
