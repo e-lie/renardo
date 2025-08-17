@@ -71,31 +71,46 @@ def normalize_fx_name(fx_name: str) -> str:
 def find_fx_by_param_name(track, param_fullname: str):
     """
     Find an FX object and parameter by full parameter name.
+    Uses the same logic as list_parameters(): first FX has no prefix, others are prefixed.
     
     Args:
         track: ReaTrack instance
-        param_fullname: Full parameter name like "fx_name_param_name"
+        param_fullname: Full parameter name like "fx_name_param_name" or "param_name" for first FX
         
     Returns:
         Tuple of (fx_object, param_object) or (None, None) if not found
     """
+    fx_list = track.list_fx()
+    if not fx_list:
+        return None, None
+    
+    # First, try to find parameter in first FX (no prefix)
+    first_fx = fx_list[0]
+    if param_fullname in first_fx.params:
+        return first_fx, first_fx.params[param_fullname]
+    
+    # Then try to find parameter with FX prefix in other FX
+    for fx_index, fx in enumerate(fx_list):
+        if fx_index == 0:
+            continue  # Already checked first FX
+        
+        fx_name = fx.snake_name
+        # Check if param_fullname starts with this FX name + underscore
+        expected_prefix = f"{fx_name}_"
+        
+        if param_fullname.startswith(expected_prefix):
+            param_name = param_fullname[len(expected_prefix):]
+            if param_name in fx.params:
+                return fx, fx.params[param_name]
+    
+    # Fallback to original logic for backward compatibility
     fx_name, param_name = split_param_name(param_fullname)
     
     # If no fx_name is specified, use the first FX on the track
     if not fx_name:
-        fx_list = track.list_fx()
-        if fx_list:
-            fx_obj = fx_list[0]  # Use first FX
-            # Try to find parameter using param_name (not literal "gain")
-            try:
-                if hasattr(fx_obj, 'get_param'):
-                    param_obj = fx_obj.get_param(param_name)
-                    return fx_obj, param_obj
-            except:
-                pass
-            return fx_obj, None
-        else:
-            return None, None
+        if first_fx and param_name in first_fx.params:
+            return first_fx, first_fx.params[param_name]
+        return first_fx, None
     
     # Try to find FX by name (try both original and normalized names)
     fx_obj = track.get_fx_by_name(fx_name)
@@ -108,12 +123,8 @@ def find_fx_by_param_name(track, param_fullname: str):
         return None, None
     
     # Try to find parameter
-    try:
-        if hasattr(fx_obj, 'get_param'):
-            param_obj = fx_obj.get_param(param_name)
-            return fx_obj, param_obj
-    except:
-        pass
+    if param_name in fx_obj.params:
+        return fx_obj, fx_obj.params[param_name]
     
     return fx_obj, None
 
