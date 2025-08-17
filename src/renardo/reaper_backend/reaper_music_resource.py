@@ -278,13 +278,25 @@ class ReaperInstrument(Instrument):
             # Handle special FX enable/disable parameters
             if param_fullname.endswith('_on'):
                 fx_name = param_fullname[:-3]  # Remove '_on' suffix
-                if enable_fx(reatrack, fx_name, bool(value)):
-                    # Successfully handled FX enable/disable
-                    continue
+                
+                # For TimeVar, delegate to set_fx_parameter instead of enable_fx
+                # because enable_fx expects a simple boolean, not a continuously changing value
+                if hasattr(value, 'now') or hasattr(value, '_is_timevar') or str(type(value)).find('TimeVar') != -1:
+                    # It's a TimeVar, treat it as a regular parameter
+                    if set_fx_parameter(reatrack, param_fullname, value):
+                        continue
+                    else:
+                        remaining_param_dict[param_fullname] = value
+                        continue
                 else:
-                    # Pass to remaining params if not handled
-                    remaining_param_dict[param_fullname] = value
-                    continue
+                    # It's a static value, use enable_fx
+                    if enable_fx(reatrack, fx_name, bool(value)):
+                        # Successfully handled FX enable/disable
+                        continue
+                    else:
+                        # Pass to remaining params if not handled
+                        remaining_param_dict[param_fullname] = value
+                        continue
             
             # Try to set FX parameter using reaside utilities
             if set_fx_parameter(reatrack, param_fullname, value):
