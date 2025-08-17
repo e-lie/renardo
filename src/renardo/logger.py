@@ -153,6 +153,25 @@ class RenardoLogger:
         if logger_name not in self._loggers:
             logger = logging.getLogger(logger_name)
             logger.setLevel(self._default_level)
+            
+            # Prevent propagation to avoid duplicate messages
+            logger.propagate = False
+            
+            # Add the same handlers as the root logger
+            root_logger = logging.getLogger('renardo')
+            for handler in root_logger.handlers:
+                # Create a copy of the handler with the same configuration
+                if isinstance(handler, logging.StreamHandler):
+                    new_handler = logging.StreamHandler(handler.stream)
+                    new_handler.setLevel(handler.level)
+                    new_handler.setFormatter(handler.formatter)
+                    logger.addHandler(new_handler)
+                elif isinstance(handler, logging.FileHandler):
+                    new_handler = logging.FileHandler(handler.baseFilename, handler.mode)
+                    new_handler.setLevel(handler.level)
+                    new_handler.setFormatter(handler.formatter)
+                    logger.addHandler(new_handler)
+            
             self._loggers[logger_name] = logger
         
         return self._loggers[logger_name]
