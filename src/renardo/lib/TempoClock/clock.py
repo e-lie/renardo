@@ -1112,4 +1112,20 @@ class TempoClock(object):
         #         item.stop()
 
         self.playing = []
-        return None
+        
+        if settings.get("reaper_backend.REAPER_BACKEND_ENABLED"):
+            # Clear reaside TimeVar bindings when Clock is cleared
+            try:
+                from renardo.reaper_backend.reaside.core.timevar_manager import get_timevar_manager
+                timevar_manager = get_timevar_manager()
+                binding_count = timevar_manager.get_binding_count()
+                if binding_count > 0:
+                    timevar_manager.clear_all_bindings()
+                    print(f"Cleared {binding_count} reaside TimeVar bindings")
+            except ImportError:
+                # reaside not available, skip silently
+                pass
+            except Exception as e:
+                # Log but don't break Clock.clear()
+                print(f"Warning: Failed to clear reaside TimeVar bindings: {e}")
+            return None
