@@ -1,8 +1,9 @@
 """REAPER parameter management for reaside."""
 
-from typing import Optional
+from typing import Optional, Union, Any
 from enum import Enum
 from ..tools.reaper_client import ReaperClient
+from .timevar_manager import get_timevar_manager
 
 
 class ReaParamState(Enum):
@@ -72,9 +73,28 @@ class ReaParam:
     def __str__(self) -> str:
         return f"{self.reaper_name}: {self.value:.3f}"
     
-    def set_value(self, value: float):
-        """Set parameter value directly in REAPER."""
+    def set_value(self, value: Union[float, Any]):
+        """
+        Set parameter value directly in REAPER or bind a TimeVar for continuous updates.
+        
+        Args:
+            value: Either a float value or a TimeVar object for continuous updates
+        """
+        # Check if value is a TimeVar-like object
+        if self._is_timevar(value):
+            # Bind TimeVar for continuous updates
+            timevar_manager = get_timevar_manager()
+            timevar_manager.bind_timevar(self, value)
+            return
+        
+        # Clear any existing TimeVar binding
+        timevar_manager = get_timevar_manager()
+        if timevar_manager.is_param_bound(self):
+            timevar_manager.unbind_param(self)
+        
+        # Normal float value handling
         # Clamp value to valid range
+        value = float(value)
         value = max(self.min_value, min(self.max_value, value))
         self.value = value
         
@@ -109,6 +129,26 @@ class ReaParam:
             track_obj = self.client.call_reascript_function("GetTrack", 0, self.track_index)
             if track_obj:
                 self.client.call_reascript_function("TrackFX_SetParam", track_obj, self.fx_index, self.param_index, value)
+    
+    def _is_timevar(self, value) -> bool:
+        """
+        Check if a value is a TimeVar-like object.
+        
+        Args:
+            value: Value to check
+            
+        Returns:
+            True if value appears to be a TimeVar
+        """
+        # Check for common TimeVar methods/attributes
+        if hasattr(value, 'now') or hasattr(value, 'current_value'):
+            return True
+        
+        # Check if it's from the renardo TimeVar module
+        if hasattr(value, '__class__') and 'TimeVar' in value.__class__.__name__:
+            return True
+        
+        return False
     
     def update_value(self):
         """Update parameter value from REAPER."""
@@ -185,8 +225,27 @@ class ReaSend(ReaParam):
         else:
             self.value = 0.0
     
-    def set_value(self, value: float):
-        """Set send parameter value directly in REAPER."""
+    def set_value(self, value: Union[float, Any]):
+        """
+        Set send parameter value directly in REAPER or bind a TimeVar for continuous updates.
+        
+        Args:
+            value: Either a float value or a TimeVar object for continuous updates
+        """
+        # Check if value is a TimeVar-like object
+        if self._is_timevar(value):
+            # Bind TimeVar for continuous updates
+            timevar_manager = get_timevar_manager()
+            timevar_manager.bind_timevar(self, value)
+            return
+        
+        # Clear any existing TimeVar binding
+        timevar_manager = get_timevar_manager()
+        if timevar_manager.is_param_bound(self):
+            timevar_manager.unbind_param(self)
+        
+        # Normal float value handling
+        value = float(value)
         self.value = value
         if self.param_type == "volume":
             self.client.set_send_volume(self.track_index, self.send_index, value)
