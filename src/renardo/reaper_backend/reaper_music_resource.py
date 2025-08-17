@@ -273,179 +273,99 @@ class ReaperInstrument(Instrument):
                     enable_fx_param = fx_name + '_on'
                     param_dict[enable_fx_param] = True
 
+        # Define shared volume conversion functions
+        def db_to_fader_position(db_value):
+            """Convert dB to REAPER fader position (piecewise linear)"""
+            # Known points: 0.5=-20.4dB, 0.828=-6dB, 0.9118=-3dB, 1.0=0dB, 1.0933=+3dB, 1.1905=+6dB, 1.4=+12dB
+            if db_value <= -150:
+                return 0.0
+            elif db_value <= -20.4:
+                return 0.5 * (db_value + 150) / (150 - 20.4)
+            elif db_value <= -6:
+                return 0.5 + (0.828 - 0.5) * (db_value + 20.4) / (-6 + 20.4)
+            elif db_value <= -3:
+                return 0.828 + (0.9118 - 0.828) * (db_value + 6) / (-3 + 6)
+            elif db_value <= 0:
+                return 0.9118 + (1.0 - 0.9118) * (db_value + 3) / 3.0
+            elif db_value <= 3:
+                return 1.0 + (1.0933 - 1.0) * db_value / 3.0
+            elif db_value <= 6:
+                return 1.0933 + (1.1905 - 1.0933) * (db_value - 3) / 3.0
+            elif db_value <= 12:
+                return 1.1905 + (1.4 - 1.1905) * (db_value - 6) / 6.0
+            else:
+                return 1.4  # Cap at +12 dB
+
+        def set_track_volume_osc(fader_position):
+            """Send volume to REAPER via OSC"""
+            linear_value = fader_position * 0.716
+            if hasattr(reatrack._client, 'send_osc_message'):
+                osc_address = f"/track/{reatrack.index + 1}/volume"
+                osc_success = reatrack._client.send_osc_message(osc_address, linear_value)
+                if osc_success:
+                    logger.debug(f"Sent OSC track volume: {osc_address} = {linear_value:.3f}")
+                    return True
+            # Fallback to direct track volume setting
+            reatrack.volume = linear_value
+            return True
+
+        # Get or create ReaParams for volume (separate for vol and volin)
+        if not hasattr(reatrack, '_vol_param'):
+            from .reaside.core.param import ReaParam
+            # ReaParam for vol (dB values)
+            reatrack._vol_param = ReaParam(
+                client=reatrack._client,
+                track_index=reatrack.index,
+                fx_index=-1,  # Special: track parameter, not FX
+                param_index=-2,  # Special index for track volume
+                name='vol',
+                reaper_name='Track Volume (dB)',
+                use_osc=True,
+                min_value=-150.0,
+                max_value=12.0
+            )
+            # Set the dB conversion handler
+            reatrack._vol_param._set_value_internal = lambda db_val: set_track_volume_osc(db_to_fader_position(float(db_val)))
+            
+        if not hasattr(reatrack, '_volin_param'):
+            # ReaParam for volin (fader position values)
+            reatrack._volin_param = ReaParam(
+                client=reatrack._client,
+                track_index=reatrack.index,
+                fx_index=-1,  # Special: track parameter, not FX
+                param_index=-3,  # Special index for linear track volume
+                name='volin',
+                reaper_name='Track Volume (Linear)',
+                use_osc=True,
+                min_value=0.0,
+                max_value=1.5
+            )
+            # Set the direct fader position handler
+            reatrack._volin_param._set_value_internal = lambda fader_val: set_track_volume_osc(float(fader_val))
+
         # Apply parameters to REAPER FX using reaside utilities
         for param_fullname, value in param_dict.items():
-            # Handle special track volume parameter (dB)
-            if param_fullname == 'vol':
+            # Handle special track volume parameters
+            if param_fullname in ['vol', 'volin']:
                 try:
-                    # Check if it's a TimeVar that needs continuous updates
-                    if hasattr(value, 'now') or hasattr(value, '_is_timevar') or str(type(value)).find('TimeVar') != -1:
-                        # Create a ReaParam for track volume with TimeVar support
-                        from .reaside.core.param import ReaParam
-                        import math
-                        volume_param = ReaParam(
-                            client=reatrack._client,
-                            track_index=reatrack.index,
-                            fx_index=-1,  # Special: track parameter, not FX
-                            param_index=-2,  # Special index for track volume
-                            name='vol',
-                            reaper_name='Track Volume (dB)',
-                            use_osc=True,
-                            min_value=-150.0,  # dB range
-                            max_value=12.0
-                        )
-                        
-                        # Override the set_value method to convert dB to fader position
-                        def set_track_volume_db(val):
-                            db_value = float(val)
-                            # Convert dB to REAPER fader position (piecewise linear)
-                            # Known points: 0.5=-20.4dB, 0.828=-6dB, 0.9118=-3dB, 1.0=0dB, 1.0933=+3dB, 1.1905=+6dB, 1.4=+12dB
-                            if db_value <= -150:
-                                fader_position = 0.0
-                            elif db_value <= -20.4:
-                                # Linear interpolation from 0 to 0.5 for -150 to -20.4 dB
-                                fader_position = 0.5 * (db_value + 150) / (150 - 20.4)
-                            elif db_value <= -6:
-                                # Linear interpolation from 0.5 to 0.828 for -20.4 to -6 dB
-                                fader_position = 0.5 + (0.828 - 0.5) * (db_value + 20.4) / (-6 + 20.4)
-                            elif db_value <= -3:
-                                # Linear interpolation from 0.828 to 0.9118 for -6 to -3 dB
-                                fader_position = 0.828 + (0.9118 - 0.828) * (db_value + 6) / (-3 + 6)
-                            elif db_value <= 0:
-                                # Linear interpolation from 0.9118 to 1.0 for -3 to 0 dB
-                                fader_position = 0.9118 + (1.0 - 0.9118) * (db_value + 3) / 3.0
-                            elif db_value <= 3:
-                                # Linear interpolation from 1.0 to 1.0933 for 0 to +3 dB
-                                fader_position = 1.0 + (1.0933 - 1.0) * db_value / 3.0
-                            elif db_value <= 6:
-                                # Linear interpolation from 1.0933 to 1.1905 for +3 to +6 dB
-                                fader_position = 1.0933 + (1.1905 - 1.0933) * (db_value - 3) / 3.0
-                            elif db_value <= 12:
-                                # Linear interpolation from 1.1905 to 1.4 for +6 to +12 dB
-                                fader_position = 1.1905 + (1.4 - 1.1905) * (db_value - 6) / 6.0
-                            else:
-                                fader_position = 1.4  # Cap at +12 dB
-                            
-                            # Apply the same 0.716 factor as volin
-                            linear_value = fader_position * 0.716
-                            
-                            # Try OSC first for better performance 
-                            if hasattr(reatrack._client, 'send_osc_message'):
-                                # OSC address for track volume (1-based track indexing)
-                                osc_address = f"/track/{reatrack.index + 1}/volume"
-                                osc_success = reatrack._client.send_osc_message(osc_address, linear_value)
-                                if osc_success:
-                                    logger.debug(f"Sent OSC track volume: {osc_address} = {linear_value:.3f} (from {db_value:.1f} dB)")
-                                    return
-                            
-                            # Fallback to direct track volume setting
-                            reatrack.volume = linear_value
-                        
-                        volume_param._set_value_internal = lambda val: set_track_volume_db(val)
-                        volume_param.set_value(value)
-                        continue
-                    else:
-                        # Static value, convert dB to fader position
-                        import math
-                        db_value = float(value)
-                        # Convert dB to REAPER fader position (piecewise linear)
-                        # Known points: 0.5=-20.4dB, 0.828=-6dB, 0.9118=-3dB, 1.0=0dB, 1.0933=+3dB, 1.1905=+6dB, 1.4=+12dB
-                        if db_value <= -150:
-                            fader_position = 0.0
-                        elif db_value <= -20.4:
-                            # Linear interpolation from 0 to 0.5 for -150 to -20.4 dB
-                            fader_position = 0.5 * (db_value + 150) / (150 - 20.4)
-                        elif db_value <= -6:
-                            # Linear interpolation from 0.5 to 0.828 for -20.4 to -6 dB
-                            fader_position = 0.5 + (0.828 - 0.5) * (db_value + 20.4) / (-6 + 20.4)
-                        elif db_value <= -3:
-                            # Linear interpolation from 0.828 to 0.9118 for -6 to -3 dB
-                            fader_position = 0.828 + (0.9118 - 0.828) * (db_value + 6) / (-3 + 6)
-                        elif db_value <= 0:
-                            # Linear interpolation from 0.9118 to 1.0 for -3 to 0 dB
-                            fader_position = 0.9118 + (1.0 - 0.9118) * (db_value + 3) / 3.0
-                        elif db_value <= 3:
-                            # Linear interpolation from 1.0 to 1.0933 for 0 to +3 dB
-                            fader_position = 1.0 + (1.0933 - 1.0) * db_value / 3.0
-                        elif db_value <= 6:
-                            # Linear interpolation from 1.0933 to 1.1905 for +3 to +6 dB
-                            fader_position = 1.0933 + (1.1905 - 1.0933) * (db_value - 3) / 3.0
-                        elif db_value <= 12:
-                            # Linear interpolation from 1.1905 to 1.4 for +6 to +12 dB
-                            fader_position = 1.1905 + (1.4 - 1.1905) * (db_value - 6) / 6.0
+                    if param_fullname == 'vol':
+                        # dB values - use the vol ReaParam which has dB conversion built-in
+                        if hasattr(value, 'now') or hasattr(value, '_is_timevar') or str(type(value)).find('TimeVar') != -1:
+                            # For TimeVar, bind to vol ReaParam (handles dB conversion)
+                            reatrack._vol_param.set_value(value)
                         else:
-                            fader_position = 1.4  # Cap at +12 dB
-                        
-                        # Apply the same 0.716 factor as volin
-                        linear_value = fader_position * 0.716
-                        
-                        if hasattr(reatrack._client, 'send_osc_message'):
-                            # OSC address for track volume (1-based track indexing)
-                            osc_address = f"/track/{reatrack.index + 1}/volume"
-                            osc_success = reatrack._client.send_osc_message(osc_address, linear_value)
-                            if osc_success:
-                                logger.debug(f"Sent OSC track volume: {osc_address} = {linear_value:.3f} (from {db_value:.1f} dB)")
-                                continue
-                        
-                        # Fallback to direct track volume setting
-                        reatrack.volume = linear_value
-                        continue
-                except Exception as e:
-                    logger.error(f"Failed to set track volume: {e}")
-                    remaining_param_dict[param_fullname] = value
+                            # Static dB value
+                            fader_position = db_to_fader_position(float(value))
+                            set_track_volume_osc(fader_position)
+                    else:  # volin
+                        # Direct fader position values - use the volin ReaParam
+                        if hasattr(value, 'now') or hasattr(value, '_is_timevar') or str(type(value)).find('TimeVar') != -1:
+                            # For TimeVar, bind to volin ReaParam (direct fader position)
+                            reatrack._volin_param.set_value(value)
+                        else:
+                            # Static fader position
+                            set_track_volume_osc(float(value))
                     continue
-            
-            # Handle special track volume parameter (linear 0-1)
-            if param_fullname == 'volin':
-                try:
-                    # Check if it's a TimeVar that needs continuous updates
-                    if hasattr(value, 'now') or hasattr(value, '_is_timevar') or str(type(value)).find('TimeVar') != -1:
-                        # Create a ReaParam for track volume with TimeVar support
-                        from .reaside.core.param import ReaParam
-                        volume_param = ReaParam(
-                            client=reatrack._client,
-                            track_index=reatrack.index,
-                            fx_index=-1,  # Special: track parameter, not FX
-                            param_index=-3,  # Special index for linear track volume
-                            name='volin',
-                            reaper_name='Track Volume (Linear)',
-                            use_osc=True,
-                            min_value=0.0,
-                            max_value=1.0
-                        )
-                        
-                        # Override the set_value method to use OSC for track volume
-                        def set_track_volume_linear(val):
-                            linear_value = float(val) * 0.716  # Factor so volin=1 is 0dB in REAPER
-                            # Try OSC first for better performance 
-                            if hasattr(reatrack._client, 'send_osc_message'):
-                                # OSC address for track volume (1-based track indexing)
-                                osc_address = f"/track/{reatrack.index + 1}/volume"
-                                osc_success = reatrack._client.send_osc_message(osc_address, linear_value)
-                                if osc_success:
-                                    logger.debug(f"Sent OSC track volume: {osc_address} = {linear_value:.3f}")
-                                    return
-                            
-                            # Fallback to direct track volume setting
-                            reatrack.volume = linear_value
-                        
-                        volume_param._set_value_internal = lambda val: set_track_volume_linear(val)
-                        volume_param.set_value(value)
-                        continue
-                    else:
-                        # Static value, multiply by 0.716 so volin=1 is 0dB in REAPER
-                        linear_value = float(value) * 0.716
-                        if hasattr(reatrack._client, 'send_osc_message'):
-                            # OSC address for track volume (1-based track indexing)
-                            osc_address = f"/track/{reatrack.index + 1}/volume"
-                            osc_success = reatrack._client.send_osc_message(osc_address, linear_value)
-                            if osc_success:
-                                logger.debug(f"Sent OSC track volume: {osc_address} = {linear_value:.3f}")
-                                continue
-                        
-                        # Fallback to direct track volume setting
-                        reatrack.volume = linear_value
-                        continue
                 except Exception as e:
                     logger.error(f"Failed to set track volume: {e}")
                     remaining_param_dict[param_fullname] = value
