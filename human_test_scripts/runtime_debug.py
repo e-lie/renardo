@@ -33,7 +33,6 @@ equals = ReaperInstrument(
 equals.add_send("cool")
 bass303.add_send("cool2")
 
-reaproject.clear_reaper()
 
 
 b1 >> bass303([0,4,5,3])
