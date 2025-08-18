@@ -408,3 +408,71 @@ class ReaProject:
         
         logger.info(f"Created bus track '{bus_name}' at position {position} (bus index {bus_index})")
         return track
+    
+    def clear_reaper(self):
+        """
+        Clear all renardo-related content from REAPER:
+        - Remove all ReaperInstruments (which will delete their tracks)
+        - Remove all remaining bus tracks
+        - Clear internal track lists
+        """
+        logger.info("Clearing all renardo content from REAPER")
+        
+        # First, clean up all ReaperInstruments (this clears the Python objects)
+        from renardo.reaper_backend.reaper_music_resource import ReaperInstrument
+        
+        # Make a copy of the list to avoid modification during iteration
+        if hasattr(ReaperInstrument, '_instru_facades'):
+            instruments_to_remove = ReaperInstrument._instru_facades.copy()
+            for instrument in instruments_to_remove:
+                try:
+                    logger.debug(f"Cleaning up ReaperInstrument: {getattr(instrument, 'shortname', 'unknown')}")
+                    # Just clear the Python references, we'll handle REAPER tracks below
+                    if instrument in ReaperInstrument._instru_facades:
+                        ReaperInstrument._instru_facades.remove(instrument)
+                    if hasattr(instrument, '_midi_channel') and instrument._midi_channel in ReaperInstrument._used_track_indexes:
+                        ReaperInstrument._used_track_indexes.remove(instrument._midi_channel)
+                except Exception as e:
+                    logger.warning(f"Error cleaning up instrument {getattr(instrument, 'shortname', 'unknown')}: {e}")
+            
+            # Clear the class lists
+            ReaperInstrument._instru_facades.clear()
+            ReaperInstrument._used_track_indexes.clear()
+        
+        # Use REAPER actions to remove all tracks at once (more reliable)
+        try:
+            # Get current track count
+            track_count = self._client.call_reascript_function("CountTracks", self._index)
+            logger.debug(f"Found {track_count} tracks to potentially remove")
+            
+            if track_count > 0:
+                # Select all tracks
+                self._client.call_reascript_function("Main_OnCommand", 40296, 0)  # Track: Select all tracks
+                
+                # Remove all selected tracks
+                self._client.call_reascript_function("Main_OnCommand", 40005, 0)  # Track: Remove tracks
+                
+                logger.debug(f"Removed all tracks using REAPER actions")
+        
+        except Exception as e:
+            logger.warning(f"Error using REAPER actions to remove tracks: {e}")
+            
+            # Fallback: try to remove tracks individually by index (from end to start)
+            try:
+                track_count = self._client.call_reascript_function("CountTracks", self._index)
+                for i in range(track_count - 1, -1, -1):  # Remove from end to start
+                    try:
+                        track_obj = self._client.call_reascript_function("GetTrack", 0, i)
+                        if track_obj:
+                            self._client.call_reascript_function("DeleteTrack", track_obj)
+                    except Exception as track_err:
+                        logger.warning(f"Error removing track at index {i}: {track_err}")
+            except Exception as fallback_err:
+                logger.warning(f"Fallback track removal also failed: {fallback_err}")
+        
+        # Clear all internal dictionaries and caches
+        self._bus_tracks.clear()
+        self._instrument_tracks.clear()
+        self.reatracks.clear()
+        
+        logger.info("Successfully cleared all renardo content from REAPER")
