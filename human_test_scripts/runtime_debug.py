@@ -1,7 +1,6 @@
 
 import time
 
-
 from renardo.runtime import *
 
 bass303 = ReaperInstrument(
@@ -14,7 +13,24 @@ bass303 = ReaperInstrument(
     category='bass'
 )
 
-b1 >> bass303([0,4,5,3], vol=linvar([-6,3]))
+equals = ReaperInstrument(
+    shortname='equals',
+    fullname='Equald Lead',
+    description='',
+    fxchain_path='equals.RfxChain',
+    arguments={},
+    bank='0_renardo_core',
+    category='lead'
+)
+
+
+b1 >> bass303([0,4,5,3])
+b2 >> equals([0,4,5,3], dur=.5)
+
+reaproject.create_bus_track("cool")
+
+
+reaproject.tracks[0].add_send_to_track(reaproject.tracks[2])
 
 
 b1 >> bass303([0,4,5,3], cutoff=linvar([0,1]), delay_mix=linvar([1,0]), rea_eq_freq_low_shelf=linvar([0,1]))
@@ -33,4 +49,4 @@ time.sleep(10)
 
 reaproject: ReaProject
 
-#reaproject.create_16_midi_tracks()
+reaproject.create_16_midi_tracks()
