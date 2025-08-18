@@ -13,6 +13,11 @@ bass303 = ReaperInstrument(
     category='bass'
 )
 
+
+reaproject.create_bus_track("cool")
+
+reaproject.create_bus_track("cool2")
+
 equals = ReaperInstrument(
     shortname='equals',
     fullname='Equald Lead',
@@ -23,11 +28,12 @@ equals = ReaperInstrument(
     category='lead'
 )
 
+equals._reatrack.add_send()
+
 
 b1 >> bass303([0,4,5,3])
 b2 >> equals([0,4,5,3], dur=.5)
 
-reaproject.create_bus_track("cool")
 
 
 reaproject.tracks[0].add_send_to_track(reaproject.tracks[2])
