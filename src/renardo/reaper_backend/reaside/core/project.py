@@ -56,6 +56,9 @@ class ReaProject:
             if track_obj:
                 midi_input = self._client.call_reascript_function("GetMediaTrackInfo_Value", track_obj, "I_RECINPUT")
                 
+                # Convert to int for bitwise operations
+                midi_input = int(midi_input)
+                
                 # Check if it's a MIDI track (has MIDI input configured)
                 if midi_input >= 4096:
                     # Extract MIDI channel from the input value

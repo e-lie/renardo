@@ -28,7 +28,8 @@ equals = ReaperInstrument(
     category='lead'
 )
 
-equals._reatrack.add_send()
+equals.add_send("cool")
+bass303.add_send("cool2")
 
 
 b1 >> bass303([0,4,5,3])

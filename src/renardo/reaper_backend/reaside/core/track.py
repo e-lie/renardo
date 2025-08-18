@@ -554,7 +554,7 @@ class ReaTrack:
         Will not create a duplicate send if one already exists to the same destination.
         
         Args:
-            destination_track: The destination ReaTrack or track index to send to
+            destination_track: The destination ReaTrack, track index, or track name to send to
             volume: Send volume (0.0 to 1.0, default 0.0)
             pan: Send pan (-1.0 to 1.0, default 0.0 center)
             mute: Whether the send should be muted (default False)
@@ -565,10 +565,21 @@ class ReaTrack:
         """
         try:
             # Get destination track index
-            if hasattr(destination_track, 'index'):
+            if hasattr(destination_track, '_index'):  # Check for ReaTrack object
                 dest_track_index = destination_track.index
+                dest_name = destination_track.name if hasattr(destination_track, 'name') else f"Track {dest_track_index + 1}"
             elif isinstance(destination_track, int):
                 dest_track_index = destination_track
+                dest_name = f"Track {dest_track_index + 1}"
+            elif isinstance(destination_track, str):
+                # Look for track by name
+                dest_track = self._project.get_track_by_name(destination_track)
+                if dest_track:
+                    dest_track_index = dest_track.index
+                    dest_name = destination_track
+                else:
+                    logger.error(f"Track with name '{destination_track}' not found")
+                    return -1
             else:
                 logger.error(f"Invalid destination track: {destination_track}")
                 return -1
@@ -586,7 +597,6 @@ class ReaTrack:
             for send_idx in range(num_sends):
                 existing_dest = self._client.call_reascript_function("GetTrackSendInfo_Value", source_track_obj, 0, send_idx, "P_DESTTRACK")
                 if existing_dest == dest_track_obj:
-                    dest_name = destination_track.name if hasattr(destination_track, 'name') else f"Track {dest_track_index + 1}"
                     logger.info(f"Send from '{self.name}' to '{dest_name}' already exists (index {send_idx})")
                     return send_idx
             
@@ -612,7 +622,6 @@ class ReaTrack:
             # Set send mode (post/pre fader)
             self._client.call_reascript_function("SetTrackSendInfo_Value", source_track_obj, 0, send_index, "I_SENDMODE", send_type)
             
-            dest_name = destination_track.name if hasattr(destination_track, 'name') else f"Track {dest_track_index + 1}"
             logger.info(f"Created send from '{self.name}' to '{dest_name}' (index {send_index})")
             
             return send_index
