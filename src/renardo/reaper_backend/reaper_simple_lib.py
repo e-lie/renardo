@@ -102,24 +102,6 @@ def track_midi_input(track_or_num, midi_chan, midi_device=0, all_midi_inputs=Tru
     RPR.SetMediaTrackInfo_Value(track, "I_RECINPUT", 
                                midi_selection_idx(midi_device, midi_chan, all_midi_inputs))
 
-def add_send(src_track_or_num, dest_track_or_num, volume=1.0, mode="post_fader"):
-    if mode == "pre_fx":
-        mode_idx = 0
-    elif mode == "post_fx":
-        mode_idx = 1
-    elif mode == "post_fader":
-        mode_idx = 3
-    else:
-        raise Exception("wrong send mode : choose between post_fader, pre_fx or post_fx")
-    src_track = ensure_track(src_track_or_num)
-    dest_track = ensure_track(dest_track_or_num)
-    send_idx = RPR.CreateTrackSend(src_track, dest_track)
-    send_category = 0
-    # set volume
-    RPR.SetTrackSendInfo_Value(src_track, send_category, send_idx, "D_VOL", volume)
-    # set send mode
-    RPR.SetTrackSendInfo_Value(src_track, send_category, send_idx, "I_SENDMODE", mode_idx)
-    
 
 def set_send_volume(track_or_num, send_idx=0, volume=1.0):
     track = ensure_track(track_or_num)
