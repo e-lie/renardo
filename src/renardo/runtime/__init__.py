@@ -371,6 +371,7 @@ if settings.get("reaper_backend.REAPER_BACKEND_ENABLED"):
     reaproject: ReaProject = reaper_instance.current_project
     ReaperInstrument.set_class_attributes(
         presets={},
+        reaper_instance=reaper_instance,
         project=reaproject,
         resource_library=reaper_resource_library
     )
