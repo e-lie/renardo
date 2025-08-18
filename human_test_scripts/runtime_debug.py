@@ -3,6 +3,8 @@ import time
 
 from renardo.runtime import *
 
+reaproject.clear_reaper()
+
 bass303 = ReaperInstrument(
     shortname='bass303',
     fullname='Bass 303',
@@ -30,6 +32,8 @@ equals = ReaperInstrument(
 
 equals.add_send("cool")
 bass303.add_send("cool2")
+
+reaproject.clear_reaper()
 
 
 b1 >> bass303([0,4,5,3])
