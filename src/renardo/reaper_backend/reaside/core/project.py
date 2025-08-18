@@ -288,3 +288,32 @@ class ReaProject:
             
         logger.info("Successfully created 16 MIDI tracks")
         return tracks
+    
+    def create_bus_track(self, bus_name: str):
+        """
+        Create a bus track for receiving audio from other tracks.
+
+        The track is:
+        - Named with the provided bus_name
+        - Has no MIDI input (audio only)
+        - Not record armed by default
+        
+        Args:
+            bus_name: Name for the bus track
+            
+        Returns:
+            ReaTrack: The created bus track
+        """
+        # Add track and get its index
+        track = self.add_track()
+        track.name = bus_name
+        
+        # Bus tracks don't need MIDI input, so we set I_RECINPUT to -1 (no input)
+        track_obj = self._client.call_reascript_function("GetTrack", 0, track._index)
+        self._client.call_reascript_function("SetMediaTrackInfo_Value", track_obj, "I_RECINPUT", -1)
+        
+        # Bus tracks are typically not record armed
+        track.is_armed = False
+        
+        logger.info(f"Created bus track '{bus_name}'")
+        return track
