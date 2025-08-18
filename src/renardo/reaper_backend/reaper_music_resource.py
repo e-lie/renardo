@@ -507,7 +507,7 @@ class ReaperInstrument(Instrument):
             logger.error(f"Error cleaning up ReaperInstrument {getattr(self, 'shortname', 'unknown')}: {e}")
     
     def add_send(self, destination_track, volume: float = 0.0, pan: float = 0.0, 
-                 mute: bool = False, post_fader: bool = False):
+                 mute: bool = False, mode: str = "post_fx"):
         """
         Add a send from this instrument's track to another track (typically a bus).
         
@@ -516,7 +516,7 @@ class ReaperInstrument(Instrument):
             volume: Send volume (0.0 to 1.0, default 0.0)
             pan: Send pan (-1.0 to 1.0, default 0.0 center)
             mute: Whether the send should be muted (default False)
-            post_fader: True for post-fader send, False for pre-fader (default False)
+            mode: Send mode - "pre_fx" (pre-fader pre-fx), "post_fx" (pre-fader post-fx), "post_fader" (post-fader pre-fx) (default "post_fx")
             
         Returns:
             int: The send index that was created, or -1 if failed
@@ -525,7 +525,7 @@ class ReaperInstrument(Instrument):
             logger.error(f"No track associated with instrument '{self.shortname}'")
             return -1
             
-        return self._reatrack.add_send(destination_track, volume, pan, mute, post_fader)
+        return self._reatrack.add_send(destination_track, volume, pan, mute, mode)
 
     def __del__(self):
         """Clean up when the instrument is deleted."""
