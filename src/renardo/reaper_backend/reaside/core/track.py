@@ -548,7 +548,7 @@ class ReaTrack:
         raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
     
     def add_send(self, destination_track, volume: float = 0.0, pan: float = 0.0, 
-                 mute: bool = False, post_fader: bool = False):
+                 mute: bool = False, mode: str = "post_fx"):
         """
         Add a send from this track to another track (typically a bus).
         Will not create a duplicate send if one already exists to the same destination.
@@ -558,7 +558,7 @@ class ReaTrack:
             volume: Send volume (0.0 to 1.0, default 0.0)
             pan: Send pan (-1.0 to 1.0, default 0.0 center)
             mute: Whether the send should be muted (default False)
-            post_fader: True for post-fader send, False for pre-fader (default False)
+            mode: Send mode - "pre_fx" (pre-fader pre-fx), "post_fx" (pre-fader post-fx), "post_fader" (post-fader pre-fx) (default "post_fx")
             
         Returns:
             int: The send index that was created, or -1 if failed
@@ -600,9 +600,19 @@ class ReaTrack:
                     logger.info(f"Send from '{self.name}' to '{dest_name}' already exists (index {send_idx})")
                     return send_idx
             
+            # Convert mode string to REAPER send mode index
+            # Based on REAPER behavior: 
+            # 0 = pre_fader pre_fx, 1 = post_fader pre_fx, 3 = pre_fader post_fx
+            if mode == "pre_fx":
+                mode_idx = 0  # pre_fader pre_fx
+            elif mode == "post_fx":
+                mode_idx = 3  # pre_fader post_fx  
+            elif mode == "post_fader":
+                mode_idx = 1  # post_fader pre_fx
+            else:
+                raise ValueError(f"Invalid send mode '{mode}'. Choose between 'pre_fx', 'post_fx', or 'post_fader'")
+            
             # Create the send using CreateTrackSend
-            # Args: source_track, dest_track, send_type (0=post-fader, 1=pre-fader)
-            send_type = 0 if post_fader else 1
             send_index = self._client.call_reascript_function("CreateTrackSend", source_track_obj, dest_track_obj)
             
             if send_index < 0:
@@ -619,8 +629,8 @@ class ReaTrack:
             # Set send mute
             self._client.call_reascript_function("SetTrackSendInfo_Value", source_track_obj, 0, send_index, "B_MUTE", 1 if mute else 0)
             
-            # Set send mode (post/pre fader)
-            self._client.call_reascript_function("SetTrackSendInfo_Value", source_track_obj, 0, send_index, "I_SENDMODE", send_type)
+            # Set send mode
+            self._client.call_reascript_function("SetTrackSendInfo_Value", source_track_obj, 0, send_index, "I_SENDMODE", mode_idx)
             
             logger.info(f"Created send from '{self.name}' to '{dest_name}' (index {send_index})")
             
