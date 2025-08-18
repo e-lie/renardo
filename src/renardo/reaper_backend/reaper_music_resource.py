@@ -136,22 +136,20 @@ class ReaperInstrument(Instrument):
             raise Exception("You can't use one of the chanN tracks with custom_track_name")
 
         # Get or create track using reaside
+        # For backward compatibility, check both the old track_name and the shortname
         self._reatrack = self.__class__._project.get_track_by_name(self.track_name)
         if not self._reatrack:
-            # Create the track if it doesn't exist using standard MIDI track creation
-            if self.track_name.startswith('chan') and self.track_name[4:].isdigit():
-                # Use create_standard_midi_track for chan1-16 tracks
-                track_num = int(self.track_name[4:])
-                if 1 <= track_num <= 16:
-                    self._reatrack = self.__class__._project.create_standard_midi_track(track_num)
-                else:
-                    # Fallback for invalid channel numbers
-                    self._reatrack = self.__class__._project.add_track()
-                    self._reatrack.name = self.track_name
-            else:
-                # Regular track creation for non-standard track names
-                self._reatrack = self.__class__._project.add_track()
-                self._reatrack.name = self.track_name
+            # Also check if a track with the shortname exists
+            self._reatrack = self.__class__._project.get_track_by_name(shortname)
+        
+        if not self._reatrack:
+            # Create the track if it doesn't exist
+            # Use the instrument's shortname as the track name (not the chanN name)
+            actual_track_name = shortname if custom_track_name is None else custom_track_name
+            self._reatrack = self.__class__._project.create_instrument_track(
+                track_name=actual_track_name,
+                midi_channel=self._midi_channel
+            )
         
         if custom_default_sustain is not None:
             self._sus = custom_default_sustain

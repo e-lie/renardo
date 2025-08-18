@@ -14,6 +14,8 @@ class ReaProject:
         self._client = reaper._client
         self._index = index
         self.reatracks = {}  # Cache for Track objects (compatible with old API)
+        self._bus_tracks: Dict[int, 'ReaTrack'] = {}  # Bus tracks by bus index
+        self._instrument_tracks: Dict[int, 'ReaTrack'] = {}  # Instrument tracks by MIDI channel (1-16)
         
         # Automatically scan and populate all tracks
         self._scan_all_tracks()
@@ -48,6 +50,25 @@ class ReaProject:
             
             # Store in cache
             self.reatracks[track_index] = track
+            
+            # Categorize track based on its MIDI input configuration
+            track_obj = self._client.call_reascript_function("GetTrack", 0, track_index)
+            if track_obj:
+                midi_input = self._client.call_reascript_function("GetMediaTrackInfo_Value", track_obj, "I_RECINPUT")
+                
+                # Check if it's a MIDI track (has MIDI input configured)
+                if midi_input >= 4096:
+                    # Extract MIDI channel from the input value
+                    # Low 5 bits are the channel (0=all, 1-16=specific)
+                    midi_channel = midi_input & 0x1F
+                    if 1 <= midi_channel <= 16:
+                        # Store by MIDI channel
+                        self._instrument_tracks[midi_channel] = track
+                elif midi_input < 0:
+                    # This is a bus track (no input)
+                    # Find the next available bus index
+                    bus_index = len(self._bus_tracks)
+                    self._bus_tracks[bus_index] = track
             
             logger.debug(f"Created ReaTrack for track {track_index}: {track.name}")
             
@@ -147,6 +168,29 @@ class ReaProject:
         # Return tracks in index order
         return [self.reatracks[i] for i in sorted(self.reatracks.keys())]
     
+    @property
+    def bus_tracks(self) -> List:
+        """Get list of bus tracks ordered by bus index."""
+        return [self._bus_tracks[idx] for idx in sorted(self._bus_tracks.keys())]
+    
+    @property
+    def instrument_tracks(self) -> List:
+        """Get list of instrument tracks ordered by MIDI channel."""
+        return [self._instrument_tracks[ch] for ch in sorted(self._instrument_tracks.keys())]
+    
+    def _is_bus_track(self, track) -> bool:
+        """Check if a track is a bus track based on its properties."""
+        try:
+            # Get track's MIDI input configuration
+            track_obj = self._client.call_reascript_function("GetTrack", 0, track._index)
+            if track_obj:
+                midi_input = self._client.call_reascript_function("GetMediaTrackInfo_Value", track_obj, "I_RECINPUT")
+                # Bus tracks have no input (-1) or are not MIDI tracks (< 4096)
+                return midi_input < 0 or (midi_input >= 0 and midi_input < 4096)
+            return False
+        except:
+            return False
+    
     def get_track(self, index: int):
         """Get track by index."""
         # Check if track exists in cache
@@ -178,14 +222,35 @@ class ReaProject:
                 
         return None
     
-    def add_track(self):
-        """Add a new track to the project."""
-        # Add new track (Action ID: 40001)
-        self._reaper.perform_action(40001)
+    def add_track(self, position: Optional[int] = None):
+        """Add a new track to the project at the specified position.
         
-        # Get the new track (it will be the last one)
-        count = self._client.call_reascript_function("CountTracks", self._index)
-        track_index = count - 1
+        Args:
+            position: Track index where to insert (0-based). If None, adds at the end.
+            
+        Returns:
+            ReaTrack: The newly created track
+        """
+        if position is None:
+            # Add at the end using action
+            self._reaper.perform_action(40001)
+            count = self._client.call_reascript_function("CountTracks", self._index)
+            track_index = count - 1
+        else:
+            # Insert at specific position using InsertTrackAtIndex
+            self._client.call_reascript_function("InsertTrackAtIndex", position, False)
+            track_index = position
+            
+            # Update indices of existing tracks that were shifted
+            # We need to update tracks that were at or after the insertion point
+            for idx in sorted(self.reatracks.keys(), reverse=True):
+                if idx >= position:
+                    # This track was shifted down by one
+                    track = self.reatracks[idx]
+                    track._index = idx + 1
+                    # Move it in the cache
+                    del self.reatracks[idx]
+                    self.reatracks[idx + 1] = track
         
         # Create and return Track object (this will automatically scan it)
         self._scan_and_populate_track(track_index)
@@ -231,35 +296,44 @@ class ReaProject:
         """Iterate over tracks."""
         return iter(self.tracks)
     
-    def create_standard_midi_track(self, track_num: int):
+    def create_instrument_track(self, track_name: str, midi_channel: int):
         """
-        Create a MIDI track for renardo integration.
+        Create an instrument track for renardo integration.
 
         The track is:
-        - Named chan1 to 16 from track_num
+        - Named with the provided track_name
         - Record armed
         - Set to receive from "All MIDI inputs"
-        - Set to receive from the MIDI channel corresponding to its number
+        - Set to receive from the specified MIDI channel
         - Record mode set to "Stereo Out" (monitors the track output)
+        - Placed in order by MIDI channel
         
         Args:
-            track_num: MIDI channel number (1-16)
+            track_name: Name for the track
+            midi_channel: MIDI channel number (1-16)
             
         Returns:
             ReaTrack: The created track
         """
-        # Create track with name "chanX" where X is the channel number
-        track_name = f"chan{track_num}"
+        # Calculate the position: after bus tracks, in MIDI channel order
+        position = len(self._bus_tracks)  # Start after all bus tracks
         
-        # Add track and get its index
-        track = self.add_track()
+        # Add offset for channels before this one
+        for ch in range(1, midi_channel):
+            if ch in self._instrument_tracks:
+                position += 1
+        
+        # Add track at the calculated position
+        track = self.add_track(position)
         track.name = track_name
+        
+        # Get track object
+        track_obj = self._client.call_reascript_function("GetTrack", 0, track._index)
         
         # Set MIDI input to "All MIDI inputs" on the appropriate channel
         # ReaScript: I_RECINPUT = 4096 | channel | (63 << 5) for "All MIDI inputs" on specific channel
         # 4096 = MIDI input flag, channel = 1-16 for specific channel, (63 << 5) = all MIDI devices
-        midi_input_value = 4096 | track_num | (63 << 5)
-        track_obj = self._client.call_reascript_function("GetTrack", 0, track._index)
+        midi_input_value = 4096 | midi_channel | (63 << 5)
         self._client.call_reascript_function("SetMediaTrackInfo_Value", track_obj, "I_RECINPUT", midi_input_value)
         
         # Arm the track for recording
@@ -268,35 +342,40 @@ class ReaProject:
         # Set record mode to "2 = None (monitors input)"
         self._client.call_reascript_function("SetMediaTrackInfo_Value", track_obj, "I_RECMODE", 2)
         
-        logger.info(f"Created MIDI track '{track_name}' for channel {track_num}")
+        # Add to instrument tracks dictionary
+        self._instrument_tracks[midi_channel] = track
+        
+        logger.info(f"Created instrument track '{track_name}' at position {position} for MIDI channel {midi_channel}")
         return track
     
-    def create_16_midi_tracks(self):
-        """
-        Creates 16 MIDI tracks in REAPER, one for each MIDI channel.
+    # def create_16_midi_tracks(self):
+    #     """
+    #     Creates 16 MIDI tracks in REAPER, one for each MIDI channel.
         
-        Returns:
-            List[ReaTrack]: List of created tracks
-        """
-        logger.info("Creating 16 MIDI tracks for renardo integration")
-        tracks = []
+    #     Returns:
+    #         List[ReaTrack]: List of created tracks
+    #     """
+    #     logger.info("Creating 16 MIDI tracks for renardo integration")
+    #     tracks = []
         
-        # Create 16 tracks, one for each MIDI channel
-        for i in range(1, 17):  # 1 to 16
-            track = self.create_standard_midi_track(i)
-            tracks.append(track)
+    #     # Create 16 tracks, one for each MIDI channel
+    #     for i in range(1, 17):  # 1 to 16
+    #         track = self.create_standard_midi_track(i)
+    #         tracks.append(track)
             
-        logger.info("Successfully created 16 MIDI tracks")
-        return tracks
+    #     logger.info("Successfully created 16 MIDI tracks")
+    #     return tracks
     
     def create_bus_track(self, bus_name: str):
         """
         Create a bus track for receiving audio from other tracks.
+        Bus tracks are created before instrument tracks to ensure proper routing.
 
         The track is:
         - Named with the provided bus_name
         - Has no MIDI input (audio only)
         - Not record armed by default
+        - Placed before all instrument tracks
         
         Args:
             bus_name: Name for the bus track
@@ -304,16 +383,25 @@ class ReaProject:
         Returns:
             ReaTrack: The created bus track
         """
-        # Add track and get its index
-        track = self.add_track()
+        # Calculate position: at the end of existing bus tracks
+        position = len(self._bus_tracks)
+        
+        # Add track at the calculated position
+        track = self.add_track(position)
         track.name = bus_name
         
-        # Bus tracks don't need MIDI input, so we set I_RECINPUT to -1 (no input)
+        # Get track object
         track_obj = self._client.call_reascript_function("GetTrack", 0, track._index)
+        
+        # Bus tracks don't need MIDI input, so we set I_RECINPUT to -1 (no input)
         self._client.call_reascript_function("SetMediaTrackInfo_Value", track_obj, "I_RECINPUT", -1)
         
         # Bus tracks are typically not record armed
         track.is_armed = False
         
-        logger.info(f"Created bus track '{bus_name}'")
+        # Add to bus tracks dictionary with the next available index
+        bus_index = len(self._bus_tracks)
+        self._bus_tracks[bus_index] = track
+        
+        logger.info(f"Created bus track '{bus_name}' at position {position} (bus index {bus_index})")
         return track
