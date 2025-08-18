@@ -547,17 +547,18 @@ class ReaTrack:
         
         raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
     
-    def add_send_to_track(self, destination_track, volume: float = 1.0, pan: float = 0.0, 
-                         mute: bool = False, post_fader: bool = True):
+    def add_send(self, destination_track, volume: float = 0.0, pan: float = 0.0, 
+                 mute: bool = False, post_fader: bool = False):
         """
         Add a send from this track to another track (typically a bus).
+        Will not create a duplicate send if one already exists to the same destination.
         
         Args:
             destination_track: The destination ReaTrack or track index to send to
-            volume: Send volume (0.0 to 1.0, default 1.0)
+            volume: Send volume (0.0 to 1.0, default 0.0)
             pan: Send pan (-1.0 to 1.0, default 0.0 center)
             mute: Whether the send should be muted (default False)
-            post_fader: True for post-fader send, False for pre-fader (default True)
+            post_fader: True for post-fader send, False for pre-fader (default False)
             
         Returns:
             int: The send index that was created, or -1 if failed
@@ -579,6 +580,15 @@ class ReaTrack:
             if not source_track_obj or not dest_track_obj:
                 logger.error(f"Failed to get track objects for send creation")
                 return -1
+            
+            # Check if a send to this destination already exists
+            num_sends = self._client.call_reascript_function("GetTrackNumSends", source_track_obj, 0)
+            for send_idx in range(num_sends):
+                existing_dest = self._client.call_reascript_function("GetTrackSendInfo_Value", source_track_obj, 0, send_idx, "P_DESTTRACK")
+                if existing_dest == dest_track_obj:
+                    dest_name = destination_track.name if hasattr(destination_track, 'name') else f"Track {dest_track_index + 1}"
+                    logger.info(f"Send from '{self.name}' to '{dest_name}' already exists (index {send_idx})")
+                    return send_idx
             
             # Create the send using CreateTrackSend
             # Args: source_track, dest_track, send_type (0=post-fader, 1=pre-fader)
