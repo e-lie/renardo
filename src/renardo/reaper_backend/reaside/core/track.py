@@ -546,3 +546,113 @@ class ReaTrack:
             return fx
         
         raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+    
+    def add_send_to_track(self, destination_track, volume: float = 1.0, pan: float = 0.0, 
+                         mute: bool = False, post_fader: bool = True):
+        """
+        Add a send from this track to another track (typically a bus).
+        
+        Args:
+            destination_track: The destination ReaTrack or track index to send to
+            volume: Send volume (0.0 to 1.0, default 1.0)
+            pan: Send pan (-1.0 to 1.0, default 0.0 center)
+            mute: Whether the send should be muted (default False)
+            post_fader: True for post-fader send, False for pre-fader (default True)
+            
+        Returns:
+            int: The send index that was created, or -1 if failed
+        """
+        try:
+            # Get destination track index
+            if hasattr(destination_track, 'index'):
+                dest_track_index = destination_track.index
+            elif isinstance(destination_track, int):
+                dest_track_index = destination_track
+            else:
+                logger.error(f"Invalid destination track: {destination_track}")
+                return -1
+            
+            # Get MediaTrack objects
+            source_track_obj = self._client.call_reascript_function("GetTrack", 0, self._index)
+            dest_track_obj = self._client.call_reascript_function("GetTrack", 0, dest_track_index)
+            
+            if not source_track_obj or not dest_track_obj:
+                logger.error(f"Failed to get track objects for send creation")
+                return -1
+            
+            # Create the send using CreateTrackSend
+            # Args: source_track, dest_track, send_type (0=post-fader, 1=pre-fader)
+            send_type = 0 if post_fader else 1
+            send_index = self._client.call_reascript_function("CreateTrackSend", source_track_obj, dest_track_obj)
+            
+            if send_index < 0:
+                logger.error(f"Failed to create send from track {self._index} to track {dest_track_index}")
+                return -1
+            
+            # Configure send parameters
+            # Set send volume
+            self._client.call_reascript_function("SetTrackSendInfo_Value", source_track_obj, 0, send_index, "D_VOL", volume)
+            
+            # Set send pan
+            self._client.call_reascript_function("SetTrackSendInfo_Value", source_track_obj, 0, send_index, "D_PAN", pan)
+            
+            # Set send mute
+            self._client.call_reascript_function("SetTrackSendInfo_Value", source_track_obj, 0, send_index, "B_MUTE", 1 if mute else 0)
+            
+            # Set send mode (post/pre fader)
+            self._client.call_reascript_function("SetTrackSendInfo_Value", source_track_obj, 0, send_index, "I_SENDMODE", send_type)
+            
+            dest_name = destination_track.name if hasattr(destination_track, 'name') else f"Track {dest_track_index + 1}"
+            logger.info(f"Created send from '{self.name}' to '{dest_name}' (index {send_index})")
+            
+            return send_index
+            
+        except Exception as e:
+            logger.error(f"Error creating send from track {self._index}: {e}")
+            return -1
+    
+    def remove_send(self, send_index: int) -> bool:
+        """
+        Remove a send by its index.
+        
+        Args:
+            send_index: Index of the send to remove
+            
+        Returns:
+            bool: True if successful, False if failed
+        """
+        try:
+            track_obj = self._client.call_reascript_function("GetTrack", 0, self._index)
+            if not track_obj:
+                logger.error(f"Failed to get track object for send removal")
+                return False
+            
+            # Remove the send using RemoveTrackSend
+            result = self._client.call_reascript_function("RemoveTrackSend", track_obj, 0, send_index)
+            
+            if result:
+                logger.info(f"Removed send {send_index} from track '{self.name}'")
+                return True
+            else:
+                logger.warning(f"Failed to remove send {send_index} from track '{self.name}'")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error removing send {send_index} from track {self._index}: {e}")
+            return False
+    
+    def get_send_count(self) -> int:
+        """
+        Get the number of sends on this track.
+        
+        Returns:
+            int: Number of sends
+        """
+        try:
+            track_obj = self._client.call_reascript_function("GetTrack", 0, self._index)
+            if track_obj:
+                return self._client.call_reascript_function("GetTrackNumSends", track_obj, 0)
+            return 0
+        except Exception as e:
+            logger.error(f"Error getting send count for track {self._index}: {e}")
+            return 0
