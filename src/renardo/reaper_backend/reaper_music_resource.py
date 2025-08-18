@@ -464,7 +464,7 @@ class ReaperInstrument(Instrument):
             **remaining_param_dict,
         )
     
-    def cleanup(self):
+    def delete(self):
         """Manually clean up the instrument and remove its track."""
         try:
             # Remove from class instances list
@@ -477,8 +477,11 @@ class ReaperInstrument(Instrument):
                     del self.instrument_dict[self.shortname]
             
             # Delete the track in REAPER if it exists
+            track_index_to_clean = None
             if hasattr(self, '_reatrack') and self._reatrack:
                 try:
+                    track_index_to_clean = self._reatrack.index
+                    
                     # Clear all FX from the track first
                     fx_count = self._reatrack.get_fx_count()
                     for i in range(fx_count - 1, -1, -1):  # Remove from end to start
@@ -491,6 +494,37 @@ class ReaperInstrument(Instrument):
                     logger.info(f"Deleted track {self.track_name} for instrument {self.shortname}")
                 except Exception as e:
                     logger.warning(f"Could not delete track for instrument {self.shortname}: {e}")
+            
+            # Clean up project track cache - remove stale references
+            if self.__class__._project and track_index_to_clean is not None:
+                try:
+                    # Remove from main track cache
+                    if track_index_to_clean in self.__class__._project.reatracks:
+                        del self.__class__._project.reatracks[track_index_to_clean]
+                    
+                    # Remove from instrument tracks cache if it was an instrument track
+                    if hasattr(self, '_midi_channel'):
+                        if self._midi_channel in self.__class__._project._instrument_tracks:
+                            del self.__class__._project._instrument_tracks[self._midi_channel]
+                    
+                    # Also clean up any tracks that were shifted due to deletion
+                    # When a track is deleted, all tracks after it shift down by one index
+                    tracks_to_update = {}
+                    for idx in list(self.__class__._project.reatracks.keys()):
+                        if idx > track_index_to_clean:
+                            # This track was shifted down
+                            track = self.__class__._project.reatracks[idx]
+                            track._index = idx - 1  # Update the internal index
+                            tracks_to_update[idx - 1] = track
+                            del self.__class__._project.reatracks[idx]
+                    
+                    # Add the updated tracks back
+                    self.__class__._project.reatracks.update(tracks_to_update)
+                    
+                    logger.debug(f"Cleaned up project track cache after deleting track {track_index_to_clean}")
+                    
+                except Exception as e:
+                    logger.warning(f"Could not clean up project track cache: {e}")
             
             # Release the MIDI channel
             if hasattr(self, '_midi_channel') and self._midi_channel in self.__class__._used_track_indexes:
@@ -529,7 +563,7 @@ class ReaperInstrument(Instrument):
 
     def __del__(self):
         """Clean up when the instrument is deleted."""
-        self.cleanup()
+        self.delete()
 
     def load(self):
         """Load the instrument in REAPER."""
