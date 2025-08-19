@@ -1,6 +1,5 @@
 
 import time
-
 from renardo.runtime import *
 
 reaproject.clear_reaper()
@@ -18,6 +17,14 @@ bass303 = ReaperInstrument(
 
 reaproject.create_bus_track("cool")
 
+b1 >> bass303([0,4,5,3], cool=linvar([0,1]), volin=0)
+
+
+
+time.sleep(2)
+b1 >> bass303([0,4,5,3], cool=0)
+
+
 reaproject.create_bus_track("cool2")
 
 
@@ -32,7 +39,6 @@ equals = ReaperInstrument(
 )
 
 
-b1 >> bass303([0,4,5,3], volin=0, cool=1)
 
 
 
