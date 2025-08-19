@@ -272,4 +272,46 @@ class ReaperClient:
             return self.call_reascript_function("GetAppVersion")
         except (ReaperHTTPError, ReaperAPIError) as e:
             logger.error(f"Failed to get REAPER version: {str(e)}")
-            raise
+    
+    # Send-related methods for ReaSend support
+    def get_send_volume(self, track_index: int, send_index: int) -> float:
+        """Get send volume for a track send."""
+        track_obj = self.call_reascript_function("GetTrack", 0, track_index)
+        if track_obj:
+            volume = self.call_reascript_function("GetTrackSendInfo_Value", track_obj, 0, send_index, "D_VOL")
+            return volume if volume is not None else 0.0
+        return 0.0
+    
+    def set_send_volume(self, track_index: int, send_index: int, value: float):
+        """Set send volume for a track send."""
+        track_obj = self.call_reascript_function("GetTrack", 0, track_index)
+        if track_obj:
+            self.call_reascript_function("SetTrackSendInfo_Value", track_obj, 0, send_index, "D_VOL", value)
+    
+    def get_send_pan(self, track_index: int, send_index: int) -> float:
+        """Get send pan for a track send."""
+        track_obj = self.call_reascript_function("GetTrack", 0, track_index)
+        if track_obj:
+            pan = self.call_reascript_function("GetTrackSendInfo_Value", track_obj, 0, send_index, "D_PAN")
+            return pan if pan is not None else 0.0
+        return 0.0
+    
+    def set_send_pan(self, track_index: int, send_index: int, value: float):
+        """Set send pan for a track send."""
+        track_obj = self.call_reascript_function("GetTrack", 0, track_index)
+        if track_obj:
+            self.call_reascript_function("SetTrackSendInfo_Value", track_obj, 0, send_index, "D_PAN", value)
+    
+    def get_send_mute(self, track_index: int, send_index: int) -> bool:
+        """Get send mute state for a track send."""
+        track_obj = self.call_reascript_function("GetTrack", 0, track_index)
+        if track_obj:
+            mute = self.call_reascript_function("GetTrackSendInfo_Value", track_obj, 0, send_index, "B_MUTE")
+            return bool(mute) if mute is not None else False
+        return False
+    
+    def set_send_mute(self, track_index: int, send_index: int, mute: bool):
+        """Set send mute state for a track send."""
+        track_obj = self.call_reascript_function("GetTrack", 0, track_index)
+        if track_obj:
+            self.call_reascript_function("SetTrackSendInfo_Value", track_obj, 0, send_index, "B_MUTE", 1 if mute else 0)
