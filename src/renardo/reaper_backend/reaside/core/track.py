@@ -23,6 +23,9 @@ class ReaTrack:
         # FX storage - unified dict for both numeric index and snake_name access
         self.reafxs = {}  # Dict storing ReaFX objects by snake_name AND numeric index
         
+        # Send storage - dict storing ReaSend objects by destination track name
+        self.sends = {}  # Dict storing ReaSend objects for controlling send parameters
+        
         # Perform initial scan to populate FX and parameters
         self._scan_track()
         
@@ -537,13 +540,19 @@ class ReaTrack:
         return chain_reafx_names
     
     def __getattr__(self, name: str):
-        """Allow accessing FX by snake_case name as attributes."""
+        """Allow accessing FX and sends by snake_case name as attributes."""
         if name.startswith('_'):
             raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
         
+        # Check for FX first
         fx = self.reafxs.get(name)
         if fx:
             return fx
+        
+        # Check for sends
+        send = self.sends.get(name)
+        if send:
+            return send
         
         raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
     
@@ -598,6 +607,21 @@ class ReaTrack:
                 existing_dest = self._client.call_reascript_function("GetTrackSendInfo_Value", source_track_obj, 0, send_idx, "P_DESTTRACK")
                 if existing_dest == dest_track_obj:
                     logger.info(f"Send from '{self.name}' to '{dest_name}' already exists (index {send_idx})")
+                    
+                    # Create ReaSend instance for existing send if not already present
+                    dest_snake_name = self._make_snake_name(dest_name)
+                    if dest_snake_name not in self.sends:
+                        from .param import ReaSend
+                        send_volume = ReaSend(
+                            client=self._client,
+                            track_index=self._index,
+                            send_index=send_idx,
+                            param_type="volume",
+                            name=f"{dest_name}_volume"
+                        )
+                        self.sends[dest_snake_name] = send_volume
+                        self.sends[f"{dest_snake_name}_send"] = send_volume
+                    
                     return send_idx
             
             # Convert mode string to REAPER send mode index
@@ -631,6 +655,25 @@ class ReaTrack:
             
             # Set send mode
             self._client.call_reascript_function("SetTrackSendInfo_Value", source_track_obj, 0, send_index, "I_SENDMODE", mode_idx)
+            
+            # Create ReaSend instance for volume control
+            from .param import ReaSend
+            
+            # Create ReaSend for volume control with the destination track name
+            send_volume = ReaSend(
+                client=self._client,
+                track_index=self._index,
+                send_index=send_index,
+                param_type="volume",
+                name=f"{dest_name}_volume"
+            )
+            
+            # Store the send by destination track name (make it snake_case for consistency)
+            dest_snake_name = self._make_snake_name(dest_name)
+            self.sends[dest_snake_name] = send_volume
+            
+            # Also store with "_send" suffix for clarity
+            self.sends[f"{dest_snake_name}_send"] = send_volume
             
             logger.info(f"Created send from '{self.name}' to '{dest_name}' (index {send_index})")
             
