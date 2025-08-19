@@ -352,24 +352,33 @@ class ReaperInstrument(Instrument):
             # Send parameters can be accessed by bus track name or bus_track_send
             send_param = None
             if hasattr(reatrack, 'sends'):
+                logger.debug(f"Checking if '{param_fullname}' is a send parameter. Available sends: {list(reatrack.sends.keys())}")
                 # Check if the parameter name matches a send
                 if param_fullname in reatrack.sends:
                     send_param = reatrack.sends[param_fullname]
+                    logger.debug(f"Found send parameter directly: {param_fullname}")
                 elif param_fullname.endswith('_send') and param_fullname in reatrack.sends:
                     send_param = reatrack.sends[param_fullname]
+                    logger.debug(f"Found send parameter with _send suffix: {param_fullname}")
                 else:
                     # Try snake_case version of the parameter name
                     snake_name = reatrack._make_snake_name(param_fullname)
+                    logger.debug(f"Trying snake_case version: {snake_name}")
                     if snake_name in reatrack.sends:
                         send_param = reatrack.sends[snake_name]
+                        logger.debug(f"Found send parameter as snake_case: {snake_name}")
                     elif f"{snake_name}_send" in reatrack.sends:
                         send_param = reatrack.sends[f"{snake_name}_send"]
+                        logger.debug(f"Found send parameter as snake_case with _send: {snake_name}_send")
+            else:
+                logger.debug(f"Track has no sends attribute")
             
             # If it's a send parameter, set its value
             if send_param:
                 try:
+                    logger.info(f"Setting send {param_fullname} to {value} via ReaSend")
                     send_param.set_value(value)
-                    logger.debug(f"Set send volume for {param_fullname} to {value}")
+                    logger.debug(f"Successfully set send volume for {param_fullname} to {value}")
                     continue
                 except Exception as e:
                     logger.error(f"Failed to set send parameter {param_fullname}: {e}")

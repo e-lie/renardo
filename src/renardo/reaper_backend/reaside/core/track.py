@@ -612,15 +612,28 @@ class ReaTrack:
                     dest_snake_name = self._make_snake_name(dest_name)
                     if dest_snake_name not in self.sends:
                         from .param import ReaSend
-                        send_volume = ReaSend(
+                        
+                        # Create dB-based volume control
+                        send_volume_db = ReaSend(
                             client=self._client,
                             track_index=self._index,
                             send_index=send_idx,
-                            param_type="volume",
-                            name=f"{dest_name}_volume"
+                            param_type="volume_db",
+                            name=f"{dest_name}"
                         )
-                        self.sends[dest_snake_name] = send_volume
-                        self.sends[f"{dest_snake_name}_send"] = send_volume
+                        
+                        # Create linear volume control
+                        send_volume_lin = ReaSend(
+                            client=self._client,
+                            track_index=self._index,
+                            send_index=send_idx,
+                            param_type="volume_lin",
+                            name=f"{dest_name}_lin"
+                        )
+                        
+                        # Store both versions
+                        self.sends[dest_snake_name] = send_volume_db
+                        self.sends[f"{dest_snake_name}_lin"] = send_volume_lin
                     
                     return send_idx
             
@@ -659,21 +672,32 @@ class ReaTrack:
             # Create ReaSend instance for volume control
             from .param import ReaSend
             
-            # Create ReaSend for volume control with the destination track name
-            send_volume = ReaSend(
+            # Create ReaSend for dB-based volume control with the destination track name
+            send_volume_db = ReaSend(
                 client=self._client,
                 track_index=self._index,
                 send_index=send_index,
-                param_type="volume",
-                name=f"{dest_name}_volume"
+                param_type="volume_db",
+                name=f"{dest_name}"
             )
             
-            # Store the send by destination track name (make it snake_case for consistency)
-            dest_snake_name = self._make_snake_name(dest_name)
-            self.sends[dest_snake_name] = send_volume
+            # Create ReaSend for linear volume control
+            send_volume_lin = ReaSend(
+                client=self._client,
+                track_index=self._index,
+                send_index=send_index,
+                param_type="volume_lin",
+                name=f"{dest_name}_lin"
+            )
             
-            # Also store with "_send" suffix for clarity
-            self.sends[f"{dest_snake_name}_send"] = send_volume
+            # Store the sends by destination track name (make it snake_case for consistency)
+            dest_snake_name = self._make_snake_name(dest_name)
+            
+            # Store dB version (default)
+            self.sends[dest_snake_name] = send_volume_db
+            
+            # Store linear version with _lin suffix
+            self.sends[f"{dest_snake_name}_lin"] = send_volume_lin
             
             logger.info(f"Created send from '{self.name}' to '{dest_name}' (index {send_index})")
             
