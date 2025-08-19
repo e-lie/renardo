@@ -437,9 +437,10 @@ class ReaProject:
         logger.info("Clearing all renardo content from REAPER")
         
         # First, clean up all ReaperInstruments (this clears the Python objects)
-        from renardo.reaper_backend.reaper_music_resource import ReaperInstrument
+        from renardo.reaper_backend.reaper_instrument import ReaperInstrument
+        from renardo.reaper_backend.reaper_effect import ReaperEffect
         
-        # Make a copy of the list to avoid modification during iteration
+        # Clean up ReaperInstruments
         if hasattr(ReaperInstrument, '_instru_facades'):
             instruments_to_remove = ReaperInstrument._instru_facades.copy()
             for instrument in instruments_to_remove:
@@ -456,6 +457,27 @@ class ReaProject:
             # Clear the class lists
             ReaperInstrument._instru_facades.clear()
             ReaperInstrument._used_track_indexes.clear()
+        
+        # Clean up ReaperEffects
+        if hasattr(ReaperEffect, '_effect_facades'):
+            effects_to_remove = ReaperEffect._effect_facades.copy()
+            for effect in effects_to_remove:
+                try:
+                    logger.debug(f"Cleaning up ReaperEffect: {getattr(effect, 'shortname', 'unknown')}")
+                    # Just clear the Python references, we'll handle REAPER tracks below
+                    if effect in ReaperEffect._effect_facades:
+                        ReaperEffect._effect_facades.remove(effect)
+                    if hasattr(effect, '_bus_index') and effect._bus_index in ReaperEffect._used_bus_indexes:
+                        ReaperEffect._used_bus_indexes.remove(effect._bus_index)
+                    if hasattr(effect, 'shortname') and effect.shortname in ReaperEffect.effect_dict:
+                        del ReaperEffect.effect_dict[effect.shortname]
+                except Exception as e:
+                    logger.warning(f"Error cleaning up effect {getattr(effect, 'shortname', 'unknown')}: {e}")
+            
+            # Clear the class lists
+            ReaperEffect._effect_facades.clear()
+            ReaperEffect._used_bus_indexes.clear()
+            ReaperEffect.effect_dict.clear()
         
         # Use REAPER actions to remove all tracks at once (more reliable)
         try:
