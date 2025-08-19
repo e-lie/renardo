@@ -364,7 +364,7 @@ PatternTypes = functions(Sequences)
 if settings.get("reaper_backend.REAPER_BACKEND_ENABLED"):
     from renardo.reaper_backend.reaside import ReaperClient, Reaper, ReaProject
     from renardo.runtime.managers_instanciation import reaper_resource_library
-    from renardo.reaper_backend import ReaperInstrument #, init_reapy_project
+    from renardo.reaper_backend import ReaperInstrument, ReaperEffect #, init_reapy_project
     #reaproject = init_reapy_project(Clock)
     reaper_client = ReaperClient()
     reaper_instance = Reaper(reaper_client)
@@ -374,6 +374,12 @@ if settings.get("reaper_backend.REAPER_BACKEND_ENABLED"):
         reaper_instance=reaper_instance,
         project=reaproject,
         resource_library=reaper_resource_library
+    )
+    ReaperEffect.set_class_attributes(
+        reaper_instance=reaper_instance,
+        reaproject=reaproject,
+        presets={},
+        reaper_resource_library=reaper_resource_library
     )
     from .reaper_backend_init import *
     create_selected_instruments = ReaperInstrumentFactory(FoxDotCode) # then we can call create_selected_instruments as a function

@@ -2,7 +2,7 @@ from typing import Mapping
 from pprint import pprint
 from pathlib import Path
 
-from renardo.reaper_backend.reaper_music_resource import ReaperInstrument
+from renardo.reaper_backend.reaper_instrument import ReaperInstrument
 from renardo.reaper_backend.ReaperIntegrationLib.ReaProject import ReaProject
 from renardo.reaper_backend.ReaperIntegrationLib.ReaTrack import ReaTrack
 from renardo.reaper_backend.ReaperIntegrationLib.ReaTaskQueue import ReaTask

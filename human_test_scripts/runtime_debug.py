@@ -16,6 +16,8 @@ bass303 = ReaperInstrument(
     category='bass'
 )
 
+b4 >> bass303([0,2,0,4])
+
 reverb = ReaperEffect(
       shortname='delayverb',
       fxchain_path='delayverb.RfxChain',
