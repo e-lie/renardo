@@ -16,8 +16,15 @@ bass303 = ReaperInstrument(
     category='bass'
 )
 
+reverb = ReaperEffect(
+      shortname='delayverb',
+      fxchain_path='delayverb.RfxChain',
+      fullname='delayverb',
+      description='Delay and reverb from Surge',
+      bank='0_renardo_core',
+      category='reverb'
+)
 
-reaproject.create_bus_track("cool")
 
 b1 >> bass303([0,4,5,3], cool=-6, volin=0)
 
