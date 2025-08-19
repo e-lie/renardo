@@ -1,4 +1,5 @@
-from renardo.reaper_backend.reaper_music_resource import ReaperInstrument
+from renardo.reaper_backend.reaper_instrument import ReaperInstrument
+from renardo.reaper_backend.reaper_effect import ReaperEffect
 from renardo.reaper_backend.ReaperIntegration import init_reapy_project
 from renardo.reaper_backend.reaper_simple_lib import ensure_16_midi_tracks
 
