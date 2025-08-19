@@ -276,8 +276,12 @@ class ReaSend(ReaParam):
         Internal method to set value without TimeVar detection.
         Used by TimeVarManager to avoid infinite loops.
         """
+        from renardo.logger import get_logger
+        logger = get_logger('reaside.core.param')
+        
         self.value = value
         if self.param_type == "volume":
+            logger.info(f"ReaSend setting send volume: track {self.track_index}, send {self.send_index}, value {value}")
             self.client.set_send_volume(self.track_index, self.send_index, value)
         elif self.param_type == "pan":
             self.client.set_send_pan(self.track_index, self.send_index, value)
