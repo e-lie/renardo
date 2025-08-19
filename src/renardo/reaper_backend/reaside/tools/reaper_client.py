@@ -153,6 +153,43 @@ class ReaperClient:
             logger.error(f"Failed to send OSC message {address}: {e}")
             return False
     
+    # Send-related methods with OSC support
+    def get_send_volume(self, track_index: int, send_index: int) -> float:
+        """Get send volume for a track send."""
+        return self.http_client.get_send_volume(track_index, send_index)
+    
+    def set_send_volume(self, track_index: int, send_index: int, value: float):
+        """Set send volume for a track send using OSC for better performance."""
+        # Try OSC first for better performance
+        # REAPER OSC uses 1-based indexing for tracks and sends
+        # Send volume in REAPER OSC expects a linear value (0.0 to 1.0 or higher)
+        osc_address = f"/track/{track_index + 1}/send/{send_index + 1}/volume"
+        osc_success = self.send_osc_message(osc_address, value)
+        if osc_success:
+            logger.debug(f"Sent OSC send volume: {osc_address} = {value:.3f}")
+            return
+        
+        # Fallback to HTTP client's ReaScript API method
+        self.http_client.set_send_volume(track_index, send_index, value)
+    
+    def get_send_pan(self, track_index: int, send_index: int) -> float:
+        """Get send pan for a track send."""
+        return self.http_client.get_send_pan(track_index, send_index)
+    
+    def set_send_pan(self, track_index: int, send_index: int, value: float):
+        """Set send pan for a track send."""
+        # Could add OSC support here too if needed
+        self.http_client.set_send_pan(track_index, send_index, value)
+    
+    def get_send_mute(self, track_index: int, send_index: int) -> bool:
+        """Get send mute state for a track send."""
+        return self.http_client.get_send_mute(track_index, send_index)
+    
+    def set_send_mute(self, track_index: int, send_index: int, mute: bool):
+        """Set send mute state for a track send."""
+        # Could add OSC support here too if needed
+        self.http_client.set_send_mute(track_index, send_index, mute)
+    
     # Connection testing
     def ping(self) -> bool:
         """Check if REAPER is accessible."""
