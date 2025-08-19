@@ -280,11 +280,71 @@ class ReaSend(ReaParam):
         logger = get_logger('reaside.core.param')
         
         self.value = value
-        if self.param_type == "volume":
-            logger.info(f"ReaSend setting send volume: track {self.track_index}, send {self.send_index}, value {value}")
+        
+        if self.param_type == "volume_db":
+            # Convert dB to REAPER linear value
+            # Using the mapping provided:
+            # -inf dB = 0.0, -6dB = 0.5928, -3dB = 0.6528, 0dB = 0.716, +3dB = 0.7827, +6dB = 0.8523, +12dB = 1.0
+            if value <= -130:  # Treat as -inf
+                linear_value = 0.0
+            elif value <= -6:
+                # Linear interpolation between -130dB (0.0) and -6dB (0.5928)
+                linear_value = 0.5928 * (value + 130) / 124
+            elif value <= -3:
+                # Linear interpolation between -6dB (0.5928) and -3dB (0.6528)
+                linear_value = 0.5928 + (0.6528 - 0.5928) * (value + 6) / 3
+            elif value <= 0:
+                # Linear interpolation between -3dB (0.6528) and 0dB (0.716)
+                linear_value = 0.6528 + (0.716 - 0.6528) * (value + 3) / 3
+            elif value <= 3:
+                # Linear interpolation between 0dB (0.716) and +3dB (0.7827)
+                linear_value = 0.716 + (0.7827 - 0.716) * value / 3
+            elif value <= 6:
+                # Linear interpolation between +3dB (0.7827) and +6dB (0.8523)
+                linear_value = 0.7827 + (0.8523 - 0.7827) * (value - 3) / 3
+            elif value <= 12:
+                # Linear interpolation between +6dB (0.8523) and +12dB (1.0)
+                linear_value = 0.8523 + (1.0 - 0.8523) * (value - 6) / 6
+            else:
+                # Cap at +12dB
+                linear_value = 1.0
+            
+            logger.info(f"ReaSend setting send volume (dB): track {self.track_index}, send {self.send_index}, {value}dB -> linear {linear_value:.4f}")
+            self.client.set_send_volume(self.track_index, self.send_index, linear_value)
+            
+        elif self.param_type == "volume_lin":
+            # Linear mode with proper dB mapping:
+            # 0.5 -> -6dB (0.5928), 1.0 -> 0dB (0.716), 1.5 -> +6dB (0.8523), 2.0 -> +12dB (1.0)
+            
+            if value <= 0:
+                linear_value = 0.0
+            elif value <= 0.5:
+                # 0 to 0.5 maps to -inf to -6dB (0.0 to 0.5928)
+                linear_value = 0.5928 * (value / 0.5)
+            elif value <= 1.0:
+                # 0.5 to 1.0 maps to -6dB to 0dB (0.5928 to 0.716)
+                linear_value = 0.5928 + (0.716 - 0.5928) * ((value - 0.5) / 0.5)
+            elif value <= 1.5:
+                # 1.0 to 1.5 maps to 0dB to +6dB (0.716 to 0.8523)
+                linear_value = 0.716 + (0.8523 - 0.716) * ((value - 1.0) / 0.5)
+            elif value <= 2.0:
+                # 1.5 to 2.0 maps to +6dB to +12dB (0.8523 to 1.0)
+                linear_value = 0.8523 + (1.0 - 0.8523) * ((value - 1.5) / 0.5)
+            else:
+                # Cap at +12dB
+                linear_value = 1.0
+            
+            logger.info(f"ReaSend setting send volume (linear): track {self.track_index}, send {self.send_index}, {value} -> OSC {linear_value:.4f}")
+            self.client.set_send_volume(self.track_index, self.send_index, linear_value)
+            
+        elif self.param_type == "volume":
+            # Legacy direct linear mode
+            logger.info(f"ReaSend setting send volume (direct): track {self.track_index}, send {self.send_index}, value {value}")
             self.client.set_send_volume(self.track_index, self.send_index, value)
+            
         elif self.param_type == "pan":
             self.client.set_send_pan(self.track_index, self.send_index, value)
+            
         elif self.param_type == "mute":
             self.client.set_send_mute(self.track_index, self.send_index, value > 0.5)
     
