@@ -348,6 +348,15 @@ class ReaProject:
         # Add to instrument tracks dictionary
         self._instrument_tracks[midi_channel] = track
         
+        # Automatically add sends to all existing bus tracks
+        for bus_track in self._bus_tracks.values():
+            try:
+                send_index = track.add_send(bus_track, volume=0.0, mode="post_fx")
+                if send_index >= 0:
+                    logger.debug(f"Added send from '{track_name}' to bus track '{bus_track.name}' (send index {send_index})")
+            except Exception as e:
+                logger.warning(f"Failed to add send from '{track_name}' to bus track '{bus_track.name}': {e}")
+        
         logger.info(f"Created instrument track '{track_name}' at position {position} for MIDI channel {midi_channel}")
         return track
     
@@ -405,6 +414,15 @@ class ReaProject:
         # Add to bus tracks dictionary with the next available index
         bus_index = len(self._bus_tracks)
         self._bus_tracks[bus_index] = track
+        
+        # Automatically add sends from all existing instrument tracks to this new bus track
+        for instrument_track in self._instrument_tracks.values():
+            try:
+                send_index = instrument_track.add_send(track, volume=0.0, mode="post_fx")
+                if send_index >= 0:
+                    logger.debug(f"Added send from '{instrument_track.name}' to bus track '{bus_name}' (send index {send_index})")
+            except Exception as e:
+                logger.warning(f"Failed to add send from '{instrument_track.name}' to bus track '{bus_name}': {e}")
         
         logger.info(f"Created bus track '{bus_name}' at position {position} (bus index {bus_index})")
         return track
