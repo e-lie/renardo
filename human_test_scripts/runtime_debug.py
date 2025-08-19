@@ -32,6 +32,9 @@ equals = ReaperInstrument(
 )
 
 
+b1 >> bass303([0,4,5,3], volin=0, cool=1)
+
+
 
 equals.add_send("cool")
 bass303.add_send("cool2")

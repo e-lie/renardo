@@ -348,6 +348,34 @@ class ReaperInstrument(Instrument):
 
         # Apply parameters to REAPER FX using reaside utilities
         for param_fullname, value in param_dict.items():
+            # Check if this is a send parameter (bus track name)
+            # Send parameters can be accessed by bus track name or bus_track_send
+            send_param = None
+            if hasattr(reatrack, 'sends'):
+                # Check if the parameter name matches a send
+                if param_fullname in reatrack.sends:
+                    send_param = reatrack.sends[param_fullname]
+                elif param_fullname.endswith('_send') and param_fullname in reatrack.sends:
+                    send_param = reatrack.sends[param_fullname]
+                else:
+                    # Try snake_case version of the parameter name
+                    snake_name = reatrack._make_snake_name(param_fullname)
+                    if snake_name in reatrack.sends:
+                        send_param = reatrack.sends[snake_name]
+                    elif f"{snake_name}_send" in reatrack.sends:
+                        send_param = reatrack.sends[f"{snake_name}_send"]
+            
+            # If it's a send parameter, set its value
+            if send_param:
+                try:
+                    send_param.set_value(value)
+                    logger.debug(f"Set send volume for {param_fullname} to {value}")
+                    continue
+                except Exception as e:
+                    logger.error(f"Failed to set send parameter {param_fullname}: {e}")
+                    remaining_param_dict[param_fullname] = value
+                    continue
+            
             # Handle special track volume parameters
             if param_fullname in ['vol', 'volin']:
                 try:
