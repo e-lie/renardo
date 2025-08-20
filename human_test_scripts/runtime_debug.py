@@ -16,7 +16,9 @@ bass303 = ReaperInstrument(
     category='bass'
 )
 
-b4 >> bass303([0,2,0,4])
+b4 >> bass303([0,2,0,4], cutoff=linvar([0,1]))
+
+
 
 reverb = ReaperEffect(
       shortname='delayverb',
