@@ -10,13 +10,13 @@ import sys
 print("""
 # Example usage of the refactored ReaperInstrument class:
 
-# First, initialize the class with shared global settings
-from renardo.reaper_backend.ReaperIntegrationLib.ReaProject import ReaProject
-from renardo.reaper_backend.reaper_music_resource import ReaperInstrument
+# Legacy ReaperIntegrationLib removed - use reaside system instead
+# from renardo.reaper_backend.ReaperIntegrationLib.ReaProject import ReaProject
+from renardo.reaper_backend.reaper_instrument import ReaperInstrument
 from renardo.runtime import Clock
 
-# Initialize a ReaProject (or get it from elsewhere)
-reaproject = ReaProject(Clock)
+# Legacy reapy integration disabled - use reaside system for REAPER integration
+# reaproject = ReaProject(Clock)
 
 # Initialize the ReaperInstrument factory functionality
 presets = {
@@ -48,16 +48,16 @@ def test_reaper_instrument_factory_functionality():
     try:
         import reapy
         
-        # Try to initialize with actual REAPER
+        # Legacy ReaperIntegrationLib removed - use reaside system instead
         from renardo.runtime import Clock
-        from renardo.reaper_backend.ReaperIntegrationLib.ReaProject import ReaProject
-        from renardo.reaper_backend.reaper_music_resource import ReaperInstrument
+        # from renardo.reaper_backend.ReaperIntegrationLib.ReaProject import ReaProject
+        from renardo.reaper_backend.reaper_instrument import ReaperInstrument
         
-        print("Testing with actual REAPER connection...")
-        reaproject = ReaProject(Clock, reapylib=reapy)
+        print("Legacy REAPER reapy connection disabled - use reaside system instead")
+        # reaproject = ReaProject(Clock, reapylib=reapy)
         
-        # Initialize factory functionality
-        ReaperInstrument.set_class_attributes({}, reaproject)
+        # Legacy factory functionality disabled
+        # ReaperInstrument.set_class_attributes({}, reaproject)
         
         # Test the ensure_fxchain_in_reaper functionality
         print("\nTesting ensure_fxchain_in_reaper:")
