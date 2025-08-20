@@ -5,7 +5,8 @@ Test script for ensure_fxchain_in_reaper functionality
 
 from pathlib import Path
 from renardo.settings_manager import settings, SettingsManager
-from renardo.reaper_backend.ReaperIntegration import ReaperInstrumentFactory, init_reapy_project
+# Legacy ReaperIntegration removed - use reaside system instead
+# from renardo.reaper_backend.ReaperIntegration import ReaperInstrumentFactory, init_reapy_project
 from renardo.gatherer.reaper_resource_management.reaper_resource_library import ReaperResourceLibrary, ensure_reaper_directories
 
 def test_ensure_fxchain():

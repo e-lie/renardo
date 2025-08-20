@@ -1,6 +1,7 @@
 
 from renardo.runtime import Clock, linvar, sinvar, PWhite, PRand, inf, player_method, nextBar
-from renardo.reaper_backend.ReaperIntegrationLib.ReaTrack import ReaTrack
+# Legacy ReaperIntegrationLib removed
+# from renardo.reaper_backend.ReaperIntegrationLib.ReaTrack import ReaTrack
 
 @player_method
 def fadep(self, param_name, fvalue=1, dur=8, ivalue=None):
@@ -15,7 +16,8 @@ def fadep(self, param_name, fvalue=1, dur=8, ivalue=None):
 
 @player_method
 def fade(self, dur=8, fvol=1, ivol=None, autostop=True):
-    if "reatrack" in self.attr.keys() and isinstance(self.attr["reatrack"][0], ReaTrack):
+    # Legacy ReaTrack check removed - assuming reaside system integration
+    if "reatrack" in self.attr.keys():
         if ivol == None:
             ivol = float(self.vol)
         self.vol = linvar([ivol, fvol], [dur, inf], start=Clock.mod(4))
@@ -58,7 +60,8 @@ def fadeinout(self, dur=32, outdur=16, mvol=1, fvol=0, ivol=None):
 
 @player_method
 def faderand(self, length=8):
-    if "reatrack" in self.attr.keys() and isinstance(self.attr["reatrack"][0], ReaTrack):
+    # Legacy ReaTrack check removed - assuming reaside system integration
+    if "reatrack" in self.attr.keys():
         self.vol = sinvar([0] | PWhite(.2,1.2)[:length-1], [8] | PRand(1,4)[:length-1]*4, start=Clock.mod(4))
     else:
         self.amplify = sinvar([0] | PWhite(.2,1.2)[:length-1], [8] | PRand(1,4)[:length-1]*4, start=Clock.mod(4))
