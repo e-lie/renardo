@@ -41,27 +41,28 @@ class ReaperInstrument(Instrument):
             self,
             shortname: str,
             fxchain_path: str,
-            custom_midi_channel: Optional[int] = None,
             arguments: Dict[str, Any] = None,
             fullname: Optional[str] = None,
             description: Optional[str] = None,
             bank: str = "undefined",
             category: str = "undefined",
-            midi_map=None, # TODO
-            custom_default_sustain=None,
-            custom_plugin_name=None,
-            custom_track_name=None,
-            instanciate_plugin=True,
-            scan_all_params=True,
     ):
         """
-        Initialize a REAPER instrument in the renardo runtime linked to REAPER
-        and instanciate the corresponding FXChain in REAPER on the right track with right midi channel
+        Initialize a REAPER instrument linked to REAPER.
+        Creates a track with the instrument's shortname and loads the FXChain.
+        
+        Args:
+            shortname: Short name used as identifier
+            fxchain_path: Path to the REAPER FX chain file
+            arguments: Dictionary of argument names and default values
+            fullname: Full descriptive name
+            description: Longer description of the instrument
+            bank: The resource bank this belongs to
+            category: The category within the bank
         """
         super().__init__(shortname, fullname, description, arguments, bank, category)
 
         self.instrument_loaded = False
-        self.chan_track_names = [f"chan{i+1}" for i in range(16)]
 
         # normalize "manual" fxchain name argument
         self.fxchain_path = Path(fxchain_path)
@@ -69,16 +70,12 @@ class ReaperInstrument(Instrument):
             self.fxchain_path = self.fxchain_path.with_suffix(".RfxChain")
         self.ensure_fxchain_in_reaper()
 
-        if custom_plugin_name is None:
-            self.plugin_name = shortname
-        else:
-            self.plugin_name = custom_plugin_name
+        # Use shortname as plugin name
+        self.plugin_name = shortname
 
-        # find a midi channel if possible
+        # find an available midi channel
         first_available_midi_channel = self.__class__.find_available_midi_channel()
-        if custom_midi_channel and self.__class__.is_channel_available(custom_midi_channel):
-            self._midi_channel = custom_midi_channel
-        elif first_available_midi_channel is not None:
+        if first_available_midi_channel is not None:
             self._midi_channel = first_available_midi_channel
         else:
             raise Exception(f"No available MIDI channel found for {shortname}")  
@@ -87,54 +84,36 @@ class ReaperInstrument(Instrument):
         if self._midi_channel not in self.__class__._used_track_indexes:
             self.__class__._used_track_indexes.append(self._midi_channel)
         
-        # set track_name
-        if custom_track_name is None:
-            self.track_name = f"chan{self._midi_channel}"
-        elif custom_track_name not in self.chan_track_names:
-            self.track_name = custom_track_name
-        else:
-            raise Exception("You can't use one of the chanN tracks with custom_track_name")
+        # Use shortname as track name
+        self.track_name = shortname
 
         # Get or create track using reaside
-        # For backward compatibility, check both the old track_name and the shortname
         self._reatrack = self.__class__._project.get_track_by_name(self.track_name)
-        if not self._reatrack:
-            # Also check if a track with the shortname exists
-            self._reatrack = self.__class__._project.get_track_by_name(shortname)
         
         if not self._reatrack:
             # Create the track if it doesn't exist
-            # Use the instrument's shortname as the track name (not the chanN name)
-            actual_track_name = shortname if custom_track_name is None else custom_track_name
             self._reatrack = self.__class__._project.create_instrument_track(
-                track_name=actual_track_name,
+                track_name=self.track_name,
                 midi_channel=self._midi_channel
             )
         
-        if custom_default_sustain is not None:
-            self._sus = custom_default_sustain
-
-        if instanciate_plugin:
-            # Use reaside to load the FX chain
-            try:
-                fx_added = self._reatrack.add_fxchain(self.plugin_name)
-                if fx_added > 0:
-                    # Rescan track to get FX objects
-                    self._reatrack.rescan_fx()
-                    # Get the first FX as the instrument
-                    fx_list = self._reatrack.list_fx()
-                    if fx_list:
-                        self._reafx_instrument = fx_list[0]
-                    else:
-                        self._reafx_instrument = None
+        # Use reaside to load the FX chain
+        try:
+            fx_added = self._reatrack.add_fxchain(self.plugin_name)
+            if fx_added > 0:
+                # Rescan track to get FX objects
+                self._reatrack.rescan_fx()
+                # Get the first FX as the instrument
+                fx_list = self._reatrack.list_fx()
+                if fx_list:
+                    self._reafx_instrument = fx_list[0]
                 else:
                     self._reafx_instrument = None
-            except Exception as e:
-                logger.error(f"Failed to load FX chain {self.plugin_name}: {e}")
+            else:
                 self._reafx_instrument = None
-        else:
-            # Try to get existing FX by name
-            self._reafx_instrument = self._reatrack.get_fx_by_name(shortname)
+        except Exception as e:
+            logger.error(f"Failed to load FX chain {self.plugin_name}: {e}")
+            self._reafx_instrument = None
 
         # Add to instrument dictionary if one is available
         if hasattr(self.__class__, 'instrument_dict'):
@@ -207,7 +186,6 @@ class ReaperInstrument(Instrument):
         effect_name: str = None,
         plugin_preset: str = None,
         effect_params: Dict = {},
-        scan_all_params: bool = True
     ):
         """Add an effect plugin to the track."""
         if hasattr(self, '_reatrack'):
@@ -446,8 +424,7 @@ class ReaperInstrument(Instrument):
         remaining_param_dict = {}
         self.apply_all_existing_reaper_params(self._reatrack, params, remaining_param_dict, runtime_kwargs=kwargs)
 
-        midi_map_name = remaining_param_dict["midi_map"] if "midi_map" in remaining_param_dict else None
-        remaining_param_dict["midi_map"] = MidiMapFactory.generate_midimap(midi_map_name)
+        # No midi_map handling needed anymore
 
         # to avoid midi event collision between start and end note (which prevent the instrument from playing)
         dur = remaining_param_dict["dur"] if "dur" in remaining_param_dict.keys() else 1
@@ -621,16 +598,15 @@ class ReaperInstrument(Instrument):
         
     @classmethod
     def create_instrument_facade(cls, name=None, plugin_name=None, track_name=None, preset=None, 
-                               params={}, scan_all_params=True, is_chain=True):
+                               params={}, is_chain=True):
         """Create a REAPER instrument facade.
         
         Args:
             name: Name of the instrument
-            plugin_name: Name of the plugin to use
-            track_name: Name of the track to use
-            preset: Preset to apply
+            plugin_name: Name of the plugin/fxchain to use (defaults to name)
+            track_name: Legacy parameter (will use name as track name)
+            preset: Legacy parameter (not used)
             params: Parameter values to set
-            scan_all_params: Whether to scan all parameters
             is_chain: Whether to treat as an FX chain
             
         Returns:
@@ -640,52 +616,23 @@ class ReaperInstrument(Instrument):
             print("REAPER project not initialized.")
             return None
             
-        # Use name for both if plugin_name is not specified
+        # Determine the name
         if name is None and track_name is not None:
             name = track_name
         elif name is None:
             name = "unnamed_instrument"
             
-        midi_channel = -1
-        
         if plugin_name is None:
             plugin_name = name
-            
-        if track_name is None:
-            # Find first available track index
-            cls.update_used_track_indexes()
-            free_indexes = [index for index in range(1,17) if index not in cls._used_track_indexes]
-            if not free_indexes:
-                logger.error("No free track indexes available.")
-                return None
-                
-            free_index = free_indexes[0]
-            midi_channel = free_index
-            cls._used_track_indexes.append(free_index)
-            track_name = 'chan' + str(free_index)
-        elif track_name[:4] == 'chan':
-            try:
-                midi_channel = int(track_name[4:6])
-            except Exception:
-                midi_channel = int(track_name[4:5])
-                
-        if preset is None:
-            preset = name
             
         try:
             instrument = ReaperInstrument(
                 shortname=name,
                 fxchain_path=plugin_name,  # Use plugin_name as fxchain path
-                custom_midi_channel=midi_channel,
                 arguments=params,
                 fullname=name,
-                description=f"ReaperInstrument for {name}",
-                custom_plugin_name=plugin_name,
-                custom_track_name=track_name,
-                instanciate_plugin=True,
-                scan_all_params=scan_all_params
+                description=f"ReaperInstrument for {name}"
             )
-            cls._instru_facades.append(instrument)
             return instrument
         except Exception as err:
             output = err.message if hasattr(err, 'message') else err
@@ -693,12 +640,11 @@ class ReaperInstrument(Instrument):
             return None
             
     @classmethod
-    def add_multiple_fxchains(cls, *chain_names, scan_all_params=True, is_chain=True):
+    def add_multiple_fxchains(cls, *chain_names, is_chain=True):
         """Add multiple FX chains to REAPER.
         
         Args:
             *chain_names: Names of the FX chains to add
-            scan_all_params: Whether to scan all parameters
             is_chain: Whether to treat as FX chains
             
         Returns:
@@ -709,7 +655,7 @@ class ReaperInstrument(Instrument):
         for chain in chain_names:
             try:
                 facade = cls.create_instrument_facade(chain, chain, 
-                                                    scan_all_params=scan_all_params, 
+ 
                                                     is_chain=is_chain)
                 if facade:
                     facades.append(facade)
