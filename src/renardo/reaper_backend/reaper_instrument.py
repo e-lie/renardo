@@ -114,10 +114,6 @@ class ReaperInstrument(Instrument):
         except Exception as e:
             logger.error(f"Failed to load FX chain {self.plugin_name}: {e}")
             self._reafx_instrument = None
-
-        # Add to instrument dictionary if one is available
-        if hasattr(self.__class__, 'instrument_dict'):
-            self.instrument_dict[self.shortname] = self
         
         # Add to class instances list for tracking
         self.__class__._instru_facades.append(self)
@@ -141,11 +137,6 @@ class ReaperInstrument(Instrument):
     @classmethod
     def is_channel_available(cls, channel_num):
         return channel_num not in cls._used_track_indexes
-
-    @classmethod
-    def set_instrument_dict(cls, instrument_dict):
-        """Set the dictionary to track all instrument instances."""
-        cls.instrument_dict = instrument_dict
         
     @classmethod
     def set_class_attributes(cls, presets: Mapping, reaper_instance=None, project=None, resource_library=None):
@@ -445,11 +436,6 @@ class ReaperInstrument(Instrument):
             if self in self.__class__._instru_facades:
                 self.__class__._instru_facades.remove(self)
             
-            # Remove from instrument dictionary
-            if hasattr(self.__class__, 'instrument_dict') and hasattr(self, 'shortname'):
-                if self.shortname in self.instrument_dict:
-                    del self.instrument_dict[self.shortname]
-            
             # Delete the track in REAPER if it exists
             track_index_to_clean = None
             if hasattr(self, '_reatrack') and self._reatrack:
@@ -541,128 +527,7 @@ class ReaperInstrument(Instrument):
         # This would load the FX chain file into REAPER tracks
         self.instrument_loaded = True
         return None
-        
-    @classmethod
-    def create_all_facades_from_reaproject_tracks(cls):
-        """Create instrument facades for all tracks in the REAPER project.
-        
-        Returns:
-            Dict: Dictionary of created instrument facades
-        """
-        if not cls._project:
-            print("REAPER project not initialized.")
-            return {}
-            
-        instrument_dict = {}
-        
-        # Get all tracks from the project
-        all_tracks = cls._project.list_tracks()
-        
-        for track in all_tracks:
-            track_name = track.name
-            
-            # Skip if track name doesn't match expected patterns
-            if not (track_name.startswith('chan') or track_name.startswith('bus')):
-                continue
-                
-            fx_list = track.list_fx()
-            if len(fx_list) > 0:
-                # First fx is usually the synth/instrument that gives the name
-                instrument_name = fx_list[0].snake_name
-            else:
-                # If no fx exists, use the track name
-                instrument_name = track_name
-                
-            # Determine MIDI channel
-            if track_name.startswith('chan'):
-                try:
-                    midi_channel = int(track_name[4:])
-                except ValueError:
-                    midi_channel = -1
-            else:
-                midi_channel = -1
-                
-            instrument_kwargs = {
-                "track_name": track_name,
-                "midi_channel": midi_channel,
-            }
-            
-            try:
-                facade = cls.create_instrument_facade(**instrument_kwargs)
-                if facade:
-                    instrument_dict[instrument_name] = facade
-            except Exception as e:
-                print(f"Failed to create facade for track {track_name}: {e}")
-            
-        return instrument_dict
-        
-    @classmethod
-    def create_instrument_facade(cls, name=None, plugin_name=None, track_name=None, preset=None, 
-                               params={}, is_chain=True):
-        """Create a REAPER instrument facade.
-        
-        Args:
-            name: Name of the instrument
-            plugin_name: Name of the plugin/fxchain to use (defaults to name)
-            track_name: Legacy parameter (will use name as track name)
-            preset: Legacy parameter (not used)
-            params: Parameter values to set
-            is_chain: Whether to treat as an FX chain
-            
-        Returns:
-            ReaperInstrument: A new instrument instance
-        """
-        if not cls._project:
-            print("REAPER project not initialized.")
-            return None
-            
-        # Determine the name
-        if name is None and track_name is not None:
-            name = track_name
-        elif name is None:
-            name = "unnamed_instrument"
-            
-        if plugin_name is None:
-            plugin_name = name
-            
-        try:
-            instrument = ReaperInstrument(
-                shortname=name,
-                fxchain_path=plugin_name,  # Use plugin_name as fxchain path
-                arguments=params,
-                fullname=name,
-                description=f"ReaperInstrument for {name}"
-            )
-            return instrument
-        except Exception as err:
-            output = err.message if hasattr(err, 'message') else err
-            print(f"Error creating instrument {name}: {output} -> skipping")
-            return None
-            
-    @classmethod
-    def add_multiple_fxchains(cls, *chain_names, is_chain=True):
-        """Add multiple FX chains to REAPER.
-        
-        Args:
-            *chain_names: Names of the FX chains to add
-            is_chain: Whether to treat as FX chains
-            
-        Returns:
-            tuple: Tuple of created instrument proxies
-        """
-        facades = []
-        
-        for chain in chain_names:
-            try:
-                facade = cls.create_instrument_facade(chain, chain, 
- 
-                                                    is_chain=is_chain)
-                if facade:
-                    facades.append(facade)
-            except Exception as e:
-                print(f"Error adding chain {chain}: {e}")
-                
-        return tuple(facades)
+
 
     def ensure_fxchain_in_reaper(self):
         """
