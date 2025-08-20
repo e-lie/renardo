@@ -1,5 +1,6 @@
 from typing import Dict, List
-from renardo.reaper_backend.ReaperIntegration import init_reapy_project, ReaperInstrumentFactory
+# Legacy ReaperIntegration removed - use reaside system instead
+# from renardo.reaper_backend.ReaperIntegration import init_reapy_project, ReaperInstrumentFactory
 
 #from .Presets import presets
 from renardo.runtime import Clock, Scale
@@ -9,22 +10,27 @@ Clock.midi_nudge = 0
 
 old_style_presets = {}
 
-reaproject = init_reapy_project()
-reainstru_factory = ReaperInstrumentFactory(old_style_presets, reaproject)
-reaper_instruments = reainstru_factory.create_all_facades_from_reaproject_tracks()
+# Legacy reapy integration disabled - use reaside system for REAPER integration
+# reaproject = init_reapy_project()
+# reainstru_factory = ReaperInstrumentFactory(old_style_presets, reaproject)
+# reaper_instruments = reainstru_factory.create_all_facades_from_reaproject_tracks()
+reaper_instruments = {}
 
+# Legacy newintru function disabled - use reaside ReaperInstrument instead
 def newintru(name:str, plugin_name:str=None, effects:List=[], plugin_preset:str=None, params:Dict={}, scan_all_params:bool=False):
-    if plugin_name is None:
-        plugin_name = name
-    if not params:
-        scan_all_params = True
-    instrument_facade = reainstru_factory.create_instrument_facade(name, plugin_name, plugin_preset, params, scan_all_params)
-    for effect_config in effects:
-        if isinstance(effect_config, dict):
-            instrument_facade.add_effect_plugin(**effect_config)
-        elif isinstance(effect_config, list):
-            instrument_facade.add_effect_plugin(*effect_config)
-    return instrument_facade.out, instrument_facade
+    print(f"Legacy newintru function called for '{name}' - use reaside ReaperInstrument instead")
+    return None, None
+    # if plugin_name is None:
+    #     plugin_name = name
+    # if not params:
+    #     scan_all_params = True
+    # instrument_facade = reainstru_factory.create_instrument_facade(name, plugin_name, plugin_preset, params, scan_all_params)
+    # for effect_config in effects:
+    #     if isinstance(effect_config, dict):
+    #         instrument_facade.add_effect_plugin(**effect_config)
+    #     elif isinstance(effect_config, list):
+    #         instrument_facade.add_effect_plugin(*effect_config)
+    # return instrument_facade.out, instrument_facade
 
 
 for key, instrument_facade in reaper_instruments.items():
