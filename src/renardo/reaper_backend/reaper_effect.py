@@ -6,25 +6,20 @@ from typing import ClassVar, List, Dict, Optional, Any
 # Import Effect base class
 from renardo.lib.music_resource import Effect
 
+# Import the base ReaperResource class
+from renardo.reaper_backend.reaper_resource import ReaperResource
+
 # Import logger
 from renardo.logger import get_logger
 
 logger = get_logger('reaper_backend.reaper_effect')
 
-# Import reaside components
-from renardo.reaper_backend.reaside.core.reaper import Reaper
-from renardo.reaper_backend.reaside.tools.reaper_client import ReaperClient
 
-
-class ReaperEffect(Effect):
+class ReaperEffect(Effect, ReaperResource):
     """Represents a REAPER effect processor that creates a bus track."""
     
-    # Class-level attributes (shared across all instances)
-    _reaper = None  # reaside Reaper instance
-    _project = None  # reaside ReaProject instance
-    _presets = {}
+    # Class-level attributes specific to effects
     _effect_facades: ClassVar[List['ReaperEffect']] = []
-    _resource_library = None  # Will be loaded dynamically to avoid circular imports
     _used_bus_indexes: ClassVar[List[int]] = []
     effect_dict: ClassVar[Dict[str, 'ReaperEffect']] = {}
 
@@ -58,16 +53,15 @@ class ReaperEffect(Effect):
             custom_bus_index: Custom bus index (otherwise auto-assigned)
             instanciate_fx: Whether to instantiate the FX chain immediately
         """
-        super().__init__(shortname, fullname, description, arguments, bank, category, order)
-        self.fxchain_path = fxchain_path
+        # Initialize both parent classes
+        Effect.__init__(self, shortname, fullname, description, arguments, bank, category, order)
+        ReaperResource.__init__(self, shortname, fxchain_path, arguments, fullname, description, bank, category)
+        
+        # Effect-specific attributes
         self.custom_track_name = custom_track_name
         self.custom_bus_index = custom_bus_index
         self.instanciate_fx = instanciate_fx
-        
-        # Instance attributes
-        self._reatrack = None
         self._bus_index = None
-        self.track_name = None
         
         # Add to class collections
         self.__class__._effect_facades.append(self)
@@ -170,48 +164,18 @@ class ReaperEffect(Effect):
             logger.error(f"Error getting FX chain file path: {e}")
             return None
 
-    def _get_reaper_fxchains_dir(self):
-        """Get the REAPER FXChains directory."""
-        try:
-            # Try common REAPER locations
-            import platform
-            import os
-            system = platform.system()
-            
-            if system == "Windows":
-                appdata = os.getenv('APPDATA')
-                if appdata:
-                    return os.path.join(appdata, "REAPER", "FXChains")
-            elif system == "Darwin":  # macOS
-                home = os.path.expanduser("~")
-                return os.path.join(home, "Library", "Application Support", "REAPER", "FXChains")
-            else:  # Linux and others
-                home = os.path.expanduser("~")
-                # Try XDG config first, then fallback to .config
-                config_home = os.getenv('XDG_CONFIG_HOME', os.path.join(home, '.config'))
-                reaper_config = os.path.join(config_home, "REAPER")
-                if os.path.exists(reaper_config):
-                    return os.path.join(reaper_config, "FXChains")
-                else:
-                    # Fallback to home directory
-                    return os.path.join(home, ".config", "REAPER", "FXChains")
-            
-        except Exception as e:
-            logger.error(f"Error determining REAPER FXChains directory: {e}")
-        
-        return None
+    # _get_reaper_fxchains_dir method inherited from ReaperResource
 
     @classmethod
     def set_class_attributes(cls, reaper_instance=None, reaproject=None, presets=None, reaper_resource_library=None):
         """Set class-level attributes shared across all ReaperEffect instances."""
-        if reaper_instance:
-            cls._reaper = reaper_instance
-        if reaproject:
-            cls._project = reaproject
-        if presets:
-            cls._presets = presets
-        if reaper_resource_library:
-            cls._resource_library = reaper_resource_library
+        # Call parent method
+        super().set_class_attributes(presets or {}, reaper_instance, reaproject, reaper_resource_library)
+        
+        # Initialize effect-specific attributes
+        cls._effect_facades = []
+        cls._used_bus_indexes = []
+        cls.effect_dict = {}
 
     @classmethod
     def get_effect(cls, shortname: str) -> Optional['ReaperEffect']:
@@ -221,6 +185,7 @@ class ReaperEffect(Effect):
     def delete(self):
         """Delete the effect and clean up its bus track."""
         try:
+            # Effect-specific cleanup
             # Remove from class collections
             if self in self.__class__._effect_facades:
                 self.__class__._effect_facades.remove(self)
@@ -228,25 +193,19 @@ class ReaperEffect(Effect):
             if self.shortname in self.__class__.effect_dict:
                 del self.__class__.effect_dict[self.shortname]
             
-            # Delete the bus track
-            if self._reatrack:
-                try:
-                    self._reatrack.delete()
-                    logger.info(f"Deleted bus track for effect {self.shortname}")
-                except Exception as e:
-                    logger.warning(f"Could not delete bus track for effect {self.shortname}: {e}")
-            
             # Release the bus index
             if self._bus_index is not None and self._bus_index in self.__class__._used_bus_indexes:
                 self.__class__._used_bus_indexes.remove(self._bus_index)
                 logger.debug(f"Released bus index {self._bus_index} for effect {self.shortname}")
             
-            # Clear references
-            self._reatrack = None
+            # Clear effect-specific references
             self._bus_index = None
                 
         except Exception as e:
             logger.error(f"Error cleaning up ReaperEffect {self.shortname}: {e}")
+        
+        # Call parent delete method for common cleanup
+        super().delete()
 
     def __del__(self):
         """Clean up when the effect is deleted."""
@@ -256,4 +215,6 @@ class ReaperEffect(Effect):
         """Load the effect in REAPER (alias for initialization)."""
         if not self._reatrack:
             self._initialize_effect()
+        # Call parent load method
+        super().load()
         return self._reatrack

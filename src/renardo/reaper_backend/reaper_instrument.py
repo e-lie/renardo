@@ -11,31 +11,24 @@ import shutil
 import inspect
 
 from renardo.lib.InstrumentProxy import InstrumentProxy
-from renardo.lib.music_resource import Instrument, Effect, ResourceType
-from renardo.settings_manager import settings, SettingsManager
+from renardo.lib.music_resource import Instrument
 from renardo.lib.Extensions.MidiMapFactory import MidiMapFactory
 from renardo.sc_backend.Midi import ReaperInstrumentProxy
 from renardo.lib.Patterns import Pattern
 from renardo.logger import get_logger
 
+# Import the base ReaperResource class
+from renardo.reaper_backend.reaper_resource import ReaperResource
+
 logger = get_logger('reaper_backend.reaper_instrument')
 
-# Import reaside components
-from renardo.reaper_backend.reaside.core.reaper import Reaper
-from renardo.reaper_backend.reaside.tools.reaper_client import ReaperClient
-from renardo.reaper_backend.reaside.utils import split_param_name, set_fx_parameter, enable_fx
 
 
-
-class ReaperInstrument(Instrument):
+class ReaperInstrument(Instrument, ReaperResource):
     """Represents a REAPER instrument using reaside."""
-    # Class-level attributes (shared across all instances)
-    _reaper = None  # reaside Reaper instance
-    _project = None  # reaside ReaProject instance
-    _presets = {}
+    # Class-level attributes specific to instruments
     _used_track_indexes: ClassVar[List[int]] = []
     _instru_facades: ClassVar[List['ReaperInstrument']] = []
-    _resource_library = None  # Will be loaded dynamically to avoid circular imports
 
     def __init__(
             self,
@@ -60,71 +53,71 @@ class ReaperInstrument(Instrument):
             bank: The resource bank this belongs to
             category: The category within the bank
         """
-        super().__init__(shortname, fullname, description, arguments, bank, category)
+        # Initialize both parent classes
+        Instrument.__init__(self, shortname, fullname, description, arguments, bank, category)
+        ReaperResource.__init__(self, shortname, fxchain_path, arguments, fullname, description, bank, category)
 
         self.instrument_loaded = False
-
-        # normalize "manual" fxchain name argument
-        self.fxchain_path = Path(fxchain_path)
-        if not self.fxchain_path.suffix.lower() == ".rfxchain":
-            self.fxchain_path = self.fxchain_path.with_suffix(".RfxChain")
-        self.ensure_fxchain_in_reaper()
-
-        # Use shortname as plugin name
         self.plugin_name = shortname
-
-        # find an available midi channel
-        first_available_midi_channel = self.__class__.find_available_midi_channel()
-        if first_available_midi_channel is not None:
-            self._midi_channel = first_available_midi_channel
-        else:
-            raise Exception(f"No available MIDI channel found for {shortname}")  
         
-        # Reserve this channel immediately to prevent conflicts
-        if self._midi_channel not in self.__class__._used_track_indexes:
-            self.__class__._used_track_indexes.append(self._midi_channel)
-        
-        # Use shortname as track name
-        self.track_name = shortname
-
-        # Get or create track using reaside
-        self._reatrack = self.__class__._project.get_track_by_name(self.track_name)
-        
-        if not self._reatrack:
-            # Create the track if it doesn't exist
-            self._reatrack = self.__class__._project.create_instrument_track(
-                track_name=self.track_name,
-                midi_channel=self._midi_channel
-            )
-        
-        # Use reaside to load the FX chain
-        try:
-            fx_added = self._reatrack.add_fxchain(self.plugin_name)
-            if fx_added > 0:
-                # Rescan track to get FX objects
-                self._reatrack.rescan_fx()
-                # Get the first FX as the instrument
-                fx_list = self._reatrack.list_fx()
-                if fx_list:
-                    self._reafx_instrument = fx_list[0]
-                else:
-                    self._reafx_instrument = None
-            else:
-                self._reafx_instrument = None
-        except Exception as e:
-            logger.error(f"Failed to load FX chain {self.plugin_name}: {e}")
-            self._reafx_instrument = None
+        # Initialize instrument-specific functionality
+        self._initialize_instrument()
         
         # Add to class instances list for tracking
         self.__class__._instru_facades.append(self)
+    
+    def _initialize_instrument(self):
+        """Initialize the instrument by creating a track and loading FX chain."""
+        try:
+            # Find an available midi channel
+            first_available_midi_channel = self.__class__.find_available_midi_channel()
+            if first_available_midi_channel is not None:
+                self._midi_channel = first_available_midi_channel
+            else:
+                raise Exception(f"No available MIDI channel found for {self.shortname}")
+            
+            # Reserve this channel immediately to prevent conflicts
+            if self._midi_channel not in self.__class__._used_track_indexes:
+                self.__class__._used_track_indexes.append(self._midi_channel)
+            
+            # Ensure FXChain is in REAPER
+            self.ensure_fxchain_in_reaper()
+            
+            # Get or create track using reaside
+            self._reatrack = self.__class__._project.get_track_by_name(self.track_name)
+            
+            if not self._reatrack:
+                # Create the track if it doesn't exist
+                self._reatrack = self.__class__._project.create_instrument_track(
+                    track_name=self.track_name,
+                    midi_channel=self._midi_channel
+                )
+            
+            # Use reaside to load the FX chain
+            try:
+                fx_added = self._reatrack.add_fxchain(self.plugin_name)
+                if fx_added > 0:
+                    # Rescan track to get FX objects
+                    self._reatrack.rescan_fx()
+                    # Get the first FX as the instrument
+                    fx_list = self._reatrack.list_fx()
+                    if fx_list:
+                        self._reafx_instrument = fx_list[0]
+                        self._fx_list = fx_list  # Store for base class
+                    else:
+                        self._reafx_instrument = None
+                else:
+                    self._reafx_instrument = None
+            except Exception as e:
+                logger.error(f"Failed to load FX chain {self.plugin_name}: {e}")
+                self._reafx_instrument = None
+                
+            logger.info(f"ReaperInstrument '{self.shortname}' initialized on track '{self.track_name}' (MIDI ch {self._midi_channel})")
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize ReaperInstrument '{self.shortname}': {e}")
+            raise
 
-    def _get_caller_file(self):
-        """Get the path of the file that created this object instance."""
-        # Should be used only from ensure_fxchain_in_reaper (otherwise the num of frame backward is higher)
-        # Go up 3 frames: current method -> ensure_fxchain_in_reaper -> __init__ -> actual caller
-        frame = inspect.currentframe().f_back.f_back.f_back
-        # Get the filename and return as Path
-        return Path(frame.f_code.co_filename)
 
     @classmethod
     def find_available_midi_channel(cls):
@@ -141,20 +134,12 @@ class ReaperInstrument(Instrument):
     @classmethod
     def set_class_attributes(cls, presets: Mapping, reaper_instance=None, project=None, resource_library=None):
         """Initialize the class-level attributes for reaside."""
-        cls._presets = presets
-        cls._reaper = reaper_instance
-        cls._project = project
+        # Call parent method
+        super().set_class_attributes(presets, reaper_instance, project, resource_library)
+        
+        # Initialize instrument-specific attributes
         cls._used_track_indexes = []
         cls._instru_facades = []
-        cls._resource_library = resource_library
-        
-        # If no reaper instance provided, create one
-        if cls._reaper is None:
-            from renardo.reaper_backend.reaside.tools.reaper_client import ReaperClient
-            from renardo.reaper_backend.reaside.core.reaper import Reaper
-            client = ReaperClient()
-            cls._reaper = Reaper(client)
-            cls._project = cls._reaper.current_project
     
     @classmethod
     def update_used_track_indexes(cls):
@@ -171,205 +156,9 @@ class ReaperInstrument(Instrument):
                 elif i+1 in cls._used_track_indexes and fx_count == 0:
                     cls._used_track_indexes = [index for index in cls._used_track_indexes if index != i+1]
     
-    def add_effect_plugin(
-        self,
-        plugin_name: str,
-        effect_name: str = None,
-        plugin_preset: str = None,
-        effect_params: Dict = {},
-    ):
-        """Add an effect plugin to the track."""
-        if hasattr(self, '_reatrack'):
-            # Add FX using reaside
-            success = self._reatrack.add_fx(plugin_name)
-            if success:
-                self._reatrack.rescan_fx()
-                logger.info(f"Added effect {plugin_name} to track {self._reatrack.name}")
-            else:
-                logger.error(f"Failed to add effect {plugin_name} to track {self._reatrack.name}")
+    # add_effect_plugin method inherited from ReaperResource
     
-    def apply_all_existing_reaper_params(self, reatrack, param_dict, remaining_param_dict={}, runtime_kwargs={}):
-        """
-        Apply all parameters in reaper (track fx and send parameters).
-        
-        This function:
-         - tries to apply all parameters in reaper (track fx and send parameters)
-         - then send the rest to FoxDot to control supercollider
-        """
-        # Handle FX enable/disable parameters first (from runtime_kwargs)
-        for key, value in runtime_kwargs.items():
-            fx_name, param_name = split_param_name(key)
-            if param_name != 'on' and key not in ['dur', 'sus', 'root', 'amp', 'amplify', 'degree', 'scale', 'room', 'crush', 'fmod']:
-                # If FX parameter is being set, enable the FX
-                if fx_name:
-                    enable_fx_param = fx_name + '_on'
-                    param_dict[enable_fx_param] = True
-
-        # Define shared volume conversion functions
-        def db_to_fader_position(db_value):
-            """Convert dB to REAPER fader position (piecewise linear)"""
-            # Known points: 0.5=-20.4dB, 0.828=-6dB, 0.9118=-3dB, 1.0=0dB, 1.0933=+3dB, 1.1905=+6dB, 1.4=+12dB
-            if db_value <= -150:
-                return 0.0
-            elif db_value <= -20.4:
-                return 0.5 * (db_value + 150) / (150 - 20.4)
-            elif db_value <= -6:
-                return 0.5 + (0.828 - 0.5) * (db_value + 20.4) / (-6 + 20.4)
-            elif db_value <= -3:
-                return 0.828 + (0.9118 - 0.828) * (db_value + 6) / (-3 + 6)
-            elif db_value <= 0:
-                return 0.9118 + (1.0 - 0.9118) * (db_value + 3) / 3.0
-            elif db_value <= 3:
-                return 1.0 + (1.0933 - 1.0) * db_value / 3.0
-            elif db_value <= 6:
-                return 1.0933 + (1.1905 - 1.0933) * (db_value - 3) / 3.0
-            elif db_value <= 12:
-                return 1.1905 + (1.4 - 1.1905) * (db_value - 6) / 6.0
-            else:
-                return 1.4  # Cap at +12 dB
-
-        def set_track_volume_osc(fader_position):
-            """Send volume to REAPER via OSC"""
-            linear_value = fader_position * 0.716
-            if hasattr(reatrack._client, 'send_osc_message'):
-                osc_address = f"/track/{reatrack.index + 1}/volume"
-                osc_success = reatrack._client.send_osc_message(osc_address, linear_value)
-                if osc_success:
-                    logger.debug(f"Sent OSC track volume: {osc_address} = {linear_value:.3f}")
-                    return True
-            # Fallback to direct track volume setting
-            reatrack.volume = linear_value
-            return True
-
-        # Get or create ReaParams for volume (separate for vol and volin)
-        if not hasattr(reatrack, '_vol_param'):
-            from .reaside.core.param import ReaParam
-            # ReaParam for vol (dB values)
-            reatrack._vol_param = ReaParam(
-                client=reatrack._client,
-                track_index=reatrack.index,
-                fx_index=-1,  # Special: track parameter, not FX
-                param_index=-2,  # Special index for track volume
-                name='vol',
-                reaper_name='Track Volume (dB)',
-                use_osc=True,
-                min_value=-150.0,
-                max_value=12.0
-            )
-            # Set the dB conversion handler
-            reatrack._vol_param._set_value_internal = lambda db_val: set_track_volume_osc(db_to_fader_position(float(db_val)))
-            
-        if not hasattr(reatrack, '_volin_param'):
-            # ReaParam for volin (fader position values)
-            reatrack._volin_param = ReaParam(
-                client=reatrack._client,
-                track_index=reatrack.index,
-                fx_index=-1,  # Special: track parameter, not FX
-                param_index=-3,  # Special index for linear track volume
-                name='volin',
-                reaper_name='Track Volume (Linear)',
-                use_osc=True,
-                min_value=0.0,
-                max_value=1.5
-            )
-            # Set the direct fader position handler
-            reatrack._volin_param._set_value_internal = lambda fader_val: set_track_volume_osc(float(fader_val))
-
-        # Apply parameters to REAPER FX using reaside utilities
-        for param_fullname, value in param_dict.items():
-            # Check if this is a send parameter (bus track name)
-            # Send parameters can be accessed by bus track name or bus_track_send
-            send_param = None
-            if hasattr(reatrack, 'sends'):
-                logger.debug(f"Checking if '{param_fullname}' is a send parameter. Available sends: {list(reatrack.sends.keys())}")
-                # Check if the parameter name matches a send
-                if param_fullname in reatrack.sends:
-                    send_param = reatrack.sends[param_fullname]
-                    logger.debug(f"Found send parameter directly: {param_fullname}")
-                elif param_fullname.endswith('_send') and param_fullname in reatrack.sends:
-                    send_param = reatrack.sends[param_fullname]
-                    logger.debug(f"Found send parameter with _send suffix: {param_fullname}")
-                else:
-                    # Try snake_case version of the parameter name
-                    snake_name = reatrack._make_snake_name(param_fullname)
-                    logger.debug(f"Trying snake_case version: {snake_name}")
-                    if snake_name in reatrack.sends:
-                        send_param = reatrack.sends[snake_name]
-                        logger.debug(f"Found send parameter as snake_case: {snake_name}")
-                    elif f"{snake_name}_send" in reatrack.sends:
-                        send_param = reatrack.sends[f"{snake_name}_send"]
-                        logger.debug(f"Found send parameter as snake_case with _send: {snake_name}_send")
-            else:
-                logger.debug(f"Track has no sends attribute")
-            
-            # If it's a send parameter, set its value
-            if send_param:
-                try:
-                    logger.info(f"Setting send {param_fullname} to {value} via ReaSend")
-                    send_param.set_value(value)
-                    logger.debug(f"Successfully set send volume for {param_fullname} to {value}")
-                    continue
-                except Exception as e:
-                    logger.error(f"Failed to set send parameter {param_fullname}: {e}")
-                    remaining_param_dict[param_fullname] = value
-                    continue
-            
-            # Handle special track volume parameters
-            if param_fullname in ['vol', 'volin']:
-                try:
-                    if param_fullname == 'vol':
-                        # dB values - use the vol ReaParam which has dB conversion built-in
-                        if hasattr(value, 'now') or hasattr(value, '_is_timevar') or str(type(value)).find('TimeVar') != -1:
-                            # For TimeVar, bind to vol ReaParam (handles dB conversion)
-                            reatrack._vol_param.set_value(value)
-                        else:
-                            # Static dB value
-                            fader_position = db_to_fader_position(float(value))
-                            set_track_volume_osc(fader_position)
-                    else:  # volin
-                        # Direct fader position values - use the volin ReaParam
-                        if hasattr(value, 'now') or hasattr(value, '_is_timevar') or str(type(value)).find('TimeVar') != -1:
-                            # For TimeVar, bind to volin ReaParam (direct fader position)
-                            reatrack._volin_param.set_value(value)
-                        else:
-                            # Static fader position
-                            set_track_volume_osc(float(value))
-                    continue
-                except Exception as e:
-                    logger.error(f"Failed to set track volume: {e}")
-                    remaining_param_dict[param_fullname] = value
-                    continue
-            
-            # Handle special FX enable/disable parameters
-            if param_fullname.endswith('_on'):
-                fx_name = param_fullname[:-3]  # Remove '_on' suffix
-                
-                # For TimeVar, delegate to set_fx_parameter instead of enable_fx
-                # because enable_fx expects a simple boolean, not a continuously changing value
-                if hasattr(value, 'now') or hasattr(value, '_is_timevar') or str(type(value)).find('TimeVar') != -1:
-                    # It's a TimeVar, treat it as a regular parameter
-                    if set_fx_parameter(reatrack, param_fullname, value):
-                        continue
-                    else:
-                        remaining_param_dict[param_fullname] = value
-                        continue
-                else:
-                    # It's a static value, use enable_fx
-                    if enable_fx(reatrack, fx_name, bool(value)):
-                        # Successfully handled FX enable/disable
-                        continue
-                    else:
-                        # Pass to remaining params if not handled
-                        remaining_param_dict[param_fullname] = value
-                        continue
-            
-            # Try to set FX parameter using reaside utilities
-            if set_fx_parameter(reatrack, param_fullname, value):
-                # Successfully set parameter in REAPER, don't add to remaining
-                continue
-            else:
-                # Parameter not handled by REAPER, pass to FoxDot
-                remaining_param_dict[param_fullname] = value
+    # apply_all_existing_reaper_params method inherited from ReaperResource
 
     def __call__(self, *args, sus=None, **kwargs):
         """
@@ -499,6 +288,9 @@ class ReaperInstrument(Instrument):
                 
         except Exception as e:
             logger.error(f"Error cleaning up ReaperInstrument {getattr(self, 'shortname', 'unknown')}: {e}")
+        
+        # Call parent delete method for additional cleanup  
+        super().delete()
     
     def add_send(self, destination_track, volume: float = 0.0, pan: float = 0.0, 
                  mute: bool = False, mode: str = "post_fx"):
@@ -521,131 +313,11 @@ class ReaperInstrument(Instrument):
             
         return self._reatrack.add_send(destination_track, volume, pan, mute, mode)
 
-    def load(self):
-        """Load the instrument in REAPER."""
-        # Placeholder for future implementation
-        # This would load the FX chain file into REAPER tracks
-        self.instrument_loaded = True
-        return None
+    # load method inherited from ReaperResource
 
 
-    def ensure_fxchain_in_reaper(self):
-        """
-        Ensure that a FXChain custom or from the ReaperResourceLibrary is present in REAPER's FXChains directory.
-        """
-        try:
-            # Get the Renardo FXChains directory in REAPER's config
-            config_dir = SettingsManager.get_standard_config_dir()
-            renardo_fxchains_dir = settings.get_path("RENARDO_FXCHAIN_DIR")
-            # Create the renardo_fxchains directory if it doesn't exist
-            renardo_fxchains_dir.mkdir(parents=True, exist_ok=True)
+    # ensure_fxchain_in_reaper method inherited from ReaperResource
 
-            # If FXChain file is already in reaper folder (not renardo subdir)
-            # Which means we want to load an externally managed FXChain, then nothing to do here
-            if (renardo_fxchains_dir.parent / self.fxchain_path).exists():
-                return True
+    # list_parameters method inherited from ReaperResource
+    
 
-            # if relative (most cases) resolve the path
-            # relative to the file creating the ReaperInstrument instance (the caller)
-            if not self.fxchain_path.is_absolute():
-                self.fxchain_path = self._get_caller_file() / self.fxchain_path
-            if not self.fxchain_path.exists():
-                self.fxchain_path = self.__class__._resource_library.find_fxchain_by_name(self.fxchain_path.name)
-                if not self.fxchain_path:
-                    raise Exception(f"FXChain file not found: {self.fxchain_path}")
-                    return False
-
-            # First try using the provided fxchain_path
-            source_path = self.fxchain_path
-            chain_name = self.fxchain_path.stem
-            
-            # If the path doesn't exist, try to search for it in the resource library
-            if not source_path.exists() and self.__class__._resource_library is not None:
-                found_path = self.__class__._resource_library.find_fxchain_by_name(chain_name)
-                if found_path is not None:
-                    source_path = found_path
-                else:
-                    raise Exception(f"FXChain file not found: {chain_name}")
-                    return False
-            elif not source_path.exists():
-                raise Exception(f"FXChain file not found: {self.fxchain_path}")
-                return False
-
-            # Copy the FXChain file to the renardo_fxchains directory
-            dest_path = renardo_fxchains_dir / f"{chain_name}.RfxChain"
-            
-            # Check if it already exists and has the same content
-            if dest_path.exists():
-                with open(source_path, 'rb') as src_file:
-                    source_content = src_file.read()
-                with open(dest_path, 'rb') as dest_file:
-                    dest_content = dest_file.read()
-                
-                if source_content == dest_content:
-                    logger.info(f"FXChain '{chain_name}' already up to date in REAPER")
-                    return True
-            
-            # Copy the file
-            shutil.copy2(source_path, dest_path)
-            logger.info(f"FXChain '{chain_name}' installed to REAPER: {dest_path}")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Error injecting FXChain '{chain_name}' in REAPER: {e}")
-            return False
-
-    def list_parameters(self, filter: str = None) -> None:
-        """
-        List all parameters for all FX loaded in the track as snake_case names.
-        Parameters are prefixed by FX name except for the first FX.
-        
-        Args:
-            filter: Optional string to filter parameter names containing this substring
-        
-        Prints a single-line comma-separated list of parameter names:
-        - First FX: "cutoff", "resonance", "envelope_mod"  
-        - Other FX: "delay_mix", "delay_feedback", "reverb_room_size"
-        
-        Example output:
-            bass303: cutoff, envelope_mod, on, resonance, delay_feedback, delay_mix, delay_on
-            bass303 (filtered by 'cut'): cutoff
-        """
-        if not hasattr(self, '_reatrack') or not self._reatrack:
-            logger.warning(f"No track available for instrument {self.shortname}")
-            return
-        
-        try:
-            # Get all FX from the track
-            fx_list = self._reatrack.list_fx()
-            
-            all_params = []
-            
-            for fx_index, fx in enumerate(fx_list):
-                fx_name = fx.snake_name
-                is_first_fx = (fx_index == 0)
-                
-                # Add all parameters for this FX
-                for param_name in fx.params.keys():
-                    if is_first_fx:
-                        # First FX: just the parameter name
-                        full_param_name = param_name
-                    else:
-                        # Other FX: prefix with FX name
-                        full_param_name = f"{fx_name}_{param_name}"
-                    
-                    # Apply filter if provided
-                    if filter is None or filter.lower() in full_param_name.lower():
-                        all_params.append(full_param_name)
-            
-            # Print the list on one line
-            if all_params:
-                sorted_params = sorted(all_params)
-                params_str = ", ".join(sorted_params)
-                filter_msg = f" (filtered by '{filter}')" if filter else ""
-                print(f"{self.shortname}{filter_msg}: {params_str}")
-            else:
-                filter_msg = f" matching '{filter}'" if filter else ""
-                print(f"{self.shortname}: No parameters{filter_msg} found")
-            
-        except Exception as e:
-            logger.error(f"Error listing parameters for instrument {self.shortname}: {e}")
