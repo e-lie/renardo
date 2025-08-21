@@ -476,8 +476,8 @@ class ReaProject:
             
             # Clear the class lists
             ReaperEffect._effect_facades.clear()
-            ReaperEffect._used_bus_indexes.clear()
             ReaperEffect.effect_dict.clear()
+            # _used_bus_indexes removed - no bus index tracking needed
         
         # Use REAPER actions to remove all tracks at once (more reliable)
         try:
