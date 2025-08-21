@@ -442,3 +442,47 @@ def is_reaper_running():
     except Exception:
         # If we can't determine, assume it's not running
         return False
+
+
+def get_reaper_fxchains_dir():
+    """Get REAPER's FXChains directory path."""
+    from renardo.settings_manager import settings
+    from renardo.logger import get_logger
+    
+    logger = get_logger('reaside.tools.reaper_program')
+    
+    try:
+        # Get REAPER resource path from settings
+        reaper_resource_path = settings.get("reaper_backend.REAPER_RESOURCE_PATH")
+        
+        if reaper_resource_path and Path(reaper_resource_path).exists():
+            fxchains_dir = Path(reaper_resource_path) / "FXChains"
+            if fxchains_dir.exists():
+                return fxchains_dir
+        
+        # Try common REAPER installation paths
+        possible_paths = []
+        
+        if is_windows():
+            possible_paths.extend([
+                Path(os.environ.get('APPDATA', '')) / "REAPER" / "FXChains",
+                Path("C:/Users") / os.environ.get('USERNAME', '') / "AppData/Roaming/REAPER/FXChains",
+            ])
+        else:  # macOS/Linux
+            home = Path.home()
+            possible_paths.extend([
+                home / "Library/Application Support/REAPER/FXChains",  # macOS
+                home / ".config/REAPER/FXChains",  # Linux
+            ])
+        
+        for path in possible_paths:
+            if path.exists():
+                return path
+        
+        logger.error(f"Could not find REAPER FXChains directory. Tried: {possible_paths}")
+        return None
+        
+    except Exception as e:
+        logger.error(f"Error determining REAPER FXChains directory: {e}")
+        return None
+
