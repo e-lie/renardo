@@ -8,4 +8,4 @@ from .reaper_http_client import ReaperClient as ReaperHTTPClient, ReaperHTTPErro
 
 
 # Import from the reaper_program module
-from .reaper_program import start_reaper, stop_reaper, is_reaper_running
+from .reaper_program import start_reaper, stop_reaper, is_reaper_running, get_reaper_fxchains_dir
