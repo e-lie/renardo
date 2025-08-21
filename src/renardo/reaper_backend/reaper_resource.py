@@ -169,29 +169,12 @@ class ReaperResource(MusicResource):
                         logger.debug(f"Set track parameter {param_name}: {param_value}")
                         continue
                 
-                # Handle FX parameters using split_param_name
-                if self._fx_list:
-                    fx_name, param_name_clean = split_param_name(param_name)
-                    if fx_name:
-                        # Try to find the FX by name
-                        for fx in self._fx_list:
-                            if fx.name and fx_name.lower() in fx.name.lower():
-                                try:
-                                    set_fx_parameter(fx, param_name_clean, param_value)
-                                    logger.debug(f"Set FX parameter {fx_name}.{param_name_clean}: {param_value}")
-                                    break
-                                except Exception as e:
-                                    logger.warning(f"Failed to set FX parameter {param_name}: {e}")
-                    else:
-                        # Try setting the parameter on all FX
-                        for fx in self._fx_list:
-                            try:
-                                set_fx_parameter(fx, param_name, param_value)
-                                logger.debug(f"Set FX parameter {param_name}: {param_value}")
-                                break
-                            except Exception:
-                                continue
-                
+                # Try to set FX parameter using reaside utilities
+                # set_fx_parameter expects the track and full parameter name
+                if set_fx_parameter(reatrack, param_name, param_value):
+                    logger.debug(f"Set FX parameter {param_name}: {param_value}")
+                    continue
+                    
                 # If we get here, the parameter wasn't handled
                 remaining_param_dict[param_name] = param_value
                 
@@ -220,14 +203,15 @@ class ReaperResource(MusicResource):
                 self.__class__._resource_library = ReaperResourceLibrary()
             
             # Find the FXChain resource using the library
-            fxchain_resource = self.__class__._resource_library.find_fxchain_by_name(self.shortname)
+            source_fxchain_path = self.__class__._resource_library.find_fxchain_by_name(self.shortname)
             
-            if not fxchain_resource:
+            if not source_fxchain_path:
                 logger.error(f"FXChain resource '{self.shortname}' not found in library")
                 return False
             
             # Check if file already exists in REAPER directory
-            reaper_fxchains_dir = self._get_reaper_fxchains_dir()
+            from renardo.reaper_backend.reaside.tools.reaper_program import get_reaper_fxchains_dir
+            reaper_fxchains_dir = get_reaper_fxchains_dir()
             if not reaper_fxchains_dir:
                 logger.error("Could not determine REAPER FXChains directory")
                 return False
@@ -235,30 +219,30 @@ class ReaperResource(MusicResource):
             renardo_subdir = reaper_fxchains_dir / "renardo_fxchains"
             renardo_subdir.mkdir(exist_ok=True)
             
-            dest_path = renardo_subdir / fxchain_resource.file_name
+            fxchain_destination_path = renardo_subdir / source_fxchain_path.name
             
             # Copy if not exists or if source is newer
             should_copy = False
-            if not dest_path.exists():
+            if not fxchain_destination_path.exists():
                 should_copy = True
-                logger.info(f"FXChain file does not exist at destination: {dest_path}")
+                logger.info(f"FXChain file does not exist at destination: {fxchain_destination_path}")
             else:
                 try:
-                    src_mtime = fxchain_resource.file_path.stat().st_mtime
-                    dest_mtime = dest_path.stat().st_mtime
+                    src_mtime = source_fxchain_path.stat().st_mtime
+                    dest_mtime = fxchain_destination_path.stat().st_mtime
                     if src_mtime > dest_mtime:
                         should_copy = True
                         logger.info(f"Source FXChain is newer than destination")
                 except Exception as e:
                     logger.warning(f"Could not compare file times, will copy anyway: {e}")
                     should_copy = True
-            
+
             if should_copy:
-                logger.info(f"Copying FXChain from {fxchain_resource.file_path} to {dest_path}")
-                shutil.copy2(fxchain_resource.file_path, dest_path)
+                logger.info(f"Copying FXChain from {source_fxchain_path} to {fxchain_destination_path}")
+                shutil.copy2(source_fxchain_path, fxchain_destination_path)
                 logger.info(f"Successfully copied FXChain to REAPER directory")
             else:
-                logger.debug(f"FXChain already exists and is up-to-date: {dest_path}")
+                logger.debug(f"FXChain already exists and is up-to-date: {fxchain_destination_path}")
             
             return True
             
@@ -266,44 +250,7 @@ class ReaperResource(MusicResource):
             logger.error(f"Failed to ensure FXChain in REAPER: {e}")
             return False
 
-    def _get_reaper_fxchains_dir(self):
-        """Get REAPER's FXChains directory path."""
-        try:
-            import os
-            
-            # Get REAPER resource path from settings
-            reaper_resource_path = settings.get("reaper_backend.REAPER_RESOURCE_PATH")
-            
-            if reaper_resource_path and Path(reaper_resource_path).exists():
-                fxchains_dir = Path(reaper_resource_path) / "FXChains"
-                if fxchains_dir.exists():
-                    return fxchains_dir
-            
-            # Try common REAPER installation paths
-            possible_paths = []
-            
-            if os.name == 'nt':  # Windows
-                possible_paths.extend([
-                    Path(os.environ.get('APPDATA', '')) / "REAPER" / "FXChains",
-                    Path("C:/Users") / os.environ.get('USERNAME', '') / "AppData/Roaming/REAPER/FXChains",
-                ])
-            else:  # macOS/Linux
-                home = Path.home()
-                possible_paths.extend([
-                    home / "Library/Application Support/REAPER/FXChains",  # macOS
-                    home / ".config/REAPER/FXChains",  # Linux
-                ])
-            
-            for path in possible_paths:
-                if path.exists():
-                    return path
-            
-            logger.error(f"Could not find REAPER FXChains directory. Tried: {possible_paths}")
-            return None
-            
-        except Exception as e:
-            logger.error(f"Error determining REAPER FXChains directory: {e}")
-            return None
+    # _get_reaper_fxchains_dir moved to reaside.tools.reaper_program.get_reaper_fxchains_dir
 
     def list_parameters(self, filter: str = None) -> None:
         """List all available parameters for this resource."""
