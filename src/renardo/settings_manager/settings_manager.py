@@ -6,6 +6,7 @@ import copy
 import os
 import pathlib
 from sys import platform
+from renardo.logger import get_logger
 
 
 
@@ -30,6 +31,7 @@ class SettingsManager:
         """
         self.public_file = Path(public_file)
         self.internal_file = Path(internal_file)
+        self.logger = get_logger('settings_manager')
 
         self._public_defaults = copy.deepcopy(public_defaults)
         self._internal_defaults = copy.deepcopy(internal_defaults)
@@ -157,10 +159,10 @@ class SettingsManager:
                         value = value[k]
                     return value
                 except KeyError:
-                    print(f"Setting {key} not found ! returning {default} ...")
+                    self.logger.info(f"Setting {key} not found, returning {default}")
                     return default
             else:
-                print(f"Setting {key} not found ! returning {default} ...")
+                self.logger.info(f"Setting {key} not found, returning {default}")
                 return default
 
 
