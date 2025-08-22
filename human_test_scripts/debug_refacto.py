@@ -21,7 +21,8 @@ reverb = ReaperEffect(
       category='reverb'
 )
 
-b4 >> bass303([0,2,0,4], cutoff=linvar([0,1]))
+b4 >> bass303([0,2,0,4], cutoff=linvar([0,1]), vol=0, delayverb=-130)
+
 
 
 import time
