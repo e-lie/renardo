@@ -21,10 +21,12 @@ class ReaParam:
     
     def __init__(self, client: ReaperClient, track_index: int, fx_index: int, 
                  param_index: int, name: str, reaper_name: str, use_osc: bool = True,
-                 initial_value: float = None, min_value: float = 0.0, max_value: float = 1.0):
+                 initial_value: float = None, min_value: float = 0.0, max_value: float = 1.0,
+                 track_ref=None):
         """Initialize ReaParam instance."""
         self.client = client
-        self.track_index = track_index
+        self.track_index = track_index  # Keep for backward compatibility
+        self._track_ref = track_ref  # Reference to ReaTrack object for dynamic index lookup
         self.fx_index = fx_index
         self.param_index = param_index
         self.name = name  # snake_case name
@@ -40,14 +42,21 @@ class ReaParam:
             self.value = 0.0
             self._update_value()
     
+    def _get_current_track_index(self) -> int:
+        """Get the current track index, accounting for dynamic track repositioning."""
+        if self._track_ref and hasattr(self._track_ref, '_index'):
+            return self._track_ref._index
+        return self.track_index  # Fallback to original stored index
+    
     def _update_value(self):
         """Update parameter value from REAPER."""
+        current_track_index = self._get_current_track_index()
         if self.param_index == -1:  # Special case for FX enabled state
-            track_obj = self.client.call_reascript_function("GetTrack", 0, self.track_index)
+            track_obj = self.client.call_reascript_function("GetTrack", 0, current_track_index)
             if track_obj:
                 self.value = float(self.client.call_reascript_function("TrackFX_GetEnabled", track_obj, self.fx_index))
         else:
-            track_obj = self.client.call_reascript_function("GetTrack", 0, self.track_index)
+            track_obj = self.client.call_reascript_function("GetTrack", 0, current_track_index)
             if track_obj:
                 self.value = self.client.call_reascript_function("TrackFX_GetParam", track_obj, self.fx_index, self.param_index)
     
@@ -120,7 +129,8 @@ class ReaParam:
                     logger.debug(f"Sent OSC bypass: {osc_address} = {bypass_value} ({bypass_state})")
             else:
                 # OSC message for parameter value - OSC uses 1-based indexing for FX and params
-                osc_address = f"/track/{self.track_index + 1}/fx/{self.fx_index + 1}/fxparam/{self.param_index + 1}/value"
+                current_track_index = self._get_current_track_index()
+                osc_address = f"/track/{current_track_index + 1}/fx/{self.fx_index + 1}/fxparam/{self.param_index + 1}/value"
                 osc_success = self.client.send_osc_message(osc_address, value)
                 if osc_success:
                     logger.debug(f"Sent OSC: {osc_address} = {value:.3f}")
@@ -130,12 +140,13 @@ class ReaParam:
                 return
         
         # Use ReaScript as fallback
+        current_track_index = self._get_current_track_index()
         if self.param_index == -1:  # Special case for FX enabled state
-            track_obj = self.client.call_reascript_function("GetTrack", 0, self.track_index)
+            track_obj = self.client.call_reascript_function("GetTrack", 0, current_track_index)
             if track_obj:
                 self.client.call_reascript_function("TrackFX_SetEnabled", track_obj, self.fx_index, value > 0.5)
         else:
-            track_obj = self.client.call_reascript_function("GetTrack", 0, self.track_index)
+            track_obj = self.client.call_reascript_function("GetTrack", 0, current_track_index)
             if track_obj:
                 self.client.call_reascript_function("TrackFX_SetParam", track_obj, self.fx_index, self.param_index, value)
     

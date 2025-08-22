@@ -57,7 +57,8 @@ class ReaTrack:
                 track_index=self._index,
                 fx_index=fx_index,
                 name=fx_name,
-                scan_data=fx_data
+                scan_data=fx_data,
+                track_ref=self
             )
             
             # Store by index and snake_case name in cache
