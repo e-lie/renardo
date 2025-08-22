@@ -12,14 +12,14 @@ bass303 = ReaperInstrument(
     category='bass'
 )
 
-# reverb = ReaperEffect(
-#       shortname='delayverb',
-#       fxchain_path='delayverb.RfxChain',
-#       fullname='delayverb',
-#       description='Delay and reverb from Surge',
-#       bank='0_renardo_core',
-#       category='reverb'
-# )
+reverb = ReaperEffect(
+      shortname='delayverb',
+      fxchain_path='delayverb.RfxChain',
+      fullname='delayverb',
+      description='Delay and reverb from Surge',
+      bank='0_renardo_core',
+      category='reverb'
+)
 
 b4 >> bass303([0,2,0,4], cutoff=linvar([0,1]))
 
