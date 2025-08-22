@@ -124,9 +124,16 @@ class ReaperResource(MusicResource):
             """Set track volume using OSC for real-time updates."""
             try:
                 if hasattr(reatrack, '_index') and reatrack._index is not None:
-                    reatrack._client.set_track_volume_osc(reatrack._index, fader_position)
-                    logger.debug(f"Set track volume via OSC: {fader_position}")
-                    return True
+                    # Convert fader position to linear value for OSC
+                    linear_value = fader_position * 0.716
+                    # Send OSC message directly
+                    if hasattr(reatrack._client, 'send_osc_message'):
+                        osc_address = f"/track/{reatrack._index + 1}/volume"
+                        osc_success = reatrack._client.send_osc_message(osc_address, linear_value)
+                        if osc_success:
+                            logger.debug(f"Sent OSC track volume: {osc_address} = {linear_value:.3f}")
+                            return True
+                    # If OSC failed or not available, fall through to HTTP fallback
             except Exception as e:
                 logger.debug(f"OSC volume setting failed, using HTTP fallback: {e}")
             
@@ -141,14 +148,36 @@ class ReaperResource(MusicResource):
         # Process each parameter
         for param_name, param_value in param_dict.items():
             try:
-                # Handle special volume parameter with dB conversion
+                # Handle special volume parameters
                 if param_name == "vol":
-                    if isinstance(param_value, (int, float)):
+                    # Check if it's a TimeVar
+                    if hasattr(param_value, 'now') or hasattr(param_value, '_is_timevar') or str(type(param_value)).find('TimeVar') != -1:
+                        # For TimeVar, we need to create a special parameter handler
+                        # For now, just pass it to set_fx_parameter which can handle TimeVars
+                        if set_fx_parameter(reatrack, param_name, param_value):
+                            logger.debug(f"Set volume TimeVar: {param_value}")
+                            continue
+                    elif isinstance(param_value, (int, float)):
                         # Convert dB to fader position and set via OSC
                         fader_position = db_to_fader_position(param_value)
                         success = set_track_volume_osc(fader_position)
                         if success:
                             logger.debug(f"Set volume: {param_value}dB -> {fader_position}")
+                        continue
+                
+                # Handle linear volume parameter
+                if param_name == "volin":
+                    # Check if it's a TimeVar
+                    if hasattr(param_value, 'now') or hasattr(param_value, '_is_timevar') or str(type(param_value)).find('TimeVar') != -1:
+                        # For TimeVar, pass to set_fx_parameter
+                        if set_fx_parameter(reatrack, param_name, param_value):
+                            logger.debug(f"Set linear volume TimeVar: {param_value}")
+                            continue
+                    elif isinstance(param_value, (int, float)):
+                        # Direct fader position value (0.0 to 1.5)
+                        success = set_track_volume_osc(float(param_value))
+                        if success:
+                            logger.debug(f"Set linear volume: {param_value}")
                         continue
                 
                 # Handle send parameters (destination bus track names)
