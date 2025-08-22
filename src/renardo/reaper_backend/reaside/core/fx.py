@@ -9,7 +9,7 @@ from ..tools.reaper_client import ReaperClient
 class ReaFX:
     """Represents a REAPER FX plugin."""
     
-    def __init__(self, client: ReaperClient, track_index: int, fx_index: int, name: str = None, scan_data: Dict = None):
+    def __init__(self, client: ReaperClient, track_index: int, fx_index: int, name: str = None, scan_data: Dict = None, track_ref=None):
         """Initialize ReaFX instance."""
         self.client = client
         self.track_index = track_index
@@ -19,6 +19,7 @@ class ReaFX:
         self.snake_name = self._make_snake_name(name) if name else f"fx_{fx_index}"
         self.params: Dict[str, ReaParam] = {}
         self.scan_data = scan_data
+        self._track_ref = track_ref  # Reference to ReaTrack object
         
         if scan_data:
             self._init_params_from_scan(scan_data)
@@ -52,7 +53,8 @@ class ReaFX:
             param_index=-1,  # Special index for FX enabled state
             name='on',
             reaper_name='FX Enabled',
-            use_osc=True
+            use_osc=True,
+            track_ref=self._track_ref
         )
         
         # Create parameters from scan data
@@ -70,7 +72,8 @@ class ReaFX:
                 use_osc=True,
                 initial_value=param_data.get('value', 0.0),
                 min_value=param_data.get('min', 0.0),
-                max_value=param_data.get('max', 1.0)
+                max_value=param_data.get('max', 1.0),
+                track_ref=self._track_ref
             )
     
     def _init_params(self):
@@ -91,7 +94,8 @@ class ReaFX:
             param_index=-1,  # Special index for FX enabled state
             name='on',
             reaper_name='FX Enabled',
-            use_osc=True
+            use_osc=True,
+            track_ref=self._track_ref
         )
         
         # Create parameters for each FX parameter
@@ -108,7 +112,8 @@ class ReaFX:
                 param_index=i,
                 name=snake_name,
                 reaper_name=param_name,
-                use_osc=True
+                use_osc=True,
+                track_ref=self._track_ref
             )
     
     # Parameter access methods
