@@ -103,19 +103,89 @@ end
 function handle_queue_action(action, args)
   log("Queue action: " .. action .. " with " .. #args .. " args")
   
-  -- TEST ACTION - Log the message
-  if action == "test_message" then
-    local message = "TEST MESSAGE RECEIVED"
-    if #args > 0 then
-      message = message .. " - Args: " .. table.concat(args, ", ")
+  -- MIDI Note On
+  if action == "midi_note_on" then
+    -- Expected args: [track_index, channel, note, velocity]
+    if #args >= 4 then
+      local track_idx = tonumber(args[1])
+      local channel = tonumber(args[2]) - 1  -- Convert to 0-based
+      local note = tonumber(args[3])
+      local velocity = tonumber(args[4])
+      
+      if track_idx and channel and note and velocity then
+        send_midi_to_track(track_idx, 0x90 + channel, note, velocity)  -- 0x90 = Note On
+        log(string.format("MIDI Note On: track=%d, ch=%d, note=%d, vel=%d", 
+                         track_idx, channel+1, note, velocity))
+      else
+        log("Invalid MIDI note_on parameters")
+      end
+    else
+      log("midi_note_on requires 4 args: track_index, channel, note, velocity")
     end
-    reaper.ShowConsoleMsg("[QUEUE TEST] " .. message .. "\n")
-    log("Test message handled: " .. message)
   
-  -- Add more actions here as needed
+  -- MIDI Note Off
+  elseif action == "midi_note_off" then
+    -- Expected args: [track_index, channel, note, velocity]
+    if #args >= 3 then
+      local track_idx = tonumber(args[1])
+      local channel = tonumber(args[2]) - 1  -- Convert to 0-based
+      local note = tonumber(args[3])
+      local velocity = tonumber(args[4]) or 0  -- Default velocity 0 for note off
+      
+      if track_idx and channel and note then
+        send_midi_to_track(track_idx, 0x80 + channel, note, velocity)  -- 0x80 = Note Off
+        log(string.format("MIDI Note Off: track=%d, ch=%d, note=%d, vel=%d", 
+                         track_idx, channel+1, note, velocity))
+      else
+        log("Invalid MIDI note_off parameters")
+      end
+    else
+      log("midi_note_off requires at least 3 args: track_index, channel, note, [velocity]")
+    end
+  
   else
     log("Unknown queue action: " .. action)
   end
+end
+
+-- Send MIDI message to a specific track's virtual MIDI keyboard
+function send_midi_to_track(track_index, status, data1, data2)
+  -- Get the track (0-based index)
+  local track = reaper.GetTrack(0, track_index)
+  if not track then
+    log("Track not found at index: " .. track_index)
+    return
+  end
+  
+  -- Make sure the track is selected and armed for recording
+  -- This ensures the MIDI message goes to the right place
+  reaper.SetTrackSelected(track, true)
+  
+  -- Check if track is record armed for MIDI input
+  local rec_input = reaper.GetMediaTrackInfo_Value(track, "I_RECINPUT")
+  if rec_input < 4096 then  -- Not set to MIDI input
+    -- Set to All MIDI inputs, all channels
+    reaper.SetMediaTrackInfo_Value(track, "I_RECINPUT", 4096)
+  end
+  
+  -- Ensure track is record armed
+  local rec_arm = reaper.GetMediaTrackInfo_Value(track, "I_RECARM")
+  if rec_arm == 0 then
+    reaper.SetMediaTrackInfo_Value(track, "I_RECARM", 1)
+  end
+  
+  -- Enable track record monitoring
+  local rec_mon = reaper.GetMediaTrackInfo_Value(track, "I_RECMON")
+  if rec_mon == 0 then
+    reaper.SetMediaTrackInfo_Value(track, "I_RECMON", 1)  -- Set to monitor input
+  end
+  
+  -- StuffMIDIMessage(mode, msg1, msg2, msg3)
+  -- mode: 0 = to virtual MIDI keyboard
+  reaper.StuffMIDIMessage(0, status, data1, data2)
+  
+  log(string.format("Sent MIDI to track %d: status=%02X, data1=%d, data2=%d", 
+                    track_index, status, data1, data2))
 end
 
 
