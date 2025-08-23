@@ -75,141 +75,6 @@ function parse_json(str)
   return nil
 end
 
--- Handle incoming JSON messages
-function handle_json_message(address, args)
-  log("Received message: " .. address .. " with " .. #args .. " args")
-  
-  -- Transport control
-  if address == "/transport/play" then
-    reaper.Main_OnCommand(40007, 0)  -- Transport: Play/stop
-    
-  elseif address == "/transport/pause" then
-    reaper.Main_OnCommand(40001, 0)  -- Transport: Play/pause
-    
-  elseif address == "/transport/stop" then
-    reaper.Main_OnCommand(40016, 0)  -- Transport: Stop
-    
-  elseif address == "/transport/record" then
-    reaper.Main_OnCommand(40044, 0)  -- Transport: Record
-    
-  -- Time positioning
-  elseif address == "/time/goto" and #args >= 1 then
-    local time_seconds = tonumber(args[1])
-    if time_seconds then
-      reaper.SetEditCurPos(time_seconds, true, true)
-    end
-    
-  elseif address == "/beat/goto" and #args >= 1 then
-    local beat = tonumber(args[1])
-    if beat then
-      local time_seconds = reaper.TimeMap2_beatsToTime(0, beat)
-      reaper.SetEditCurPos(time_seconds, true, true)
-    end
-    
-  -- Track operations
-  elseif address:match("^/track/(%d+)/volume$") and #args >= 1 then
-    local track_id = tonumber(address:match("^/track/(%d+)/volume$"))
-    local volume = tonumber(args[1])
-    if track_id and volume then
-      local track = reaper.GetTrack(0, track_id - 1)  -- Convert to 0-based
-      if track then
-        reaper.SetMediaTrackInfo_Value(track, "D_VOL", volume)
-      end
-    end
-    
-  elseif address:match("^/track/(%d+)/pan$") and #args >= 1 then
-    local track_id = tonumber(address:match("^/track/(%d+)/pan$"))
-    local pan = tonumber(args[1])
-    if track_id and pan then
-      local track = reaper.GetTrack(0, track_id - 1)  -- Convert to 0-based
-      if track then
-        reaper.SetMediaTrackInfo_Value(track, "D_PAN", pan)
-      end
-    end
-    
-  elseif address:match("^/track/(%d+)/mute$") and #args >= 1 then
-    local track_id = tonumber(address:match("^/track/(%d+)/mute$"))
-    local mute = tonumber(args[1])
-    if track_id and mute ~= nil then
-      local track = reaper.GetTrack(0, track_id - 1)  -- Convert to 0-based
-      if track then
-        reaper.SetMediaTrackInfo_Value(track, "B_MUTE", mute)
-      end
-    end
-    
-  elseif address:match("^/track/(%d+)/solo$") and #args >= 1 then
-    local track_id = tonumber(address:match("^/track/(%d+)/solo$"))
-    local solo = tonumber(args[1])
-    if track_id and solo ~= nil then
-      local track = reaper.GetTrack(0, track_id - 1)  -- Convert to 0-based
-      if track then
-        reaper.SetMediaTrackInfo_Value(track, "I_SOLO", solo)
-      end
-    end
-    
-  -- Query operations removed - part of unused OSC system
-    
-  elseif address == "/ping" then
-    -- Ping/pong removed - was part of unused OSC system
-    
-  -- TEST CUSTOM FUNCTION - REMOVE AFTER TESTING
-  elseif address == "/custom/test_function" then
-    -- Simple test function that just logs a message
-    local test_message = "Custom function triggered!"
-    
-    -- If args provided, include them in the message
-    if args and #args > 0 then
-      test_message = test_message .. " Args: " .. table.concat(args, ", ")
-    end
-    
-    -- Show in Reaper console
-    reaper.ShowConsoleMsg("[CUSTOM TEST] " .. test_message .. "\n")
-    
-    -- Also log it (only visible if DEBUG = true)
-    log("Custom function executed: " .. test_message)
-    
-  else
-    log("Unknown message address: " .. address)
-  end
-end
-
--- Check for incoming JSON messages via ExtState
-function check_json_messages()
-  -- Check for messages in ExtState
-  -- Use global ExtState, not project ExtState!
-  local raw_value = reaper.GetExtState("reaside_json", "incoming")
-  if raw_value and raw_value ~= "" then
-    log("Found JSON message in ExtState: " .. raw_value)
-    
-    -- Clear the message immediately
-    reaper.DeleteExtState("reaside_json", "incoming", false)
-    
-    -- Parse the JSON message
-    log("About to parse JSON...")
-    local json_message = parse_json(raw_value)
-    
-    if json_message then
-      log("JSON parsed successfully, type: " .. type(json_message))
-      if type(json_message) == "table" then
-        log("Message is table, checking for address...")
-        if json_message.address then
-          log("Found address: " .. tostring(json_message.address))
-          log("About to handle message...")
-          handle_json_message(json_message.address, json_message.args or {})
-          log("Message handled")
-        else
-          log("ERROR: No address field in message")
-        end
-      else
-        log("ERROR: Parsed message is not a table")
-      end
-    else
-      log("ERROR: Failed to parse JSON")
-    end
-  end
-end
-
--- Removed send_osc_updates function - part of unused OSC system
 
 -- Function to store a userdata pointer and return a unique string ID
 function store_pointer(ptr)
@@ -1066,12 +931,9 @@ end
 function initialize_api()
   log("Initializing reaside HTTP API")
   
-  -- Removed OSC initialization - using ExtState JSON messages instead
-  
   -- Store basic information in REAPER's ExtState
   set_ext_state(SECTION, "version", REAPER_VERSION, true)
   set_ext_state(SECTION, "api_status", "ready", true)
-  -- Removed OSC configuration storage
   set_ext_state(SECTION, "last_updated", tostring(os.time()), true)
   
   -- Store the action ID for later use
@@ -1139,9 +1001,6 @@ function run_main_loop()
   -- Execute any pending FX chain operations
   save_fxchain()
   add_fxchain()
-  
-  -- Handle JSON messages via ExtState
-  check_json_messages()
   
   -- Update timestamps to indicate script is still running
   local current_time = tostring(os.time())
