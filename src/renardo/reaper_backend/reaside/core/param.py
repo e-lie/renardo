@@ -183,6 +183,14 @@ class ReaParam:
         if hasattr(value, 'now') and callable(getattr(value, 'now')):
             return True
         
+        # Check for objects with current_value() method
+        if hasattr(value, 'current_value') and callable(getattr(value, 'current_value')):
+            return True
+        
+        # Check if class name contains TimeVar (for custom TimeVar classes)
+        if hasattr(value, '__class__') and 'TimeVar' in value.__class__.__name__:
+            return True
+        
         return False
     
     def update_value(self):
