@@ -21,12 +21,6 @@ local DEBUG = false  -- Set to true to enable debug logging
 local SECTION = "reaside"
 local REAPER_VERSION = reaper.GetAppVersion()
 
--- OSC Configuration
-local OSC_ENABLED = true  -- Set to false to disable OSC functionality
-local OSC_SEND_PORT = 8001  -- Port to send OSC messages to Python client
-local OSC_RECEIVE_PORT = 8000  -- Port to receive OSC messages from Python client
-local OSC_HOST = "127.0.0.1"  -- Host for OSC communication
-
 -- Pointer cache to store userdata objects (MediaTrack, MediaItem, etc.)
 local pointer_cache = {}
 local pointer_counter = 0
@@ -38,237 +32,49 @@ function log(msg)
   end
 end
 
--- OSC state tracking
-local osc_device_id = nil
-local last_transport_state = -1
-local last_time_position = -1
-local last_beat_position = -1
-
--- Initialize OSC device
-function init_osc()
-  if not OSC_ENABLED then
-    return false
+-- Simple JSON parser (handles basic cases)
+function parse_json(str)
+  if not str or str == "" then
+    return nil
   end
   
-  -- Try to find existing OSC device or create one
-  for i = 0, reaper.GetNumMIDIOutputs() - 1 do
-    local retval, name = reaper.GetMIDIOutputName(i, "")
-    if name and name:find("OSC") then
-      osc_device_id = i
-      log("Found existing OSC device: " .. name)
-      break
+  -- Remove whitespace
+  str = str:gsub("^%s*", ""):gsub("%s*$", "")
+  
+  -- Try to parse as a Lua table using loadstring
+  local func, err = loadstring("return " .. str)
+  if func then
+    local success, result = pcall(func)
+    if success then
+      return result
     end
   end
   
-  -- If no OSC device found, we'll use the local message system
-  log("OSC functionality initialized (using local messaging)")
-  return true
+  -- Fallback: Try converting JSON-like syntax to Lua
+  -- Replace JSON syntax with Lua syntax
+  local lua_str = str
+    :gsub('"(%w+)"%s*:', '["%1"]=')  -- "key": -> ["key"]=
+    :gsub(':%s*"', '="')              -- : " -> ="
+    :gsub(':%s*([%d%.%-]+)', '=%1')  -- : number -> =number
+    :gsub(':%s*true', '=true')       -- : true -> =true
+    :gsub(':%s*false', '=false')     -- : false -> =false
+    :gsub(':%s*null', '=nil')        -- : null -> =nil
+    :gsub(':%s*%[', '={')             -- : [ -> ={
+    :gsub('%]', '}')                  -- ] -> }
+  
+  -- Try parsing the converted string
+  func, err = loadstring("return " .. lua_str)
+  if func then
+    local success, result = pcall(func)
+    if success then
+      return result
+    end
+  end
+  
+  log("Failed to parse JSON: " .. tostring(err))
+  return nil
 end
 
--- Send OSC message to Python client
-function send_osc_message(address, ...)
-  if not OSC_ENABLED then
-    return
-  end
-  
-  local args = {...}
-  local msg = address
-  
-  -- Format arguments
-  for i, arg in ipairs(args) do
-    msg = msg .. " " .. tostring(arg)
-  end
-  
-  -- Use REAPER's OSC sending capability
-  if reaper.OscLocalMessageToHost then
-    reaper.OscLocalMessageToHost(msg, OSC_SEND_PORT)
-    log("Sent OSC: " .. msg)
-  else
-    -- Fallback: store in ExtState for Python to poll
-    set_ext_state("reaside_osc", "message", {
-      address = address,
-      args = args,
-      timestamp = os.time()
-    }, false)
-  end
-end
-
--- Handle incoming OSC messages
-function handle_osc_message(address, args)
-  log("Received OSC: " .. address .. " with " .. #args .. " args")
-  
-  -- Transport control
-  if address == "/transport/play" then
-    reaper.Main_OnCommand(40007, 0)  -- Transport: Play/stop
-    
-  elseif address == "/transport/pause" then
-    reaper.Main_OnCommand(40001, 0)  -- Transport: Play/pause
-    
-  elseif address == "/transport/stop" then
-    reaper.Main_OnCommand(40016, 0)  -- Transport: Stop
-    
-  elseif address == "/transport/record" then
-    reaper.Main_OnCommand(40044, 0)  -- Transport: Record
-    
-  -- Time positioning
-  elseif address == "/time/goto" and #args >= 1 then
-    local time_seconds = tonumber(args[1])
-    if time_seconds then
-      reaper.SetEditCurPos(time_seconds, true, true)
-    end
-    
-  elseif address == "/beat/goto" and #args >= 1 then
-    local beat = tonumber(args[1])
-    if beat then
-      local time_seconds = reaper.TimeMap2_beatsToTime(0, beat)
-      reaper.SetEditCurPos(time_seconds, true, true)
-    end
-    
-  -- Track operations
-  elseif address:match("^/track/(%d+)/volume$") and #args >= 1 then
-    local track_id = tonumber(address:match("^/track/(%d+)/volume$"))
-    local volume = tonumber(args[1])
-    if track_id and volume then
-      local track = reaper.GetTrack(0, track_id - 1)  -- Convert to 0-based
-      if track then
-        reaper.SetMediaTrackInfo_Value(track, "D_VOL", volume)
-      end
-    end
-    
-  elseif address:match("^/track/(%d+)/pan$") and #args >= 1 then
-    local track_id = tonumber(address:match("^/track/(%d+)/pan$"))
-    local pan = tonumber(args[1])
-    if track_id and pan then
-      local track = reaper.GetTrack(0, track_id - 1)  -- Convert to 0-based
-      if track then
-        reaper.SetMediaTrackInfo_Value(track, "D_PAN", pan)
-      end
-    end
-    
-  elseif address:match("^/track/(%d+)/mute$") and #args >= 1 then
-    local track_id = tonumber(address:match("^/track/(%d+)/mute$"))
-    local mute = tonumber(args[1])
-    if track_id and mute ~= nil then
-      local track = reaper.GetTrack(0, track_id - 1)  -- Convert to 0-based
-      if track then
-        reaper.SetMediaTrackInfo_Value(track, "B_MUTE", mute)
-      end
-    end
-    
-  elseif address:match("^/track/(%d+)/solo$") and #args >= 1 then
-    local track_id = tonumber(address:match("^/track/(%d+)/solo$"))
-    local solo = tonumber(args[1])
-    if track_id and solo ~= nil then
-      local track = reaper.GetTrack(0, track_id - 1)  -- Convert to 0-based
-      if track then
-        reaper.SetMediaTrackInfo_Value(track, "I_SOLO", solo)
-      end
-    end
-    
-  -- Query operations
-  elseif address == "/query/track_count" then
-    local count = reaper.CountTracks(0)
-    send_osc_message("/response/track_count", count)
-    
-  elseif address == "/query/play_state" then
-    local state = reaper.GetPlayState()
-    send_osc_message("/response/play_state", state)
-    
-  elseif address == "/query/time_position" then
-    local pos = reaper.GetCursorPosition()
-    send_osc_message("/response/time_position", pos)
-    
-  elseif address == "/query/beat_position" then
-    local time_pos = reaper.GetCursorPosition()
-    local beat_pos = reaper.TimeMap2_timeToBeats(0, time_pos)
-    send_osc_message("/response/beat_position", beat_pos)
-    
-  elseif address == "/ping" then
-    send_osc_message("/response/pong", "pong")
-    
-    
-  else
-    log("Unknown OSC address: " .. address)
-  end
-end
-
--- Check for incoming OSC messages
-function check_osc_messages()
-  if not OSC_ENABLED then
-    return
-  end
-  
-  -- Check for OSC messages in ExtState (fallback method)
-  -- Use global ExtState, not project ExtState!
-  local raw_value = reaper.GetExtState("reaside_osc", "incoming")
-  if raw_value and raw_value ~= "" then
-    log("Found OSC message in ExtState: " .. raw_value)
-    
-    -- Clear the message immediately
-    reaper.DeleteExtState("reaside_osc", "incoming", false)
-    
-    -- Parse the JSON message
-    log("About to parse JSON...")
-    local osc_message = parse_json(raw_value)
-    
-    if osc_message then
-      log("JSON parsed successfully, type: " .. type(osc_message))
-      if type(osc_message) == "table" then
-        log("Message is table, checking for address...")
-        if osc_message.address then
-          log("Found address: " .. tostring(osc_message.address))
-          log("About to handle OSC message...")
-          handle_osc_message(osc_message.address, osc_message.args or {})
-          log("OSC message handled")
-        else
-          log("ERROR: No address field in message")
-        end
-      else
-        log("ERROR: Parsed message is not a table")
-      end
-    else
-      log("ERROR: Failed to parse JSON")
-    end
-  end
-end
-
--- Send periodic updates via OSC
-function send_osc_updates()
-  if not OSC_ENABLED then
-    return
-  end
-  
-  -- Send transport state changes
-  local current_transport_state = reaper.GetPlayState()
-  if current_transport_state ~= last_transport_state then
-    if current_transport_state == 0 then
-      send_osc_message("/transport/stop")
-    elseif current_transport_state == 1 then
-      send_osc_message("/transport/play")
-    elseif current_transport_state == 2 then
-      send_osc_message("/transport/pause")
-    elseif current_transport_state == 5 then
-      send_osc_message("/transport/record", 1)
-    elseif current_transport_state == 6 then
-      send_osc_message("/transport/record", 0)  -- Record paused
-    end
-    last_transport_state = current_transport_state
-  end
-  
-  -- Send time position updates (every second to avoid spam)
-  local current_time = reaper.GetCursorPosition()
-  if math.abs(current_time - last_time_position) > 0.1 then  -- Update if >100ms change
-    send_osc_message("/time/position", current_time)
-    last_time_position = current_time
-    
-    -- Also send beat position
-    local beat_pos = reaper.TimeMap2_timeToBeats(0, current_time)
-    if math.abs(beat_pos - last_beat_position) > 0.01 then
-      send_osc_message("/beat/position", beat_pos)
-      last_beat_position = beat_pos
-    end
-  end
-end
 
 -- Function to store a userdata pointer and return a unique string ID
 function store_pointer(ptr)
@@ -1125,20 +931,9 @@ end
 function initialize_api()
   log("Initializing reaside HTTP API")
   
-  -- Initialize OSC
-  local osc_success = init_osc()
-  if osc_success then
-    log("OSC functionality enabled")
-  else
-    log("OSC functionality disabled")
-  end
-  
   -- Store basic information in REAPER's ExtState
   set_ext_state(SECTION, "version", REAPER_VERSION, true)
   set_ext_state(SECTION, "api_status", "ready", true)
-  set_ext_state(SECTION, "osc_enabled", OSC_ENABLED and osc_success, true)
-  set_ext_state(SECTION, "osc_send_port", OSC_SEND_PORT, true)
-  set_ext_state(SECTION, "osc_receive_port", OSC_RECEIVE_PORT, true)
   set_ext_state(SECTION, "last_updated", tostring(os.time()), true)
   
   -- Store the action ID for later use
@@ -1206,10 +1001,6 @@ function run_main_loop()
   -- Execute any pending FX chain operations
   save_fxchain()
   add_fxchain()
-  
-  -- Handle OSC communication
-  check_osc_messages()
-  send_osc_updates()
   
   -- Update timestamps to indicate script is still running
   local current_time = tostring(os.time())
