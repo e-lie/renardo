@@ -9,7 +9,7 @@ This script runs independently from reaside_server.lua for better performance.
 ]]
 
 -- Configuration
-local DEBUG = false  -- Set to true to enable debug logging
+local DEBUG = true  -- Set to true to enable debug logging
 local POLL_RATE = 200  -- Hz - how often to check for messages (increased for better timing accuracy)
 
 -- Timing state
@@ -53,13 +53,13 @@ function parse_json(str)
   local lua_str = str:gsub('%[', '{'):gsub('%]', '}')
   
   -- Replace JSON object syntax with Lua table syntax
-  -- This handles "key": value patterns
+  -- This handles "key": value patterns - order matters!
+  lua_str = lua_str:gsub('"([^"]+)"%s*:%s*{', '["%1"] = {')              -- "key": { nested object (do this first)
   lua_str = lua_str:gsub('"([^"]+)"%s*:%s*"([^"]*)"', '["%1"] = "%2"')  -- "key": "string value"
   lua_str = lua_str:gsub('"([^"]+)"%s*:%s*([%d%.%-]+)', '["%1"] = %2')   -- "key": number
   lua_str = lua_str:gsub('"([^"]+)"%s*:%s*true', '["%1"] = true')        -- "key": true
   lua_str = lua_str:gsub('"([^"]+)"%s*:%s*false', '["%1"] = false')      -- "key": false
   lua_str = lua_str:gsub('"([^"]+)"%s*:%s*null', '["%1"] = nil')         -- "key": null
-  lua_str = lua_str:gsub('"([^"]+)"%s*:%s*{', '["%1"] = {')              -- "key": { nested object
   
   -- Try parsing the converted string
   func, err = loadfn("return " .. lua_str)
@@ -71,13 +71,24 @@ function parse_json(str)
   end
   
   log("Failed to parse JSON: " .. tostring(err))
+  if string.len(str) < 200 then
+    log("Original: " .. str)
+    log("Converted: " .. lua_str)
+  end
   return nil
 end
 
 -- Get current TempoClock time estimate
 function get_tempo_clock_time()
-  -- Calculate elapsed time since last clock update
+  -- Use a local timer that starts from 0
   local current_time = reaper.time_precise()
+  
+  -- If we haven't synced yet, just return 0
+  if clock_info.system_time == 0 then
+    return 0
+  end
+  
+  -- Calculate elapsed time since last clock update
   local elapsed = current_time - clock_info.system_time
   
   -- Convert elapsed seconds to beats
@@ -95,9 +106,10 @@ function update_clock_sync()
     local sync = parse_json(clock_data)
     if sync then
       clock_info.tempo_clock_time = sync.clock_time or clock_info.tempo_clock_time
-      clock_info.system_time = sync.system_time or reaper.time_precise()
+      -- Store Reaper's time when we received this sync
+      clock_info.system_time = reaper.time_precise()
       clock_info.bpm = sync.bpm or clock_info.bpm
-      log(string.format("Clock sync: time=%.3f, bpm=%.1f", clock_info.tempo_clock_time, clock_info.bpm))
+      -- Removed clock sync logging to reduce console spam
     end
   end
 end
@@ -107,10 +119,19 @@ function process_timed_messages()
   local current_clock = get_tempo_clock_time()
   local messages_to_remove = {}
   
+  -- Log queue status periodically
+  if #timed_messages > 0 and math.floor(current_clock * 10) % 10 == 0 then
+    log(string.format("Queue: %d messages, current_clock=%.3f, next_msg_time=%.3f", 
+                     #timed_messages, current_clock, 
+                     timed_messages[1] and timed_messages[1].time or -1))
+  end
+  
   -- Check each timed message
   for i, msg in ipairs(timed_messages) do
     if msg.time <= current_clock then
       -- Execute the message
+      log(string.format("Executing timed message: action=%s at clock=%.3f (scheduled=%.3f)", 
+                       msg.action, current_clock, msg.time))
       handle_queue_action(msg.action, msg.args or {})
       table.insert(messages_to_remove, i)
     end
@@ -128,6 +149,7 @@ function handle_message_queue()
   local raw_batch = reaper.GetExtState("midi_batch", "messages")
   
   if raw_batch and raw_batch ~= "" then
+    log("Found batch in ExtState, length: " .. string.len(raw_batch))
     -- Clear the batch immediately
     reaper.DeleteExtState("midi_batch", "messages", false)
     
@@ -137,23 +159,29 @@ function handle_message_queue()
     if batch and type(batch) == "table" then
       -- Check if it's a batch or single message
       if batch.messages then
+        log("Processing batch with " .. #batch.messages .. " messages")
         -- It's a batch with multiple timed messages
-        for _, msg in ipairs(batch.messages) do
+        for i, msg in ipairs(batch.messages) do
           if msg.time then
             -- Add to timed queue
             table.insert(timed_messages, msg)
+            log(string.format("  Message %d: %s at time %.3f", i, msg.action, msg.time))
           else
             -- Execute immediately
+            log(string.format("  Message %d: %s (immediate)", i, msg.action))
             handle_queue_action(msg.action, msg.args or {})
           end
         end
         -- Sort by time
         table.sort(timed_messages, function(a, b) return a.time < b.time end)
-        log("Added " .. #batch.messages .. " messages to queue")
+        log("Added " .. #batch.messages .. " messages to queue, total queued: " .. #timed_messages)
       elseif batch.action then
         -- Single message for immediate execution
+        log("Single message: " .. batch.action)
         handle_queue_action(batch.action, batch.args or {})
       end
+    else
+      log("Failed to parse batch")
     end
   end
   
