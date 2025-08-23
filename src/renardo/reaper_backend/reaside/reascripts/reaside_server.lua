@@ -51,17 +51,18 @@ function parse_json(str)
     end
   end
   
-  -- Fallback: Try converting JSON-like syntax to Lua
-  -- Replace JSON syntax with Lua syntax
-  local lua_str = str
-    :gsub('"(%w+)"%s*:', '["%1"]=')  -- "key": -> ["key"]=
-    :gsub(':%s*"', '="')              -- : " -> ="
-    :gsub(':%s*([%d%.%-]+)', '=%1')  -- : number -> =number
-    :gsub(':%s*true', '=true')       -- : true -> =true
-    :gsub(':%s*false', '=false')     -- : false -> =false
-    :gsub(':%s*null', '=nil')        -- : null -> =nil
-    :gsub(':%s*%[', '={')             -- : [ -> ={
-    :gsub('%]', '}')                  -- ] -> }
+  -- Simplified JSON to Lua conversion
+  -- Replace JSON arrays with Lua tables
+  local lua_str = str:gsub('%[', '{'):gsub('%]', '}')
+  
+  -- Replace JSON object syntax with Lua table syntax
+  -- This handles "key": value patterns
+  lua_str = lua_str:gsub('"([^"]+)"%s*:%s*"([^"]*)"', '["%1"] = "%2"')  -- "key": "string value"
+  lua_str = lua_str:gsub('"([^"]+)"%s*:%s*([%d%.%-]+)', '["%1"] = %2')   -- "key": number
+  lua_str = lua_str:gsub('"([^"]+)"%s*:%s*true', '["%1"] = true')        -- "key": true
+  lua_str = lua_str:gsub('"([^"]+)"%s*:%s*false', '["%1"] = false')      -- "key": false
+  lua_str = lua_str:gsub('"([^"]+)"%s*:%s*null', '["%1"] = nil')         -- "key": null
+  lua_str = lua_str:gsub('"([^"]+)"%s*:%s*{', '["%1"] = {')              -- "key": { nested object
   
   -- Try parsing the converted string
   func, err = loadfn("return " .. lua_str)
@@ -73,6 +74,7 @@ function parse_json(str)
   end
   
   log("Failed to parse JSON: " .. tostring(err))
+  log("Attempted to parse: " .. lua_str)
   return nil
 end
 
