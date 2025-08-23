@@ -9,8 +9,18 @@ This script runs independently from reaside_server.lua for better performance.
 ]]
 
 -- Configuration
-local DEBUG = false  -- Set to true to enable debug logging
-local POLL_RATE = 100  -- Hz - how often to check for messages
+local DEBUG = true  -- Set to true to enable debug logging
+local POLL_RATE = 200  -- Hz - how often to check for messages (increased for better timing accuracy)
+
+-- Timing state
+local clock_info = {
+  tempo_clock_time = 0,  -- Current TempoClock time in beats
+  system_time = 0,       -- System time when clock was updated
+  bpm = 120              -- Current BPM
+}
+
+-- Message queue for timed events
+local timed_messages = {}
 
 -- Debug logging function
 function log(msg)
@@ -19,7 +29,7 @@ function log(msg)
   end
 end
 
--- Simple JSON parser (handles basic cases)
+-- JSON parser that handles nested structures better
 function parse_json(str)
   if not str or str == "" then
     return nil
@@ -38,18 +48,28 @@ function parse_json(str)
     end
   end
   
-  -- Simplified JSON to Lua conversion
-  -- Replace JSON arrays with Lua tables
-  local lua_str = str:gsub('%[', '{'):gsub('%]', '}')
+  -- More robust JSON to Lua conversion
+  local lua_str = str
   
-  -- Replace JSON object syntax with Lua table syntax
-  -- This handles "key": value patterns
-  lua_str = lua_str:gsub('"([^"]+)"%s*:%s*"([^"]*)"', '["%1"] = "%2"')  -- "key": "string value"
-  lua_str = lua_str:gsub('"([^"]+)"%s*:%s*([%d%.%-]+)', '["%1"] = %2')   -- "key": number
-  lua_str = lua_str:gsub('"([^"]+)"%s*:%s*true', '["%1"] = true')        -- "key": true
-  lua_str = lua_str:gsub('"([^"]+)"%s*:%s*false', '["%1"] = false')      -- "key": false
-  lua_str = lua_str:gsub('"([^"]+)"%s*:%s*null', '["%1"] = nil')         -- "key": null
-  lua_str = lua_str:gsub('"([^"]+)"%s*:%s*{', '["%1"] = {')              -- "key": { nested object
+  -- First, handle arrays of numbers (common in args)
+  -- Match patterns like [0, 1, 60, 100]
+  lua_str = lua_str:gsub('%[([%d%s,%.%-]+)%]', function(nums)
+    return '{' .. nums .. '}'
+  end)
+  
+  -- Then handle remaining brackets
+  lua_str = lua_str:gsub('%[', '{'):gsub('%]', '}')
+  
+  -- Handle object properties - order matters!
+  -- First handle nested objects/arrays
+  lua_str = lua_str:gsub('"([^"]+)"%s*:%s*{', '["%1"] = {')
+  
+  -- Then handle primitive values
+  lua_str = lua_str:gsub('"([^"]+)"%s*:%s*"([^"]*)"', '["%1"] = "%2"')  -- strings
+  lua_str = lua_str:gsub('"([^"]+)"%s*:%s*([%d%.%-]+)', '["%1"] = %2')   -- numbers
+  lua_str = lua_str:gsub('"([^"]+)"%s*:%s*true', '["%1"] = true')        -- booleans
+  lua_str = lua_str:gsub('"([^"]+)"%s*:%s*false', '["%1"] = false')
+  lua_str = lua_str:gsub('"([^"]+)"%s*:%s*null', '["%1"] = nil')         -- null
   
   -- Try parsing the converted string
   func, err = loadfn("return " .. lua_str)
@@ -60,27 +80,218 @@ function parse_json(str)
     end
   end
   
+  -- If it still fails, try a different approach for deeply nested structures
+  -- This is a fallback for complex cases
+  lua_str = str
+  
+  -- Replace all JSON syntax at once
+  lua_str = lua_str:gsub('%[', '{')
+  lua_str = lua_str:gsub('%]', '}')
+  lua_str = lua_str:gsub('"(%w+)":', '["%1"]=')
+  lua_str = lua_str:gsub(':([%d%.%-]+)', '=%1')
+  lua_str = lua_str:gsub(':true', '=true')
+  lua_str = lua_str:gsub(':false', '=false')
+  lua_str = lua_str:gsub(':null', '=nil')
+  lua_str = lua_str:gsub(':"([^"]*)"', '="%1"')
+  
+  func, err = loadfn("return " .. lua_str)
+  if func then
+    local success, result = pcall(func)
+    if success then
+      return result
+    end
+  end
+  
   log("Failed to parse JSON: " .. tostring(err))
+  if string.len(str) < 500 then
+    log("JSON parse failed for: " .. string.sub(str, 1, 100) .. "...")
+  end
   return nil
+end
+
+-- Get current TempoClock time estimate
+function get_tempo_clock_time()
+  -- Use a local timer that starts from 0
+  local current_time = reaper.time_precise()
+  
+  -- If we haven't synced yet, just return 0
+  if clock_info.system_time == 0 then
+    return 0
+  end
+  
+  -- Calculate elapsed time since last clock update
+  local elapsed = current_time - clock_info.system_time
+  
+  -- Convert elapsed seconds to beats
+  local elapsed_beats = (elapsed * clock_info.bpm) / 60.0
+  
+  -- Return estimated current clock time
+  return clock_info.tempo_clock_time + elapsed_beats
+end
+
+-- Update clock sync from ExtState
+function update_clock_sync()
+  -- Check for clock sync update
+  local clock_data = reaper.GetExtState("midi_clock_sync", "current")
+  if clock_data and clock_data ~= "" then
+    local sync = parse_json(clock_data)
+    if sync then
+      clock_info.tempo_clock_time = sync.clock_time or clock_info.tempo_clock_time
+      -- Store Reaper's time when we received this sync
+      clock_info.system_time = reaper.time_precise()
+      clock_info.bpm = sync.bpm or clock_info.bpm
+      -- Removed clock sync logging to reduce console spam
+    end
+  end
+end
+
+-- Process timed messages that are ready
+function process_timed_messages()
+  local current_clock = get_tempo_clock_time()
+  local messages_to_remove = {}
+  
+  -- Log queue status periodically
+  if #timed_messages > 0 and math.floor(current_clock * 10) % 10 == 0 then
+    log(string.format("Queue: %d messages, current_clock=%.3f, next_msg_time=%.3f", 
+                     #timed_messages, current_clock, 
+                     timed_messages[1] and timed_messages[1].time or -1))
+  end
+  
+  -- Check each timed message
+  for i, msg in ipairs(timed_messages) do
+    if msg.time <= current_clock then
+      -- Execute the message
+      log(string.format("Executing timed message: action=%s at clock=%.3f (scheduled=%.3f)", 
+                       msg.action, current_clock, msg.time))
+      handle_queue_action(msg.action, msg.args or {})
+      table.insert(messages_to_remove, i)
+    end
+  end
+  
+  -- Remove processed messages (in reverse order to maintain indices)
+  for i = #messages_to_remove, 1, -1 do
+    table.remove(timed_messages, messages_to_remove[i])
+  end
+end
+
+-- Parse simple CSV-like format
+-- Format: action track channel note velocity time
+-- Example: "midi_note_on 0 1 60 100 10.5"
+function parse_simple_message(line)
+  local parts = {}
+  for part in string.gmatch(line, "%S+") do
+    table.insert(parts, part)
+  end
+  
+  if #parts < 2 then
+    return nil
+  end
+  
+  local msg = {
+    action = parts[1],
+    args = {}
+  }
+  
+  -- Parse args based on action type
+  if msg.action == "midi_note_on" or msg.action == "midi_note_off" then
+    -- Expect: track channel note velocity [time]
+    if #parts >= 5 then
+      msg.args[1] = tonumber(parts[2])  -- track
+      msg.args[2] = tonumber(parts[3])  -- channel
+      msg.args[3] = tonumber(parts[4])  -- note
+      msg.args[4] = tonumber(parts[5])  -- velocity
+      
+      -- Optional time parameter
+      if #parts >= 6 then
+        msg.time = tonumber(parts[6])
+      end
+    end
+  end
+  
+  return msg
 end
 
 -- Message queue handler for ExtState polling
 function handle_message_queue()
-  -- Check for messages in ExtState queue
-  local raw_message = reaper.GetExtState("reaside_queue", "message")
+  -- Check for simple format batch
+  local raw_batch = reaper.GetExtState("midi_batch_simple", "data")
   
-  if raw_message and raw_message ~= "" then
-    -- Clear the message immediately to avoid processing it twice
-    reaper.DeleteExtState("reaside_queue", "message", false)
+  if raw_batch and raw_batch ~= "" then
+    log("Found simple batch, length: " .. string.len(raw_batch))
+    -- Clear immediately
+    reaper.DeleteExtState("midi_batch_simple", "data", false)
     
-    -- Parse the message
-    local message = parse_json(raw_message)
-    
-    if message and type(message) == "table" then
-      -- Route to appropriate handler based on action
-      if message.action then
-        handle_queue_action(message.action, message.args or {})
+    -- Parse line by line
+    local count = 0
+    for line in string.gmatch(raw_batch, "[^\n]+") do
+      local msg = parse_simple_message(line)
+      if msg then
+        count = count + 1
+        if msg.time then
+          -- Add to timed queue
+          table.insert(timed_messages, msg)
+        else
+          -- Execute immediately
+          handle_queue_action(msg.action, msg.args or {})
+        end
       end
+    end
+    
+    -- Sort timed messages
+    if #timed_messages > 0 then
+      table.sort(timed_messages, function(a, b) return a.time < b.time end)
+    end
+    
+    log("Processed " .. count .. " messages, queued: " .. #timed_messages)
+  end
+  
+  -- Also check JSON batch for backwards compatibility
+  local raw_batch_json = reaper.GetExtState("midi_batch", "messages")
+  
+  if raw_batch_json and raw_batch_json ~= "" then
+    log("Found JSON batch in ExtState, length: " .. string.len(raw_batch_json))
+    -- Clear the batch immediately
+    reaper.DeleteExtState("midi_batch", "messages", false)
+    
+    -- Parse the batch
+    local batch = parse_json(raw_batch_json)
+    
+    if batch and type(batch) == "table" then
+      -- Check if it's a batch or single message
+      if batch.messages then
+        log("Processing batch with " .. #batch.messages .. " messages")
+        -- It's a batch with multiple timed messages
+        for i, msg in ipairs(batch.messages) do
+          if msg.time then
+            -- Add to timed queue
+            table.insert(timed_messages, msg)
+            log(string.format("  Message %d: %s at time %.3f", i, msg.action, msg.time))
+          else
+            -- Execute immediately
+            log(string.format("  Message %d: %s (immediate)", i, msg.action))
+            handle_queue_action(msg.action, msg.args or {})
+          end
+        end
+        -- Sort by time
+        table.sort(timed_messages, function(a, b) return a.time < b.time end)
+        log("Added " .. #batch.messages .. " messages to queue, total queued: " .. #timed_messages)
+      elseif batch.action then
+        -- Single message for immediate execution
+        log("Single message: " .. batch.action)
+        handle_queue_action(batch.action, batch.args or {})
+      end
+    else
+      log("Failed to parse batch")
+    end
+  end
+  
+  -- Also check old single message queue for compatibility
+  local raw_message = reaper.GetExtState("reaside_queue", "message")
+  if raw_message and raw_message ~= "" then
+    reaper.DeleteExtState("reaside_queue", "message", false)
+    local message = parse_json(raw_message)
+    if message and type(message) == "table" and message.action then
+      handle_queue_action(message.action, message.args or {})
     end
   end
 end
@@ -176,7 +387,13 @@ end
 
 -- Main loop function
 function main_loop()
-  -- Poll for messages
+  -- Update clock sync
+  update_clock_sync()
+  
+  -- Process any timed messages that are ready
+  process_timed_messages()
+  
+  -- Poll for new messages
   handle_message_queue()
   
   -- Continue running at specified rate
