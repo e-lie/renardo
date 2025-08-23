@@ -17,7 +17,7 @@ Installation:
 ]]
 
 -- Configuration
-local DEBUG = false  -- Set to true to enable debug logging
+local DEBUG = true  -- Set to true to enable debug logging
 local SECTION = "reaside"
 local REAPER_VERSION = reaper.GetAppVersion()
 
@@ -41,8 +41,9 @@ function parse_json(str)
   -- Remove whitespace
   str = str:gsub("^%s*", ""):gsub("%s*$", "")
   
-  -- Try to parse as a Lua table using loadstring
-  local func, err = loadstring("return " .. str)
+  -- Try to parse as a Lua table using load (Lua 5.2+) or loadstring (Lua 5.1)
+  local loadfn = load or loadstring
+  local func, err = loadfn("return " .. str)
   if func then
     local success, result = pcall(func)
     if success then
@@ -63,7 +64,7 @@ function parse_json(str)
     :gsub('%]', '}')                  -- ] -> }
   
   -- Try parsing the converted string
-  func, err = loadstring("return " .. lua_str)
+  func, err = loadfn("return " .. lua_str)
   if func then
     local success, result = pcall(func)
     if success then
@@ -73,6 +74,46 @@ function parse_json(str)
   
   log("Failed to parse JSON: " .. tostring(err))
   return nil
+end
+
+-- Message queue handler for ExtState polling
+function handle_message_queue()
+  -- Check for messages in ExtState queue
+  local raw_message = reaper.GetExtState("reaside_queue", "message")
+  
+  if raw_message and raw_message ~= "" then
+    -- Clear the message immediately to avoid processing it twice
+    reaper.DeleteExtState("reaside_queue", "message", false)
+    
+    -- Parse the message
+    local message = parse_json(raw_message)
+    
+    if message and type(message) == "table" then
+      -- Route to appropriate handler based on action
+      if message.action then
+        handle_queue_action(message.action, message.args or {})
+      end
+    end
+  end
+end
+
+-- Handle specific actions from the message queue
+function handle_queue_action(action, args)
+  log("Queue action: " .. action .. " with " .. #args .. " args")
+  
+  -- TEST ACTION - Log the message
+  if action == "test_message" then
+    local message = "TEST MESSAGE RECEIVED"
+    if #args > 0 then
+      message = message .. " - Args: " .. table.concat(args, ", ")
+    end
+    reaper.ShowConsoleMsg("[QUEUE TEST] " .. message .. "\n")
+    log("Test message handled: " .. message)
+  
+  -- Add more actions here as needed
+  else
+    log("Unknown queue action: " .. action)
+  end
 end
 
 
@@ -1001,6 +1042,9 @@ function run_main_loop()
   -- Execute any pending FX chain operations
   save_fxchain()
   add_fxchain()
+  
+  -- Check for messages in the queue
+  handle_message_queue()
   
   -- Update timestamps to indicate script is still running
   local current_time = tostring(os.time())
