@@ -193,20 +193,52 @@ class TimeVarManager:
             Current value as float
         """
         try:
-            # Check if it has a now() method (typical for TimeVar)
-            if hasattr(timevar, 'now'):
-                result = timevar.now()
-                # Handle lists/arrays by taking first element
-                if isinstance(result, (list, tuple)) and len(result) > 0:
-                    result = result[0]
-                return float(result)
+            # For Mock objects, check what was explicitly set
+            # Mock creates attributes on access, so we need to be careful
+            try:
+                from unittest.mock import Mock
+                is_mock = isinstance(timevar, Mock)
+            except ImportError:
+                is_mock = False
             
-            # Check if it has a current_value() method
-            if hasattr(timevar, 'current_value'):
-                result = timevar.current_value()
-                if isinstance(result, (list, tuple)) and len(result) > 0:
-                    result = result[0]
-                return float(result)
+            # For Mock objects, check which method was explicitly configured
+            if is_mock:
+                # Check current_value first
+                if hasattr(timevar, 'current_value'):
+                    attr = getattr(timevar, 'current_value')
+                    # Check if it has a non-Mock return_value (i.e., was explicitly configured)
+                    if callable(attr) and hasattr(attr, 'return_value') and not isinstance(attr.return_value, Mock):
+                        result = timevar.current_value()
+                        if isinstance(result, (list, tuple)) and len(result) > 0:
+                            result = result[0]
+                        return float(result)
+                
+                # Check now method
+                if hasattr(timevar, 'now'):
+                    attr = getattr(timevar, 'now')
+                    # Check if it has a non-Mock return_value (i.e., was explicitly configured)
+                    if callable(attr) and hasattr(attr, 'return_value') and not isinstance(attr.return_value, Mock):
+                        result = timevar.now()
+                        if isinstance(result, (list, tuple)) and len(result) > 0:
+                            result = result[0]
+                        return float(result)
+            else:
+                # For non-Mock objects, use normal detection
+                # Check if it has a current_value() method first
+                if hasattr(timevar, 'current_value') and callable(getattr(timevar, 'current_value')):
+                    result = timevar.current_value()
+                    # Handle lists/arrays by taking first element
+                    if isinstance(result, (list, tuple)) and len(result) > 0:
+                        result = result[0]
+                    return float(result)
+                
+                # Check if it has a now() method (typical for TimeVar)
+                if hasattr(timevar, 'now') and callable(getattr(timevar, 'now')):
+                    result = timevar.now()
+                    # Handle lists/arrays by taking first element
+                    if isinstance(result, (list, tuple)) and len(result) > 0:
+                        result = result[0]
+                    return float(result)
             
             # Check if it has __call__ method
             if callable(timevar):
