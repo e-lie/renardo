@@ -10,7 +10,17 @@ This script runs independently from reaside_server.lua for better performance.
 
 -- Configuration
 local DEBUG = false  -- Set to true to enable debug logging
-local POLL_RATE = 100  -- Hz - how often to check for messages
+local POLL_RATE = 200  -- Hz - how often to check for messages (increased for better timing accuracy)
+
+-- Timing state
+local clock_info = {
+  tempo_clock_time = 0,  -- Current TempoClock time in beats
+  system_time = 0,       -- System time when clock was updated
+  bpm = 120              -- Current BPM
+}
+
+-- Message queue for timed events
+local timed_messages = {}
 
 -- Debug logging function
 function log(msg)
@@ -64,23 +74,96 @@ function parse_json(str)
   return nil
 end
 
+-- Get current TempoClock time estimate
+function get_tempo_clock_time()
+  -- Calculate elapsed time since last clock update
+  local current_time = reaper.time_precise()
+  local elapsed = current_time - clock_info.system_time
+  
+  -- Convert elapsed seconds to beats
+  local elapsed_beats = (elapsed * clock_info.bpm) / 60.0
+  
+  -- Return estimated current clock time
+  return clock_info.tempo_clock_time + elapsed_beats
+end
+
+-- Update clock sync from ExtState
+function update_clock_sync()
+  -- Check for clock sync update
+  local clock_data = reaper.GetExtState("midi_clock_sync", "current")
+  if clock_data and clock_data ~= "" then
+    local sync = parse_json(clock_data)
+    if sync then
+      clock_info.tempo_clock_time = sync.clock_time or clock_info.tempo_clock_time
+      clock_info.system_time = sync.system_time or reaper.time_precise()
+      clock_info.bpm = sync.bpm or clock_info.bpm
+      log(string.format("Clock sync: time=%.3f, bpm=%.1f", clock_info.tempo_clock_time, clock_info.bpm))
+    end
+  end
+end
+
+-- Process timed messages that are ready
+function process_timed_messages()
+  local current_clock = get_tempo_clock_time()
+  local messages_to_remove = {}
+  
+  -- Check each timed message
+  for i, msg in ipairs(timed_messages) do
+    if msg.time <= current_clock then
+      -- Execute the message
+      handle_queue_action(msg.action, msg.args or {})
+      table.insert(messages_to_remove, i)
+    end
+  end
+  
+  -- Remove processed messages (in reverse order to maintain indices)
+  for i = #messages_to_remove, 1, -1 do
+    table.remove(timed_messages, messages_to_remove[i])
+  end
+end
+
 -- Message queue handler for ExtState polling
 function handle_message_queue()
-  -- Check for messages in ExtState queue
-  local raw_message = reaper.GetExtState("reaside_queue", "message")
+  -- Check for batch messages in ExtState queue
+  local raw_batch = reaper.GetExtState("midi_batch", "messages")
   
-  if raw_message and raw_message ~= "" then
-    -- Clear the message immediately to avoid processing it twice
-    reaper.DeleteExtState("reaside_queue", "message", false)
+  if raw_batch and raw_batch ~= "" then
+    -- Clear the batch immediately
+    reaper.DeleteExtState("midi_batch", "messages", false)
     
-    -- Parse the message
-    local message = parse_json(raw_message)
+    -- Parse the batch
+    local batch = parse_json(raw_batch)
     
-    if message and type(message) == "table" then
-      -- Route to appropriate handler based on action
-      if message.action then
-        handle_queue_action(message.action, message.args or {})
+    if batch and type(batch) == "table" then
+      -- Check if it's a batch or single message
+      if batch.messages then
+        -- It's a batch with multiple timed messages
+        for _, msg in ipairs(batch.messages) do
+          if msg.time then
+            -- Add to timed queue
+            table.insert(timed_messages, msg)
+          else
+            -- Execute immediately
+            handle_queue_action(msg.action, msg.args or {})
+          end
+        end
+        -- Sort by time
+        table.sort(timed_messages, function(a, b) return a.time < b.time end)
+        log("Added " .. #batch.messages .. " messages to queue")
+      elseif batch.action then
+        -- Single message for immediate execution
+        handle_queue_action(batch.action, batch.args or {})
       end
+    end
+  end
+  
+  -- Also check old single message queue for compatibility
+  local raw_message = reaper.GetExtState("reaside_queue", "message")
+  if raw_message and raw_message ~= "" then
+    reaper.DeleteExtState("reaside_queue", "message", false)
+    local message = parse_json(raw_message)
+    if message and type(message) == "table" and message.action then
+      handle_queue_action(message.action, message.args or {})
     end
   end
 end
@@ -176,7 +259,13 @@ end
 
 -- Main loop function
 function main_loop()
-  -- Poll for messages
+  -- Update clock sync
+  update_clock_sync()
+  
+  -- Process any timed messages that are ready
+  process_timed_messages()
+  
+  -- Poll for new messages
   handle_message_queue()
   
   -- Continue running at specified rate
