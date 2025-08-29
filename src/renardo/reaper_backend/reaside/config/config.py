@@ -12,6 +12,7 @@ from renardo.logger import get_logger
 import urllib.request
 import urllib.error
 from pathlib import Path
+from typing import Optional
 
 logger = get_logger('reaside.config.config')
 
@@ -417,3 +418,120 @@ def check_reaper_configuration():
         return True
     except FileNotFoundError:
         return False
+
+
+def get_reaper_user_plugins_directory() -> Optional[Path]:
+    """Get the REAPER UserPlugins directory path for the current platform.
+    
+    Returns:
+        Path to UserPlugins directory or None if not found
+    """
+    system = platform.system().lower()
+    
+    if system == "linux":
+        return Path.home() / ".config" / "REAPER" / "UserPlugins"
+    elif system == "darwin":
+        return Path.home() / "Library" / "Application Support" / "REAPER" / "UserPlugins"
+    elif system == "windows":
+        appdata = os.environ.get("APPDATA")
+        if appdata:
+            return Path(appdata) / "REAPER" / "UserPlugins"
+        return None
+    else:
+        logger.warning(f"Unsupported platform for REAPER plugins: {system}")
+        return None
+
+
+def install_rust_extension() -> bool:
+    """Install the Rust OSC extension to REAPER's UserPlugins directory.
+    
+    Returns:
+        True if installation successful, False otherwise
+    """
+    try:
+        # Get the rust extension path
+        current_dir = Path(__file__).parent.parent
+        rust_extension_dir = current_dir / "rust_extension"
+        
+        # Determine the library file based on platform
+        system = platform.system().lower()
+        if system == "linux":
+            lib_file = "target/release/librenardo_reaper_ext.so"
+            target_file = "reaper_renardo.so"
+        elif system == "darwin":
+            lib_file = "target/release/librenardo_reaper_ext.dylib"
+            target_file = "reaper_renardo.dylib"
+        elif system == "windows":
+            lib_file = "target/release/renardo_reaper_ext.dll"
+            target_file = "reaper_renardo.dll"
+        else:
+            logger.error(f"Unsupported platform: {system}")
+            return False
+        
+        source_path = rust_extension_dir / lib_file
+        
+        if not source_path.exists():
+            logger.error(f"Rust extension not built: {source_path}")
+            logger.info("Run: cd src/renardo/reaper_backend/reaside/rust_extension && cargo build --release")
+            return False
+        
+        # Get REAPER UserPlugins directory
+        reaper_plugins_dir = get_reaper_user_plugins_directory()
+        if not reaper_plugins_dir:
+            logger.error("Could not determine REAPER UserPlugins directory")
+            return False
+        
+        # Ensure directory exists
+        reaper_plugins_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Copy and rename the extension
+        target_path = reaper_plugins_dir / target_file
+        shutil.copy2(source_path, target_path)
+        
+        logger.info(f"Installed Rust extension: {target_path}")
+        logger.info("Restart REAPER to load the extension")
+        
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to install Rust extension: {e}")
+        return False
+
+
+def configure_reaper() -> bool:
+    """Configure REAPER with all necessary components.
+    
+    Returns:
+        True if all configurations successful, False otherwise
+    """
+    logger.info("Configuring REAPER...")
+    
+    success = True
+    
+    # Install Rust OSC extension
+    logger.info("Installing Rust OSC extension...")
+    if install_rust_extension():
+        logger.info("✓ Rust OSC extension installed")
+    else:
+        logger.warning("✗ Rust OSC extension installation failed")
+        success = False
+    
+    # Configure Lua ReaScript (existing functionality)
+    logger.info("Configuring Lua ReaScript...")
+    try:
+        if configure_lua_reascript():
+            logger.info("✓ Lua ReaScript configured")
+        else:
+            logger.warning("✗ Lua ReaScript configuration failed")
+            success = False
+    except Exception as e:
+        logger.error(f"Lua ReaScript configuration failed: {e}")
+        success = False
+    
+    if success:
+        logger.info("REAPER configuration completed successfully")
+        logger.info("Please restart REAPER to activate all changes")
+    else:
+        logger.warning("REAPER configuration completed with some errors")
+    
+    return success

@@ -122,5 +122,5 @@ Temporary Items
 **/.claude/settings.local.json
 
 # Rust extension
-src/renardo/reaper_backend/rust_extension/target/
-src/renardo/reaper_backend/rust_extension/Cargo.lock
+src/renardo/reaper_backend/reaside/rust_extension/target/
+src/renardo/reaper_backend/reaside/rust_extension/Cargo.lock
