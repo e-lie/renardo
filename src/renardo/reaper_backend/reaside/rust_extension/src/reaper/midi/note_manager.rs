@@ -10,7 +10,6 @@ use crate::reaper::api::*;
 /// Represents an active MIDI note
 #[derive(Debug, Clone)]
 struct ActiveNote {
-    track_name: String,
     midi_channel: u8,
     note: u8,
     velocity: u8,
@@ -23,7 +22,7 @@ static mut NOTE_MANAGER: Option<Arc<Mutex<NoteManager>>> = None;
 
 /// MIDI note manager that handles automatic note-off messages
 pub struct NoteManager {
-    active_notes: HashMap<(String, u8), ActiveNote>, // Key: (track_name, note)
+    active_notes: HashMap<(u8, u8), ActiveNote>, // Key: (midi_channel, note)
 }
 
 impl NoteManager {
@@ -34,16 +33,16 @@ impl NoteManager {
     }
 
     /// Play a MIDI note with automatic note-off handling
-    pub fn play_note(&mut self, track_name: String, midi_channel: u8, note: u8, velocity: u8, duration_ms: u64) {
-        show_console_msg(&format!("[renardo-ext] Playing note {} on track '{}' ch{} vel{} dur{}ms\n", 
-                                note, track_name, midi_channel, velocity, duration_ms));
+    pub fn play_note(&mut self, midi_channel: u8, note: u8, velocity: u8, duration_ms: u64) {
+        show_console_msg(&format!("[renardo-ext] Playing note {} on ch{} vel{} dur{}ms\n", 
+                                note, midi_channel, velocity, duration_ms));
 
-        let note_key = (track_name.clone(), note);
+        let note_key = (midi_channel, note);
         
         // If note is already playing, stop it immediately
         if let Some(active_note) = self.active_notes.get(&note_key) {
-            show_console_msg(&format!("[renardo-ext] Stopping existing note {} on track '{}'\n", 
-                                    note, track_name));
+            show_console_msg(&format!("[renardo-ext] Stopping existing note {} on ch{}\n", 
+                                    note, midi_channel));
             self.send_note_off(active_note.midi_channel, note);
         }
 
@@ -52,7 +51,6 @@ impl NoteManager {
 
         // Store the active note
         let active_note = ActiveNote {
-            track_name: track_name.clone(),
             midi_channel,
             note,
             velocity,
@@ -67,13 +65,13 @@ impl NoteManager {
             thread::sleep(Duration::from_millis(duration_ms));
             
             if let Ok(mut manager) = manager_clone.lock() {
-                let note_key = (track_name.clone(), note);
+                let note_key = (midi_channel, note);
                 
                 // Check if this is still the same note (not replaced by a newer one)
                 if let Some(current_note) = manager.active_notes.get(&note_key) {
                     if current_note.start_time == active_note.start_time {
-                        show_console_msg(&format!("[renardo-ext] Auto note-off {} on track '{}'\n", 
-                                                note, track_name));
+                        show_console_msg(&format!("[renardo-ext] Auto note-off {} on ch{}\n", 
+                                                note, midi_channel));
                         manager.send_note_off(midi_channel, note);
                         manager.active_notes.remove(&note_key);
                     }
@@ -108,19 +106,19 @@ impl NoteManager {
         }
     }
 
-    /// Stop all notes on a specific track
-    pub fn stop_all_notes_on_track(&mut self, track_name: &str) {
+    /// Stop all notes on a specific MIDI channel
+    pub fn stop_all_notes_on_channel(&mut self, midi_channel: u8) {
         let mut notes_to_stop = Vec::new();
         
-        for ((tn, note), active_note) in &self.active_notes {
-            if tn == track_name {
-                notes_to_stop.push((active_note.midi_channel, *note));
+        for ((ch, note), _active_note) in &self.active_notes {
+            if *ch == midi_channel {
+                notes_to_stop.push(*note);
             }
         }
         
-        for (channel, note) in notes_to_stop {
-            self.send_note_off(channel, note);
-            self.active_notes.remove(&(track_name.to_string(), note));
+        for note in notes_to_stop {
+            self.send_note_off(midi_channel, note);
+            self.active_notes.remove(&(midi_channel, note));
         }
     }
 

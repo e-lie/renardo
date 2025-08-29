@@ -9,18 +9,19 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from renardo.reaper_backend.reaside.tools.rust_osc_client import RustOscClient
+from renardo.reaper_backend.reaside.core.reaper import Reaper
 
 def test_midi_notes():
     """Test MIDI note playing functionality."""
-    print("=== Testing MIDI Note OSC Route ===")
-    
-    # Create client
-    client = RustOscClient()
+    print("=== Testing MIDI Note Functionality ===")
     
     try:
-        print("1. Testing note on track 'Track 1' (should find if exists)")
+        # Test low-level OSC client
+        print("1. Testing low-level OSC client with MIDI channel 1")
+        client = RustOscClient()
+        
         result = client.play_note(
-            track_name="Track 1",
+            midi_channel=1,
             midi_note=60,  # Middle C
             velocity=100,
             duration_ms=2000
@@ -31,7 +32,7 @@ def test_midi_notes():
         
         print("2. Testing note retriggering (same note before note-off)")
         result1 = client.play_note(
-            track_name="Track 1",
+            midi_channel=1,
             midi_note=64,  # E
             velocity=80,
             duration_ms=3000
@@ -41,7 +42,7 @@ def test_midi_notes():
         # Send same note again before the first one ends
         time.sleep(1.0)
         result2 = client.play_note(
-            track_name="Track 1",
+            midi_channel=1,
             midi_note=64,  # Same E
             velocity=120,
             duration_ms=2000
@@ -50,28 +51,46 @@ def test_midi_notes():
         
         time.sleep(0.5)
         
-        print("3. Testing different notes simultaneously")
-        client.play_note("Track 1", 67, 90, 1500)  # G
-        client.play_note("Track 1", 72, 95, 1500)  # C
-        client.play_note("Track 1", 76, 85, 1500)  # E
+        print("3. Testing different notes simultaneously on channel 1")
+        client.play_note(1, 67, 90, 1500)  # G
+        client.play_note(1, 72, 95, 1500)  # C
+        client.play_note(1, 76, 85, 1500)  # E
         print("   Playing chord: C major")
         
         time.sleep(2.0)
         
-        print("4. Testing non-existent track")
-        result = client.play_note(
-            track_name="NonExistentTrack",
-            midi_note=60,
-            velocity=100,
-            duration_ms=1000
-        )
-        print(f"   Result for non-existent track: {result}")
+        client.close()
+        
+        print("4. Testing ReaTrack.play_note() method")
+        # Test ReaTrack method if we can access a track
+        reaper = Reaper()
+        project = reaper.get_current_project()
+        
+        if len(project.tracks) > 0:
+            track = project.tracks[0]
+            print(f"   Track: '{track.name}' (MIDI channel: {track.midi_channel})")
+            
+            if track.midi_channel is not None:
+                success = track.play_note(60, 100, 1500)  # Middle C
+                print(f"   Played note on track: {success}")
+                
+                time.sleep(0.5)
+                
+                # Test chord on track
+                track.play_note(60, 90, 2000)  # C
+                track.play_note(64, 90, 2000)  # E  
+                track.play_note(67, 90, 2000)  # G
+                print(f"   Played chord on track: C major")
+            else:
+                print(f"   Track '{track.name}' is not configured for MIDI input")
+        else:
+            print("   No tracks found in project")
         
         print("\nTest completed! Check REAPER console for detailed logs.")
         print("Note: This test assumes you have tracks configured with MIDI input.")
         
-    finally:
-        client.close()
+    except Exception as e:
+        print(f"Error during test: {e}")
 
 if __name__ == "__main__":
     test_midi_notes()

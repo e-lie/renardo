@@ -323,12 +323,12 @@ class RustOscClient:
         
         return response is not None and len(response) >= 3 and response[2] == "success"
     
-    def play_note(self, track_name: str, midi_note: int, velocity: int = 100, 
+    def play_note(self, midi_channel: int, midi_note: int, velocity: int = 100, 
                   duration_ms: int = 1000, timeout: Optional[float] = None) -> bool:
-        """Play a MIDI note on a specific track with automatic note-off.
+        """Play a MIDI note on a specific MIDI channel with automatic note-off.
         
         Args:
-            track_name: Name of the track to play the note on
+            midi_channel: MIDI channel (1-16)
             midi_note: MIDI note number (0-127)
             velocity: Note velocity (0-127)
             duration_ms: Note duration in milliseconds
@@ -340,7 +340,7 @@ class RustOscClient:
         response = self.send_and_wait(
             "/note",
             "/note/response",
-            track_name, midi_note, velocity, duration_ms,
+            midi_channel, midi_note, velocity, duration_ms,
             timeout=timeout
         )
         

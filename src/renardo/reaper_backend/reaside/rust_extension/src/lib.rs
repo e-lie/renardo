@@ -58,7 +58,7 @@ pub extern "C" fn ReaperPluginEntry(
             show_console_msg("[renardo-ext] Available routes:\n");
             show_console_msg("  Project: /project/name/get, /project/name/set, /project/add_track\n");
             show_console_msg("  Track: /track/name/get, /track/name/set, /track/volume/*, /track/pan/*\n");
-            show_console_msg("  MIDI: /note [track_name, note, velocity, duration_ms]\n");
+            show_console_msg("  MIDI: /note [channel, note, velocity, duration_ms]\n");
             show_console_msg("  FX: /fx/* (planned)\n");
             
             // Store server in global state
