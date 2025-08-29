@@ -2,6 +2,7 @@
 
 from renardo.logger import get_logger
 from typing import Optional, List, Union, Dict, Any
+from ..tools.rust_osc_client import get_rust_osc_client
 
 logger = get_logger('reaside.core.project')
 
@@ -86,25 +87,59 @@ class ReaProject:
     @property
     def name(self) -> str:
         """Get project name."""
+        try:
+            # Try using Rust OSC extension first (preferred method)
+            rust_client = get_rust_osc_client()
+            project_name = rust_client.get_project_name(timeout=1.0)
+            if project_name:
+                logger.debug(f"Got project name from Rust extension: {project_name}")
+                return project_name
+        except Exception as e:
+            logger.debug(f"Rust OSC client not available, falling back to HTTP: {e}")
+        
+        # Fallback to HTTP/ReaScript methods
         # Try to get from project title first
-        result = self._client.call_reascript_function("GetSetProjectInfo_String", 0, "PROJECT_TITLE", "", False)
-        if isinstance(result, tuple) and len(result) >= 2 and result[1]:
-            return result[1]
+        try:
+            result = self._client.call_reascript_function("GetSetProjectInfo_String", 0, "PROJECT_TITLE", "", False)
+            if isinstance(result, tuple) and len(result) >= 2 and result[1]:
+                return result[1]
+        except Exception as e:
+            logger.debug(f"GetSetProjectInfo_String failed: {e}")
             
         # Fallback to ExtState if available
-        title = self._client.get_ext_state("project", "title")
-        if title:
-            return title
+        try:
+            title = self._client.get_ext_state("project", "title")
+            if title:
+                return title
+        except Exception as e:
+            logger.debug(f"ExtState fallback failed: {e}")
             
         # Final fallback to GetProjectName
-        name = self._client.call_reascript_function("GetProjectName", self._index, "", 1024)
-        return name or "Untitled"
+        try:
+            name = self._client.call_reascript_function("GetProjectName", self._index, "", 1024)
+            return name or "Untitled"
+        except Exception as e:
+            logger.warning(f"All project name methods failed: {e}")
+            return "Untitled"
     
     @name.setter
     def name(self, value: str) -> None:
         """Set project name."""
-        # Use PROJECT_TITLE to set the project title
-        self._client.call_reascript_function("GetSetProjectInfo_String", 0, "PROJECT_TITLE", value, True)
+        try:
+            # Try using Rust OSC extension first (preferred method)
+            rust_client = get_rust_osc_client()
+            if rust_client.set_project_name(value, timeout=2.0):
+                logger.debug(f"Set project name via Rust extension: {value}")
+                return
+        except Exception as e:
+            logger.debug(f"Rust OSC client not available, falling back to HTTP: {e}")
+        
+        # Fallback to HTTP/ReaScript method
+        try:
+            self._client.call_reascript_function("GetSetProjectInfo_String", 0, "PROJECT_TITLE", value, True)
+            logger.debug(f"Set project name via HTTP: {value}")
+        except Exception as e:
+            logger.error(f"Failed to set project name: {e}")
         
         # Also store in ExtState as backup
         self._client.set_ext_state("project", "title", value)
