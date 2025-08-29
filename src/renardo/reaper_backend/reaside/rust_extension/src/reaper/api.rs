@@ -12,7 +12,7 @@ pub static mut INSERT_TRACK_AT_INDEX: Option<extern "C" fn(c_int, c_int)> = None
 pub static mut COUNT_TRACKS: Option<extern "C" fn(*mut c_void) -> c_int> = None;
 pub static mut GET_TRACK: Option<extern "C" fn(*mut c_void, c_int) -> *mut c_void> = None;
 pub static mut GET_TRACK_NAME: Option<extern "C" fn(*mut c_void, *mut c_char, c_int) -> bool> = None;
-pub static mut STUFF_MIDI_MESSAGE: Option<extern "C" fn(c_int, *const u8, c_int)> = None;
+pub static mut STUFF_MIDI_MESSAGE: Option<extern "C" fn(c_int, c_int, c_int, c_int)> = None;
 
 /// REAPER plugin info struct for interfacing with REAPER
 #[repr(C)]
