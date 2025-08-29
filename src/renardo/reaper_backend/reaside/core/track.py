@@ -91,22 +91,30 @@ class ReaTrack:
         # Don't cache the track ID since it's now a pointer ID that's managed by Lua script
         return self._client.call_reascript_function("GetTrack", self._project.index, self._index)
     
-    @property
+    @property 
     def name(self) -> str:
-        """Get track name."""
-        # GetTrackName returns (retval, name)
-        result = self._client.call_reascript_function("GetTrackName", self.id, "", 1024)
-        if isinstance(result, tuple) and len(result) >= 2:
-            return result[1]  # Return the track name
-        elif isinstance(result, tuple) and len(result) == 1:
-            return result[0] if result[0] else f"Track {self._index + 1}"
-        else:
-            return str(result) if result else f"Track {self._index + 1}"
+        """Get track name via Rust OSC extension."""
+        try:
+            from ..tools.rust_osc_client import get_rust_osc_client
+            rust_client = get_rust_osc_client()
+            track_name = rust_client.get_track_name(self._index, timeout=1.0)
+            return track_name or f"Track {self._index + 1}"
+        except Exception as e:
+            logger.warning(f"Rust OSC extension not available for track {self._index}: {e}")
+            return f"Track {self._index + 1}"
     
     @name.setter
     def name(self, value: str) -> None:
-        """Set track name."""
-        self._client.call_reascript_function("GetSetMediaTrackInfo_String", self.id, "P_NAME", value, True)
+        """Set track name via Rust OSC extension."""
+        try:
+            from ..tools.rust_osc_client import get_rust_osc_client
+            rust_client = get_rust_osc_client()
+            if rust_client.set_track_name(self._index, value, timeout=2.0):
+                logger.debug(f"Set track {self._index} name to: {value} via Rust OSC")
+            else:
+                logger.warning(f"Rust OSC extension failed to set track {self._index} name: {value}")
+        except Exception as e:
+            logger.error(f"Rust OSC extension not available for track {self._index}: {e}")
     
     @property
     def is_selected(self) -> bool:
