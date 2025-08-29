@@ -107,20 +107,35 @@ class ReaProject:
         except Exception as e:
             logger.error(f"Rust OSC extension not available: {e}")
     
-    def basic_add_track(self) -> Optional['ReaTrack']:
-        """Add a new track via Rust OSC extension.
+    def add_track_configured(self, position: int = -1, name: str = "", 
+                           input_value: int = -1, record_armed: bool = False) -> Optional['ReaTrack']:
+        """Add a new track via Rust OSC extension with configuration.
         
+        Args:
+            position: Where to insert track (-1 for end)
+            name: Track name (empty string for default) 
+            input_value: MIDI input value (-1 for no input, 0+ for MIDI channels)
+            record_armed: Whether to arm track for recording
+            
         Returns:
             ReaTrack instance for the new track or None if failed
         """
         try:
             rust_client = get_rust_osc_client()
-            track_index = rust_client.add_track(timeout=2.0)
+            track_index = rust_client.add_track(
+                position=position, 
+                name=name, 
+                input_value=input_value, 
+                record_armed=record_armed,
+                timeout=2.0
+            )
             if track_index is not None:
-                logger.debug(f"Added track via Rust OSC at index: {track_index}")
+                logger.debug(f"Added configured track via Rust OSC at index: {track_index}")
                 # Create ReaTrack instance for the new track
                 from .track import ReaTrack
                 new_track = ReaTrack(self, track_index)
+                # Update our internal tracking
+                self.reatracks[track_index] = new_track
                 return new_track
             else:
                 logger.warning("Rust OSC extension failed to add track")
@@ -245,15 +260,38 @@ class ReaProject:
                 
         return None
     
-    def add_track(self, position: Optional[int] = None):
-        """Add a new track to the project at the specified position.
+    def add_track(self, position: Optional[int] = None, name: str = "", 
+                  input_value: int = -1, record_armed: bool = False):
+        """Add a new track to the project with optional configuration.
         
         Args:
             position: Track index where to insert (0-based). If None, adds at the end.
+            name: Track name (empty string for default)
+            input_value: MIDI input value (-1 for no input, 0+ for MIDI channels)  
+            record_armed: Whether to arm track for recording
             
         Returns:
             ReaTrack: The newly created track
         """
+        # Convert None position to -1 for Rust extension
+        pos = -1 if position is None else position
+        
+        try:
+            # Try Rust OSC extension first
+            new_track = self.add_track_configured(
+                position=pos, 
+                name=name, 
+                input_value=input_value, 
+                record_armed=record_armed
+            )
+            if new_track:
+                return new_track
+            
+            logger.warning("Rust OSC extension failed, falling back to legacy method")
+        except Exception as e:
+            logger.warning(f"Rust OSC extension not available: {e}, using legacy method")
+        
+        # Fallback to legacy method (simplified - just basic track creation)
         if position is None:
             # Add at the end using action
             self._reaper.perform_action(40001)
@@ -265,17 +303,14 @@ class ReaProject:
             track_index = position
             
             # Update indices of existing tracks that were shifted
-            # We need to update tracks that were at or after the insertion point
             for idx in sorted(self.reatracks.keys(), reverse=True):
                 if idx >= position:
-                    # This track was shifted down by one
                     track = self.reatracks[idx]
                     track._index = idx + 1
-                    # Move it in the cache
                     del self.reatracks[idx]
                     self.reatracks[idx + 1] = track
         
-        # Create and return Track object (this will automatically scan it)
+        # Create and return Track object
         self._scan_and_populate_track(track_index)
         return self.reatracks[track_index]
     
@@ -326,8 +361,7 @@ class ReaProject:
         The track is:
         - Named with the provided track_name
         - Record armed
-        - Set to receive from "All MIDI inputs"
-        - Set to receive from the specified MIDI channel
+        - Set to receive from "All MIDI inputs" on the specified MIDI channel
         - Record mode set to "Stereo Out" (monitors the track output)
         - Placed in order by MIDI channel
         
@@ -346,24 +380,25 @@ class ReaProject:
             if ch in self._instrument_tracks:
                 position += 1
         
-        # Add track at the calculated position
-        track = self.add_track(position)
-        track.name = track_name
-        
-        # Get track object
-        track_obj = self._client.call_reascript_function("GetTrack", 0, track._index)
-        
-        # Set MIDI input to "All MIDI inputs" on the appropriate channel
-        # ReaScript: I_RECINPUT = 4096 | channel | (63 << 5) for "All MIDI inputs" on specific channel
+        # Calculate MIDI input value: "All MIDI inputs" on specific channel
+        # I_RECINPUT = 4096 | channel | (63 << 5) for "All MIDI inputs" on specific channel
         # 4096 = MIDI input flag, channel = 1-16 for specific channel, (63 << 5) = all MIDI devices
         midi_input_value = 4096 | midi_channel | (63 << 5)
-        self._client.call_reascript_function("SetMediaTrackInfo_Value", track_obj, "I_RECINPUT", midi_input_value)
         
-        # Arm the track for recording
-        track.is_armed = True
+        # Create track with all configuration in one call
+        track = self.add_track(
+            position=position, 
+            name=track_name,
+            input_value=midi_input_value,
+            record_armed=True
+        )
         
-        # Set record mode to "2 = None (monitors input)"
-        self._client.call_reascript_function("SetMediaTrackInfo_Value", track_obj, "I_RECMODE", 2)
+        # Set record mode to "2 = None (monitors input)" - requires legacy call for now
+        try:
+            track_obj = self._client.call_reascript_function("GetTrack", 0, track._index)
+            self._client.call_reascript_function("SetMediaTrackInfo_Value", track_obj, "I_RECMODE", 2)
+        except Exception as e:
+            logger.warning(f"Failed to set record mode for track {track_name}: {e}")
         
         # Add to instrument tracks dictionary
         self._instrument_tracks[midi_channel] = track
@@ -418,18 +453,13 @@ class ReaProject:
         # Calculate position: at the end of existing bus tracks
         position = len(self._bus_tracks)
         
-        # Add track at the calculated position
-        track = self.add_track(position)
-        track.name = bus_name
-        
-        # Get track object
-        track_obj = self._client.call_reascript_function("GetTrack", 0, track._index)
-        
-        # Bus tracks don't need MIDI input, so we set I_RECINPUT to -1 (no input)
-        self._client.call_reascript_function("SetMediaTrackInfo_Value", track_obj, "I_RECINPUT", -1)
-        
-        # Bus tracks are typically not record armed
-        track.is_armed = False
+        # Create track with configuration in one call
+        track = self.add_track(
+            position=position,
+            name=bus_name,
+            input_value=-1,  # No MIDI input
+            record_armed=False
+        )
         
         # Add to bus tracks dictionary with the next available index
         bus_index = len(self._bus_tracks)
