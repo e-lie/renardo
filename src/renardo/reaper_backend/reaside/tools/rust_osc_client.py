@@ -323,6 +323,29 @@ class RustOscClient:
         
         return response is not None and len(response) >= 3 and response[2] == "success"
     
+    def play_note(self, track_name: str, midi_note: int, velocity: int = 100, 
+                  duration_ms: int = 1000, timeout: Optional[float] = None) -> bool:
+        """Play a MIDI note on a specific track with automatic note-off.
+        
+        Args:
+            track_name: Name of the track to play the note on
+            midi_note: MIDI note number (0-127)
+            velocity: Note velocity (0-127)
+            duration_ms: Note duration in milliseconds
+            timeout: Timeout in seconds
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        response = self.send_and_wait(
+            "/note",
+            "/note/response",
+            track_name, midi_note, velocity, duration_ms,
+            timeout=timeout
+        )
+        
+        return response is not None and len(response) >= 1 and response[0] == "success"
+    
     def close(self):
         """Close the client and stop the server."""
         if self.server:

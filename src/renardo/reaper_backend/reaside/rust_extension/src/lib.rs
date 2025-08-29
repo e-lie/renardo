@@ -21,6 +21,7 @@ mod reaper;
 mod osc;
 
 use reaper::api::{ReaperPluginInfo, initialize_api, show_console_msg};
+use reaper::midi::{init_note_manager};
 use osc::{OscServer, OSC_SERVER};
 
 /// Plugin entry point called by REAPER
@@ -43,6 +44,9 @@ pub extern "C" fn ReaperPluginEntry(
     show_console_msg("Renardo REAPER Extension loaded!\n");
     show_console_msg("=================================\n");
     
+    // Initialize MIDI note manager
+    init_note_manager();
+    
     // Start OSC server on ports 9877 (receive) and 9878 (send)
     let server_port = 9877;
     let client_port = 9878;
@@ -53,7 +57,8 @@ pub extern "C" fn ReaperPluginEntry(
             show_console_msg(&format!("[renardo-ext] OSC client sending to port {}\n", client_port));
             show_console_msg("[renardo-ext] Available routes:\n");
             show_console_msg("  Project: /project/name/get, /project/name/set, /project/add_track\n");
-            show_console_msg("  Track: /track/name/get, /track/name/set\n");
+            show_console_msg("  Track: /track/name/get, /track/name/set, /track/volume/*, /track/pan/*\n");
+            show_console_msg("  MIDI: /note [track_name, note, velocity, duration_ms]\n");
             show_console_msg("  FX: /fx/* (planned)\n");
             
             // Store server in global state
