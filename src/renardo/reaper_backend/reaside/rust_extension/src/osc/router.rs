@@ -5,7 +5,7 @@ use rosc::OscPacket;
 
 use crate::reaper::api::show_console_msg;
 use crate::reaper::project::{handle_get_project_name, handle_set_project_name, handle_add_track};
-use crate::reaper::track::{handle_get_track_name, handle_set_track_name};
+use crate::reaper::track::{handle_get_track_name, handle_set_track_name, handle_get_track_volume, handle_set_track_volume, handle_get_track_pan, handle_set_track_pan};
 use crate::reaper::fx::{handle_add_fx, handle_remove_fx, handle_get_fx_param, handle_set_fx_param};
 
 /// Handle incoming OSC packets
@@ -41,6 +41,10 @@ fn handle_osc_message(msg: rosc::OscMessage, sender_addr: SocketAddr) {
         // Track operations
         "/track/name/get" => handle_get_track_name(&msg, sender_addr),
         "/track/name/set" => handle_set_track_name(&msg, sender_addr),
+        "/track/volume/get" => handle_get_track_volume(&msg, sender_addr),
+        "/track/volume/set" => handle_set_track_volume(&msg, sender_addr),
+        "/track/pan/get" => handle_get_track_pan(&msg, sender_addr),
+        "/track/pan/set" => handle_set_track_pan(&msg, sender_addr),
         
         // FX operations (placeholders)
         "/fx/add" => handle_add_fx(&msg, sender_addr),
