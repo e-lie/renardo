@@ -108,7 +108,7 @@ class ReaProject:
             logger.error(f"Rust OSC extension not available: {e}")
     
     def add_track_configured(self, position: int = -1, name: str = "", 
-                           input_value: int = -1, record_armed: bool = False) -> Optional['ReaTrack']:
+                           input_value: int = -1, record_armed: bool = False, record_mode: int = 2) -> Optional['ReaTrack']:
         """Add a new track via Rust OSC extension with configuration.
         
         Args:
@@ -116,6 +116,7 @@ class ReaProject:
             name: Track name (empty string for default) 
             input_value: MIDI input value (-1 for no input, 0+ for MIDI channels)
             record_armed: Whether to arm track for recording
+            record_mode: Record mode (0=output, 1=output stereo, 2=none/monitor input, 3=midi output)
             
         Returns:
             ReaTrack instance for the new track or None if failed
@@ -127,6 +128,7 @@ class ReaProject:
                 name=name, 
                 input_value=input_value, 
                 record_armed=record_armed,
+                record_mode=record_mode,
                 timeout=2.0
             )
             if track_index is not None:
@@ -261,7 +263,7 @@ class ReaProject:
         return None
     
     def add_track(self, position: Optional[int] = None, name: str = "", 
-                  input_value: int = -1, record_armed: bool = False):
+                  input_value: int = -1, record_armed: bool = False, record_mode: int = 2):
         """Add a new track to the project with optional configuration.
         
         Args:
@@ -269,6 +271,7 @@ class ReaProject:
             name: Track name (empty string for default)
             input_value: MIDI input value (-1 for no input, 0+ for MIDI channels)  
             record_armed: Whether to arm track for recording
+            record_mode: Record mode (0=output, 1=output stereo, 2=none/monitor input, 3=midi output)
             
         Returns:
             ReaTrack: The newly created track
@@ -282,7 +285,8 @@ class ReaProject:
                 position=pos, 
                 name=name, 
                 input_value=input_value, 
-                record_armed=record_armed
+                record_armed=record_armed,
+                record_mode=record_mode
             )
             if new_track:
                 return new_track
@@ -390,15 +394,9 @@ class ReaProject:
             position=position, 
             name=track_name,
             input_value=midi_input_value,
-            record_armed=True
+            record_armed=True,
+            record_mode=2  # None (monitors input)
         )
-        
-        # Set record mode to "2 = None (monitors input)" - requires legacy call for now
-        try:
-            track_obj = self._client.call_reascript_function("GetTrack", 0, track._index)
-            self._client.call_reascript_function("SetMediaTrackInfo_Value", track_obj, "I_RECMODE", 2)
-        except Exception as e:
-            logger.warning(f"Failed to set record mode for track {track_name}: {e}")
         
         # Add to instrument tracks dictionary
         self._instrument_tracks[midi_channel] = track

@@ -160,25 +160,55 @@ class ReaTrack:
     
     @property
     def volume(self) -> float:
-        """Get track volume."""
-        return self._client.call_reascript_function("GetMediaTrackInfo_Value", self.id, "D_VOL")
+        """Get track volume via Rust OSC extension."""
+        try:
+            from ..tools.rust_osc_client import get_rust_osc_client
+            rust_client = get_rust_osc_client()
+            volume = rust_client.get_track_volume(self._index, timeout=1.0)
+            return volume if volume is not None else 1.0
+        except Exception as e:
+            logger.warning(f"Rust OSC extension not available for track {self._index} volume: {e}")
+            return self._client.call_reascript_function("GetMediaTrackInfo_Value", self.id, "D_VOL")
     
     @volume.setter
     def volume(self, value: float) -> None:
-        """Set track volume."""
-        # Use unified client for better performance with OSC if available
-        self._client.set_track_volume(self._index + 1, value)  # Convert to 1-based
+        """Set track volume via Rust OSC extension."""
+        try:
+            from ..tools.rust_osc_client import get_rust_osc_client
+            rust_client = get_rust_osc_client()
+            if rust_client.set_track_volume(self._index, value, timeout=2.0):
+                logger.debug(f"Set track {self._index} volume to: {value} via Rust OSC")
+            else:
+                logger.warning(f"Rust OSC extension failed to set track {self._index} volume: {value}")
+        except Exception as e:
+            logger.error(f"Rust OSC extension not available for track {self._index} volume: {e}")
+            self._client.set_track_volume(self._index + 1, value)
     
     @property
     def pan(self) -> float:
-        """Get track pan."""
-        return self._client.call_reascript_function("GetMediaTrackInfo_Value", self.id, "D_PAN")
+        """Get track pan via Rust OSC extension."""
+        try:
+            from ..tools.rust_osc_client import get_rust_osc_client
+            rust_client = get_rust_osc_client()
+            pan = rust_client.get_track_pan(self._index, timeout=1.0)
+            return pan if pan is not None else 0.0
+        except Exception as e:
+            logger.warning(f"Rust OSC extension not available for track {self._index} pan: {e}")
+            return self._client.call_reascript_function("GetMediaTrackInfo_Value", self.id, "D_PAN")
     
     @pan.setter
     def pan(self, value: float) -> None:
-        """Set track pan."""
-        # Use unified client for better performance with OSC if available
-        self._client.set_track_pan(self._index + 1, value)  # Convert to 1-based
+        """Set track pan via Rust OSC extension."""
+        try:
+            from ..tools.rust_osc_client import get_rust_osc_client
+            rust_client = get_rust_osc_client()
+            if rust_client.set_track_pan(self._index, value, timeout=2.0):
+                logger.debug(f"Set track {self._index} pan to: {value} via Rust OSC")
+            else:
+                logger.warning(f"Rust OSC extension failed to set track {self._index} pan: {value}")
+        except Exception as e:
+            logger.error(f"Rust OSC extension not available for track {self._index} pan: {e}")
+            self._client.set_track_pan(self._index + 1, value)
     
     @property
     def items(self) -> List:
