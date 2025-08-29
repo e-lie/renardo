@@ -107,6 +107,28 @@ class ReaProject:
         except Exception as e:
             logger.error(f"Rust OSC extension not available: {e}")
     
+    def basic_add_track(self) -> Optional['ReaTrack']:
+        """Add a new track via Rust OSC extension.
+        
+        Returns:
+            ReaTrack instance for the new track or None if failed
+        """
+        try:
+            rust_client = get_rust_osc_client()
+            track_index = rust_client.add_track(timeout=2.0)
+            if track_index is not None:
+                logger.debug(f"Added track via Rust OSC at index: {track_index}")
+                # Create ReaTrack instance for the new track
+                from .track import ReaTrack
+                new_track = ReaTrack(self, track_index)
+                return new_track
+            else:
+                logger.warning("Rust OSC extension failed to add track")
+                return None
+        except Exception as e:
+            logger.error(f"Rust OSC extension not available for adding track: {e}")
+            return None
+    
     @property
     def path(self) -> str:
         """Get project file path."""

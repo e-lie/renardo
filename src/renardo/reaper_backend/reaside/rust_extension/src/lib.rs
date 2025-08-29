@@ -17,6 +17,10 @@ static mut GET_PROJECT_NAME: Option<extern "C" fn(*mut c_void, *mut c_char, c_in
 static mut ENUM_PROJECTS: Option<extern "C" fn(c_int) -> *mut c_void> = None;
 static mut GET_SET_MEDIA_TRACK_INFO: Option<extern "C" fn(*mut c_void, *const c_char, *mut c_void, c_int)> = None;
 static mut MAIN_ON_COMMAND: Option<extern "C" fn(c_int, c_int)> = None;
+static mut INSERT_TRACK_AT_INDEX: Option<extern "C" fn(c_int, c_int)> = None;
+static mut COUNT_TRACKS: Option<extern "C" fn(*mut c_void) -> c_int> = None;
+static mut GET_TRACK: Option<extern "C" fn(*mut c_void, c_int) -> *mut c_void> = None;
+static mut GET_TRACK_NAME: Option<extern "C" fn(*mut c_void, *mut c_char, c_int) -> bool> = None;
 
 // Global state for the OSC server
 static OSC_SERVER: Lazy<Arc<Mutex<Option<OscServer>>>> = Lazy::new(|| Arc::new(Mutex::new(None)));
@@ -144,11 +148,12 @@ fn handle_osc_message(msg: OscMessage, sender_addr: std::net::SocketAddr) {
                             
                             let packet = OscPacket::Message(response);
                             if let Ok(buf) = encoder::encode(&packet) {
-                                // Send response back to sender
+                                // Send response to fixed client port 9878
                                 let response_socket = UdpSocket::bind("127.0.0.1:0").expect("Failed to create response socket");
-                                match response_socket.send_to(&buf, sender_addr) {
-                                    Ok(_) => show_console_msg(&format!("[renardo-ext] Sent project name response to {}\n", sender_addr)),
-                                    Err(e) => show_console_msg(&format!("[renardo-ext] Failed to send response to {}: {}\n", sender_addr, e)),
+                                let client_addr = std::net::SocketAddr::new(sender_addr.ip(), 9878);
+                                match response_socket.send_to(&buf, client_addr) {
+                                    Ok(_) => show_console_msg(&format!("[renardo-ext] Sent project name response to {}\n", client_addr)),
+                                    Err(e) => show_console_msg(&format!("[renardo-ext] Failed to send response to {}: {}\n", client_addr, e)),
                                 }
                             } else {
                                 show_console_msg("[renardo-ext] Failed to encode OSC response\n");
@@ -182,11 +187,147 @@ fn handle_osc_message(msg: OscMessage, sender_addr: std::net::SocketAddr) {
                         
                         let packet = OscPacket::Message(response);
                         if let Ok(buf) = encoder::encode(&packet) {
-                            // Send response back to sender
+                            // Send response to fixed client port 9878
                             let response_socket = UdpSocket::bind("127.0.0.1:0").expect("Failed to create response socket");
-                            match response_socket.send_to(&buf, sender_addr) {
-                                Ok(_) => show_console_msg(&format!("[renardo-ext] Sent set response to {}\n", sender_addr)),
-                                Err(e) => show_console_msg(&format!("[renardo-ext] Failed to send set response to {}: {}\n", sender_addr, e)),
+                            let client_addr = std::net::SocketAddr::new(sender_addr.ip(), 9878);
+                            match response_socket.send_to(&buf, client_addr) {
+                                Ok(_) => show_console_msg(&format!("[renardo-ext] Sent set response to {}\n", client_addr)),
+                                Err(e) => show_console_msg(&format!("[renardo-ext] Failed to send set response to {}: {}\n", client_addr, e)),
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        "/project/add_track" => {
+            // Add a new track to the project
+            show_console_msg("[renardo-ext] Adding new track\n");
+            
+            unsafe {
+                if let Some(insert_track_at_index) = INSERT_TRACK_AT_INDEX {
+                    if let Some(count_tracks) = COUNT_TRACKS {
+                        // Get current track count
+                        let track_count = count_tracks(std::ptr::null_mut());
+                        
+                        // Insert track at the end
+                        insert_track_at_index(track_count, false as i32);
+                        
+                        // Return the new track index (should be track_count)
+                        let response = OscMessage {
+                            addr: "/project/add_track/response".to_string(),
+                            args: vec![OscType::Int(track_count)],
+                        };
+                        
+                        let packet = OscPacket::Message(response);
+                        if let Ok(buf) = encoder::encode(&packet) {
+                            // Send response to fixed client port 9878
+                            let response_socket = UdpSocket::bind("127.0.0.1:0").expect("Failed to create response socket");
+                            let client_addr = std::net::SocketAddr::new(sender_addr.ip(), 9878);
+                            match response_socket.send_to(&buf, client_addr) {
+                                Ok(_) => show_console_msg(&format!("[renardo-ext] Sent add_track response: {} to {}\n", track_count, client_addr)),
+                                Err(e) => show_console_msg(&format!("[renardo-ext] Failed to send add_track response: {}\n", e)),
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        "/track/name/get" => {
+            // Get track name - expecting track index as first argument
+            if let Some(OscType::Int(track_index)) = msg.args.get(0) {
+                show_console_msg(&format!("[renardo-ext] Getting name for track {}\n", track_index));
+                
+                unsafe {
+                    if let Some(get_track) = GET_TRACK {
+                        if let Some(get_track_name) = GET_TRACK_NAME {
+                            // Get the track
+                            let track = get_track(std::ptr::null_mut(), *track_index);
+                            if !track.is_null() {
+                                let mut buf = vec![0u8; 256];
+                                let success = get_track_name(track, buf.as_mut_ptr() as *mut c_char, 256);
+                                
+                                if success {
+                                    // Convert to string safely
+                                    let track_name = std::ffi::CStr::from_ptr(buf.as_ptr() as *const c_char)
+                                        .to_string_lossy()
+                                        .to_string();
+                                    
+                                    show_console_msg(&format!("[renardo-ext] Got track {} name: '{}'\n", track_index, track_name));
+                                    
+                                    // Send response
+                                    let response = OscMessage {
+                                        addr: "/track/name/get/response".to_string(),
+                                        args: vec![
+                                            OscType::Int(*track_index),
+                                            OscType::String(track_name)
+                                        ],
+                                    };
+                                    
+                                    let packet = OscPacket::Message(response);
+                                    if let Ok(buf) = encoder::encode(&packet) {
+                                        let response_socket = UdpSocket::bind("127.0.0.1:0").expect("Failed to create response socket");
+                                        let client_addr = std::net::SocketAddr::new(sender_addr.ip(), 9878);
+                                        match response_socket.send_to(&buf, client_addr) {
+                                            Ok(_) => show_console_msg(&format!("[renardo-ext] Sent track name response to {}\n", client_addr)),
+                                            Err(e) => show_console_msg(&format!("[renardo-ext] Failed to send track name response: {}\n", e)),
+                                        }
+                                    }
+                                } else {
+                                    show_console_msg(&format!("[renardo-ext] Failed to get track {} name\n", track_index));
+                                }
+                            } else {
+                                show_console_msg(&format!("[renardo-ext] Track {} not found\n", track_index));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        "/track/name/set" => {
+            // Set track name - expecting track index and name as arguments
+            if let (Some(OscType::Int(track_index)), Some(OscType::String(new_name))) = 
+                (msg.args.get(0), msg.args.get(1)) {
+                
+                show_console_msg(&format!("[renardo-ext] Setting track {} name to: '{}'\n", track_index, new_name));
+                
+                unsafe {
+                    if let Some(get_track) = GET_TRACK {
+                        if let Some(get_set_media_track_info) = GET_SET_MEDIA_TRACK_INFO {
+                            // Get the track
+                            let track = get_track(std::ptr::null_mut(), *track_index);
+                            if !track.is_null() {
+                                // Set track name using GetSetMediaTrackInfo
+                                let name_cstring = std::ffi::CString::new(new_name.as_str()).unwrap();
+                                let param_name = std::ffi::CString::new("P_NAME").unwrap();
+                                
+                                get_set_media_track_info(
+                                    track,
+                                    param_name.as_ptr(),
+                                    name_cstring.as_ptr() as *mut c_void,
+                                    1 // setNewValue = true
+                                );
+                                
+                                // Send success response
+                                let response = OscMessage {
+                                    addr: "/track/name/set/response".to_string(),
+                                    args: vec![
+                                        OscType::Int(*track_index),
+                                        OscType::String(new_name.clone()),
+                                        OscType::String("success".to_string())
+                                    ],
+                                };
+                                
+                                let packet = OscPacket::Message(response);
+                                if let Ok(buf) = encoder::encode(&packet) {
+                                    let response_socket = UdpSocket::bind("127.0.0.1:0").expect("Failed to create response socket");
+                                    let client_addr = std::net::SocketAddr::new(sender_addr.ip(), 9878);
+                                    match response_socket.send_to(&buf, client_addr) {
+                                        Ok(_) => show_console_msg(&format!("[renardo-ext] Sent track set name response to {}\n", client_addr)),
+                                        Err(e) => show_console_msg(&format!("[renardo-ext] Failed to send track set name response: {}\n", e)),
+                                    }
+                                }
+                            } else {
+                                show_console_msg(&format!("[renardo-ext] Track {} not found for name setting\n", track_index));
                             }
                         }
                     }
@@ -259,6 +400,41 @@ pub extern "C" fn ReaperPluginEntry(
             let func_ptr = get_func(func_name.as_ptr());
             if !func_ptr.is_null() {
                 MAIN_ON_COMMAND = Some(std::mem::transmute(func_ptr));
+            }
+            
+            // Get GetSetMediaTrackInfo function
+            let func_name = CString::new("GetSetMediaTrackInfo").unwrap();
+            let func_ptr = get_func(func_name.as_ptr());
+            if !func_ptr.is_null() {
+                GET_SET_MEDIA_TRACK_INFO = Some(std::mem::transmute(func_ptr));
+            }
+            
+            // Get InsertTrackAtIndex function
+            let func_name = CString::new("InsertTrackAtIndex").unwrap();
+            let func_ptr = get_func(func_name.as_ptr());
+            if !func_ptr.is_null() {
+                INSERT_TRACK_AT_INDEX = Some(std::mem::transmute(func_ptr));
+            }
+            
+            // Get CountTracks function
+            let func_name = CString::new("CountTracks").unwrap();
+            let func_ptr = get_func(func_name.as_ptr());
+            if !func_ptr.is_null() {
+                COUNT_TRACKS = Some(std::mem::transmute(func_ptr));
+            }
+            
+            // Get GetTrack function
+            let func_name = CString::new("GetTrack").unwrap();
+            let func_ptr = get_func(func_name.as_ptr());
+            if !func_ptr.is_null() {
+                GET_TRACK = Some(std::mem::transmute(func_ptr));
+            }
+            
+            // Get GetTrackName function
+            let func_name = CString::new("GetTrackName").unwrap();
+            let func_ptr = get_func(func_name.as_ptr());
+            if !func_ptr.is_null() {
+                GET_TRACK_NAME = Some(std::mem::transmute(func_ptr));
             }
         }
     }
