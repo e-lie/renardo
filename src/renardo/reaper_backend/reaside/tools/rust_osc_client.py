@@ -49,7 +49,7 @@ class RustOscClient:
         # Start server
         self._start_server()
         
-        logger.debug(f"RustOscClient initialized - send:{send_port}, receive:{receive_port}")
+        logger.info(f"RustOscClient initialized - sending to {host}:{send_port}, receiving on {host}:{receive_port}")
     
     def _start_server(self):
         """Start the OSC server for receiving responses."""
@@ -75,14 +75,17 @@ class RustOscClient:
     
     def _handle_response(self, address: str, *args):
         """Handle incoming OSC responses."""
-        logger.debug(f"Received OSC response: {address} {args}")
+        logger.info(f"Received OSC response from {self.receive_port}: {address} {args}")
         
         # Store response
         self.responses[address] = args
         
         # Signal any waiting threads
         if address in self.response_events:
+            logger.debug(f"Signaling event for {address}")
             self.response_events[address].set()
+        else:
+            logger.warning(f"No waiting thread for response {address}")
     
     def send_message(self, address: str, *args) -> None:
         """Send an OSC message without waiting for response.
@@ -91,8 +94,12 @@ class RustOscClient:
             address: OSC address
             *args: Arguments to send
         """
-        logger.debug(f"Sending OSC: {address} {args}")
-        self.client.send_message(address, list(args) if args else [])
+        logger.info(f"Sending OSC to {self.host}:{self.send_port}: {address} {args}")
+        try:
+            self.client.send_message(address, list(args) if args else [])
+            logger.debug(f"OSC message sent successfully")
+        except Exception as e:
+            logger.error(f"Failed to send OSC message: {e}")
     
     def send_and_wait(self, 
                       address: str, 
@@ -112,6 +119,8 @@ class RustOscClient:
         """
         timeout = timeout or self.timeout
         
+        logger.info(f"OSC send_and_wait: {address} -> expecting {response_address}, timeout={timeout}s")
+        
         # Clear any old response
         self.responses.pop(response_address, None)
         
@@ -124,10 +133,14 @@ class RustOscClient:
             self.send_message(address, *args)
             
             # Wait for response
+            logger.debug(f"Waiting for response to {response_address}...")
             if event.wait(timeout):
-                return self.responses.get(response_address)
+                response = self.responses.get(response_address)
+                logger.info(f"Received response to {address}: {response}")
+                return response
             else:
-                logger.warning(f"Timeout waiting for response to {address}")
+                logger.warning(f"Timeout waiting for response to {address} (expected {response_address})")
+                logger.debug(f"Server running: {self.server is not None}, Thread alive: {self.server_thread and self.server_thread.is_alive() if self.server_thread else 'No thread'}")
                 return None
         finally:
             # Clean up event
@@ -322,6 +335,29 @@ class RustOscClient:
         )
         
         return response is not None and len(response) >= 3 and response[2] == "success"
+    
+    def play_note(self, midi_channel: int, midi_note: int, velocity: int = 100, 
+                  duration_ms: int = 1000, timeout: Optional[float] = None) -> bool:
+        """Play a MIDI note on a specific MIDI channel with automatic note-off.
+        
+        Args:
+            midi_channel: MIDI channel (1-16)
+            midi_note: MIDI note number (0-127)
+            velocity: Note velocity (0-127)
+            duration_ms: Note duration in milliseconds
+            timeout: Timeout in seconds
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        response = self.send_and_wait(
+            "/note",
+            "/note/response",
+            midi_channel, midi_note, velocity, duration_ms,
+            timeout=timeout
+        )
+        
+        return response is not None and len(response) >= 1 and response[0] == "success"
     
     def close(self):
         """Close the client and stop the server."""

@@ -7,6 +7,7 @@ use crate::reaper::api::show_console_msg;
 use crate::reaper::project::{handle_get_project_name, handle_set_project_name, handle_add_track};
 use crate::reaper::track::{handle_get_track_name, handle_set_track_name, handle_get_track_volume, handle_set_track_volume, handle_get_track_pan, handle_set_track_pan};
 use crate::reaper::fx::{handle_add_fx, handle_remove_fx, handle_get_fx_param, handle_set_fx_param};
+use crate::reaper::midi::{handle_play_note};
 
 /// Handle incoming OSC packets
 pub fn handle_osc_packet(packet: OscPacket, sender_addr: SocketAddr, _socket: &UdpSocket) {
@@ -51,6 +52,9 @@ fn handle_osc_message(msg: rosc::OscMessage, sender_addr: SocketAddr) {
         "/fx/remove" => handle_remove_fx(&msg, sender_addr),
         "/fx/param/get" => handle_get_fx_param(&msg, sender_addr),
         "/fx/param/set" => handle_set_fx_param(&msg, sender_addr),
+        
+        // MIDI operations
+        "/note" => handle_play_note(&msg, sender_addr),
         
         // Unknown routes
         _ => {
