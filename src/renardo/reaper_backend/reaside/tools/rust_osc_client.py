@@ -54,32 +54,24 @@ class RustOscClient:
     def _start_server(self):
         """Start the OSC server for receiving responses."""
         try:
-            # Try to bind to the specified port, if it fails try nearby ports
-            port_attempts = [self.receive_port, self.receive_port + 1, self.receive_port + 2, 0]
+            # Try to bind to the specified port 9878 (must be fixed for Rust extension)
+            self.server = osc_server.ThreadingOSCUDPServer(
+                (self.host, self.receive_port), 
+                self.dispatcher
+            )
+            self.server_thread = threading.Thread(target=self.server.serve_forever)
+            self.server_thread.daemon = True
+            self.server_thread.start()
             
-            for port in port_attempts:
-                try:
-                    self.server = osc_server.ThreadingOSCUDPServer(
-                        (self.host, port), 
-                        self.dispatcher
-                    )
-                    self.server_thread = threading.Thread(target=self.server.serve_forever)
-                    self.server_thread.daemon = True
-                    self.server_thread.start()
-                    
-                    actual_port = self.server.server_address[1]
-                    logger.debug(f"OSC server started on port {actual_port}")
-                    
-                    # Update the receive port to the actual port
-                    self.receive_port = actual_port
-                    break
-                except OSError:
-                    if port == 0:  # Last attempt with any available port
-                        raise
-                    continue
+            actual_port = self.server.server_address[1]
+            logger.debug(f"OSC server started on port {actual_port}")
+            
+            if actual_port != self.receive_port:
+                logger.warning(f"OSC server bound to port {actual_port} instead of requested {self.receive_port}")
                     
         except Exception as e:
-            logger.error(f"Failed to start OSC server: {e}")
+            logger.error(f"Failed to start OSC server on port {self.receive_port}: {e}")
+            raise
     
     def _handle_response(self, address: str, *args):
         """Handle incoming OSC responses."""
@@ -180,6 +172,67 @@ class RustOscClient:
         )
         
         return response is not None
+    
+    def get_track_name(self, track_index: int, timeout: Optional[float] = None) -> Optional[str]:
+        """Get a track name by index.
+        
+        Args:
+            track_index: Track index (0-based)
+            timeout: Timeout in seconds
+            
+        Returns:
+            Track name or None if error/timeout
+        """
+        response = self.send_and_wait(
+            "/track/name/get",
+            "/track/name/get/response",
+            track_index,
+            timeout=timeout
+        )
+        
+        if response and len(response) >= 2:
+            return response[1]  # response[0] is track_index, response[1] is name
+        return None
+    
+    def set_track_name(self, track_index: int, name: str, timeout: Optional[float] = None) -> bool:
+        """Set a track name by index.
+        
+        Args:
+            track_index: Track index (0-based)
+            name: New track name
+            timeout: Timeout in seconds
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        response = self.send_and_wait(
+            "/track/name/set",
+            "/track/name/set/response",
+            track_index,
+            name,
+            timeout=timeout
+        )
+        
+        return response is not None and len(response) >= 3 and response[2] == "success"
+    
+    def add_track(self, timeout: Optional[float] = None) -> Optional[int]:
+        """Add a new track to the project.
+        
+        Args:
+            timeout: Timeout in seconds
+            
+        Returns:
+            New track index or None if error/timeout
+        """
+        response = self.send_and_wait(
+            "/project/add_track",
+            "/project/add_track/response",
+            timeout=timeout
+        )
+        
+        if response and len(response) >= 1:
+            return response[0]  # Track index
+        return None
     
     def close(self):
         """Close the client and stop the server."""

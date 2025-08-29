@@ -24,9 +24,22 @@ def configure_reaper():
     """Configure REAPER with Rust OSC extension and Lua ReaScript."""
     from .config import configure_lua_reascript, get_resource_path
     from .config.config import install_rust_extension
+    from .tools.reaper_program import start_reaper, stop_reaper
+    import time
     
     logger.info("Configuring REAPER...")
     success = True
+    reaper_was_stopped = False
+    
+    # Check if REAPER is running and stop it for installation
+    try:
+        logger.info("Checking if REAPER needs to be stopped for installation...")
+        stop_reaper()
+        reaper_was_stopped = True
+        time.sleep(2)  # Give REAPER time to shut down
+        logger.info("REAPER stopped for extension installation")
+    except Exception as e:
+        logger.debug(f"REAPER was not running or stop failed: {e}")
     
     # Install Rust OSC extension
     logger.info("Installing Rust OSC extension...")
@@ -59,10 +72,33 @@ def configure_reaper():
     
     if success:
         logger.info("REAPER configuration completed successfully")
-        logger.info("Please restart REAPER to activate all changes")
+        
+        # Restart REAPER if we stopped it
+        if reaper_was_stopped:
+            logger.info("Restarting REAPER with new configuration...")
+            try:
+                start_reaper()
+                time.sleep(3)  # Give REAPER time to start and load extension
+                logger.info("✓ REAPER restarted with Rust OSC extension")
+            except Exception as e:
+                logger.warning(f"Failed to restart REAPER: {e}")
+                logger.info("Please start REAPER manually to load the Rust extension")
+        else:
+            logger.info("Please restart REAPER to activate all changes")
+        
         return True
     else:
         logger.warning("REAPER configuration completed with some errors")
+        
+        # Still try to restart if we stopped REAPER
+        if reaper_was_stopped:
+            logger.info("Attempting to restart REAPER despite errors...")
+            try:
+                start_reaper()
+                logger.info("REAPER restarted (some configuration errors occurred)")
+            except Exception as e:
+                logger.error(f"Failed to restart REAPER: {e}")
+        
         return False
 
 def init_api_bridge(host="localhost", port=WEB_INTERFACE_PORT, auto_launch=True):
