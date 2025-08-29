@@ -63,28 +63,37 @@ def test_midi_notes():
         
         print("4. Testing ReaTrack.play_note() method")
         # Test ReaTrack method if we can access a track
-        reaper = Reaper()
-        project = reaper.get_current_project()
-        
-        if len(project.tracks) > 0:
-            track = project.tracks[0]
-            print(f"   Track: '{track.name}' (MIDI channel: {track.midi_channel})")
+        try:
+            from renardo.reaper_backend.reaside.core.reaper import Reaper
+            from renardo.reaper_backend.reaside.client import Client
             
-            if track.midi_channel is not None:
-                success = track.play_note(60, 100, 1500)  # Middle C
-                print(f"   Played note on track: {success}")
+            # Create client and reaper instance
+            reaside_client = Client()
+            reaper = Reaper(reaside_client)
+            project = reaper.get_current_project()
+            
+            if len(project.tracks) > 0:
+                track = project.tracks[0]
+                print(f"   Track: '{track.name}' (MIDI channel: {track.midi_channel})")
                 
-                time.sleep(0.5)
-                
-                # Test chord on track
-                track.play_note(60, 90, 2000)  # C
-                track.play_note(64, 90, 2000)  # E  
-                track.play_note(67, 90, 2000)  # G
-                print(f"   Played chord on track: C major")
+                if track.midi_channel is not None:
+                    success = track.play_note(60, 100, 1500)  # Middle C
+                    print(f"   Played note on track: {success}")
+                    
+                    time.sleep(0.5)
+                    
+                    # Test chord on track
+                    track.play_note(60, 90, 2000)  # C
+                    track.play_note(64, 90, 2000)  # E  
+                    track.play_note(67, 90, 2000)  # G
+                    print(f"   Played chord on track: C major")
+                else:
+                    print(f"   Track '{track.name}' is not configured for MIDI input")
             else:
-                print(f"   Track '{track.name}' is not configured for MIDI input")
-        else:
-            print("   No tracks found in project")
+                print("   No tracks found in project")
+                
+        except Exception as track_error:
+            print(f"   Could not test ReaTrack.play_note(): {track_error}")
         
         print("\nTest completed! Check REAPER console for detailed logs.")
         print("Note: This test assumes you have tracks configured with MIDI input.")
