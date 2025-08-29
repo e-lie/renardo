@@ -216,7 +216,7 @@ class RustOscClient:
         return response is not None and len(response) >= 3 and response[2] == "success"
     
     def add_track(self, position: int = -1, name: str = "", input_value: int = -1, 
-                  record_armed: bool = False, timeout: Optional[float] = None) -> Optional[int]:
+                  record_armed: bool = False, record_mode: int = 2, timeout: Optional[float] = None) -> Optional[int]:
         """Add a new track to the project with configuration.
         
         Args:
@@ -224,6 +224,7 @@ class RustOscClient:
             name: Track name (empty string for default)
             input_value: MIDI input value (-1 for no input, 0+ for MIDI channels)
             record_armed: Whether to arm track for recording
+            record_mode: Record mode (0=output, 1=output stereo, 2=none/monitor input, 3=midi output)
             timeout: Timeout in seconds
             
         Returns:
@@ -232,13 +233,95 @@ class RustOscClient:
         response = self.send_and_wait(
             "/project/add_track",
             "/project/add_track/response",
-            position, name, input_value, record_armed,
+            position, name, input_value, record_armed, record_mode,
             timeout=timeout
         )
         
         if response and len(response) >= 1:
             return response[0]  # Track index
         return None
+    
+    def get_track_volume(self, track_index: int, timeout: Optional[float] = None) -> Optional[float]:
+        """Get track volume by index.
+        
+        Args:
+            track_index: Track index (0-based)
+            timeout: Timeout in seconds
+            
+        Returns:
+            Track volume or None if error/timeout
+        """
+        response = self.send_and_wait(
+            "/track/volume/get",
+            "/track/volume/get/response",
+            track_index,
+            timeout=timeout
+        )
+        
+        if response and len(response) >= 2:
+            return response[1]  # response[0] is track_index, response[1] is volume
+        return None
+    
+    def set_track_volume(self, track_index: int, volume: float, timeout: Optional[float] = None) -> bool:
+        """Set track volume by index.
+        
+        Args:
+            track_index: Track index (0-based)
+            volume: Volume value (0.0 to 1.0+)
+            timeout: Timeout in seconds
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        response = self.send_and_wait(
+            "/track/volume/set",
+            "/track/volume/set/response",
+            track_index, volume,
+            timeout=timeout
+        )
+        
+        return response is not None and len(response) >= 3 and response[2] == "success"
+    
+    def get_track_pan(self, track_index: int, timeout: Optional[float] = None) -> Optional[float]:
+        """Get track pan by index.
+        
+        Args:
+            track_index: Track index (0-based)
+            timeout: Timeout in seconds
+            
+        Returns:
+            Track pan (-1.0 to 1.0) or None if error/timeout
+        """
+        response = self.send_and_wait(
+            "/track/pan/get",
+            "/track/pan/get/response",
+            track_index,
+            timeout=timeout
+        )
+        
+        if response and len(response) >= 2:
+            return response[1]  # response[0] is track_index, response[1] is pan
+        return None
+    
+    def set_track_pan(self, track_index: int, pan: float, timeout: Optional[float] = None) -> bool:
+        """Set track pan by index.
+        
+        Args:
+            track_index: Track index (0-based)  
+            pan: Pan value (-1.0 to 1.0, 0.0 = center)
+            timeout: Timeout in seconds
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        response = self.send_and_wait(
+            "/track/pan/set",
+            "/track/pan/set/response",
+            track_index, pan,
+            timeout=timeout
+        )
+        
+        return response is not None and len(response) >= 3 and response[2] == "success"
     
     def close(self):
         """Close the client and stop the server."""
