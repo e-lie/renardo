@@ -27,7 +27,7 @@ def main():
         print(f"Current project: '{project.name}'")
         
         print("\n1. Adding a new track...")
-        new_track = project.basic_add_track()
+        new_track = project.add_track_configured()
         
         if new_track:
             print(f"✓ Successfully added track at index: {new_track._index}")

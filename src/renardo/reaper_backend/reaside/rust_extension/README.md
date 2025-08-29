@@ -39,7 +39,11 @@ The extension provides bidirectional OSC communication:
 #### Project Operations
 - `/project/name/get` - Get current project name
 - `/project/name/set <name>` - Set project name
-- `/project/add_track` - Add new track to project
+- `/project/add_track <position> <name> <input> <record_armed>` - Add configured track to project
+  - `position`: Where to insert (-1 for end)
+  - `name`: Track name (empty string for default)
+  - `input`: MIDI input value (-1 for no input, 0+ for MIDI channels)
+  - `record_armed`: Whether to arm track for recording
 
 #### Track Operations  
 - `/track/name/get <track_index>` - Get track name by index
@@ -107,14 +111,23 @@ pub fn handle_new_operation(msg: &OscMessage, sender_addr: SocketAddr) {
 The extension integrates seamlessly with the existing reaside Python API:
 
 ```python
-# Add track via Rust OSC
-new_track = project.basic_add_track()
+# Basic track creation
+basic_track = project.add_track()
 
-# Set track name via Rust OSC  
-new_track.name = "My Track"
+# Fully configured track creation
+midi_track = project.add_track(
+    name="MIDI Instrument",
+    input_value=4096 | 1 | (63 << 5),  # All MIDI inputs, channel 1
+    record_armed=True
+)
 
-# Get track name via Rust OSC
-track_name = new_track.name
+# Specialized track creation (uses generic API internally)
+instrument_track = project.create_instrument_track("Lead Synth", midi_channel=1)
+bus_track = project.create_bus_track("Reverb Bus")
+
+# Track name operations
+new_track.name = "My Track"  # Set via Rust OSC
+track_name = new_track.name  # Get via Rust OSC
 ```
 
 All operations transparently use the native Rust extension for optimal performance.
