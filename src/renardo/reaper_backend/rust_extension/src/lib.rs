@@ -2,16 +2,21 @@ use std::error::Error;
 use std::ffi::{CString, c_void};
 use std::net::UdpSocket;
 use std::os::raw::{c_char, c_int};
+use std::ptr;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
-use rosc::{OscPacket, OscMessage, OscType};
+use rosc::{OscPacket, OscMessage, OscType, encoder};
 
 // REAPER API function pointers
 static mut SHOW_CONSOLE_MSG: Option<extern "C" fn(*const c_char)> = None;
+static mut GET_PROJECT_NAME: Option<extern "C" fn(*mut c_void, *mut c_char, c_int)> = None;
+static mut ENUM_PROJECTS: Option<extern "C" fn(c_int) -> *mut c_void> = None;
+static mut GET_SET_MEDIA_TRACK_INFO: Option<extern "C" fn(*mut c_void, *const c_char, *mut c_void, c_int)> = None;
+static mut MAIN_ON_COMMAND: Option<extern "C" fn(c_int, c_int)> = None;
 
 // Global state for the OSC server
 static OSC_SERVER: Lazy<Arc<Mutex<Option<OscServer>>>> = Lazy::new(|| Arc::new(Mutex::new(None)));
@@ -27,22 +32,35 @@ struct ReaperPluginInfo {
 
 struct OscServer {
     socket: UdpSocket,
+    client_socket: UdpSocket,
     running: Arc<Mutex<bool>>,
 }
 
 impl OscServer {
-    fn new(port: u16) -> Result<Self, Box<dyn Error>> {
-        let socket = UdpSocket::bind(format!("127.0.0.1:{}", port))?;
+    fn new(server_port: u16, client_port: u16) -> Result<Self, Box<dyn Error>> {
+        let socket = UdpSocket::bind(format!("127.0.0.1:{}", server_port))?;
         socket.set_nonblocking(true)?;
+        
+        let client_socket = UdpSocket::bind("127.0.0.1:0")?;  // Bind to any available port
+        client_socket.connect(format!("127.0.0.1:{}", client_port))?;
         
         Ok(OscServer {
             socket,
+            client_socket,
             running: Arc::new(Mutex::new(true)),
         })
     }
     
+    fn send_response(&self, msg: OscMessage) -> Result<(), Box<dyn Error>> {
+        let packet = OscPacket::Message(msg);
+        let buf = encoder::encode(&packet)?;
+        self.client_socket.send(&buf)?;
+        Ok(())
+    }
+    
     fn start(&self) {
         let socket = self.socket.try_clone().expect("Failed to clone socket");
+        let client_socket = self.client_socket.try_clone().expect("Failed to clone client socket");
         let running = self.running.clone();
         
         thread::spawn(move || {
@@ -53,7 +71,7 @@ impl OscServer {
                     Ok((size, addr)) => {
                         match rosc::decoder::decode_udp(&buf[..size]) {
                             Ok((_remaining, packet)) => {
-                                handle_osc_packet(packet, addr);
+                                handle_osc_packet(packet, addr, &client_socket);
                             }
                             Err(e) => {
                                 show_console_msg(&format!("OSC decode error: {:?}\n", e));
@@ -77,48 +95,88 @@ impl OscServer {
     }
 }
 
-fn handle_osc_packet(packet: OscPacket, addr: std::net::SocketAddr) {
+fn handle_osc_packet(packet: OscPacket, addr: std::net::SocketAddr, client_socket: &UdpSocket) {
     match packet {
-        OscPacket::Message(msg) => handle_osc_message(msg, addr),
+        OscPacket::Message(msg) => handle_osc_message(msg, addr, client_socket),
         OscPacket::Bundle(bundle) => {
             for packet in bundle.content {
-                handle_osc_packet(packet, addr);
+                handle_osc_packet(packet, addr, client_socket);
             }
         }
     }
 }
 
-fn handle_osc_message(msg: OscMessage, addr: std::net::SocketAddr) {
-    // Log all incoming messages
-    show_console_msg(&format!(
-        "[renardo-ext] OSC from {}: {}\n", 
-        addr, 
-        msg.addr
-    ));
+fn handle_osc_message(msg: OscMessage, addr: std::net::SocketAddr, client_socket: &UdpSocket) {
+    // Log incoming messages (except frequent ones)
+    if !msg.addr.starts_with("/project/name/get") {
+        show_console_msg(&format!(
+            "[renardo-ext] OSC from {}: {}\n", 
+            addr, 
+            msg.addr
+        ));
+    }
     
     // Handle specific routes
     match msg.addr.as_str() {
-        "/demo/args" => {
-            show_console_msg("[renardo-ext] /demo/args route triggered\n");
-            
-            // Log all arguments
-            for (i, arg) in msg.args.iter().enumerate() {
-                let arg_str = match arg {
-                    OscType::Int(v) => format!("Int({})", v),
-                    OscType::Float(v) => format!("Float({})", v),
-                    OscType::String(v) => format!("String(\"{}\")", v),
-                    OscType::Double(v) => format!("Double({})", v),
-                    OscType::Long(v) => format!("Long({})", v),
-                    OscType::Bool(v) => format!("Bool({})", v),
-                    OscType::Char(v) => format!("Char('{}')", v),
-                    _ => format!("{:?}", arg),
-                };
+        "/project/name/get" => {
+            // Get current project name
+            unsafe {
+                if let Some(enum_projects) = ENUM_PROJECTS {
+                    if let Some(get_project_name) = GET_PROJECT_NAME {
+                        // Get current project (0 = current)
+                        let proj = enum_projects(-1);
+                        if !proj.is_null() {
+                            let mut buf = vec![0u8; 512];
+                            get_project_name(proj, buf.as_mut_ptr() as *mut c_char, 512);
+                            
+                            // Convert to string
+                            let c_str = CString::from_raw(buf.as_mut_ptr() as *mut c_char);
+                            let project_name = c_str.to_string_lossy().to_string();
+                            std::mem::forget(c_str); // Don't deallocate the buffer
+                            
+                            // Send response
+                            let response = OscMessage {
+                                addr: "/project/name/response".to_string(),
+                                args: vec![OscType::String(project_name)],
+                            };
+                            
+                            let packet = OscPacket::Message(response);
+                            if let Ok(buf) = encoder::encode(&packet) {
+                                let _ = client_socket.send(&buf);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        "/project/name/set" => {
+            // Set project name
+            if let Some(OscType::String(new_name)) = msg.args.get(0) {
+                show_console_msg(&format!("[renardo-ext] Setting project name to: {}\n", new_name));
                 
-                show_console_msg(&format!(
-                    "[renardo-ext]   arg[{}]: {}\n", 
-                    i, 
-                    arg_str
-                ));
+                // Use Main_OnCommand to trigger "Save project as..." with the new name
+                // Command 40022 = File: Save project as...
+                unsafe {
+                    if let Some(main_on_command) = MAIN_ON_COMMAND {
+                        // This will open the save dialog - we can't directly set the name
+                        // For now, just log that we received the request
+                        show_console_msg(&format!("[renardo-ext] Note: Direct project rename not available via API, would need save dialog\n"));
+                        
+                        // Send response indicating limitation
+                        let response = OscMessage {
+                            addr: "/project/name/response".to_string(),
+                            args: vec![
+                                OscType::String("limited".to_string()),
+                                OscType::String(new_name.clone()),
+                            ],
+                        };
+                        
+                        let packet = OscPacket::Message(response);
+                        if let Ok(buf) = encoder::encode(&packet) {
+                            let _ = client_socket.send(&buf);
+                        }
+                    }
+                }
             }
         }
         _ => {
@@ -167,6 +225,27 @@ pub extern "C" fn ReaperPluginEntry(
             if !func_ptr.is_null() {
                 SHOW_CONSOLE_MSG = Some(std::mem::transmute(func_ptr));
             }
+            
+            // Get GetProjectName function
+            let func_name = CString::new("GetProjectName").unwrap();
+            let func_ptr = get_func(func_name.as_ptr());
+            if !func_ptr.is_null() {
+                GET_PROJECT_NAME = Some(std::mem::transmute(func_ptr));
+            }
+            
+            // Get EnumProjects function
+            let func_name = CString::new("EnumProjects").unwrap();
+            let func_ptr = get_func(func_name.as_ptr());
+            if !func_ptr.is_null() {
+                ENUM_PROJECTS = Some(std::mem::transmute(func_ptr));
+            }
+            
+            // Get Main_OnCommand function
+            let func_name = CString::new("Main_OnCommand").unwrap();
+            let func_ptr = get_func(func_name.as_ptr());
+            if !func_ptr.is_null() {
+                MAIN_ON_COMMAND = Some(std::mem::transmute(func_ptr));
+            }
         }
     }
     
@@ -175,13 +254,16 @@ pub extern "C" fn ReaperPluginEntry(
     show_console_msg("Renardo REAPER Extension loaded!\n");
     show_console_msg("=================================\n");
     
-    // Start OSC server on port 9000
-    let port = 9000;
-    match OscServer::new(port) {
+    // Start OSC server on ports 9877 (receive) and 9878 (send)
+    let server_port = 9877;
+    let client_port = 9878;
+    match OscServer::new(server_port, client_port) {
         Ok(server) => {
-            show_console_msg(&format!("[renardo-ext] OSC server started on port {}\n", port));
-            show_console_msg("[renardo-ext] Listening for OSC messages...\n");
-            show_console_msg("[renardo-ext] Test with: /demo/args\n");
+            show_console_msg(&format!("[renardo-ext] OSC server listening on port {}\n", server_port));
+            show_console_msg(&format!("[renardo-ext] OSC client sending to port {}\n", client_port));
+            show_console_msg("[renardo-ext] Available routes:\n");
+            show_console_msg("[renardo-ext]   /project/name/get - Get current project name\n");
+            show_console_msg("[renardo-ext]   /project/name/set - Set project name (limited)\n");
             
             server.start();
             
