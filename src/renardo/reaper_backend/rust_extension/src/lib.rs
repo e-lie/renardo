@@ -95,23 +95,23 @@ impl OscServer {
     }
 }
 
-fn handle_osc_packet(packet: OscPacket, addr: std::net::SocketAddr, client_socket: &UdpSocket) {
+fn handle_osc_packet(packet: OscPacket, sender_addr: std::net::SocketAddr, _client_socket: &UdpSocket) {
     match packet {
-        OscPacket::Message(msg) => handle_osc_message(msg, addr, client_socket),
+        OscPacket::Message(msg) => handle_osc_message(msg, sender_addr),
         OscPacket::Bundle(bundle) => {
             for packet in bundle.content {
-                handle_osc_packet(packet, addr, client_socket);
+                handle_osc_packet(packet, sender_addr, _client_socket);
             }
         }
     }
 }
 
-fn handle_osc_message(msg: OscMessage, addr: std::net::SocketAddr, client_socket: &UdpSocket) {
+fn handle_osc_message(msg: OscMessage, sender_addr: std::net::SocketAddr) {
     // Log incoming messages (except frequent ones)
     if !msg.addr.starts_with("/project/name/get") {
         show_console_msg(&format!(
             "[renardo-ext] OSC from {}: {}\n", 
-            addr, 
+            sender_addr, 
             msg.addr
         ));
     }
@@ -129,10 +129,12 @@ fn handle_osc_message(msg: OscMessage, addr: std::net::SocketAddr, client_socket
                             let mut buf = vec![0u8; 512];
                             get_project_name(proj, buf.as_mut_ptr() as *mut c_char, 512);
                             
-                            // Convert to string
-                            let c_str = CString::from_raw(buf.as_mut_ptr() as *mut c_char);
-                            let project_name = c_str.to_string_lossy().to_string();
-                            std::mem::forget(c_str); // Don't deallocate the buffer
+                            // Convert to string safely
+                            let project_name = std::ffi::CStr::from_ptr(buf.as_ptr() as *const c_char)
+                                .to_string_lossy()
+                                .to_string();
+                            
+                            show_console_msg(&format!("[renardo-ext] Got project name: '{}'\n", project_name));
                             
                             // Send response
                             let response = OscMessage {
@@ -142,7 +144,14 @@ fn handle_osc_message(msg: OscMessage, addr: std::net::SocketAddr, client_socket
                             
                             let packet = OscPacket::Message(response);
                             if let Ok(buf) = encoder::encode(&packet) {
-                                let _ = client_socket.send(&buf);
+                                // Send response back to sender
+                                let response_socket = UdpSocket::bind("127.0.0.1:0").expect("Failed to create response socket");
+                                match response_socket.send_to(&buf, sender_addr) {
+                                    Ok(_) => show_console_msg(&format!("[renardo-ext] Sent project name response to {}\n", sender_addr)),
+                                    Err(e) => show_console_msg(&format!("[renardo-ext] Failed to send response to {}: {}\n", sender_addr, e)),
+                                }
+                            } else {
+                                show_console_msg("[renardo-ext] Failed to encode OSC response\n");
                             }
                         }
                     }
@@ -173,7 +182,12 @@ fn handle_osc_message(msg: OscMessage, addr: std::net::SocketAddr, client_socket
                         
                         let packet = OscPacket::Message(response);
                         if let Ok(buf) = encoder::encode(&packet) {
-                            let _ = client_socket.send(&buf);
+                            // Send response back to sender
+                            let response_socket = UdpSocket::bind("127.0.0.1:0").expect("Failed to create response socket");
+                            match response_socket.send_to(&buf, sender_addr) {
+                                Ok(_) => show_console_msg(&format!("[renardo-ext] Sent set response to {}\n", sender_addr)),
+                                Err(e) => show_console_msg(&format!("[renardo-ext] Failed to send set response to {}: {}\n", sender_addr, e)),
+                            }
                         }
                     }
                 }
