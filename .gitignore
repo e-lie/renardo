@@ -120,3 +120,7 @@ Temporary Items
 # Pyinstaller
 *.spec
 **/.claude/settings.local.json
+
+# Rust extension
+src/renardo/reaper_backend/rust_extension/target/
+src/renardo/reaper_backend/rust_extension/Cargo.lock
