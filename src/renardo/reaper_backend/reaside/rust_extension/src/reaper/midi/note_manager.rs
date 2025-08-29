@@ -86,16 +86,18 @@ impl NoteManager {
         // Channel is 1-16 from user, convert to 0-15 for MIDI
         let midi_channel = (channel - 1) & 0x0F;
         let status = 0x90 | midi_channel;
-        let midi_msg = [status, note, velocity];
         
         show_console_msg(&format!("[renardo-ext] Sending MIDI note-on: status={:02X} note={} vel={}\n", 
                                 status, note, velocity));
         
         unsafe {
             if let Some(stuff_midi) = STUFF_MIDI_MESSAGE {
-                // Mode: 0 = virtual keyboard, 1 = virtual MIDI keyboard with CC/pitch
-                // Frame offset: we use 0 for immediate
-                stuff_midi(0, midi_msg.as_ptr(), midi_msg.len() as i32);
+                // StuffMIDIMessage(mode, msg1, msg2, msg3)
+                // mode: 0 = virtual keyboard
+                // msg1: status byte
+                // msg2: note number
+                // msg3: velocity
+                stuff_midi(0, status as i32, note as i32, velocity as i32);
                 show_console_msg("[renardo-ext] StuffMIDIMessage called for note-on\n");
             } else {
                 show_console_msg("[renardo-ext] ERROR: StuffMIDIMessage function not available!\n");
@@ -109,14 +111,18 @@ impl NoteManager {
         // Channel is 1-16 from user, convert to 0-15 for MIDI
         let midi_channel = (channel - 1) & 0x0F;
         let status = 0x80 | midi_channel;
-        let midi_msg = [status, note, 0];
         
         show_console_msg(&format!("[renardo-ext] Sending MIDI note-off: status={:02X} note={}\n", 
                                 status, note));
         
         unsafe {
             if let Some(stuff_midi) = STUFF_MIDI_MESSAGE {
-                stuff_midi(0, midi_msg.as_ptr(), midi_msg.len() as i32);
+                // StuffMIDIMessage(mode, msg1, msg2, msg3)
+                // mode: 0 = virtual keyboard
+                // msg1: status byte
+                // msg2: note number
+                // msg3: velocity (0 for note-off)
+                stuff_midi(0, status as i32, note as i32, 0);
                 show_console_msg("[renardo-ext] StuffMIDIMessage called for note-off\n");
             } else {
                 show_console_msg("[renardo-ext] ERROR: StuffMIDIMessage function not available!\n");
