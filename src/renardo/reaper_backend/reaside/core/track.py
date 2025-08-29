@@ -211,6 +211,56 @@ class ReaTrack:
             self._client.set_track_pan(self._index + 1, value)
     
     @property
+    def midi_channel(self) -> Optional[int]:
+        """Get MIDI channel for this track (1-16), or None if not a MIDI track."""
+        try:
+            midi_input = self._client.call_reascript_function("GetMediaTrackInfo_Value", self.id, "I_RECINPUT")
+            midi_input = int(midi_input)
+            
+            # Check if it's a MIDI track (has MIDI input configured)
+            if midi_input >= 4096:
+                # Extract MIDI channel from the input value
+                # Low 5 bits are the channel (0=all, 1-16=specific)
+                midi_channel = midi_input & 0x1F
+                if 1 <= midi_channel <= 16:
+                    return midi_channel
+            return None
+        except Exception as e:
+            logger.warning(f"Failed to get MIDI channel for track {self._index}: {e}")
+            return None
+    
+    def play_note(self, midi_note: int, velocity: int = 100, duration_ms: int = 1000) -> bool:
+        """Play a MIDI note on this track with automatic note-off.
+        
+        Args:
+            midi_note: MIDI note number (0-127)
+            velocity: Note velocity (0-127) 
+            duration_ms: Note duration in milliseconds
+            
+        Returns:
+            True if successful, False otherwise
+            
+        Raises:
+            ValueError: If track is not configured for MIDI
+        """
+        channel = self.midi_channel
+        if channel is None:
+            raise ValueError(f"Track '{self.name}' is not configured for MIDI input")
+        
+        try:
+            from ..tools.rust_osc_client import get_rust_osc_client
+            rust_client = get_rust_osc_client()
+            success = rust_client.play_note(channel, midi_note, velocity, duration_ms, timeout=2.0)
+            if success:
+                logger.debug(f"Played note {midi_note} on track '{self.name}' (ch{channel}) via Rust OSC")
+            else:
+                logger.warning(f"Failed to play note {midi_note} on track '{self.name}' via Rust OSC")
+            return success
+        except Exception as e:
+            logger.error(f"Rust OSC extension not available for playing note on track {self._index}: {e}")
+            return False
+    
+    @property
     def items(self) -> List:
         """Get list of all items on this track."""
         from .item import ReaItem
