@@ -94,3 +94,167 @@ pub fn handle_set_track_name(msg: &OscMessage, sender_addr: SocketAddr) {
         }
     }
 }
+
+/// Handle OSC route: /track/volume/get
+pub fn handle_get_track_volume(msg: &OscMessage, sender_addr: SocketAddr) {
+    if let Some(OscType::Int(track_index)) = msg.args.get(0) {
+        show_console_msg(&format!("[renardo-ext] Getting volume for track {}\n", track_index));
+        
+        unsafe {
+            if let Some(get_track) = GET_TRACK {
+                if let Some(get_set_media_track_info) = GET_SET_MEDIA_TRACK_INFO {
+                    let track = get_track(std::ptr::null_mut(), *track_index);
+                    if !track.is_null() {
+                        let param_name = CString::new("D_VOL").unwrap();
+                        let mut volume_value: f64 = 0.0;
+                        
+                        get_set_media_track_info(
+                            track,
+                            param_name.as_ptr(),
+                            &mut volume_value as *mut f64 as *mut c_void,
+                            0 // setNewValue = false (get)
+                        );
+                        
+                        let response = OscMessage {
+                            addr: "/track/volume/get/response".to_string(),
+                            args: vec![
+                                OscType::Int(*track_index),
+                                OscType::Float(volume_value as f32)
+                            ],
+                        };
+                        
+                        send_response(response, sender_addr);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Handle OSC route: /track/volume/set
+pub fn handle_set_track_volume(msg: &OscMessage, sender_addr: SocketAddr) {
+    if let (Some(OscType::Int(track_index)), Some(volume_arg)) = 
+        (msg.args.get(0), msg.args.get(1)) {
+        
+        let volume = match volume_arg {
+            OscType::Float(v) => *v as f64,
+            OscType::Double(v) => *v,
+            OscType::Int(v) => *v as f64,
+            _ => return,
+        };
+        
+        show_console_msg(&format!("[renardo-ext] Setting track {} volume to: {}\n", track_index, volume));
+        
+        unsafe {
+            if let Some(get_track) = GET_TRACK {
+                if let Some(get_set_media_track_info) = GET_SET_MEDIA_TRACK_INFO {
+                    let track = get_track(std::ptr::null_mut(), *track_index);
+                    if !track.is_null() {
+                        let param_name = CString::new("D_VOL").unwrap();
+                        let mut volume_value = volume;
+                        
+                        get_set_media_track_info(
+                            track,
+                            param_name.as_ptr(),
+                            &mut volume_value as *mut f64 as *mut c_void,
+                            1 // setNewValue = true
+                        );
+                        
+                        let response = OscMessage {
+                            addr: "/track/volume/set/response".to_string(),
+                            args: vec![
+                                OscType::Int(*track_index),
+                                OscType::Float(volume as f32),
+                                OscType::String("success".to_string())
+                            ],
+                        };
+                        
+                        send_response(response, sender_addr);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Handle OSC route: /track/pan/get
+pub fn handle_get_track_pan(msg: &OscMessage, sender_addr: SocketAddr) {
+    if let Some(OscType::Int(track_index)) = msg.args.get(0) {
+        show_console_msg(&format!("[renardo-ext] Getting pan for track {}\n", track_index));
+        
+        unsafe {
+            if let Some(get_track) = GET_TRACK {
+                if let Some(get_set_media_track_info) = GET_SET_MEDIA_TRACK_INFO {
+                    let track = get_track(std::ptr::null_mut(), *track_index);
+                    if !track.is_null() {
+                        let param_name = CString::new("D_PAN").unwrap();
+                        let mut pan_value: f64 = 0.0;
+                        
+                        get_set_media_track_info(
+                            track,
+                            param_name.as_ptr(),
+                            &mut pan_value as *mut f64 as *mut c_void,
+                            0 // setNewValue = false (get)
+                        );
+                        
+                        let response = OscMessage {
+                            addr: "/track/pan/get/response".to_string(),
+                            args: vec![
+                                OscType::Int(*track_index),
+                                OscType::Float(pan_value as f32)
+                            ],
+                        };
+                        
+                        send_response(response, sender_addr);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Handle OSC route: /track/pan/set
+pub fn handle_set_track_pan(msg: &OscMessage, sender_addr: SocketAddr) {
+    if let (Some(OscType::Int(track_index)), Some(pan_arg)) = 
+        (msg.args.get(0), msg.args.get(1)) {
+        
+        let pan = match pan_arg {
+            OscType::Float(v) => *v as f64,
+            OscType::Double(v) => *v,
+            OscType::Int(v) => *v as f64,
+            _ => return,
+        };
+        
+        show_console_msg(&format!("[renardo-ext] Setting track {} pan to: {}\n", track_index, pan));
+        
+        unsafe {
+            if let Some(get_track) = GET_TRACK {
+                if let Some(get_set_media_track_info) = GET_SET_MEDIA_TRACK_INFO {
+                    let track = get_track(std::ptr::null_mut(), *track_index);
+                    if !track.is_null() {
+                        let param_name = CString::new("D_PAN").unwrap();
+                        let mut pan_value = pan;
+                        
+                        get_set_media_track_info(
+                            track,
+                            param_name.as_ptr(),
+                            &mut pan_value as *mut f64 as *mut c_void,
+                            1 // setNewValue = true
+                        );
+                        
+                        let response = OscMessage {
+                            addr: "/track/pan/set/response".to_string(),
+                            args: vec![
+                                OscType::Int(*track_index),
+                                OscType::Float(pan as f32),
+                                OscType::String("success".to_string())
+                            ],
+                        };
+                        
+                        send_response(response, sender_addr);
+                    }
+                }
+            }
+        }
+    }
+}
