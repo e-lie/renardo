@@ -1,113 +1,120 @@
 # Renardo REAPER Extension
 
-A native REAPER extension written in Rust that provides an OSC interface for controlling REAPER from Renardo.
-
-## Features
-
-- OSC server listening on port 9000
-- `/demo/args` route for testing that logs all received parameters
-- Extensible architecture for adding more OSC routes
-
-## Building
-
-### Prerequisites
-
-1. Install Rust: https://rustup.rs/
-2. Install REAPER (obviously)
-
-### Build Steps
-
-```bash
-# Build the extension
-./build.sh
-
-# Or manually:
-cargo build --release
-```
-
-## Installation
-
-1. Build the extension (see above)
-2. Copy the built library to your REAPER UserPlugins directory:
-   - **Linux**: `~/.config/REAPER/UserPlugins/`
-   - **macOS**: `~/Library/Application Support/REAPER/UserPlugins/`
-   - **Windows**: `%APPDATA%\REAPER\UserPlugins\`
-
-3. Rename the file:
-   - **Linux**: Rename `librenardo_reaper_ext.so` to `reaper_renardo.so`
-   - **macOS**: Rename `librenardo_reaper_ext.dylib` to `reaper_renardo.dylib`  
-   - **Windows**: Rename `renardo_reaper_ext.dll` to `reaper_renardo.dll`
-
-4. Restart REAPER
-
-5. Check the REAPER console (View > Show REAPER Resource Path in Explorer/Finder) for the startup message:
-   ```
-   =================================
-   Renardo REAPER Extension loaded!
-   =================================
-   [renardo-ext] OSC server started on port 9000
-   ```
-
-## Testing
-
-Once installed, you can test the OSC interface:
-
-### Using the test script:
-
-```bash
-# Install python-osc if needed
-pip install python-osc
-
-# Run the test script
-python test_osc.py
-```
-
-### Manual testing with oscsend:
-
-```bash
-# Send a test message
-oscsend localhost 9000 /demo/args ifs 42 3.14 "Hello"
-```
-
-### From Python:
-
-```python
-from pythonosc import udp_client
-
-client = udp_client.SimpleUDPClient("127.0.0.1", 9000)
-client.send_message("/demo/args", [1, 2, 3, "test"])
-```
-
-## OSC Routes
-
-Currently implemented:
-
-- `/demo/args` - Logs all arguments received (for testing)
-
-## Development
-
-To add new OSC routes, edit `src/lib.rs` and add cases to the `match` statement in `handle_osc_message()`:
-
-```rust
-match msg.addr.as_str() {
-    "/demo/args" => { /* existing handler */ }
-    "/your/new/route" => {
-        // Your handler code here
-    }
-    _ => { /* unknown route */ }
-}
-```
-
-## Troubleshooting
-
-1. **Extension not loading**: Check REAPER console for error messages
-2. **Port already in use**: Another application is using port 9000
-3. **No console output**: Make sure REAPER console is open (Actions > Show REAPER resource path)
+A native Rust REAPER extension providing OSC-based control interface for the Renardo live coding environment.
 
 ## Architecture
 
-The extension consists of:
-- OSC server running in a separate thread
-- Message handler that processes incoming OSC packets
-- Integration with REAPER's console for logging
-- Global state management for the server instance
+The extension is organized into a modular structure for scalability:
+
+```
+src/
+├── lib.rs              # Main entry point and plugin initialization
+├── reaper/             # REAPER API bindings and handlers
+│   ├── mod.rs          # Module exports
+│   ├── api.rs          # Core REAPER API function pointers and utilities
+│   ├── project/        # Project-level operations
+│   │   ├── mod.rs      
+│   │   └── handlers.rs # OSC handlers for project operations
+│   ├── track/          # Track-level operations  
+│   │   ├── mod.rs
+│   │   └── handlers.rs # OSC handlers for track operations
+│   └── fx/             # FX-level operations (planned)
+│       ├── mod.rs
+│       └── handlers.rs # OSC handlers for FX operations
+└── osc/                # OSC server and message routing
+    ├── mod.rs          # Module exports
+    ├── server.rs       # UDP server implementation
+    ├── router.rs       # Message routing and dispatch
+    └── utils.rs        # OSC utilities and response handling
+```
+
+## OSC Interface
+
+The extension provides bidirectional OSC communication:
+- **Listen Port**: 9877 (receives commands from Python)
+- **Send Port**: 9878 (sends responses to Python)
+
+### Available Routes
+
+#### Project Operations
+- `/project/name/get` - Get current project name
+- `/project/name/set <name>` - Set project name
+- `/project/add_track` - Add new track to project
+
+#### Track Operations  
+- `/track/name/get <track_index>` - Get track name by index
+- `/track/name/set <track_index> <name>` - Set track name by index
+
+#### FX Operations (Planned)
+- `/fx/add <track_index> <fx_name>` - Add FX to track
+- `/fx/remove <track_index> <fx_index>` - Remove FX from track
+- `/fx/param/get <track_index> <fx_index> <param_index>` - Get FX parameter
+- `/fx/param/set <track_index> <fx_index> <param_index> <value>` - Set FX parameter
+
+## Building
+
+```bash
+cargo build --release
+```
+
+The compiled extension will be at `target/release/librenardo_reaper_ext.so` (Linux) or `target/release/renardo_reaper_ext.dll` (Windows).
+
+## Installation
+
+The extension is automatically installed by the Python configuration system:
+
+```python
+from src.renardo.reaper_backend.reaside import configure_reaper
+configure_reaper()
+```
+
+This will:
+1. Stop REAPER if running
+2. Build and install the Rust extension 
+3. Configure Lua ReaScript
+4. Restart REAPER with the extension loaded
+
+## Development
+
+### Adding New Handlers
+
+1. **Create handler function** in appropriate module (e.g., `reaper/track/handlers.rs`):
+```rust
+pub fn handle_new_operation(msg: &OscMessage, sender_addr: SocketAddr) {
+    // Implementation here
+    let response = OscMessage { /* ... */ };
+    send_response(response, sender_addr);
+}
+```
+
+2. **Add route** in `osc/router.rs`:
+```rust
+"/track/new_operation" => handle_new_operation(&msg, sender_addr),
+```
+
+3. **Export function** in appropriate `mod.rs` file
+
+### Architecture Benefits
+
+- **Modularity**: Easy to add new functionality without modifying core files
+- **Separation of Concerns**: OSC handling separated from REAPER API logic  
+- **Scalability**: Can grow to support hundreds of routes without becoming unwieldy
+- **Maintainability**: Small focused files are easier to understand and modify
+- **Testability**: Individual modules can be tested in isolation
+
+## Integration with Python
+
+The extension integrates seamlessly with the existing reaside Python API:
+
+```python
+# Add track via Rust OSC
+new_track = project.basic_add_track()
+
+# Set track name via Rust OSC  
+new_track.name = "My Track"
+
+# Get track name via Rust OSC
+track_name = new_track.name
+```
+
+All operations transparently use the native Rust extension for optimal performance.
