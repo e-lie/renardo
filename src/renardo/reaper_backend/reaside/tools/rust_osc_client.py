@@ -54,14 +54,30 @@ class RustOscClient:
     def _start_server(self):
         """Start the OSC server for receiving responses."""
         try:
-            self.server = osc_server.ThreadingOSCUDPServer(
-                (self.host, self.receive_port), 
-                self.dispatcher
-            )
-            self.server_thread = threading.Thread(target=self.server.serve_forever)
-            self.server_thread.daemon = True
-            self.server_thread.start()
-            logger.debug(f"OSC server started on port {self.receive_port}")
+            # Try to bind to the specified port, if it fails try nearby ports
+            port_attempts = [self.receive_port, self.receive_port + 1, self.receive_port + 2, 0]
+            
+            for port in port_attempts:
+                try:
+                    self.server = osc_server.ThreadingOSCUDPServer(
+                        (self.host, port), 
+                        self.dispatcher
+                    )
+                    self.server_thread = threading.Thread(target=self.server.serve_forever)
+                    self.server_thread.daemon = True
+                    self.server_thread.start()
+                    
+                    actual_port = self.server.server_address[1]
+                    logger.debug(f"OSC server started on port {actual_port}")
+                    
+                    # Update the receive port to the actual port
+                    self.receive_port = actual_port
+                    break
+                except OSError:
+                    if port == 0:  # Last attempt with any available port
+                        raise
+                    continue
+                    
         except Exception as e:
             logger.error(f"Failed to start OSC server: {e}")
     
