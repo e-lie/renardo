@@ -215,10 +215,15 @@ class RustOscClient:
         
         return response is not None and len(response) >= 3 and response[2] == "success"
     
-    def add_track(self, timeout: Optional[float] = None) -> Optional[int]:
-        """Add a new track to the project.
+    def add_track(self, position: int = -1, name: str = "", input_value: int = -1, 
+                  record_armed: bool = False, timeout: Optional[float] = None) -> Optional[int]:
+        """Add a new track to the project with configuration.
         
         Args:
+            position: Where to insert track (-1 for end)
+            name: Track name (empty string for default)
+            input_value: MIDI input value (-1 for no input, 0+ for MIDI channels)
+            record_armed: Whether to arm track for recording
             timeout: Timeout in seconds
             
         Returns:
@@ -227,6 +232,7 @@ class RustOscClient:
         response = self.send_and_wait(
             "/project/add_track",
             "/project/add_track/response",
+            position, name, input_value, record_armed,
             timeout=timeout
         )
         
