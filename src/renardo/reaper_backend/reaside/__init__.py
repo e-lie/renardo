@@ -21,10 +21,26 @@ configure_logging(level=logging.INFO)
 logger = get_logger('reaside')
 
 def configure_reaper():
-    """Configure REAPER to allow reaside connections using Lua ReaScript."""
+    """Configure REAPER with Rust OSC extension and Lua ReaScript."""
     from .config import configure_lua_reascript, get_resource_path
+    from .config.config import install_rust_extension
     
-    # Get REAPER resource path
+    logger.info("Configuring REAPER...")
+    success = True
+    
+    # Install Rust OSC extension
+    logger.info("Installing Rust OSC extension...")
+    try:
+        if install_rust_extension():
+            logger.info("✓ Rust OSC extension installed")
+        else:
+            logger.warning("✗ Rust OSC extension installation failed")
+            success = False
+    except Exception as e:
+        logger.error(f"Rust OSC extension installation failed: {e}")
+        success = False
+    
+    # Get REAPER resource path for Lua ReaScript
     try:
         resource_path = get_resource_path()
         logger.info(f"REAPER resource path: {resource_path}")
@@ -32,14 +48,22 @@ def configure_reaper():
         logger.error(f"Could not find REAPER resource path: {str(e)}")
         raise
     
-    # Configure REAPER
+    # Configure Lua ReaScript
+    logger.info("Configuring Lua ReaScript...")
     try:
         configure_lua_reascript(resource_path)
-        logger.info("Please restart REAPER for the changes to take effect.")
-        return True
+        logger.info("✓ Lua ReaScript configured")
     except Exception as e:
-        logger.error(f"Failed to configure REAPER: {str(e)}")
-        raise RuntimeError(f"Failed to configure REAPER: {str(e)}")
+        logger.error(f"Lua ReaScript configuration failed: {str(e)}")
+        success = False
+    
+    if success:
+        logger.info("REAPER configuration completed successfully")
+        logger.info("Please restart REAPER to activate all changes")
+        return True
+    else:
+        logger.warning("REAPER configuration completed with some errors")
+        return False
 
 def init_api_bridge(host="localhost", port=WEB_INTERFACE_PORT, auto_launch=True):
     """Initialize reaside by launching the ReaScript API bridge in REAPER."""
