@@ -66,11 +66,12 @@ pub fn handle_set_project_name(msg: &OscMessage, sender_addr: SocketAddr) {
 }
 
 /// Handle OSC route: /project/add_track
-/// Expected args: [position (int), name (string), input (int), record_armed (bool)]
+/// Expected args: [position (int), name (string), input (int), record_armed (bool), record_mode (int)]
 /// - position: Where to insert track (-1 for end)
 /// - name: Track name (empty string for default)
 /// - input: MIDI input value (-1 for no input, 0+ for MIDI channels)
 /// - record_armed: Whether to arm track for recording
+/// - record_mode: Record mode (0=output, 1=output stereo, 2=none/monitor input, 3=midi output, etc.)
 pub fn handle_add_track(msg: &OscMessage, sender_addr: SocketAddr) {
     // Parse arguments with defaults
     let position = msg.args.get(0)
@@ -89,9 +90,13 @@ pub fn handle_add_track(msg: &OscMessage, sender_addr: SocketAddr) {
         .and_then(|arg| if let OscType::Bool(armed) = arg { Some(*armed) } else { None })
         .unwrap_or(false);
     
+    let record_mode = msg.args.get(4)
+        .and_then(|arg| if let OscType::Int(mode) = arg { Some(*mode) } else { None })
+        .unwrap_or(2); // Default to "none/monitor input"
+    
     show_console_msg(&format!(
-        "[renardo-ext] Adding track: pos={}, name='{}', input={}, armed={}\n", 
-        position, name, input, record_armed
+        "[renardo-ext] Adding track: pos={}, name='{}', input={}, armed={}, mode={}\n", 
+        position, name, input, record_armed, record_mode
     ));
     
     unsafe {
@@ -149,6 +154,19 @@ pub fn handle_add_track(msg: &OscMessage, sender_addr: SocketAddr) {
                                 new_track,
                                 param_name.as_ptr(),
                                 &mut armed_value as *mut i32 as *mut c_void,
+                                1 // setNewValue = true
+                            );
+                        }
+                        
+                        // Set record mode
+                        if let Some(get_set_media_track_info) = GET_SET_MEDIA_TRACK_INFO {
+                            let param_name = CString::new("I_RECMODE").unwrap();
+                            let mut mode_value = record_mode;
+                            
+                            get_set_media_track_info(
+                                new_track,
+                                param_name.as_ptr(),
+                                &mut mode_value as *mut i32 as *mut c_void,
                                 1 // setNewValue = true
                             );
                         }
