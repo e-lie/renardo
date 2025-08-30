@@ -336,6 +336,110 @@ class RustOscClient:
         
         return response is not None and len(response) >= 3 and response[2] == "success"
     
+    def scan_track(self, track_index: int, timeout: Optional[float] = None) -> Optional[dict]:
+        """Scan complete track information including FX and sends.
+        
+        Args:
+            track_index: Track index (0-based)
+            timeout: Timeout in seconds
+            
+        Returns:
+            Dictionary with track data or None if failed
+        """
+        response = self.send_and_wait(
+            "/track/scan",
+            "/track/scan/response",
+            track_index,
+            timeout=timeout or 5.0  # Longer timeout for scanning
+        )
+        
+        if response and len(response) >= 2 and response[0] == "success":
+            # Parse response data
+            track_data = {
+                "index": response[1],
+                "name": response[2] if len(response) > 2 else "",
+                "volume": response[3] if len(response) > 3 else 1.0,
+                "pan": response[4] if len(response) > 4 else 0.0,
+                "mute": response[5] if len(response) > 5 else False,
+                "solo": response[6] if len(response) > 6 else False,
+                "rec_arm": response[7] if len(response) > 7 else False,
+                "rec_input": response[8] if len(response) > 8 else -1,
+                "rec_mode": response[9] if len(response) > 9 else 0,
+                "rec_mon": response[10] if len(response) > 10 else 0,
+                "color": response[11] if len(response) > 11 else 0,
+            }
+            
+            # Parse FX data from blob if present
+            if len(response) > 12 and isinstance(response[12], bytes):
+                track_data["fx"] = self._parse_scan_blob(response[12])
+            else:
+                track_data["fx"] = []
+            
+            # Parse send data from blob if present
+            if len(response) > 13 and isinstance(response[13], bytes):
+                track_data["sends"] = self._parse_scan_blob(response[13])
+            else:
+                track_data["sends"] = []
+            
+            return track_data
+        
+        return None
+    
+    def _parse_scan_blob(self, blob: bytes) -> list:
+        """Parse serialized OSC data blob from track scan.
+        
+        Args:
+            blob: Serialized data
+            
+        Returns:
+            Parsed list of items
+        """
+        items = []
+        pos = 0
+        
+        if len(blob) < 4:
+            return items
+        
+        # Read item count
+        item_count = int.from_bytes(blob[pos:pos+4], 'big')
+        pos += 4
+        
+        for _ in range(item_count):
+            if pos >= len(blob):
+                break
+                
+            item_type = chr(blob[pos])
+            pos += 1
+            
+            if item_type == 'i':  # Integer
+                if pos + 4 <= len(blob):
+                    value = int.from_bytes(blob[pos:pos+4], 'big', signed=True)
+                    items.append(value)
+                    pos += 4
+            elif item_type == 'f':  # Float
+                if pos + 4 <= len(blob):
+                    import struct
+                    value = struct.unpack('>f', blob[pos:pos+4])[0]
+                    items.append(value)
+                    pos += 4
+            elif item_type == 's':  # String
+                if pos + 4 <= len(blob):
+                    length = int.from_bytes(blob[pos:pos+4], 'big')
+                    pos += 4
+                    if pos + length <= len(blob):
+                        value = blob[pos:pos+length].decode('utf-8', errors='ignore')
+                        items.append(value)
+                        pos += length
+            elif item_type == 'b':  # Boolean
+                if pos + 1 <= len(blob):
+                    value = blob[pos] != 0
+                    items.append(value)
+                    pos += 1
+            elif item_type == 'n':  # Null
+                items.append(None)
+        
+        return items
+    
     def play_note(self, midi_channel: int, midi_note: int, velocity: int = 100, 
                   duration_ms: int = 1000, timeout: Optional[float] = None) -> bool:
         """Play a MIDI note on a specific MIDI channel with automatic note-off.
