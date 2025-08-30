@@ -14,6 +14,24 @@ pub static mut GET_TRACK: Option<extern "C" fn(*mut c_void, c_int) -> *mut c_voi
 pub static mut GET_TRACK_NAME: Option<extern "C" fn(*mut c_void, *mut c_char, c_int) -> bool> = None;
 pub static mut STUFF_MIDI_MESSAGE: Option<extern "C" fn(c_int, c_int, c_int, c_int)> = None;
 
+// FX API functions
+pub static mut TRACK_FX_GET_COUNT: Option<extern "C" fn(*mut c_void) -> c_int> = None;
+pub static mut TRACK_FX_GET_FX_NAME: Option<extern "C" fn(*mut c_void, c_int, *mut c_char, c_int) -> bool> = None;
+pub static mut TRACK_FX_GET_ENABLED: Option<extern "C" fn(*mut c_void, c_int) -> bool> = None;
+pub static mut TRACK_FX_GET_PRESET: Option<extern "C" fn(*mut c_void, c_int, *mut c_char, c_int) -> bool> = None;
+pub static mut TRACK_FX_GET_NUM_PARAMS: Option<extern "C" fn(*mut c_void, c_int) -> c_int> = None;
+pub static mut TRACK_FX_GET_PARAM_NAME: Option<extern "C" fn(*mut c_void, c_int, c_int, *mut c_char, c_int) -> bool> = None;
+pub static mut TRACK_FX_GET_PARAM: Option<extern "C" fn(*mut c_void, c_int, c_int, *mut f64, *mut f64) -> f64> = None;
+pub static mut TRACK_FX_GET_FORMATTED_PARAM_VALUE: Option<extern "C" fn(*mut c_void, c_int, c_int, *mut c_char, c_int) -> bool> = None;
+
+// Send API functions  
+pub static mut GET_TRACK_NUM_SENDS: Option<extern "C" fn(*mut c_void, c_int) -> c_int> = None;
+pub static mut GET_TRACK_SEND_INFO_VALUE: Option<extern "C" fn(*mut c_void, c_int, c_int, *const c_char) -> f64> = None;
+pub static mut GET_TRACK_SEND_NAME: Option<extern "C" fn(*mut c_void, c_int, *mut c_char, c_int) -> bool> = None;
+
+// Track color
+pub static mut GET_TRACK_COLOR: Option<extern "C" fn(*mut c_void) -> c_int> = None;
+
 /// REAPER plugin info struct for interfacing with REAPER
 #[repr(C)]
 pub struct ReaperPluginInfo {
@@ -38,6 +56,24 @@ pub fn initialize_api(plugin_info: &ReaperPluginInfo) {
             init_function_pointer(&get_func, "GetTrack", &mut GET_TRACK);
             init_function_pointer(&get_func, "GetTrackName", &mut GET_TRACK_NAME);
             init_function_pointer(&get_func, "StuffMIDIMessage", &mut STUFF_MIDI_MESSAGE);
+            
+            // FX functions
+            init_function_pointer(&get_func, "TrackFX_GetCount", &mut TRACK_FX_GET_COUNT);
+            init_function_pointer(&get_func, "TrackFX_GetFXName", &mut TRACK_FX_GET_FX_NAME);
+            init_function_pointer(&get_func, "TrackFX_GetEnabled", &mut TRACK_FX_GET_ENABLED);
+            init_function_pointer(&get_func, "TrackFX_GetPreset", &mut TRACK_FX_GET_PRESET);
+            init_function_pointer(&get_func, "TrackFX_GetNumParams", &mut TRACK_FX_GET_NUM_PARAMS);
+            init_function_pointer(&get_func, "TrackFX_GetParamName", &mut TRACK_FX_GET_PARAM_NAME);
+            init_function_pointer(&get_func, "TrackFX_GetParam", &mut TRACK_FX_GET_PARAM);
+            init_function_pointer(&get_func, "TrackFX_GetFormattedParamValue", &mut TRACK_FX_GET_FORMATTED_PARAM_VALUE);
+            
+            // Send functions
+            init_function_pointer(&get_func, "GetTrackNumSends", &mut GET_TRACK_NUM_SENDS);
+            init_function_pointer(&get_func, "GetTrackSendInfo_Value", &mut GET_TRACK_SEND_INFO_VALUE);
+            init_function_pointer(&get_func, "GetTrackSendName", &mut GET_TRACK_SEND_NAME);
+            
+            // Track color
+            init_function_pointer(&get_func, "GetTrackColor", &mut GET_TRACK_COLOR);
         }
     }
 }
