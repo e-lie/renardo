@@ -31,31 +31,16 @@ class ReaTrack:
         
     def _scan_track(self):
         """Scan track to populate FX and parameter information via Rust OSC extension."""
-        try:
-            # Try Rust OSC extension first (faster)
-            from ..tools.rust_osc_client import get_rust_osc_client
-            rust_client = get_rust_osc_client()
-            scan_result = rust_client.scan_track(self._index, timeout=3.0)
-            
-            if scan_result:
-                self._scan_data = self._convert_rust_scan_to_legacy_format(scan_result)
-                self._populate_reafxs()
-                logger.debug(f"Track {self._index} scanned via Rust OSC extension")
-                return
-            else:
-                logger.warning(f"Rust OSC scan failed for track {self._index}, falling back to Lua")
-        except Exception as e:
-            logger.warning(f"Rust OSC extension not available for track {self._index}: {e}, falling back to Lua")
+        from ..tools.rust_osc_client import get_rust_osc_client
+        rust_client = get_rust_osc_client()
+        scan_result = rust_client.scan_track(self._index, timeout=3.0)
         
-        # Fallback to Lua scan
-        try:
-            scan_result = self._client.scan_track_complete(self._index)
-            if scan_result and scan_result.get('success'):
-                self._scan_data = scan_result['track']
-                self._populate_reafxs()
-                logger.debug(f"Track {self._index} scanned via Lua fallback")
-        except Exception as e:
-            logger.error(f"Both Rust and Lua track scan failed for track {self._index}: {e}")
+        if scan_result:
+            self._scan_data = self._convert_rust_scan_to_legacy_format(scan_result)
+            self._populate_reafxs()
+            logger.debug(f"Track {self._index} scanned via Rust OSC extension")
+        else:
+            logger.error(f"Rust OSC scan failed for track {self._index}")
             self._scan_data = None
 
     def _convert_rust_scan_to_legacy_format(self, rust_data: dict) -> dict:
@@ -206,27 +191,20 @@ class ReaTrack:
     @property 
     def name(self) -> str:
         """Get track name via Rust OSC extension."""
-        try:
-            from ..tools.rust_osc_client import get_rust_osc_client
-            rust_client = get_rust_osc_client()
-            track_name = rust_client.get_track_name(self._index, timeout=1.0)
-            return track_name or f"Track {self._index + 1}"
-        except Exception as e:
-            logger.warning(f"Rust OSC extension not available for track {self._index}: {e}")
-            return f"Track {self._index + 1}"
+        from ..tools.rust_osc_client import get_rust_osc_client
+        rust_client = get_rust_osc_client()
+        track_name = rust_client.get_track_name(self._index, timeout=1.0)
+        return track_name or f"Track {self._index + 1}"
     
     @name.setter
     def name(self, value: str) -> None:
         """Set track name via Rust OSC extension."""
-        try:
-            from ..tools.rust_osc_client import get_rust_osc_client
-            rust_client = get_rust_osc_client()
-            if rust_client.set_track_name(self._index, value, timeout=2.0):
-                logger.debug(f"Set track {self._index} name to: {value} via Rust OSC")
-            else:
-                logger.warning(f"Rust OSC extension failed to set track {self._index} name: {value}")
-        except Exception as e:
-            logger.error(f"Rust OSC extension not available for track {self._index}: {e}")
+        from ..tools.rust_osc_client import get_rust_osc_client
+        rust_client = get_rust_osc_client()
+        if rust_client.set_track_name(self._index, value, timeout=2.0):
+            logger.debug(f"Set track {self._index} name to: {value} via Rust OSC")
+        else:
+            logger.warning(f"Rust OSC extension failed to set track {self._index} name: {value}")
     
     @property
     def is_selected(self) -> bool:
@@ -273,54 +251,38 @@ class ReaTrack:
     @property
     def volume(self) -> float:
         """Get track volume via Rust OSC extension."""
-        try:
-            from ..tools.rust_osc_client import get_rust_osc_client
-            rust_client = get_rust_osc_client()
-            volume = rust_client.get_track_volume(self._index, timeout=1.0)
-            return volume if volume is not None else 1.0
-        except Exception as e:
-            logger.warning(f"Rust OSC extension not available for track {self._index} volume: {e}")
-            return self._client.call_reascript_function("GetMediaTrackInfo_Value", self.id, "D_VOL")
+        from ..tools.rust_osc_client import get_rust_osc_client
+        rust_client = get_rust_osc_client()
+        volume = rust_client.get_track_volume(self._index, timeout=1.0)
+        return volume if volume is not None else 1.0
     
     @volume.setter
     def volume(self, value: float) -> None:
         """Set track volume via Rust OSC extension."""
-        try:
-            from ..tools.rust_osc_client import get_rust_osc_client
-            rust_client = get_rust_osc_client()
-            if rust_client.set_track_volume(self._index, value, timeout=2.0):
-                logger.debug(f"Set track {self._index} volume to: {value} via Rust OSC")
-            else:
-                logger.warning(f"Rust OSC extension failed to set track {self._index} volume: {value}")
-        except Exception as e:
-            logger.error(f"Rust OSC extension not available for track {self._index} volume: {e}")
-            self._client.set_track_volume(self._index + 1, value)
+        from ..tools.rust_osc_client import get_rust_osc_client
+        rust_client = get_rust_osc_client()
+        if rust_client.set_track_volume(self._index, value, timeout=2.0):
+            logger.debug(f"Set track {self._index} volume to: {value} via Rust OSC")
+        else:
+            logger.warning(f"Rust OSC extension failed to set track {self._index} volume: {value}")
     
     @property
     def pan(self) -> float:
         """Get track pan via Rust OSC extension."""
-        try:
-            from ..tools.rust_osc_client import get_rust_osc_client
-            rust_client = get_rust_osc_client()
-            pan = rust_client.get_track_pan(self._index, timeout=1.0)
-            return pan if pan is not None else 0.0
-        except Exception as e:
-            logger.warning(f"Rust OSC extension not available for track {self._index} pan: {e}")
-            return self._client.call_reascript_function("GetMediaTrackInfo_Value", self.id, "D_PAN")
+        from ..tools.rust_osc_client import get_rust_osc_client
+        rust_client = get_rust_osc_client()
+        pan = rust_client.get_track_pan(self._index, timeout=1.0)
+        return pan if pan is not None else 0.0
     
     @pan.setter
     def pan(self, value: float) -> None:
         """Set track pan via Rust OSC extension."""
-        try:
-            from ..tools.rust_osc_client import get_rust_osc_client
-            rust_client = get_rust_osc_client()
-            if rust_client.set_track_pan(self._index, value, timeout=2.0):
-                logger.debug(f"Set track {self._index} pan to: {value} via Rust OSC")
-            else:
-                logger.warning(f"Rust OSC extension failed to set track {self._index} pan: {value}")
-        except Exception as e:
-            logger.error(f"Rust OSC extension not available for track {self._index} pan: {e}")
-            self._client.set_track_pan(self._index + 1, value)
+        from ..tools.rust_osc_client import get_rust_osc_client
+        rust_client = get_rust_osc_client()
+        if rust_client.set_track_pan(self._index, value, timeout=2.0):
+            logger.debug(f"Set track {self._index} pan to: {value} via Rust OSC")
+        else:
+            logger.warning(f"Rust OSC extension failed to set track {self._index} pan: {value}")
     
     @property
     def midi_channel(self) -> Optional[int]:
@@ -359,18 +321,14 @@ class ReaTrack:
         if channel is None:
             raise ValueError(f"Track '{self.name}' is not configured for MIDI input")
         
-        try:
-            from ..tools.rust_osc_client import get_rust_osc_client
-            rust_client = get_rust_osc_client()
-            success = rust_client.play_note(channel, midi_note, velocity, duration_ms, timeout=2.0)
-            if success:
-                logger.debug(f"Played note {midi_note} on track '{self.name}' (ch{channel}) via Rust OSC")
-            else:
-                logger.warning(f"Failed to play note {midi_note} on track '{self.name}' via Rust OSC")
-            return success
-        except Exception as e:
-            logger.error(f"Rust OSC extension not available for playing note on track {self._index}: {e}")
-            return False
+        from ..tools.rust_osc_client import get_rust_osc_client
+        rust_client = get_rust_osc_client()
+        success = rust_client.play_note(channel, midi_note, velocity, duration_ms, timeout=2.0)
+        if success:
+            logger.debug(f"Played note {midi_note} on track '{self.name}' (ch{channel}) via Rust OSC")
+        else:
+            logger.warning(f"Failed to play note {midi_note} on track '{self.name}' via Rust OSC")
+        return success
     
     @property
     def items(self) -> List:
