@@ -30,15 +30,127 @@ class ReaTrack:
         self._scan_track()
         
     def _scan_track(self):
-        """Scan track to populate FX and parameter information."""
+        """Scan track to populate FX and parameter information via Rust OSC extension."""
+        try:
+            # Try Rust OSC extension first (faster)
+            from ..tools.rust_osc_client import get_rust_osc_client
+            rust_client = get_rust_osc_client()
+            scan_result = rust_client.scan_track(self._index, timeout=3.0)
+            
+            if scan_result:
+                self._scan_data = self._convert_rust_scan_to_legacy_format(scan_result)
+                self._populate_reafxs()
+                logger.debug(f"Track {self._index} scanned via Rust OSC extension")
+                return
+            else:
+                logger.warning(f"Rust OSC scan failed for track {self._index}, falling back to Lua")
+        except Exception as e:
+            logger.warning(f"Rust OSC extension not available for track {self._index}: {e}, falling back to Lua")
+        
+        # Fallback to Lua scan
         try:
             scan_result = self._client.scan_track_complete(self._index)
             if scan_result and scan_result.get('success'):
                 self._scan_data = scan_result['track']
                 self._populate_reafxs()
+                logger.debug(f"Track {self._index} scanned via Lua fallback")
         except Exception as e:
-            logger.warning(f"Failed to scan track {self._index}: {e}")
+            logger.error(f"Both Rust and Lua track scan failed for track {self._index}: {e}")
             self._scan_data = None
+
+    def _convert_rust_scan_to_legacy_format(self, rust_data: dict) -> dict:
+        """Convert Rust OSC scan format to legacy Lua scan format."""
+        legacy_data = {
+            "index": rust_data.get("index", self._index),
+            "name": rust_data.get("name", ""),
+            "volume": rust_data.get("volume", 1.0),
+            "pan": rust_data.get("pan", 0.0),
+            "mute": rust_data.get("mute", False),
+            "solo": rust_data.get("solo", False),
+            "rec_arm": rust_data.get("rec_arm", False),
+            "rec_input": rust_data.get("rec_input", -1),
+            "rec_mode": rust_data.get("rec_mode", 0),
+            "rec_mon": rust_data.get("rec_mon", 0),
+            "color": rust_data.get("color", 0),
+        }
+        
+        # Convert FX data
+        fx_raw = rust_data.get("fx", [])
+        if fx_raw and len(fx_raw) > 0 and isinstance(fx_raw[0], int):
+            # Parse FX data: first element is count, then FX info blocks
+            fx_count = fx_raw[0]
+            legacy_data["fx_count"] = fx_count
+            legacy_data["fx"] = []
+            
+            pos = 1
+            for fx_idx in range(fx_count):
+                if pos >= len(fx_raw):
+                    break
+                    
+                fx_info = {
+                    "index": fx_idx,
+                    "name": fx_raw[pos] if pos < len(fx_raw) else "Unknown",
+                    "enabled": fx_raw[pos + 1] if pos + 1 < len(fx_raw) else True,
+                    "preset": fx_raw[pos + 2] if pos + 2 < len(fx_raw) else "",
+                    "param_count": fx_raw[pos + 3] if pos + 3 < len(fx_raw) else 0,
+                    "params": []
+                }
+                pos += 4
+                
+                # Parse parameters
+                param_count = fx_info["param_count"]
+                if isinstance(param_count, int) and param_count > 0:
+                    for param_idx in range(min(param_count, 20)):  # Limit to first 20 params like Rust code
+                        if pos + 4 >= len(fx_raw):
+                            break
+                            
+                        param_info = {
+                            "index": param_idx,
+                            "name": fx_raw[pos] if pos < len(fx_raw) else f"Param {param_idx}",
+                            "value": fx_raw[pos + 1] if pos + 1 < len(fx_raw) else 0.0,
+                            "min": fx_raw[pos + 2] if pos + 2 < len(fx_raw) else 0.0,
+                            "max": fx_raw[pos + 3] if pos + 3 < len(fx_raw) else 1.0,
+                            "formatted": fx_raw[pos + 4] if pos + 4 < len(fx_raw) else ""
+                        }
+                        fx_info["params"].append(param_info)
+                        pos += 5
+                
+                legacy_data["fx"].append(fx_info)
+        else:
+            legacy_data["fx_count"] = 0
+            legacy_data["fx"] = []
+        
+        # Convert send data
+        send_raw = rust_data.get("sends", [])
+        if send_raw and len(send_raw) > 0 and isinstance(send_raw[0], int):
+            # Parse send data: first element is count, then send info blocks
+            send_count = send_raw[0]
+            legacy_data["send_count"] = send_count
+            legacy_data["sends"] = []
+            
+            pos = 1
+            for send_idx in range(send_count):
+                if pos + 4 >= len(send_raw):
+                    break
+                    
+                send_info = {
+                    "index": send_idx,
+                    "dest_name": send_raw[pos] if pos < len(send_raw) else "Unknown",
+                    "dest_index": send_raw[pos + 1] if pos + 1 < len(send_raw) else -1,
+                    "volume": send_raw[pos + 2] if pos + 2 < len(send_raw) else 1.0,
+                    "pan": send_raw[pos + 3] if pos + 3 < len(send_raw) else 0.0,
+                    "mute": send_raw[pos + 4] if pos + 4 < len(send_raw) else False,
+                    # Note: Rust scan doesn't capture phase/mono, set defaults
+                    "phase": False,
+                    "mono": False
+                }
+                legacy_data["sends"].append(send_info)
+                pos += 5
+        else:
+            legacy_data["send_count"] = 0
+            legacy_data["sends"] = []
+        
+        return legacy_data
     
     def _populate_reafxs(self):
         """Create ReaFX objects from scan data."""
