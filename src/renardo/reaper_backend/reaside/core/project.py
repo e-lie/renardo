@@ -279,44 +279,14 @@ class ReaProject:
         # Convert None position to -1 for Rust extension
         pos = -1 if position is None else position
         
-        try:
-            # Try Rust OSC extension first
-            new_track = self.add_track_configured(
-                position=pos, 
-                name=name, 
-                input_value=input_value, 
-                record_armed=record_armed,
-                record_mode=record_mode
-            )
-            if new_track:
-                return new_track
-            
-            logger.warning("Rust OSC extension failed, falling back to legacy method")
-        except Exception as e:
-            logger.warning(f"Rust OSC extension not available: {e}, using legacy method")
-        
-        # Fallback to legacy method (simplified - just basic track creation)
-        if position is None:
-            # Add at the end using action
-            self._reaper.perform_action(40001)
-            count = self._client.call_reascript_function("CountTracks", self._index)
-            track_index = count - 1
-        else:
-            # Insert at specific position using InsertTrackAtIndex
-            self._client.call_reascript_function("InsertTrackAtIndex", position, False)
-            track_index = position
-            
-            # Update indices of existing tracks that were shifted
-            for idx in sorted(self.reatracks.keys(), reverse=True):
-                if idx >= position:
-                    track = self.reatracks[idx]
-                    track._index = idx + 1
-                    del self.reatracks[idx]
-                    self.reatracks[idx + 1] = track
-        
-        # Create and return Track object
-        self._scan_and_populate_track(track_index)
-        return self.reatracks[track_index]
+        # Use Rust OSC extension only (no fallback)
+        return self.add_track_configured(
+            position=pos, 
+            name=name, 
+            input_value=input_value, 
+            record_armed=record_armed,
+            record_mode=record_mode
+        )
     
     def save(self, file_path: Optional[str] = None) -> bool:
         """Save the project."""
