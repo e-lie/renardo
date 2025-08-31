@@ -250,39 +250,33 @@ class ReaTrack:
     
     @property
     def volume(self) -> float:
-        """Get track volume via Rust OSC extension."""
-        from ..tools.rust_osc_client import get_rust_osc_client
-        rust_client = get_rust_osc_client()
-        volume = rust_client.get_track_volume(self._index, timeout=1.0)
-        return volume if volume is not None else 1.0
+        """Get track volume."""
+        return self._client.call_reascript_function("GetMediaTrackInfo_Value", self.id, "D_VOL")
     
     @volume.setter
     def volume(self, value: float) -> None:
-        """Set track volume via Rust OSC extension."""
-        from ..tools.rust_osc_client import get_rust_osc_client
-        rust_client = get_rust_osc_client()
-        if rust_client.set_track_volume(self._index, value, timeout=2.0):
-            logger.debug(f"Set track {self._index} volume to: {value} via Rust OSC")
+        """Set track volume via REAPER OSC."""
+        # Use REAPER's OSC interface directly (1-based track indexing)
+        osc_address = f"/track/{self._index + 1}/volume"
+        if self._client.send_osc_message(osc_address, value):
+            logger.debug(f"Set track {self._index} volume to {value} via REAPER OSC")
         else:
-            logger.warning(f"Rust OSC extension failed to set track {self._index} volume: {value}")
+            logger.warning(f"Failed to set track {self._index} volume via OSC")
     
     @property
     def pan(self) -> float:
-        """Get track pan via Rust OSC extension."""
-        from ..tools.rust_osc_client import get_rust_osc_client
-        rust_client = get_rust_osc_client()
-        pan = rust_client.get_track_pan(self._index, timeout=1.0)
-        return pan if pan is not None else 0.0
+        """Get track pan."""
+        return self._client.call_reascript_function("GetMediaTrackInfo_Value", self.id, "D_PAN")
     
     @pan.setter
     def pan(self, value: float) -> None:
-        """Set track pan via Rust OSC extension."""
-        from ..tools.rust_osc_client import get_rust_osc_client
-        rust_client = get_rust_osc_client()
-        if rust_client.set_track_pan(self._index, value, timeout=2.0):
-            logger.debug(f"Set track {self._index} pan to: {value} via Rust OSC")
+        """Set track pan via REAPER OSC."""
+        # Use REAPER's OSC interface directly (1-based track indexing)
+        osc_address = f"/track/{self._index + 1}/pan"
+        if self._client.send_osc_message(osc_address, value):
+            logger.debug(f"Set track {self._index} pan to {value} via REAPER OSC")
         else:
-            logger.warning(f"Rust OSC extension failed to set track {self._index} pan: {value}")
+            logger.warning(f"Failed to set track {self._index} pan via OSC")
     
     @property
     def midi_channel(self) -> Optional[int]:
