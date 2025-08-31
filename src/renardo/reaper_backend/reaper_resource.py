@@ -121,25 +121,10 @@ class ReaperResource(MusicResource):
                 return 1.0
 
         def set_track_volume_osc(fader_position):
-            """Set track volume using OSC for real-time updates."""
+            """Set track volume using the track's volume property."""
             try:
-                if hasattr(reatrack, '_index') and reatrack._index is not None:
-                    # Convert fader position to linear value for OSC
-                    linear_value = fader_position * 0.716
-                    # Send OSC message directly
-                    if hasattr(reatrack._client, 'send_osc_message'):
-                        osc_address = f"/track/{reatrack._index + 1}/volume"
-                        osc_success = reatrack._client.send_osc_message(osc_address, linear_value)
-                        if osc_success:
-                            logger.debug(f"Sent OSC track volume: {osc_address} = {linear_value:.3f}")
-                            return True
-                    # If OSC failed or not available, fall through to HTTP fallback
-            except Exception as e:
-                logger.debug(f"OSC volume setting failed, using HTTP fallback: {e}")
-            
-            # Fallback to HTTP method
-            try:
-                reatrack.set_volume(fader_position)
+                # Directly use the track's volume property which uses REAPER OSC
+                reatrack.volume = fader_position
                 return True
             except Exception as e:
                 logger.error(f"Failed to set track volume: {e}")
@@ -152,11 +137,14 @@ class ReaperResource(MusicResource):
                 if param_name == "vol":
                     # Check if it's a TimeVar
                     if hasattr(param_value, 'now') or hasattr(param_value, '_is_timevar') or str(type(param_value)).find('TimeVar') != -1:
-                        # For TimeVar, we need to create a special parameter handler
-                        # For now, just pass it to set_fx_parameter which can handle TimeVars
-                        if set_fx_parameter(reatrack, param_name, param_value):
-                            logger.debug(f"Set volume TimeVar: {param_value}")
-                            continue
+                        # For TimeVar, get the current value and set volume
+                        current_value = param_value.now() if hasattr(param_value, 'now') else param_value
+                        # Convert dB to fader position and set via OSC
+                        fader_position = db_to_fader_position(current_value)
+                        success = set_track_volume_osc(fader_position)
+                        if success:
+                            logger.debug(f"Set volume TimeVar: {current_value}dB -> {fader_position} from {param_value}")
+                        continue
                     elif isinstance(param_value, (int, float)):
                         # Convert dB to fader position and set via OSC
                         fader_position = db_to_fader_position(param_value)
@@ -169,10 +157,12 @@ class ReaperResource(MusicResource):
                 if param_name == "volin":
                     # Check if it's a TimeVar
                     if hasattr(param_value, 'now') or hasattr(param_value, '_is_timevar') or str(type(param_value)).find('TimeVar') != -1:
-                        # For TimeVar, pass to set_fx_parameter
-                        if set_fx_parameter(reatrack, param_name, param_value):
-                            logger.debug(f"Set linear volume TimeVar: {param_value}")
-                            continue
+                        # For TimeVar, get the current value and set volume
+                        current_value = param_value.now() if hasattr(param_value, 'now') else param_value
+                        success = set_track_volume_osc(float(current_value))
+                        if success:
+                            logger.debug(f"Set linear volume TimeVar: {current_value} from {param_value}")
+                        continue
                     elif isinstance(param_value, (int, float)):
                         # Direct fader position value (0.0 to 1.5)
                         success = set_track_volume_osc(float(param_value))
