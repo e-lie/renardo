@@ -130,25 +130,77 @@ pub fn handle_add_track(msg: &OscMessage, sender_addr: SocketAddr) {
                             }
                         }
                         
-                        // Set MIDI input if specified
+                        // Set MIDI input if specified - comprehensive forum-based approaches
                         if input >= 0 {
-                            if let Some(get_set_media_track_info) = GET_SET_MEDIA_TRACK_INFO {
-                                let param_name = CString::new("I_RECINPUT").unwrap();
-                                let mut input_value = input;
+                            let param_name = CString::new("I_RECINPUT").unwrap();
+                            
+                            // Try multiple forum-recommended approaches
+                            show_console_msg(&format!("[renardo-ext] Trying multiple I_RECINPUT approaches for value: {}\n", input));
+                            
+                            // Approach 1: SetMediaTrackInfo_Value with proper encoding
+                            if let Some(set_media_track_info_value) = SET_MEDIA_TRACK_INFO_VALUE {
+                                let midi_input_value = if input >= 4096 {
+                                    input as f64
+                                } else if input > 0 {
+                                    (4096 + input + (63 << 5)) as f64
+                                } else {
+                                    input as f64
+                                };
                                 
-                                get_set_media_track_info(
-                                    new_track,
-                                    param_name.as_ptr(),
-                                    &mut input_value as *mut i32 as *mut c_void,
-                                    1 // setNewValue = true
-                                );
+                                show_console_msg(&format!("[renardo-ext] Approach 1: SetMediaTrackInfo_Value with {}\n", midi_input_value));
+                                let success1 = set_media_track_info_value(new_track, param_name.as_ptr(), midi_input_value);
+                                
+                                if success1 {
+                                    if let Some(tracklist_update) = TRACKLIST_UPDATE_ALL_EXTERNAL_SURFACES {
+                                        tracklist_update();
+                                    }
+                                    if let Some(update_timeline) = UPDATE_TIMELINE {
+                                        update_timeline();
+                                    }
+                                }
+                                
+                                // Check result
+                                if let Some(get_media_track_info_value) = GET_MEDIA_TRACK_INFO_VALUE {
+                                    let check1 = get_media_track_info_value(new_track, param_name.as_ptr()) as i32;
+                                    if check1 != 0 {
+                                        show_console_msg(&format!("[renardo-ext] ✅ Approach 1 worked: {}\n", check1));
+                                    } else {
+                                        show_console_msg("[renardo-ext] ❌ Approach 1 failed, trying approach 2\n");
+                                        
+                                        // Approach 2: GetSetMediaTrackInfo with double pointer
+                                        if let Some(get_set_media_track_info) = GET_SET_MEDIA_TRACK_INFO {
+                                            let mut double_value = midi_input_value;
+                                            show_console_msg(&format!("[renardo-ext] Approach 2: GetSetMediaTrackInfo with double* {}\n", double_value));
+                                            get_set_media_track_info(new_track, param_name.as_ptr(), &mut double_value as *mut f64 as *mut c_void, 1);
+                                            
+                                            let check2 = get_media_track_info_value(new_track, param_name.as_ptr()) as i32;
+                                            if check2 != 0 {
+                                                show_console_msg(&format!("[renardo-ext] ✅ Approach 2 worked: {}\n", check2));
+                                            } else {
+                                                show_console_msg("[renardo-ext] ❌ Approach 2 failed, trying approach 3\n");
+                                                
+                                                // Approach 3: Try setting after small delay using REAPER actions
+                                                show_console_msg("[renardo-ext] Approach 3: Using REAPER action to set MIDI input\n");
+                                                
+                                                // Action 40712: Track: Set track input to all MIDI inputs (VKB)
+                                                if let Some(main_on_command) = MAIN_ON_COMMAND {
+                                                    main_on_command(40712, 0);
+                                                    show_console_msg("[renardo-ext] Executed action 40712 (set MIDI input)\n");
+                                                    
+                                                    let check3 = get_media_track_info_value(new_track, param_name.as_ptr()) as i32;
+                                                    show_console_msg(&format!("[renardo-ext] Approach 3 result: {}\n", check3));
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                         
                         // Set record armed state
                         if let Some(get_set_media_track_info) = GET_SET_MEDIA_TRACK_INFO {
                             let param_name = CString::new("I_RECARM").unwrap();
-                            let mut armed_value = if record_armed { 1 } else { 0 };
+                            let mut armed_value = if record_armed { 1i32 } else { 0i32 };
                             
                             get_set_media_track_info(
                                 new_track,
