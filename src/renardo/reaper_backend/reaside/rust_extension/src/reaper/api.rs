@@ -7,6 +7,7 @@ pub static mut SHOW_CONSOLE_MSG: Option<extern "C" fn(*const c_char)> = None;
 pub static mut GET_PROJECT_NAME: Option<extern "C" fn(*mut c_void, *mut c_char, c_int)> = None;
 pub static mut ENUM_PROJECTS: Option<extern "C" fn(c_int) -> *mut c_void> = None;
 pub static mut GET_SET_MEDIA_TRACK_INFO: Option<extern "C" fn(*mut c_void, *const c_char, *mut c_void, c_int)> = None;
+pub static mut SET_MEDIA_TRACK_INFO_VALUE: Option<extern "C" fn(*mut c_void, *const c_char, f64) -> bool> = None;
 pub static mut MAIN_ON_COMMAND: Option<extern "C" fn(c_int, c_int)> = None;
 pub static mut INSERT_TRACK_AT_INDEX: Option<extern "C" fn(c_int, c_int)> = None;
 pub static mut COUNT_TRACKS: Option<extern "C" fn(*mut c_void) -> c_int> = None;
@@ -31,6 +32,9 @@ pub static mut GET_TRACK_SEND_NAME: Option<extern "C" fn(*mut c_void, c_int, *mu
 
 // Track color
 pub static mut GET_TRACK_COLOR: Option<extern "C" fn(*mut c_void) -> c_int> = None;
+pub static mut GET_MEDIA_TRACK_INFO_VALUE: Option<extern "C" fn(*mut c_void, *const c_char) -> f64> = None;
+pub static mut TRACKLIST_UPDATE_ALL_EXTERNAL_SURFACES: Option<extern "C" fn()> = None;
+pub static mut UPDATE_TIMELINE: Option<extern "C" fn()> = None;
 
 /// REAPER plugin info struct for interfacing with REAPER
 #[repr(C)]
@@ -51,6 +55,7 @@ pub fn initialize_api(plugin_info: &ReaperPluginInfo) {
             init_function_pointer(&get_func, "EnumProjects", &mut ENUM_PROJECTS);
             init_function_pointer(&get_func, "Main_OnCommand", &mut MAIN_ON_COMMAND);
             init_function_pointer(&get_func, "GetSetMediaTrackInfo", &mut GET_SET_MEDIA_TRACK_INFO);
+            init_function_pointer(&get_func, "SetMediaTrackInfo_Value", &mut SET_MEDIA_TRACK_INFO_VALUE);
             init_function_pointer(&get_func, "InsertTrackAtIndex", &mut INSERT_TRACK_AT_INDEX);
             init_function_pointer(&get_func, "CountTracks", &mut COUNT_TRACKS);
             init_function_pointer(&get_func, "GetTrack", &mut GET_TRACK);
@@ -72,8 +77,11 @@ pub fn initialize_api(plugin_info: &ReaperPluginInfo) {
             init_function_pointer(&get_func, "GetTrackSendInfo_Value", &mut GET_TRACK_SEND_INFO_VALUE);
             init_function_pointer(&get_func, "GetTrackSendName", &mut GET_TRACK_SEND_NAME);
             
-            // Track color
+            // Track color and additional functions
             init_function_pointer(&get_func, "GetTrackColor", &mut GET_TRACK_COLOR);
+            init_function_pointer(&get_func, "GetMediaTrackInfo_Value", &mut GET_MEDIA_TRACK_INFO_VALUE);
+            init_function_pointer(&get_func, "TrackList_UpdateAllExternalSurfaces", &mut TRACKLIST_UPDATE_ALL_EXTERNAL_SURFACES);
+            init_function_pointer(&get_func, "UpdateTimeline", &mut UPDATE_TIMELINE);
         }
     }
 }
