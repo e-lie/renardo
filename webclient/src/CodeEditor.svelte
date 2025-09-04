@@ -338,26 +338,42 @@
       currentTabIds: tabs.map(t => t.id)
     });
     
-    // Create a single default tab
-    const defaultTab = {
+    // Find existing startup file to preserve its content
+    const existingStartupTab = tabs.find(tab => tab.isStartupFile);
+    const startupContent = existingStartupTab ? 
+      (editorComponent && activeTabId === existingStartupTab.id ? editorComponent.getValue() : existingStartupTab.content) :
+      "# Renardo startup file\n# This file is loaded when Renardo starts\n# Add your custom code here\n";
+    
+    // Create startup file tab (always ID 1)  
+    const startupTab = {
       id: 1,
+      name: 'startup.py',
+      content: startupContent,
+      editing: false,
+      isStartupFile: true,
+      startupFilePath: existingStartupTab?.startupFilePath || null
+    };
+    
+    // Create default code tab (always ID 2)
+    const codeTab = {
+      id: 2,
       name: 'Untitled',
       content: '',
       editing: false,
       isStartupFile: false
     };
     
-    // Reset session state
+    // Reset session state with both tabs
     stateHelpers.updateNestedSection('editor', 'session', {
       name: 'Untitled Session',
-      startupFile: null,
+      startupFile: existingStartupTab?.startupFilePath || null,
       modified: false,
-      tabs: [defaultTab],
-      activeTabId: 1,
-      nextTabId: 2
+      tabs: [startupTab, codeTab],
+      activeTabId: 2,  // Start with code tab active
+      nextTabId: 3
     });
     
-    // Update editor content
+    // Update editor content to code tab (empty)
     if (editorComponent) {
       editorComponent.setValue('');
       editorComponent.focus();
@@ -366,8 +382,9 @@
     showNewSessionModal = false;
     
     sendDebugLog('INFO', 'New session created successfully', {
-      newTabsCount: 1,
-      activeTabId: 1
+      newTabsCount: 2,
+      activeTabId: 2,
+      startupContentPreserved: startupContent.length > 0
     });
   }
   
@@ -442,13 +459,19 @@
   
   function handleCreateNewBuffer(event) {
     const newBuffer = {
-      id: nextTabId++,
+      id: nextTabId,
       name: event.detail.name,
       content: '',
       editing: false
     };
     tabs = [...tabs, newBuffer];
-    activeTabId = newBuffer.id;
+    
+    // Update state with new tab and incremented nextTabId
+    stateHelpers.updateNestedSection('editor', 'session', { 
+      tabs: [...tabs], 
+      activeTabId: newBuffer.id,
+      nextTabId: nextTabId + 1
+    });
     
     showNewBufferModal = false;
     
@@ -890,13 +913,19 @@
         } else {
           // Create new buffer if it doesn't exist
           const newBuffer = {
-            id: nextTabId++,
+            id: nextTabId,
             name: bufferName,
             content: content,
             editing: false
           };
           tabs = [...tabs, newBuffer];
-          activeTabId = newBuffer.id;
+          
+          // Update state with new tab and incremented nextTabId
+          stateHelpers.updateNestedSection('editor', 'session', {
+            tabs: [...tabs],
+            activeTabId: newBuffer.id,
+            nextTabId: nextTabId + 1
+          });
           
           if (editorComponent) {
             editorComponent.setValue(content);
@@ -1232,7 +1261,7 @@
       await loadStartupFile(defaultFile);
     } else {
       const startupBuffer = {
-        id: nextTabId++,
+        id: nextTabId,
         name: 'startup.py',
         content: "# Renardo startup file\n# This file is loaded when Renardo starts\n# Add your custom code here\n",
         editing: false,
@@ -1244,7 +1273,7 @@
     }
     
     const codeBuffer = {
-      id: nextTabId++,
+      id: nextTabId + 1,
       name: 'Untitled',
       content: ``,
       editing: false,
@@ -1253,7 +1282,12 @@
     
     tabs = [...tabs, codeBuffer];
     
-    activeTabId = codeBuffer.id;
+    // Update state with proper nextTabId management
+    stateHelpers.updateNestedSection('editor', 'session', {
+      tabs: [...tabs],
+      activeTabId: codeBuffer.id,
+      nextTabId: nextTabId + 2  // Account for both tabs created
+    });
   }
   
   async function loadStartupFile(file) {
@@ -1267,7 +1301,7 @@
         const data = await response.json();
         if (data.success) {
           const newBuffer = {
-            id: nextTabId++,
+            id: nextTabId,
             name: file.name,
             content: data.content,
             editing: false,
@@ -1276,7 +1310,15 @@
           };
           
           tabs = [newBuffer, ...tabs.filter(tab => !tab.isStartupFile)];
-          activeTabId = newBuffer.id;
+          
+          // Update state with new tab and incremented nextTabId
+          stateHelpers.updateNestedSection('editor', 'session', {
+            tabs: [...tabs],
+            activeTabId: newBuffer.id,
+            nextTabId: nextTabId + 1,
+            startupFile: file,
+            modified: true
+          });
           
           if (editorComponent) {
             editorComponent.setValue(data.content);
@@ -1285,8 +1327,6 @@
           }
           
           selectedStartupFile = file;
-          currentSession.startupFile = file;
-          currentSession.modified = true;
         } else {
           console.error('Failed to load startup file:', data.message);
         }
@@ -1514,13 +1554,19 @@
         } else {
           // Create new buffer if it doesn't exist
           const newBuffer = {
-            id: nextTabId++,
+            id: nextTabId,
             name: bufferName,
             content: content,
             editing: false
           };
           tabs = [...tabs, newBuffer];
-          activeTabId = newBuffer.id;
+          
+          // Update state with new tab and incremented nextTabId
+          stateHelpers.updateNestedSection('editor', 'session', {
+            tabs: [...tabs],
+            activeTabId: newBuffer.id,
+            nextTabId: nextTabId + 1
+          });
           
           if (editorComponent) {
             editorComponent.setValue(content);
