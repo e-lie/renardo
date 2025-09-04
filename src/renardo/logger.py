@@ -1,337 +1,288 @@
 """
-General logging configuration for renardo.
-Provides consistent logging across all modules with configurable levels and formatting.
+Enhanced logging configuration for renardo with multiple loggers.
+Provides main_logger and ws_logger with centralized configuration.
 """
 
 import logging
+import logging.config
 import sys
-from typing import Optional, Dict, Any, Union
+import json
+from typing import Optional, Dict, Any
 from pathlib import Path
+import os
 
 
-def _get_log_level_from_string(level: Union[str, int]) -> int:
-    """Convert string log level to logging constant."""
-    if isinstance(level, int):
-        return level
-    
-    level_map = {
-        'DEBUG': logging.DEBUG,
-        'INFO': logging.INFO,
-        'WARNING': logging.WARNING,
-        'ERROR': logging.ERROR,
-        'CRITICAL': logging.CRITICAL
-    }
-    
-    return level_map.get(level.upper(), logging.INFO)
-
-
-def _get_default_log_level() -> int:
-    """Get default log level from settings manager."""
-    try:
-        from renardo.settings_manager import settings
-        level_str = settings.get("core.DEFAULT_LOG_LEVEL", "INFO")
-        return _get_log_level_from_string(level_str)
-    except ImportError:
-        # Fallback if settings manager is not available
-        return logging.WARNING
-
-
-class RenardoFormatter(logging.Formatter):
-    """Custom formatter for renardo with colors and module-specific prefixes."""
-    
-    # ANSI color codes
-    COLORS = {
-        'DEBUG': '\033[36m',     # Cyan
-        'INFO': '\033[32m',      # Green
-        'WARNING': '\033[33m',   # Yellow
-        'ERROR': '\033[31m',     # Red
-        'CRITICAL': '\033[35m',  # Magenta
-        'RESET': '\033[0m'       # Reset
-    }
-    
-    def __init__(self, use_colors: bool = True, show_module: bool = True):
-        """
-        Initialize the formatter.
-        
-        Args:
-            use_colors: Whether to use ANSI colors in output
-            show_module: Whether to show module names in log messages
-        """
-        self.use_colors = use_colors and hasattr(sys.stderr, 'isatty') and sys.stderr.isatty()
-        self.show_module = show_module
-        
-        # Base format
-        if self.show_module:
-            fmt = '[%(name)s] %(levelname)s: %(message)s'
-        else:
-            fmt = '%(levelname)s: %(message)s'
-        
-        super().__init__(fmt)
-    
-    def format(self, record):
-        """Format the log record with colors and module prefixes."""
-        # Get the base formatted message
-        message = super().format(record)
-        
-        # Add colors if enabled
-        if self.use_colors:
-            color = self.COLORS.get(record.levelname, '')
-            reset = self.COLORS['RESET']
-            message = f"{color}{message}{reset}"
-        
-        return message
-
-
-class RenardoLogger:
-    """
-    Central logger manager for renardo.
-    Provides consistent logging configuration across all modules.
-    """
-    
-    _instance: Optional['RenardoLogger'] = None
-    _loggers: Dict[str, logging.Logger] = {}
-    
-    def __new__(cls):
-        """Ensure singleton pattern."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
+class WebSocketHandler(logging.Handler):
+    """Custom handler that sends log messages to WebSocket clients."""
     
     def __init__(self):
-        """Initialize the logger manager."""
-        # Only initialize once
-        if hasattr(self, '_initialized'):
+        super().__init__()
+        self._websocket_connections = set()
+        
+    def add_websocket(self, ws):
+        """Add a WebSocket connection to receive log messages."""
+        self._websocket_connections.add(ws)
+        
+    def remove_websocket(self, ws):
+        """Remove a WebSocket connection."""
+        self._websocket_connections.discard(ws)
+        
+    def emit(self, record):
+        """Send log record to all connected WebSocket clients."""
+        if not self._websocket_connections:
             return
-        
-        self._initialized = True
-        self._default_level = _get_default_log_level()
-        self._use_colors = True
-        self._show_module = True
-        self._configured = False
-    
-    def configure(self, 
-                  level: Optional[Union[int, str]] = None,
-                  use_colors: bool = True,
-                  show_module: bool = True,
-                  log_file: Optional[Path] = None) -> None:
-        """
-        Configure the global logging settings.
-        
-        Args:
-            level: Default logging level (string or int). If None, uses settings default.
-            use_colors: Whether to use colors in console output
-            show_module: Whether to show module names
-            log_file: Optional file to write logs to
-        """
-        if level is None:
-            level = _get_default_log_level()
-        else:
-            level = _get_log_level_from_string(level)
-        
-        self._default_level = level
-        self._use_colors = use_colors
-        self._show_module = show_module
-        
-        # Configure root logger
-        root_logger = logging.getLogger('renardo')
-        root_logger.setLevel(level)
-        
-        # Clear existing handlers
-        for handler in root_logger.handlers[:]:
-            root_logger.removeHandler(handler)
-        
-        # Console handler
-        console_handler = logging.StreamHandler(sys.stderr)
-        console_handler.setLevel(level)
-        console_formatter = RenardoFormatter(use_colors=use_colors, show_module=show_module)
-        console_handler.setFormatter(console_formatter)
-        root_logger.addHandler(console_handler)
-        
-        # File handler if specified
-        if log_file:
-            file_handler = logging.FileHandler(log_file)
-            file_handler.setLevel(level)
-            file_formatter = RenardoFormatter(use_colors=False, show_module=show_module)
-            file_handler.setFormatter(file_formatter)
-            root_logger.addHandler(file_handler)
-        
-        # Update existing loggers
-        for logger_name, logger in self._loggers.items():
-            logger.setLevel(level)
-        
-        self._configured = True
-    
-    def get_logger(self, name: str) -> logging.Logger:
-        """
-        Get a logger for a specific module.
-        
-        Args:
-            name: Logger name (usually module name)
             
-        Returns:
-            Configured logger instance
-        """
-        # Ensure configuration is done
+        try:
+            # Format the message
+            message = self.format(record)
+            
+            # Create log entry for WebSocket
+            log_entry = {
+                "timestamp": record.created,
+                "level": record.levelname,
+                "message": message,
+                "logger": record.name
+            }
+            
+            # Add to state helper if available
+            try:
+                from renardo.webserver import state_helper
+                state_helper.add_log_message(message, level=record.levelname)
+            except (ImportError, TypeError):
+                pass  # state_helper not available or incompatible
+            
+            # Send to all connected WebSocket clients
+            ws_message = json.dumps({
+                "type": "log_message",
+                "data": log_entry
+            })
+            
+            # Remove closed connections while sending
+            closed_connections = set()
+            for ws in self._websocket_connections:
+                try:
+                    if hasattr(ws, 'closed') and not ws.closed:
+                        ws.send(ws_message)
+                    else:
+                        closed_connections.add(ws)
+                except Exception:
+                    closed_connections.add(ws)
+            
+            # Clean up closed connections
+            self._websocket_connections -= closed_connections
+            
+        except Exception as e:
+            # Don't let WebSocket errors break logging
+            print(f"Error sending log to WebSocket: {e}", file=sys.stderr)
+
+
+class RenardoLoggerManager:
+    """Manager for Renardo's multiple logger system."""
+    
+    def __init__(self):
+        self._configured = False
+        self._config_file = None
+        self._websocket_handler = None
+        
+    def configure(self, config_file: Optional[Path] = None):
+        """Configure logging from configuration file."""
+        if self._configured:
+            return
+            
+        # Determine config file path
+        if config_file is None:
+            config_file = Path(__file__).parent / "logging.conf"
+            
+        if not config_file.exists():
+            raise FileNotFoundError(f"Logging configuration file not found: {config_file}")
+            
+        self._config_file = config_file
+        
+        # Ensure /tmp directory exists and is writable
+        log_dir = Path("/tmp")
+        if not log_dir.exists() or not os.access(log_dir, os.W_OK):
+            print("Warning: /tmp is not writable, using current directory for log file", file=sys.stderr)
+            # Update config to use current directory
+            config_content = config_file.read_text()
+            config_content = config_content.replace("'/tmp/renardo.log'", "'./renardo.log'")
+            # Write temporary config file
+            temp_config = Path("temp_logging.conf")
+            temp_config.write_text(config_content)
+            config_file = temp_config
+        
+        # Load configuration
+        logging.config.fileConfig(str(config_file), disable_existing_loggers=False)
+        
+        # Add WebSocket handler programmatically to avoid circular import issues
+        ws_logger = logging.getLogger('renardo.ws')
+        self._websocket_handler = WebSocketHandler()
+        self._websocket_handler.setLevel(logging.DEBUG)
+        
+        # Set formatter for WebSocket handler
+        ws_formatter = logging.Formatter('%(levelname)s: %(message)s')
+        self._websocket_handler.setFormatter(ws_formatter)
+        
+        # Add to ws_logger
+        ws_logger.addHandler(self._websocket_handler)
+                
+        self._configured = True
+        
+        # Clean up temporary config file if created
+        if config_file.name == "temp_logging.conf":
+            config_file.unlink()
+    
+    def get_main_logger(self) -> logging.Logger:
+        """Get the main application logger."""
         if not self._configured:
             self.configure()
+        return logging.getLogger('renardo.main')
+    
+    def get_ws_logger(self) -> logging.Logger:
+        """Get the WebSocket logger."""
+        if not self._configured:
+            self.configure()
+        return logging.getLogger('renardo.ws')
         
-        # Create logger name with renardo prefix
-        if not name.startswith('renardo'):
-            logger_name = f'renardo.{name}'
+    def add_websocket_connection(self, ws):
+        """Add a WebSocket connection to receive log messages."""
+        if not self._configured:
+            self.configure()
+        if self._websocket_handler:
+            self._websocket_handler.add_websocket(ws)
+            
+    def remove_websocket_connection(self, ws):
+        """Remove a WebSocket connection."""
+        if self._websocket_handler:
+            self._websocket_handler.remove_websocket(ws)
+    
+    def set_level(self, level: str, logger_name: Optional[str] = None):
+        """Set logging level for specific logger or all loggers."""
+        if not self._configured:
+            self.configure()
+            
+        level_int = getattr(logging, level.upper(), logging.INFO)
+        
+        if logger_name:
+            logger = logging.getLogger(f'renardo.{logger_name}')
+            logger.setLevel(level_int)
+            # Also update handlers
+            for handler in logger.handlers:
+                handler.setLevel(level_int)
         else:
-            logger_name = name
-        
-        # Return existing logger or create new one
-        if logger_name not in self._loggers:
-            logger = logging.getLogger(logger_name)
-            logger.setLevel(self._default_level)
-            
-            # Prevent propagation to avoid duplicate messages
-            logger.propagate = False
-            
-            # Add the same handlers as the root logger
-            root_logger = logging.getLogger('renardo')
-            for handler in root_logger.handlers:
-                # Create a copy of the handler with the same configuration
-                if isinstance(handler, logging.StreamHandler):
-                    new_handler = logging.StreamHandler(handler.stream)
-                    new_handler.setLevel(handler.level)
-                    new_handler.setFormatter(handler.formatter)
-                    logger.addHandler(new_handler)
-                elif isinstance(handler, logging.FileHandler):
-                    new_handler = logging.FileHandler(handler.baseFilename, handler.mode)
-                    new_handler.setLevel(handler.level)
-                    new_handler.setFormatter(handler.formatter)
-                    logger.addHandler(new_handler)
-            
-            self._loggers[logger_name] = logger
-        
-        return self._loggers[logger_name]
+            # Update all renardo loggers
+            for name in ['main', 'ws']:
+                logger = logging.getLogger(f'renardo.{name}')
+                logger.setLevel(level_int)
+                for handler in logger.handlers:
+                    handler.setLevel(level_int)
     
-    def set_level(self, level: int, module: Optional[str] = None) -> None:
-        """
-        Set logging level for all loggers or a specific module.
-        
-        Args:
-            level: New logging level
-            module: Specific module name, or None for all modules
-        """
-        if module:
-            logger_name = f'renardo.{module}' if not module.startswith('renardo') else module
-            if logger_name in self._loggers:
-                self._loggers[logger_name].setLevel(level)
-        else:
-            # Set for all loggers
-            self._default_level = level
-            for logger in self._loggers.values():
-                logger.setLevel(level)
+    def list_loggers(self) -> Dict[str, str]:
+        """List all configured loggers and their levels."""
+        if not self._configured:
+            self.configure()
             
-            # Update root logger
-            root_logger = logging.getLogger('renardo')
-            root_logger.setLevel(level)
-            for handler in root_logger.handlers:
-                handler.setLevel(level)
-    
-    def enable_debug(self, module: Optional[str] = None) -> None:
-        """Enable debug logging for all modules or a specific module."""
-        self.set_level(logging.DEBUG, module)
-    
-    def disable_debug(self, module: Optional[str] = None) -> None:
-        """Disable debug logging for all modules or a specific module."""
-        self.set_level(logging.INFO, module)
-    
-    def list_loggers(self) -> Dict[str, int]:
-        """Get all configured loggers and their levels."""
-        return {name: logger.level for name, logger in self._loggers.items()}
+        loggers = {}
+        for name in ['main', 'ws']:
+            logger = logging.getLogger(f'renardo.{name}')
+            loggers[name] = logging.getLevelName(logger.level)
+        return loggers
 
 
-# Global instance
-_logger_manager = RenardoLogger()
+# Global manager instance
+_manager = RenardoLoggerManager()
 
 
+def configure_logging(config_file: Optional[Path] = None):
+    """
+    Configure the logging system from configuration file.
+    
+    Args:
+        config_file: Path to logging configuration file. If None, uses default.
+    """
+    _manager.configure(config_file)
+
+
+def get_main_logger() -> logging.Logger:
+    """
+    Get the main application logger.
+    
+    Usage:
+        logger = get_main_logger()
+        logger.info("Application started")
+        logger.error("Something went wrong")
+    """
+    return _manager.get_main_logger()
+
+
+def get_ws_logger() -> logging.Logger:
+    """
+    Get the WebSocket logger that sends messages to web clients.
+    
+    Usage:
+        logger = get_ws_logger()
+        logger.info("Download started")  # This will appear in webclient
+        logger.error("Download failed")
+    """
+    return _manager.get_ws_logger()
+
+
+def add_websocket_connection(ws):
+    """
+    Add a WebSocket connection to receive log messages.
+    Call this when a WebSocket client connects.
+    """
+    _manager.add_websocket_connection(ws)
+
+
+def remove_websocket_connection(ws):
+    """
+    Remove a WebSocket connection from receiving log messages.
+    Call this when a WebSocket client disconnects.
+    """
+    _manager.remove_websocket_connection(ws)
+
+
+def set_log_level(level: str, logger_name: Optional[str] = None):
+    """
+    Set logging level for specific logger or all loggers.
+    
+    Args:
+        level: Log level ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')
+        logger_name: Specific logger ('main' or 'ws') or None for all
+    
+    Examples:
+        set_log_level('DEBUG')          # Set all loggers to DEBUG
+        set_log_level('ERROR', 'ws')    # Set only ws_logger to ERROR
+    """
+    _manager.set_level(level, logger_name)
+
+
+def list_loggers() -> Dict[str, str]:
+    """List all configured loggers and their levels."""
+    return _manager.list_loggers()
+
+
+# Convenience functions for backward compatibility
 def get_logger(name: str) -> logging.Logger:
     """
-    Get a logger for a module.
-    
-    Args:
-        name: Module name (e.g., 'reaside.core.param' or 'foxdot_editor')
-        
-    Returns:
-        Configured logger instance
-    
-    Example:
-        logger = get_logger('reaside.core.param')
-        logger.info("Parameter updated")
+    Get a logger by name (backward compatibility).
+    Maps to main_logger for most cases.
     """
-    return _logger_manager.get_logger(name)
+    if name.lower() in ['ws', 'websocket', 'web']:
+        return get_ws_logger()
+    else:
+        return get_main_logger()
 
 
-def configure_logging(level: Optional[Union[int, str]] = None,
-                     use_colors: bool = True,
-                     show_module: bool = True,
-                     log_file: Optional[Path] = None) -> None:
-    """
-    Configure global logging settings.
-    
-    Args:
-        level: Default logging level (string or int). If None, uses settings default.
-        use_colors: Whether to use colors in console output
-        show_module: Whether to show module names in log messages
-        log_file: Optional file to write logs to
-    
-    Example:
-        configure_logging(level="DEBUG", log_file=Path("renardo.log"))
-        configure_logging(level=logging.WARNING)
-        configure_logging()  # Uses settings default (WARNING)
-    """
-    _logger_manager.configure(level, use_colors, show_module, log_file)
+def enable_debug():
+    """Enable DEBUG level for all loggers."""
+    set_log_level('DEBUG')
 
 
-def set_log_level(level: Union[int, str], module: Optional[str] = None) -> None:
-    """
-    Set logging level for all modules or a specific module.
-    
-    Args:
-        level: New logging level (string or int)
-        module: Specific module name, or None for all modules
-    
-    Example:
-        set_log_level("DEBUG", 'reaside')       # Debug only for reaside
-        set_log_level("WARNING")                # Warning level for all
-        set_log_level(logging.WARNING)          # Same as above
-    """
-    level = _get_log_level_from_string(level)
-    _logger_manager.set_level(level, module)
+def disable_debug():
+    """Set all loggers to INFO level."""
+    set_log_level('INFO')
 
 
-def enable_debug(module: Optional[str] = None) -> None:
-    """
-    Enable debug logging.
-    
-    Args:
-        module: Specific module name, or None for all modules
-    
-    Example:
-        enable_debug('reaside')  # Debug only for reaside
-        enable_debug()           # Debug for all modules
-    """
-    _logger_manager.enable_debug(module)
-
-
-def disable_debug(module: Optional[str] = None) -> None:
-    """
-    Disable debug logging.
-    
-    Args:
-        module: Specific module name, or None for all modules
-    """
-    _logger_manager.disable_debug(module)
-
-
-def list_loggers() -> Dict[str, int]:
-    """Get all configured loggers and their levels."""
-    return _logger_manager.list_loggers()
-
-
-# Auto-configure with sensible defaults on import
+# Auto-configure on import
 configure_logging()

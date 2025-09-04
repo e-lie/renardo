@@ -15,9 +15,8 @@ from .core.track import ReaTrack
 from .core.fx import ReaFX
 
 # Set up logging using renardo logger
-from renardo.logger import configure_logging
-import logging
-configure_logging(level=logging.INFO)
+from renardo.logger import set_log_level
+set_log_level('INFO')
 logger = get_logger('reaside')
 
 def configure_reaper():

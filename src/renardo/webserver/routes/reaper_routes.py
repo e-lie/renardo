@@ -12,7 +12,7 @@ import platform
 from pathlib import Path
 
 from renardo.webserver import state_helper
-from renardo.webserver.routes.ws_utils import WebsocketLogger
+from renardo.logger import get_ws_logger
 
 
 # REAPER integration state
@@ -33,8 +33,8 @@ reaper_init_state = ReaperInitState()
 
 def start_reaper_initialization_task(ws):
     """Handle REAPER initialization in a separate thread"""
-    # Create logger
-    logger = WebsocketLogger(ws)
+    # Get WebSocket logger
+    logger = get_ws_logger()
     
     try:
         # Reset initialization state
@@ -47,7 +47,7 @@ def start_reaper_initialization_task(ws):
             from renardo.reaper_backend.reaper_mgt.launcher import launch_reaper_with_pythonhome, initialize_reapy
         except ImportError as e:
             error_msg = f"Error importing REAPER modules: {str(e)}"
-            logger.write_error(error_msg)
+            logger.error(error_msg)
             ws.send(json.dumps({
                 "type": "error",
                 "message": error_msg
@@ -131,7 +131,7 @@ def start_reaper_initialization_task(ws):
     
     except Exception as e:
         error_msg = f"Error starting REAPER initialization: {str(e)}"
-        logger.write_error(error_msg)
+        logger.error(error_msg)
         
         # Send error message to client
         try:
@@ -156,14 +156,14 @@ def start_reaper_initialization_task(ws):
 
 def confirm_reaper_action_task(ws):
     """Handle user confirmation for REAPER initialization steps"""
-    # Create logger
-    logger = WebsocketLogger(ws)
+    # Get WebSocket logger
+    logger = get_ws_logger()
     
     try:
         # Check if we're waiting for confirmation
         global reaper_init_state
         if not reaper_init_state.waiting_for_confirmation:
-            logger.write_line("No pending confirmation request", "WARN")
+            logger.warning("No pending confirmation request")
             return
         
         # Reset confirmation flag
@@ -253,7 +253,7 @@ def confirm_reaper_action_task(ws):
                 
             except Exception as e:
                 error_msg = f"Error configuring ReaPy: {str(e)}"
-                logger.write_error(error_msg)
+                logger.error(error_msg)
                 
                 ws.send(json.dumps({
                     "type": "reaper_init_log",
@@ -367,7 +367,7 @@ def confirm_reaper_action_task(ws):
             
     except Exception as e:
         error_msg = f"Error processing REAPER action confirmation: {str(e)}"
-        logger.write_error(error_msg)
+        logger.error(error_msg)
         
         # Send error message to client
         try:
@@ -392,8 +392,8 @@ def confirm_reaper_action_task(ws):
 
 def open_reaper_user_dir_task(ws):
     """Open the REAPER user directory in the file explorer"""
-    # Create logger
-    logger = WebsocketLogger(ws)
+    # Get WebSocket logger
+    logger = get_ws_logger()
     
     try:
         # Import REAPER launcher to access platform detection functions
@@ -469,7 +469,7 @@ def open_reaper_user_dir_task(ws):
                     # Linux: Try xdg-open or similar
                     subprocess.run(["xdg-open", str(reaper_config_dir)])
                 
-                logger.write_line(f"Opened REAPER user directory: {reaper_config_dir}", "SUCCESS")
+                logger.info(f"Opened REAPER user directory: {reaper_config_dir}")
                 
                 # Send success message
                 ws.send(json.dumps({
@@ -482,7 +482,7 @@ def open_reaper_user_dir_task(ws):
                 
             except Exception as e:
                 error_msg = f"Error opening directory: {str(e)}"
-                logger.write_error(error_msg)
+                logger.error(error_msg)
                 
                 # Send error message
                 ws.send(json.dumps({
@@ -494,7 +494,7 @@ def open_reaper_user_dir_task(ws):
                 }))
         else:
             error_msg = "REAPER user directory not found"
-            logger.write_error(error_msg)
+            logger.error(error_msg)
             
             # Send error message
             ws.send(json.dumps({
@@ -507,7 +507,7 @@ def open_reaper_user_dir_task(ws):
             
     except Exception as e:
         error_msg = f"Error opening REAPER user directory: {str(e)}"
-        logger.write_error(error_msg)
+        logger.error(error_msg)
         
         # Send error message
         try:
@@ -524,8 +524,8 @@ def open_reaper_user_dir_task(ws):
 
 def launch_reaper_pythonhome_task(ws):
     """Launch REAPER with the correct PYTHONHOME environment variable"""
-    # Create logger
-    logger = WebsocketLogger(ws)
+    # Get WebSocket logger
+    logger = get_ws_logger()
     
     try:
         # Import REAPER launcher module
@@ -533,7 +533,7 @@ def launch_reaper_pythonhome_task(ws):
             from renardo.reaper_backend.reaper_mgt.launcher import launch_reaper_with_pythonhome
         except ImportError as e:
             error_msg = f"Error importing REAPER modules: {str(e)}"
-            logger.write_error(error_msg)
+            logger.error(error_msg)
             ws.send(json.dumps({
                 "type": "reaper_launch_result",
                 "data": {
@@ -558,12 +558,12 @@ def launch_reaper_pythonhome_task(ws):
         for line in output_lines:
             if line.strip():
                 level = "ERROR" if "error" in line.lower() else "INFO"
-                logger.write_line(line, level)
+                logger.info(line, level)
         
         # Send result to client
         if success:
             success_message = f"REAPER launched successfully with PYTHONHOME={pythonhome_path}"
-            logger.write_line(success_message, "SUCCESS")
+            logger.info(success_message, "SUCCESS")
             ws.send(json.dumps({
                 "type": "reaper_launch_result",
                 "data": {
@@ -574,7 +574,7 @@ def launch_reaper_pythonhome_task(ws):
             }))
         else:
             error_msg = "Failed to launch REAPER"
-            logger.write_error(error_msg)
+            logger.error(error_msg)
             ws.send(json.dumps({
                 "type": "reaper_launch_result",
                 "data": {
@@ -585,7 +585,7 @@ def launch_reaper_pythonhome_task(ws):
     
     except Exception as e:
         error_msg = f"Error launching REAPER: {str(e)}"
-        logger.write_error(error_msg)
+        logger.error(error_msg)
         
         # Send error message
         try:
@@ -602,26 +602,26 @@ def launch_reaper_pythonhome_task(ws):
 
 def test_reaper_integration_task(ws):
     """Test REAPER integration by adding tracks to the current project"""
-    # Create logger
-    logger = WebsocketLogger(ws)
+    # Get WebSocket logger
+    logger = get_ws_logger()
     
     try:
-        logger.write_line("Starting REAPER integration test...", "INFO")
+        logger.info("Starting REAPER integration test...")
         
         try:
             # Import the test function from the launcher module
             from renardo.reaper_backend.reaper_mgt.launcher import test_reaper_integration
-            logger.write_line("Successfully imported test_reaper_integration function", "INFO")
+            logger.info("Successfully imported test_reaper_integration function")
             
             # Run the test
-            logger.write_line("Executing REAPER integration test...", "INFO")
+            logger.info("Executing REAPER integration test...")
             result = test_reaper_integration()
             
             # Log the result
             if result["success"]:
-                logger.write_line(result["message"], "SUCCESS")
+                logger.info(result["message"], "SUCCESS")
             else:
-                logger.write_line(result["message"], "ERROR")
+                logger.info(result["message"], "ERROR")
             
             # Send result to client
             ws.send(json.dumps({
@@ -631,7 +631,7 @@ def test_reaper_integration_task(ws):
             
         except ImportError as e:
             error_msg = f"Could not import required modules: {str(e)}"
-            logger.write_error(error_msg)
+            logger.error(error_msg)
             ws.send(json.dumps({
                 "type": "reaper_test_result",
                 "data": {
@@ -642,11 +642,11 @@ def test_reaper_integration_task(ws):
             
         except Exception as e:
             error_msg = f"Error executing REAPER test: {str(e)}"
-            logger.write_error(error_msg)
+            logger.error(error_msg)
             # Get exception traceback for detailed debugging
             import traceback
             tb = traceback.format_exc()
-            logger.write_error(f"Traceback: {tb}")
+            logger.error(f"Traceback: {tb}")
             ws.send(json.dumps({
                 "type": "reaper_test_result",
                 "data": {
@@ -657,7 +657,7 @@ def test_reaper_integration_task(ws):
     
     except Exception as e:
         error_msg = f"Error in REAPER integration test task: {str(e)}"
-        logger.write_error(error_msg)
+        logger.error(error_msg)
         
         # Send error message
         try:
@@ -674,8 +674,8 @@ def test_reaper_integration_task(ws):
 
 def reinit_reaper_with_backup_task(ws):
     """Reinitialize REAPER with backup in a separate thread"""
-    # Create logger
-    logger = WebsocketLogger(ws)
+    # Get WebSocket logger
+    logger = get_ws_logger()
     
     try:
         # Import REAPER launcher module
@@ -683,7 +683,7 @@ def reinit_reaper_with_backup_task(ws):
             from renardo.reaper_backend.reaper_mgt.launcher import reinit_reaper_with_backup
         except ImportError as e:
             error_msg = f"Error importing REAPER modules: {str(e)}"
-            logger.write_error(error_msg)
+            logger.error(error_msg)
             ws.send(json.dumps({
                 "type": "reaper_reinit_result",
                 "data": {
@@ -708,11 +708,11 @@ def reinit_reaper_with_backup_task(ws):
         for line in output_lines:
             if line.strip():
                 level = "ERROR" if "error" in line.lower() else "INFO"
-                logger.write_line(line, level)
+                logger.info(line, level)
         
         # Send result to client
         if success:
-            logger.write_line("REAPER configuration reset successful", "SUCCESS")
+            logger.info("REAPER configuration reset successful")
             ws.send(json.dumps({
                 "type": "reaper_reinit_result",
                 "data": {
@@ -722,7 +722,7 @@ def reinit_reaper_with_backup_task(ws):
             }))
         else:
             error_msg = "Failed to reset REAPER configuration"
-            logger.write_error(error_msg)
+            logger.error(error_msg)
             ws.send(json.dumps({
                 "type": "reaper_reinit_result",
                 "data": {
@@ -733,7 +733,7 @@ def reinit_reaper_with_backup_task(ws):
     
     except Exception as e:
         error_msg = f"Error resetting REAPER configuration: {str(e)}"
-        logger.write_error(error_msg)
+        logger.error(error_msg)
         
         # Send error message
         try:
@@ -750,23 +750,23 @@ def reinit_reaper_with_backup_task(ws):
 
 def prepare_reaper_task(ws):
     """Prepare REAPER by creating a new empty project and adding 16 MIDI tracks"""
-    # Create logger
-    logger = WebsocketLogger(ws)
+    # Get WebSocket logger
+    logger = get_ws_logger()
     
     try:
-        logger.write_line("Starting REAPER preparation...", "INFO")
+        logger.info("Starting REAPER preparation...")
         
         try:
             # Import the necessary functions
             import reapy
             from renardo.reaper_backend.reaper_simple_lib import ensure_16_midi_tracks
             
-            logger.write_line("Connecting to REAPER via ReaPy...", "INFO")
+            logger.info("Connecting to REAPER via ReaPy...")
             
             # Connect to REAPER and create new project
             with reapy.inside_reaper():
                 # Create a new empty project
-                logger.write_line("Creating new empty project...", "INFO")
+                logger.info("Creating new empty project...")
                 project = reapy.Project()
                 
                 # Set project to unsaved to make it a new project
@@ -776,18 +776,18 @@ def prepare_reaper_task(ws):
                 for track in project.tracks:
                     track.delete()
                 
-                logger.write_line("Project created successfully", "SUCCESS")
+                logger.info("Project created successfully")
             
             # Now create the 16 MIDI tracks
-            logger.write_line("Creating 16 MIDI tracks...", "INFO")
+            logger.info("Creating 16 MIDI tracks...")
             
             # Call the function to ensure 16 MIDI tracks exist
             created_tracks = ensure_16_midi_tracks()
             
             if created_tracks:
-                logger.write_line(f"Created {len(created_tracks)} MIDI tracks: {', '.join(map(str, created_tracks))}", "SUCCESS")
+                logger.info(f"Created {len(created_tracks)} MIDI tracks: {', '.join(map(str, created_tracks))}")
             else:
-                logger.write_line("All 16 MIDI tracks already exist", "SUCCESS")
+                logger.info("All 16 MIDI tracks already exist")
             
             # Send success result
             ws.send(json.dumps({
@@ -800,7 +800,7 @@ def prepare_reaper_task(ws):
             
         except ImportError as e:
             error_msg = f"Could not import required modules: {str(e)}"
-            logger.write_error(error_msg)
+            logger.error(error_msg)
             ws.send(json.dumps({
                 "type": "reaper_prepare_result",
                 "data": {
@@ -811,11 +811,11 @@ def prepare_reaper_task(ws):
             
         except Exception as e:
             error_msg = f"Error preparing REAPER: {str(e)}"
-            logger.write_error(error_msg)
+            logger.error(error_msg)
             # Get exception traceback for detailed debugging
             import traceback
             tb = traceback.format_exc()
-            logger.write_error(f"Traceback: {tb}")
+            logger.error(f"Traceback: {tb}")
             ws.send(json.dumps({
                 "type": "reaper_prepare_result",
                 "data": {
@@ -826,7 +826,7 @@ def prepare_reaper_task(ws):
     
     except Exception as e:
         error_msg = f"Error in REAPER preparation task: {str(e)}"
-        logger.write_error(error_msg)
+        logger.error(error_msg)
         
         # Send error message
         try:
