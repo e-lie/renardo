@@ -184,8 +184,23 @@
   function handleEditorChange(event) {
     const currentBuffer = tabs.find(t => t.id === activeTabId);
     if (currentBuffer) {
+      const oldContent = currentBuffer.content;
+      const newContent = event.detail.value;
+      
+      // Log startup file content changes specifically
+      if (currentBuffer.isStartupFile) {
+        sendDebugLog('INFO', 'Startup file content changed', {
+          tabId: activeTabId,
+          tabName: currentBuffer.name,
+          oldLength: oldContent.length,
+          newLength: newContent.length,
+          oldContent: oldContent.length > 50 ? oldContent.substring(0, 50) + '...' : oldContent,
+          newContent: newContent.length > 50 ? newContent.substring(0, 50) + '...' : newContent
+        });
+      }
+      
       const updatedTabs = tabs.map(tab => 
-        tab.id === activeTabId ? { ...tab, content: event.detail.value } : tab
+        tab.id === activeTabId ? { ...tab, content: newContent } : tab
       );
       stateHelpers.updateNestedSection('editor', 'session', { tabs: updatedTabs, modified: true });
       // Save session to localStorage
@@ -892,10 +907,23 @@
   
   async function loadTutorialFile(file) {
     try {
+      sendDebugLog('INFO', 'Loading tutorial file', {
+        fileName: file.name,
+        currentActiveTabId: activeTabId,
+        currentTabsCount: tabs.length,
+        currentTabIds: tabs.map(t => t.id)
+      });
+      
       const response = await fetch(file.url);
       if (response.ok) {
         const content = await response.text();
         const bufferName = file.name.replace('.py', '');
+        
+        sendDebugLog('INFO', 'Tutorial content loaded', {
+          bufferName: bufferName,
+          contentLength: content.length,
+          contentPreview: content.length > 50 ? content.substring(0, 50) + '...' : content
+        });
         
         // Check if a buffer with the same name and content already exists
         const existingBuffer = tabs.find(tab => 
@@ -904,7 +932,10 @@
         
         if (existingBuffer) {
           // If buffer already exists, just switch to it
-          activeTabId = existingBuffer.id;
+          // Switch to existing buffer via state management
+          stateHelpers.updateNestedSection('editor', 'session', {
+            activeTabId: existingBuffer.id
+          });
           if (editorComponent) {
             editorComponent.setValue(existingBuffer.content);
             editorComponent.setCursor({ line: 0, ch: 0 });
@@ -1545,7 +1576,10 @@
         
         if (existingBuffer) {
           // If buffer already exists, just switch to it
-          activeTabId = existingBuffer.id;
+          // Switch to existing buffer via state management
+          stateHelpers.updateNestedSection('editor', 'session', {
+            activeTabId: existingBuffer.id
+          });
           if (editorComponent) {
             editorComponent.setValue(existingBuffer.content);
             editorComponent.setCursor({ line: 0, ch: 0 });
