@@ -13,6 +13,7 @@
   import SaveSessionModal from './components/modals/SaveSessionModal.svelte';
   import NewBufferModal from './components/modals/NewBufferModal.svelte';
   import CloseBufferModal from './components/modals/CloseBufferModal.svelte';
+  import NewSessionModal from './components/modals/NewSessionModal.svelte';
   
   // Reactive state from appState
   $: rightPanelOpen = $appState.editor.ui.rightPanelOpen;
@@ -106,6 +107,7 @@
   let savingSession = false;
   let showNewBufferModal = false;
   let showCloseBufferModal = false;
+  let showNewSessionModal = false;
   let bufferToClose = null;
   let showInitModal = false;
   let initStatus = {
@@ -205,23 +207,71 @@
     const oldTabId = activeTabId;
     const newTabId = event.detail.tabId;
     
+    // Skip if switching to the same tab
+    if (oldTabId === newTabId) {
+      sendDebugLog('DEBUG', 'Tab switch to same tab ignored', { tabId: oldTabId });
+      return;
+    }
+    
+    // Get old tab content before switching
+    const oldTab = tabs.find(t => t.id === oldTabId);
+    const oldContent = editorComponent ? editorComponent.getValue() : '';
+    
     sendDebugLog('INFO', 'Tab switch initiated', {
       from: oldTabId,
       to: newTabId,
-      totalTabs: tabs.length
+      totalTabs: tabs.length,
+      oldTabName: oldTab?.name || 'unknown',
+      oldTabContent: oldContent.length > 100 ? oldContent.substring(0, 100) + '...' : oldContent
     });
     
-    activeTabId = newTabId;
-    if (editorComponent) {
-      const newTab = tabs.find(t => t.id === activeTabId);
-      if (newTab) {
-        editorComponent.setValue(newTab.content);
-        editorComponent.focus();
-        sendDebugLog('INFO', 'Tab switch completed', { tabName: newTab.name });
-      } else {
-        sendDebugLog('ERROR', 'Tab not found after switch', { tabId: newTabId });
-      }
+    // CRITICAL: Save current editor content to the old tab before switching
+    if (oldTab && editorComponent) {
+      const oldContentBeforeSave = oldTab.content;
+      
+      // Update the tabs array first
+      tabs = tabs.map(t => t.id === oldTabId ? { ...t, content: oldContent } : t);
+      
+      sendDebugLog('INFO', 'Saved content to old tab', {
+        tabId: oldTabId,
+        tabName: oldTab.name,
+        oldContentBefore: oldContentBeforeSave.length > 50 ? oldContentBeforeSave.substring(0, 50) + '...' : oldContentBeforeSave,
+        newContentSaved: oldContent.length > 50 ? oldContent.substring(0, 50) + '...' : oldContent,
+        contentLength: oldContent.length
+      });
+      
+      // Persist to state management
+      stateHelpers.updateNestedSection('editor', 'session', { tabs, modified: true });
+      stateHelpers.saveEditorSession();
     }
+    
+    // THEN change activeTabId (which triggers reactive statement)
+    activeTabId = newTabId;
+    
+    // Wait a tick to let reactive statement complete, then manually set content
+    setTimeout(() => {
+      if (editorComponent) {
+        const newTab = tabs.find(t => t.id === activeTabId);
+        if (newTab) {
+          sendDebugLog('INFO', 'About to load new tab content', {
+            tabId: newTabId,
+            tabName: newTab.name,
+            contentToLoad: newTab.content.length > 50 ? newTab.content.substring(0, 50) + '...' : newTab.content
+          });
+          
+          // Force set the content to avoid race conditions
+          editorComponent.setValue(newTab.content);
+          editorComponent.focus();
+          
+          sendDebugLog('INFO', 'Tab switch completed', { 
+            tabName: newTab.name,
+            newTabContent: newTab.content.length > 100 ? newTab.content.substring(0, 100) + '...' : newTab.content
+          });
+        } else {
+          sendDebugLog('ERROR', 'Tab not found after switch', { tabId: newTabId });
+        }
+      }
+    }, 0);
   }
   
   function handleStartEditingName(event) {
@@ -269,6 +319,49 @@
   
   function handleNewBuffer() {
     showNewBufferModal = true;
+  }
+  
+  function handleNewSession() {
+    showNewSessionModal = true;
+  }
+  
+  function createNewSession() {
+    sendDebugLog('INFO', 'Starting new session - clearing all tabs', {
+      currentTabsCount: tabs.length,
+      currentTabIds: tabs.map(t => t.id)
+    });
+    
+    // Create a single default tab
+    const defaultTab = {
+      id: 1,
+      name: 'Untitled',
+      content: '',
+      editing: false,
+      isStartupFile: false
+    };
+    
+    // Reset session state
+    stateHelpers.updateNestedSection('editor', 'session', {
+      name: 'Untitled Session',
+      startupFile: null,
+      modified: false,
+      tabs: [defaultTab],
+      activeTabId: 1,
+      nextTabId: 2
+    });
+    
+    // Update editor content
+    if (editorComponent) {
+      editorComponent.setValue('');
+      editorComponent.focus();
+    }
+    
+    showNewSessionModal = false;
+    
+    sendDebugLog('INFO', 'New session created successfully', {
+      newTabsCount: 1,
+      activeTabId: 1
+    });
   }
   
   function handleSaveStartupFile(event) {
@@ -1642,6 +1735,18 @@
             </svg>
             Load Session
           </button>
+          <button
+            class="btn btn-sm btn-error"
+            on:click={handleNewSession}
+            title="Start a new session (WARNING: Will delete all current tabs!)"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clip-rule="evenodd" />
+              <path fill-rule="evenodd" d="M10 15a1 1 0 01-1-1v-4a1 1 0 112 0v4a1 1 0 01-1 1z" clip-rule="evenodd" />
+              <path fill-rule="evenodd" d="M3 7a1 1 0 011-1h12a1 1 0 110 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a1 1 0 01-1-1z" clip-rule="evenodd" />
+            </svg>
+            New Session
+          </button>
           
           {#if activeBuffer && activeBuffer.isStartupFile}
             <button
@@ -1816,6 +1921,11 @@
     showCloseBufferModal = false;
     bufferToClose = null;
   }}
+/>
+<NewSessionModal
+  show={showNewSessionModal}
+  on:newSession={createNewSession}
+  on:cancel={() => showNewSessionModal = false}
 />
 
 <style>
