@@ -515,6 +515,27 @@ export function sendMessage(message) {
 }
 
 /**
+ * Send a debug log message to the server (will appear in /tmp/renardo.log)
+ */
+export function sendDebugLog(level, message, context = {}) {
+  const debugMessage = {
+    type: 'client_debug_log',
+    data: {
+      level: level || 'DEBUG',
+      message: message,
+      context: context,
+      timestamp: Date.now(),
+      source: 'webclient'
+    }
+  };
+  
+  // Also log locally for immediate feedback
+  console.log(`[WebClient ${level}] ${message}`, context);
+  
+  return sendMessage(debugMessage);
+}
+
+/**
  * Increment counter
  */
 export function incrementCounter() {
