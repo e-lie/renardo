@@ -14,7 +14,7 @@ from renardo.gatherer.reaper_resource_management.default_reaper_pack import is_d
 from renardo.sc_backend import write_sc_renardo_files_in_user_config, is_renardo_sc_classes_initialized
 
 # Import logging
-from renardo.logger import get_ws_logger, add_websocket_connection, remove_websocket_connection
+from renardo.logger import get_to_webclient_logger, add_websocket_connection, remove_websocket_connection
 
 # Import REAPER routes
 from renardo.webserver.routes.reaper_routes import start_reaper_initialization_task, confirm_reaper_action_task, reinit_reaper_with_backup_task, open_reaper_user_dir_task, launch_reaper_pythonhome_task, test_reaper_integration_task, prepare_reaper_task
@@ -285,6 +285,36 @@ def register_websocket_routes(sock):
                             "type": "pong",
                             "timestamp": message.get("timestamp", time.time() * 1000)
                         }))
+                    
+                    elif message_type == "client_debug_log":
+                        # Handle debug log messages from webclient
+                        data = message.get("data", {})
+                        level = data.get("level", "DEBUG").upper()
+                        log_message = data.get("message", "")
+                        context = data.get("context", {})
+                        
+                        # Use from_webclient_logger - these messages should NOT be sent back to client
+                        from renardo.logger import get_from_webclient_logger
+                        logger = get_from_webclient_logger()
+                        
+                        # Format message with context if provided
+                        if context:
+                            formatted_message = f"[WebClient] {log_message} | Context: {context}"
+                        else:
+                            formatted_message = f"[WebClient] {log_message}"
+                        
+                        # Log with appropriate level
+                        if level == "DEBUG":
+                            logger.debug(formatted_message)
+                        elif level == "INFO":
+                            logger.info(formatted_message)
+                        elif level == "WARNING":
+                            logger.warning(formatted_message)
+                        elif level == "ERROR":
+                            logger.error(formatted_message)
+                        else:
+                            logger.info(formatted_message)  # Default to info for unknown levels
+                    
                     else:
                         # Unknown message type
                         ws.send(json.dumps({
@@ -336,7 +366,7 @@ def update_renardo_status():
 def start_sc_backend_task(ws, custom_code=None):
     """Start SuperCollider backend in a separate thread and execute initialization code"""
     # Get WebSocket logger
-    logger = get_ws_logger()
+    logger = get_to_webclient_logger()
     
     try:
         # Import SC backend module
@@ -468,7 +498,7 @@ def start_sc_backend_task(ws, custom_code=None):
 def stop_sc_backend_task(ws):
     """Stop SuperCollider backend in a separate thread"""
     # Get WebSocket logger
-    logger = get_ws_logger()
+    logger = get_to_webclient_logger()
     
     try:
         # Import SC backend module
@@ -578,7 +608,7 @@ def send_sc_backend_status(ws):
 def launch_supercollider_ide_task(ws):
     """Launch the SuperCollider IDE application in a separate thread"""
     # Get WebSocket logger
-    logger = get_ws_logger()
+    logger = get_to_webclient_logger()
     
     try:
         # Import SC backend module
@@ -631,7 +661,7 @@ def launch_supercollider_ide_task(ws):
 def download_special_sccode_task(ws):
     """Download SCLang code in a separate thread"""
     # Get WebSocket logger
-    logger = get_ws_logger()
+    logger = get_to_webclient_logger()
     
     try:
         # Check if already downloaded
