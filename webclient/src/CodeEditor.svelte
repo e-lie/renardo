@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { slide } from 'svelte/transition';
   import { appState, stateHelpers } from './lib/appState.js';
-  import { sendMessage } from './lib/websocket.js';
+  import { sendMessage, sendDebugLog } from './lib/websocket.js';
   
   // Import components
   import EditorTabs from './components/editor/EditorTabs.svelte';
@@ -26,6 +26,16 @@
   $: tabs = $appState.editor.session.tabs;
   $: activeTabId = $appState.editor.session.activeTabId;
   $: nextTabId = $appState.editor.session.nextTabId;
+  
+  // Debug logging for state changes
+  $: if (hasInitialized && tabs) {
+    sendDebugLog('DEBUG', 'Tabs array updated via reactive statement', {
+      tabsCount: tabs.length,
+      tabIds: tabs.map(t => t.id),
+      tabNames: tabs.map(t => t.name),
+      activeTabId: activeTabId
+    });
+  }
   $: currentSession = {
     name: $appState.editor.session.name,
     startupFile: $appState.editor.session.startupFile,
@@ -43,6 +53,11 @@
   // Auto-save session to localStorage whenever tabs change (but not on initial load)
   let hasInitialized = false;
   $: if (tabs && tabs.length > 0 && hasInitialized) {
+    sendDebugLog('DEBUG', 'Auto-saving session after tabs change', {
+      tabsCount: tabs.length,
+      tabIds: tabs.map(t => t.id),
+      activeTabId: activeTabId
+    });
     stateHelpers.saveEditorSession();
   }
   
@@ -187,10 +202,25 @@
   
   // Tab management handlers
   function handleSwitchTab(event) {
-    activeTabId = event.detail.tabId;
+    const oldTabId = activeTabId;
+    const newTabId = event.detail.tabId;
+    
+    sendDebugLog('INFO', 'Tab switch initiated', {
+      from: oldTabId,
+      to: newTabId,
+      totalTabs: tabs.length
+    });
+    
+    activeTabId = newTabId;
     if (editorComponent) {
-      editorComponent.setValue(tabs.find(t => t.id === activeTabId).content);
-      editorComponent.focus();
+      const newTab = tabs.find(t => t.id === activeTabId);
+      if (newTab) {
+        editorComponent.setValue(newTab.content);
+        editorComponent.focus();
+        sendDebugLog('INFO', 'Tab switch completed', { tabName: newTab.name });
+      } else {
+        sendDebugLog('ERROR', 'Tab not found after switch', { tabId: newTabId });
+      }
     }
   }
   
@@ -224,7 +254,16 @@
   }
   
   function handleCloseBuffer(event) {
-    bufferToClose = tabs.find(t => t.id === event.detail.bufferId);
+    const bufferId = event.detail.bufferId;
+    bufferToClose = tabs.find(t => t.id === bufferId);
+    
+    sendDebugLog('INFO', 'Close buffer modal triggered', {
+      bufferId: bufferId,
+      bufferName: bufferToClose?.name || 'unknown',
+      totalTabs: tabs.length,
+      currentActiveTab: activeTabId
+    });
+    
     showCloseBufferModal = true;
   }
   
@@ -321,17 +360,70 @@
   }
   
   function closeBuffer() {
-    if (!bufferToClose || tabs.length <= 1) return;
-    
-    const bufferId = bufferToClose.id;
-    tabs = tabs.filter(t => t.id !== bufferId);
-    
-    if (activeTabId === bufferId) {
-      activeTabId = tabs[0].id;
+    if (!bufferToClose) {
+      sendDebugLog('ERROR', 'closeBuffer called but no bufferToClose set');
+      return;
     }
     
+    if (tabs.length <= 1) {
+      sendDebugLog('WARNING', 'Cannot close last tab', { tabsCount: tabs.length });
+      return;
+    }
+    
+    const bufferId = bufferToClose.id;
+    const bufferName = bufferToClose.name;
+    const wasActiveTab = activeTabId === bufferId;
+    const tabsBeforeClose = tabs.length;
+    
+    sendDebugLog('INFO', 'Starting buffer close process', {
+      bufferId: bufferId,
+      bufferName: bufferName,
+      wasActiveTab: wasActiveTab,
+      tabsBeforeClose: tabsBeforeClose,
+      allTabIds: tabs.map(t => t.id)
+    });
+    
+    // Remove the tab from the array
+    const newTabs = tabs.filter(t => t.id !== bufferId);
+    
+    sendDebugLog('DEBUG', 'Tabs after filter', {
+      newTabsCount: newTabs.length,
+      newTabIds: newTabs.map(t => t.id),
+      removedTabId: bufferId
+    });
+    
+    // Update the tabs array
+    tabs = newTabs;
+    
+    // Force update the appState to ensure reactivity
+    stateHelpers.updateNestedSection('editor', 'session', {
+      tabs: newTabs,
+      activeTabId: activeTabId
+    });
+    
+    sendDebugLog('DEBUG', 'Forced appState update after tab close', {
+      updatedTabsCount: newTabs.length,
+      updatedActiveTabId: activeTabId
+    });
+    
+    // If we closed the active tab, switch to the first available tab
+    if (wasActiveTab && tabs.length > 0) {
+      activeTabId = tabs[0].id;
+      sendDebugLog('INFO', 'Switched to new active tab', {
+        newActiveTabId: activeTabId,
+        newActiveTabName: tabs[0].name
+      });
+    }
+    
+    // Close modal and cleanup
     showCloseBufferModal = false;
     bufferToClose = null;
+    
+    sendDebugLog('INFO', 'Buffer close process completed', {
+      remainingTabs: tabs.length,
+      currentActiveTab: activeTabId,
+      remainingTabIds: tabs.map(t => t.id)
+    });
   }
   
   // Browser/viewer handlers
@@ -1382,6 +1474,11 @@
         }
       }
       // Set initialization flag after we've processed the initial state
+      sendDebugLog('INFO', 'CodeEditor initialization completed', {
+        initialTabsCount: tabs.length,
+        initialTabIds: tabs.map(t => t.id),
+        initialActiveTabId: activeTabId
+      });
       hasInitialized = true;
     }, 50);
     

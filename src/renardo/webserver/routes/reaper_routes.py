@@ -12,7 +12,7 @@ import platform
 from pathlib import Path
 
 from renardo.webserver import state_helper
-from renardo.logger import get_ws_logger
+from renardo.logger import get_to_webclient_logger
 
 
 # REAPER integration state
@@ -34,7 +34,7 @@ reaper_init_state = ReaperInitState()
 def start_reaper_initialization_task(ws):
     """Handle REAPER initialization in a separate thread"""
     # Get WebSocket logger
-    logger = get_ws_logger()
+    logger = get_to_webclient_logger()
     
     try:
         # Reset initialization state
@@ -157,7 +157,7 @@ def start_reaper_initialization_task(ws):
 def confirm_reaper_action_task(ws):
     """Handle user confirmation for REAPER initialization steps"""
     # Get WebSocket logger
-    logger = get_ws_logger()
+    logger = get_to_webclient_logger()
     
     try:
         # Check if we're waiting for confirmation
@@ -393,7 +393,7 @@ def confirm_reaper_action_task(ws):
 def open_reaper_user_dir_task(ws):
     """Open the REAPER user directory in the file explorer"""
     # Get WebSocket logger
-    logger = get_ws_logger()
+    logger = get_to_webclient_logger()
     
     try:
         # Import REAPER launcher to access platform detection functions
@@ -525,7 +525,7 @@ def open_reaper_user_dir_task(ws):
 def launch_reaper_pythonhome_task(ws):
     """Launch REAPER with the correct PYTHONHOME environment variable"""
     # Get WebSocket logger
-    logger = get_ws_logger()
+    logger = get_to_webclient_logger()
     
     try:
         # Import REAPER launcher module
@@ -603,7 +603,7 @@ def launch_reaper_pythonhome_task(ws):
 def test_reaper_integration_task(ws):
     """Test REAPER integration by adding tracks to the current project"""
     # Get WebSocket logger
-    logger = get_ws_logger()
+    logger = get_to_webclient_logger()
     
     try:
         logger.info("Starting REAPER integration test...")
@@ -675,7 +675,7 @@ def test_reaper_integration_task(ws):
 def reinit_reaper_with_backup_task(ws):
     """Reinitialize REAPER with backup in a separate thread"""
     # Get WebSocket logger
-    logger = get_ws_logger()
+    logger = get_to_webclient_logger()
     
     try:
         # Import REAPER launcher module
@@ -751,7 +751,7 @@ def reinit_reaper_with_backup_task(ws):
 def prepare_reaper_task(ws):
     """Prepare REAPER by creating a new empty project and adding 16 MIDI tracks"""
     # Get WebSocket logger
-    logger = get_ws_logger()
+    logger = get_to_webclient_logger()
     
     try:
         logger.info("Starting REAPER preparation...")

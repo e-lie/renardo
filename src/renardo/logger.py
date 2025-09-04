@@ -114,7 +114,7 @@ class RenardoLoggerManager:
         logging.config.fileConfig(str(config_file), disable_existing_loggers=False)
         
         # Add WebSocket handler programmatically to avoid circular import issues
-        ws_logger = logging.getLogger('renardo.ws')
+        to_webclient_logger = logging.getLogger('renardo.to_webclient')
         self._websocket_handler = WebSocketHandler()
         self._websocket_handler.setLevel(logging.DEBUG)
         
@@ -122,8 +122,8 @@ class RenardoLoggerManager:
         ws_formatter = logging.Formatter('%(levelname)s: %(message)s')
         self._websocket_handler.setFormatter(ws_formatter)
         
-        # Add to ws_logger
-        ws_logger.addHandler(self._websocket_handler)
+        # Add to to_webclient_logger only (from_webclient_logger doesn't get WebSocket handler)
+        to_webclient_logger.addHandler(self._websocket_handler)
                 
         self._configured = True
         
@@ -137,11 +137,17 @@ class RenardoLoggerManager:
             self.configure()
         return logging.getLogger('renardo.main')
     
-    def get_ws_logger(self) -> logging.Logger:
-        """Get the WebSocket logger."""
+    def get_to_webclient_logger(self) -> logging.Logger:
+        """Get the logger that sends messages to webclient."""
         if not self._configured:
             self.configure()
-        return logging.getLogger('renardo.ws')
+        return logging.getLogger('renardo.to_webclient')
+        
+    def get_from_webclient_logger(self) -> logging.Logger:
+        """Get the logger for messages received from webclient."""
+        if not self._configured:
+            self.configure()
+        return logging.getLogger('renardo.from_webclient')
         
     def add_websocket_connection(self, ws):
         """Add a WebSocket connection to receive log messages."""
@@ -170,7 +176,7 @@ class RenardoLoggerManager:
                 handler.setLevel(level_int)
         else:
             # Update all renardo loggers
-            for name in ['main', 'ws']:
+            for name in ['main', 'to_webclient', 'from_webclient']:
                 logger = logging.getLogger(f'renardo.{name}')
                 logger.setLevel(level_int)
                 for handler in logger.handlers:
@@ -182,7 +188,7 @@ class RenardoLoggerManager:
             self.configure()
             
         loggers = {}
-        for name in ['main', 'ws']:
+        for name in ['main', 'to_webclient', 'from_webclient']:
             logger = logging.getLogger(f'renardo.{name}')
             loggers[name] = logging.getLevelName(logger.level)
         return loggers
@@ -214,16 +220,33 @@ def get_main_logger() -> logging.Logger:
     return _manager.get_main_logger()
 
 
-def get_ws_logger() -> logging.Logger:
+def get_to_webclient_logger() -> logging.Logger:
     """
-    Get the WebSocket logger that sends messages to web clients.
+    Get the logger that sends messages to webclient (appears in web UI).
     
     Usage:
-        logger = get_ws_logger()
+        logger = get_to_webclient_logger()
         logger.info("Download started")  # This will appear in webclient
         logger.error("Download failed")
     """
-    return _manager.get_ws_logger()
+    return _manager.get_to_webclient_logger()
+
+
+def get_from_webclient_logger() -> logging.Logger:
+    """
+    Get the logger for messages received from webclient (server-side only).
+    
+    Usage:
+        logger = get_from_webclient_logger()
+        logger.info("Tab closed by user")  # This will NOT appear in webclient
+        logger.debug("UI state changed")
+    """
+    return _manager.get_from_webclient_logger()
+
+# Backward compatibility alias
+def get_ws_logger() -> logging.Logger:
+    """Deprecated: Use get_to_webclient_logger() instead."""
+    return get_to_webclient_logger()
 
 
 def add_websocket_connection(ws):
@@ -269,7 +292,7 @@ def get_logger(name: str) -> logging.Logger:
     Maps to main_logger for most cases.
     """
     if name.lower() in ['ws', 'websocket', 'web']:
-        return get_ws_logger()
+        return get_to_webclient_logger()  # Default to sending to webclient for backward compatibility
     else:
         return get_main_logger()
 
