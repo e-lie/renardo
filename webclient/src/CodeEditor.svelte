@@ -13,6 +13,7 @@
   import SaveSessionModal from './components/modals/SaveSessionModal.svelte';
   import NewBufferModal from './components/modals/NewBufferModal.svelte';
   import CloseBufferModal from './components/modals/CloseBufferModal.svelte';
+  import NewSessionModal from './components/modals/NewSessionModal.svelte';
   
   // Reactive state from appState
   $: rightPanelOpen = $appState.editor.ui.rightPanelOpen;
@@ -106,6 +107,7 @@
   let savingSession = false;
   let showNewBufferModal = false;
   let showCloseBufferModal = false;
+  let showNewSessionModal = false;
   let bufferToClose = null;
   let showInitModal = false;
   let initStatus = {
@@ -182,8 +184,23 @@
   function handleEditorChange(event) {
     const currentBuffer = tabs.find(t => t.id === activeTabId);
     if (currentBuffer) {
+      const oldContent = currentBuffer.content;
+      const newContent = event.detail.value;
+      
+      // Log startup file content changes specifically
+      if (currentBuffer.isStartupFile) {
+        sendDebugLog('INFO', 'Startup file content changed', {
+          tabId: activeTabId,
+          tabName: currentBuffer.name,
+          oldLength: oldContent.length,
+          newLength: newContent.length,
+          oldContent: oldContent.length > 50 ? oldContent.substring(0, 50) + '...' : oldContent,
+          newContent: newContent.length > 50 ? newContent.substring(0, 50) + '...' : newContent
+        });
+      }
+      
       const updatedTabs = tabs.map(tab => 
-        tab.id === activeTabId ? { ...tab, content: event.detail.value } : tab
+        tab.id === activeTabId ? { ...tab, content: newContent } : tab
       );
       stateHelpers.updateNestedSection('editor', 'session', { tabs: updatedTabs, modified: true });
       // Save session to localStorage
@@ -205,23 +222,78 @@
     const oldTabId = activeTabId;
     const newTabId = event.detail.tabId;
     
+    // Skip if switching to the same tab
+    if (oldTabId === newTabId) {
+      sendDebugLog('DEBUG', 'Tab switch to same tab ignored', { tabId: oldTabId });
+      return;
+    }
+    
+    // Get old tab content before switching
+    const oldTab = tabs.find(t => t.id === oldTabId);
+    const oldContent = editorComponent ? editorComponent.getValue() : '';
+    
     sendDebugLog('INFO', 'Tab switch initiated', {
       from: oldTabId,
       to: newTabId,
-      totalTabs: tabs.length
+      totalTabs: tabs.length,
+      oldTabName: oldTab?.name || 'unknown',
+      oldTabContent: oldContent.length > 100 ? oldContent.substring(0, 100) + '...' : oldContent
     });
     
-    activeTabId = newTabId;
-    if (editorComponent) {
-      const newTab = tabs.find(t => t.id === activeTabId);
-      if (newTab) {
-        editorComponent.setValue(newTab.content);
-        editorComponent.focus();
-        sendDebugLog('INFO', 'Tab switch completed', { tabName: newTab.name });
-      } else {
-        sendDebugLog('ERROR', 'Tab not found after switch', { tabId: newTabId });
-      }
+    // CRITICAL: Save current editor content to the old tab before switching
+    if (oldTab && editorComponent) {
+      const oldContentBeforeSave = oldTab.content;
+      
+      // Update the tabs array first
+      tabs = tabs.map(t => t.id === oldTabId ? { ...t, content: oldContent } : t);
+      
+      sendDebugLog('INFO', 'Saved content to old tab', {
+        tabId: oldTabId,
+        tabName: oldTab.name,
+        oldContentBefore: oldContentBeforeSave.length > 50 ? oldContentBeforeSave.substring(0, 50) + '...' : oldContentBeforeSave,
+        newContentSaved: oldContent.length > 50 ? oldContent.substring(0, 50) + '...' : oldContent,
+        contentLength: oldContent.length
+      });
+      
+      // Persist to state management
+      stateHelpers.updateNestedSection('editor', 'session', { tabs, modified: true });
+      stateHelpers.saveEditorSession();
     }
+    
+    // THEN change activeTabId via state management (which triggers reactive statement)
+    stateHelpers.updateNestedSection('editor', 'session', { activeTabId: newTabId });
+    
+    // Wait a tick to let reactive statement complete, then manually set content
+    setTimeout(() => {
+      if (editorComponent) {
+        const newTab = tabs.find(t => t.id === newTabId);
+        if (newTab) {
+          sendDebugLog('INFO', 'About to load new tab content', {
+            tabId: newTabId,
+            tabName: newTab.name,
+            contentToLoad: newTab.content.length > 50 ? newTab.content.substring(0, 50) + '...' : newTab.content,
+            allTabsInfo: tabs.map(t => ({ id: t.id, name: t.name, contentLength: t.content.length }))
+          });
+          
+          // Force set the content to avoid race conditions
+          editorComponent.setValue(newTab.content);
+          editorComponent.focus();
+          
+          sendDebugLog('INFO', 'Tab switch completed', { 
+            tabName: newTab.name,
+            newTabContent: newTab.content.length > 100 ? newTab.content.substring(0, 100) + '...' : newTab.content,
+            verifyActiveTabId: activeTabId,
+            verifyTargetTabId: newTabId
+          });
+        } else {
+          sendDebugLog('ERROR', 'Tab not found after switch', { 
+            tabId: newTabId,
+            activeTabId: activeTabId,
+            availableTabs: tabs.map(t => ({ id: t.id, name: t.name }))
+          });
+        }
+      }
+    }, 0);
   }
   
   function handleStartEditingName(event) {
@@ -269,6 +341,66 @@
   
   function handleNewBuffer() {
     showNewBufferModal = true;
+  }
+  
+  function handleNewSession() {
+    showNewSessionModal = true;
+  }
+  
+  function createNewSession() {
+    sendDebugLog('INFO', 'Starting new session - clearing all tabs', {
+      currentTabsCount: tabs.length,
+      currentTabIds: tabs.map(t => t.id)
+    });
+    
+    // Find existing startup file to preserve its content
+    const existingStartupTab = tabs.find(tab => tab.isStartupFile);
+    const startupContent = existingStartupTab ? 
+      (editorComponent && activeTabId === existingStartupTab.id ? editorComponent.getValue() : existingStartupTab.content) :
+      "# Renardo startup file\n# This file is loaded when Renardo starts\n# Add your custom code here\n";
+    
+    // Create startup file tab (always ID 1)  
+    const startupTab = {
+      id: 1,
+      name: 'startup.py',
+      content: startupContent,
+      editing: false,
+      isStartupFile: true,
+      startupFilePath: existingStartupTab?.startupFilePath || null
+    };
+    
+    // Create default code tab (always ID 2)
+    const codeTab = {
+      id: 2,
+      name: 'Untitled',
+      content: '',
+      editing: false,
+      isStartupFile: false
+    };
+    
+    // Reset session state with both tabs
+    stateHelpers.updateNestedSection('editor', 'session', {
+      name: 'Untitled Session',
+      startupFile: existingStartupTab?.startupFilePath || null,
+      modified: false,
+      tabs: [startupTab, codeTab],
+      activeTabId: 2,  // Start with code tab active
+      nextTabId: 3
+    });
+    
+    // Update editor content to code tab (empty)
+    if (editorComponent) {
+      editorComponent.setValue('');
+      editorComponent.focus();
+    }
+    
+    showNewSessionModal = false;
+    
+    sendDebugLog('INFO', 'New session created successfully', {
+      newTabsCount: 2,
+      activeTabId: 2,
+      startupContentPreserved: startupContent.length > 0
+    });
   }
   
   function handleSaveStartupFile(event) {
@@ -342,13 +474,19 @@
   
   function handleCreateNewBuffer(event) {
     const newBuffer = {
-      id: nextTabId++,
+      id: nextTabId,
       name: event.detail.name,
       content: '',
       editing: false
     };
     tabs = [...tabs, newBuffer];
-    activeTabId = newBuffer.id;
+    
+    // Update state with new tab and incremented nextTabId
+    stateHelpers.updateNestedSection('editor', 'session', { 
+      tabs: [...tabs], 
+      activeTabId: newBuffer.id,
+      nextTabId: nextTabId + 1
+    });
     
     showNewBufferModal = false;
     
@@ -769,10 +907,23 @@
   
   async function loadTutorialFile(file) {
     try {
+      sendDebugLog('INFO', 'Loading tutorial file', {
+        fileName: file.name,
+        currentActiveTabId: activeTabId,
+        currentTabsCount: tabs.length,
+        currentTabIds: tabs.map(t => t.id)
+      });
+      
       const response = await fetch(file.url);
       if (response.ok) {
         const content = await response.text();
         const bufferName = file.name.replace('.py', '');
+        
+        sendDebugLog('INFO', 'Tutorial content loaded', {
+          bufferName: bufferName,
+          contentLength: content.length,
+          contentPreview: content.length > 50 ? content.substring(0, 50) + '...' : content
+        });
         
         // Check if a buffer with the same name and content already exists
         const existingBuffer = tabs.find(tab => 
@@ -781,7 +932,10 @@
         
         if (existingBuffer) {
           // If buffer already exists, just switch to it
-          activeTabId = existingBuffer.id;
+          // Switch to existing buffer via state management
+          stateHelpers.updateNestedSection('editor', 'session', {
+            activeTabId: existingBuffer.id
+          });
           if (editorComponent) {
             editorComponent.setValue(existingBuffer.content);
             editorComponent.setCursor({ line: 0, ch: 0 });
@@ -790,13 +944,19 @@
         } else {
           // Create new buffer if it doesn't exist
           const newBuffer = {
-            id: nextTabId++,
+            id: nextTabId,
             name: bufferName,
             content: content,
             editing: false
           };
           tabs = [...tabs, newBuffer];
-          activeTabId = newBuffer.id;
+          
+          // Update state with new tab and incremented nextTabId
+          stateHelpers.updateNestedSection('editor', 'session', {
+            tabs: [...tabs],
+            activeTabId: newBuffer.id,
+            nextTabId: nextTabId + 1
+          });
           
           if (editorComponent) {
             editorComponent.setValue(content);
@@ -1132,7 +1292,7 @@
       await loadStartupFile(defaultFile);
     } else {
       const startupBuffer = {
-        id: nextTabId++,
+        id: nextTabId,
         name: 'startup.py',
         content: "# Renardo startup file\n# This file is loaded when Renardo starts\n# Add your custom code here\n",
         editing: false,
@@ -1144,7 +1304,7 @@
     }
     
     const codeBuffer = {
-      id: nextTabId++,
+      id: nextTabId + 1,
       name: 'Untitled',
       content: ``,
       editing: false,
@@ -1153,7 +1313,12 @@
     
     tabs = [...tabs, codeBuffer];
     
-    activeTabId = codeBuffer.id;
+    // Update state with proper nextTabId management
+    stateHelpers.updateNestedSection('editor', 'session', {
+      tabs: [...tabs],
+      activeTabId: codeBuffer.id,
+      nextTabId: nextTabId + 2  // Account for both tabs created
+    });
   }
   
   async function loadStartupFile(file) {
@@ -1167,7 +1332,7 @@
         const data = await response.json();
         if (data.success) {
           const newBuffer = {
-            id: nextTabId++,
+            id: nextTabId,
             name: file.name,
             content: data.content,
             editing: false,
@@ -1176,7 +1341,15 @@
           };
           
           tabs = [newBuffer, ...tabs.filter(tab => !tab.isStartupFile)];
-          activeTabId = newBuffer.id;
+          
+          // Update state with new tab and incremented nextTabId
+          stateHelpers.updateNestedSection('editor', 'session', {
+            tabs: [...tabs],
+            activeTabId: newBuffer.id,
+            nextTabId: nextTabId + 1,
+            startupFile: file,
+            modified: true
+          });
           
           if (editorComponent) {
             editorComponent.setValue(data.content);
@@ -1185,8 +1358,6 @@
           }
           
           selectedStartupFile = file;
-          currentSession.startupFile = file;
-          currentSession.modified = true;
         } else {
           console.error('Failed to load startup file:', data.message);
         }
@@ -1405,7 +1576,10 @@
         
         if (existingBuffer) {
           // If buffer already exists, just switch to it
-          activeTabId = existingBuffer.id;
+          // Switch to existing buffer via state management
+          stateHelpers.updateNestedSection('editor', 'session', {
+            activeTabId: existingBuffer.id
+          });
           if (editorComponent) {
             editorComponent.setValue(existingBuffer.content);
             editorComponent.setCursor({ line: 0, ch: 0 });
@@ -1414,13 +1588,18 @@
         } else {
           // Create new buffer if it doesn't exist
           const newBuffer = {
-            id: nextTabId++,
+            id: nextTabId,
             name: bufferName,
             content: content,
             editing: false
           };
-          tabs = [...tabs, newBuffer];
-          activeTabId = newBuffer.id;
+          
+          // Update state with new tab and incremented nextTabId (single operation)
+          stateHelpers.updateNestedSection('editor', 'session', {
+            tabs: [...tabs, newBuffer],
+            activeTabId: newBuffer.id,
+            nextTabId: nextTabId + 1
+          });
           
           if (editorComponent) {
             editorComponent.setValue(content);
@@ -1477,7 +1656,13 @@
       sendDebugLog('INFO', 'CodeEditor initialization completed', {
         initialTabsCount: tabs.length,
         initialTabIds: tabs.map(t => t.id),
-        initialActiveTabId: activeTabId
+        initialActiveTabId: activeTabId,
+        allTabsDetails: tabs.map(t => ({ 
+          id: t.id, 
+          name: t.name, 
+          contentLength: t.content.length,
+          content: t.content.length > 30 ? t.content.substring(0, 30) + '...' : t.content
+        }))
       });
       hasInitialized = true;
     }, 50);
@@ -1641,6 +1826,18 @@
               <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
             </svg>
             Load Session
+          </button>
+          <button
+            class="btn btn-sm btn-error"
+            on:click={handleNewSession}
+            title="Start a new session (WARNING: Will delete all current tabs!)"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clip-rule="evenodd" />
+              <path fill-rule="evenodd" d="M10 15a1 1 0 01-1-1v-4a1 1 0 112 0v4a1 1 0 01-1 1z" clip-rule="evenodd" />
+              <path fill-rule="evenodd" d="M3 7a1 1 0 011-1h12a1 1 0 110 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a1 1 0 01-1-1z" clip-rule="evenodd" />
+            </svg>
+            New Session
           </button>
           
           {#if activeBuffer && activeBuffer.isStartupFile}
@@ -1816,6 +2013,11 @@
     showCloseBufferModal = false;
     bufferToClose = null;
   }}
+/>
+<NewSessionModal
+  show={showNewSessionModal}
+  on:newSession={createNewSession}
+  on:cancel={() => showNewSessionModal = false}
 />
 
 <style>
