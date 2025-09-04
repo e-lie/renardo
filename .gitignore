@@ -13,7 +13,7 @@ dist
 
 gunicorn.pid
 .claude
-
+CLAUDE.md
 
 MUSIC.md
 

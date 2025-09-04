@@ -13,8 +13,8 @@ from renardo.gatherer import is_special_sccode_initialized, download_special_scc
 from renardo.gatherer.reaper_resource_management.default_reaper_pack import is_default_reaper_pack_initialized
 from renardo.sc_backend import write_sc_renardo_files_in_user_config, is_renardo_sc_classes_initialized
 
-# Import shared WebSocket utilities
-from renardo.webserver.routes.ws_utils import WebsocketLogger
+# Import logging
+from renardo.logger import get_ws_logger, add_websocket_connection, remove_websocket_connection
 
 # Import REAPER routes
 from renardo.webserver.routes.reaper_routes import start_reaper_initialization_task, confirm_reaper_action_task, reinit_reaper_with_backup_task, open_reaper_user_dir_task, launch_reaper_pythonhome_task, test_reaper_integration_task, prepare_reaper_task
@@ -32,6 +32,9 @@ def register_websocket_routes(sock):
         """WebSocket endpoint for real-time updates"""
         # Add this connection to active connections
         websocket_utils.add_connection(ws)
+        
+        # Register WebSocket for logging
+        add_websocket_connection(ws)
         
         try:
             # Send initial state to client
@@ -309,6 +312,9 @@ def register_websocket_routes(sock):
         finally:
             # Remove this connection from active connections
             websocket_utils.remove_connection(ws)
+            
+            # Remove WebSocket from logging
+            remove_websocket_connection(ws)
 
 def update_renardo_status():
     """Update the current status of Renardo components"""
@@ -329,8 +335,8 @@ def update_renardo_status():
 
 def start_sc_backend_task(ws, custom_code=None):
     """Start SuperCollider backend in a separate thread and execute initialization code"""
-    # Create logger
-    logger = WebsocketLogger(ws)
+    # Get WebSocket logger
+    logger = get_ws_logger()
     
     try:
         # Import SC backend module
@@ -341,7 +347,7 @@ def start_sc_backend_task(ws, custom_code=None):
         sc_instance = SupercolliderInstance()
         
         if sc_instance.is_sclang_running():
-            logger.write_line("SuperCollider backend is already running", "WARN")
+            logger.warning("SuperCollider backend is already running")
             
             # Send status message to client
             ws.send(json.dumps({
@@ -369,16 +375,16 @@ def start_sc_backend_task(ws, custom_code=None):
         })
         
         # Start the sclang subprocess
-        logger.write_line("Starting SuperCollider backend...", "INFO")
+        logger.info("Starting SuperCollider backend...")
         success = sc_instance.start_sclang_subprocess()
         
         if success:
-            logger.write_line("SuperCollider started successfully. Waiting for initialization...", "INFO")
+            logger.info("SuperCollider started successfully. Waiting for initialization...")
             
             # Wait for sclang to initialize
             output_line = sc_instance.read_stdout_line()
             while output_line and "Welcome to" not in output_line:
-                logger.write_line(output_line)
+                logger.info(output_line)
                 output_line = sc_instance.read_stdout_line()
             pass
 
@@ -388,11 +394,11 @@ def start_sc_backend_task(ws, custom_code=None):
                     while sc_instance.is_sclang_running():
                         output = sc_instance.read_stdout_line()
                         if output:
-                            logger.write_line(output)
+                            logger.info(output)
                         else:
                             time.sleep(0.1)
                 except Exception as e:
-                    logger.write_error(f"Error reading SuperCollider output: {e}")
+                    logger.error(f"Error reading SuperCollider output: {e}")
             
             # Start output reader thread
             threading.Thread(target=read_output, daemon=True).start()
@@ -401,14 +407,14 @@ def start_sc_backend_task(ws, custom_code=None):
             time.sleep(2)
             
             # Execute initialization code
-            logger.write_line(f"Executing initialization code: {custom_code}", "INFO")
+            logger.info(f"Executing initialization code: {custom_code}")
             for line in custom_code.strip().split(';'):
                 if line.strip():
                     try:
                         sc_instance.evaluate_sclang_code(f"{line.strip()};")
-                        logger.write_line(f"Executed: {line.strip()};", "INFO")
+                        logger.info(f"Executed: {line.strip()};")
                     except Exception as e:
-                        logger.write_line(f"Error executing code line '{line.strip()}': {str(e)}", "ERROR")
+                        logger.error(f"Error executing code line '{line.strip()}': {str(e)}")
                         raise
             
             # Update state to reflect backend running
@@ -433,11 +439,11 @@ def start_sc_backend_task(ws, custom_code=None):
                 }
             })
             
-            logger.write_line("SuperCollider backend started and initialized successfully!", "SUCCESS")
+            logger.info("SuperCollider backend started and initialized successfully!")
             
         else:
             error_msg = "Failed to start SuperCollider backend"
-            logger.write_error(error_msg)
+            logger.error(error_msg)
             
             # Send error message to client
             ws.send(json.dumps({
@@ -447,7 +453,7 @@ def start_sc_backend_task(ws, custom_code=None):
     
     except Exception as e:
         error_msg = f"Error starting SuperCollider backend: {str(e)}"
-        logger.write_error(error_msg)
+        logger.error(error_msg)
         
         # Send error message to client
         try:
@@ -461,8 +467,8 @@ def start_sc_backend_task(ws, custom_code=None):
 
 def stop_sc_backend_task(ws):
     """Stop SuperCollider backend in a separate thread"""
-    # Create logger
-    logger = WebsocketLogger(ws)
+    # Get WebSocket logger
+    logger = get_ws_logger()
     
     try:
         # Import SC backend module
@@ -474,7 +480,7 @@ def stop_sc_backend_task(ws):
         sc_instance = SupercolliderInstance()
         
         if not sc_instance.is_sclang_running():
-            logger.write_line("SuperCollider backend is not running", "WARN")
+            logger.warning("SuperCollider backend is not running")
             
             # Send status message to client
             ws.send(json.dumps({
@@ -516,13 +522,13 @@ def stop_sc_backend_task(ws):
         })
         
         if success:
-            logger.write_line("SuperCollider backend stopped successfully!", "SUCCESS")
+            logger.info("SuperCollider backend stopped successfully!")
         else:
-            logger.write_line("SuperCollider backend stopped with some issues.", "WARN")
+            logger.warning("SuperCollider backend stopped with some issues.")
     
     except Exception as e:
         error_msg = f"Error stopping SuperCollider backend: {str(e)}"
-        logger.write_error(error_msg)
+        logger.error(error_msg)
         
         # Send error message to client
         try:
@@ -571,8 +577,8 @@ def send_sc_backend_status(ws):
 
 def launch_supercollider_ide_task(ws):
     """Launch the SuperCollider IDE application in a separate thread"""
-    # Create logger
-    logger = WebsocketLogger(ws)
+    # Get WebSocket logger
+    logger = get_ws_logger()
     
     try:
         # Import SC backend module
@@ -585,7 +591,7 @@ def launch_supercollider_ide_task(ws):
         success = sc_instance.launch_supercollider_ide()
         
         if success:
-            logger.write_line("SuperCollider IDE launched successfully", "SUCCESS")
+            logger.info("SuperCollider IDE launched successfully")
             
             # Send success message to client
             ws.send(json.dumps({
@@ -597,7 +603,7 @@ def launch_supercollider_ide_task(ws):
             }))
         else:
             error_msg = "Failed to launch SuperCollider IDE. The application may not be installed or could not be found."
-            logger.write_line(error_msg, "ERROR")
+            logger.error(error_msg)
             
             # Send error message to client
             ws.send(json.dumps({
@@ -610,7 +616,7 @@ def launch_supercollider_ide_task(ws):
     
     except Exception as e:
         error_msg = f"Error launching SuperCollider IDE: {str(e)}"
-        logger.write_error(error_msg)
+        logger.error(error_msg)
         
         # Send error message to client
         try:
@@ -624,13 +630,13 @@ def launch_supercollider_ide_task(ws):
 
 def download_special_sccode_task(ws):
     """Download SCLang code in a separate thread"""
-    # Create logger
-    logger = WebsocketLogger(ws)
+    # Get WebSocket logger
+    logger = get_ws_logger()
     
     try:
         # Check if already downloaded
         if is_special_sccode_initialized():
-            logger.write_line("SuperCollider language code already downloaded", "WARN")
+            logger.warning("SuperCollider language code already downloaded")
             
             # Send completion message to client
             ws.send(json.dumps({
@@ -643,11 +649,11 @@ def download_special_sccode_task(ws):
             return
         
         # Download SCLang code
-        logger.write_line("Starting download of SuperCollider language code...")
+        logger.info("Starting download of SuperCollider language code...")
         result = download_special_sccode_pack(logger)
         
         if result:
-            logger.write_line("SuperCollider language code downloaded successfully!", "SUCCESS")
+            logger.info("SuperCollider language code downloaded successfully!")
             
             # Update status
             state_helper.update_renardo_init_status("sclangCode", True)
@@ -670,7 +676,7 @@ def download_special_sccode_task(ws):
             })
         else:
             error_msg = "Failed to download SuperCollider language code"
-            logger.write_line(error_msg, "ERROR")
+            logger.error(error_msg)
             
             # Send error message to client
             ws.send(json.dumps({
@@ -682,7 +688,7 @@ def download_special_sccode_task(ws):
         print(error_msg)
         
         # Log error
-        logger.write_line(error_msg, "ERROR")
+        logger.error(error_msg)
         
         # Send error message to client
         try:
