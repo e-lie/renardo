@@ -245,18 +245,19 @@
       stateHelpers.saveEditorSession();
     }
     
-    // THEN change activeTabId (which triggers reactive statement)
-    activeTabId = newTabId;
+    // THEN change activeTabId via state management (which triggers reactive statement)
+    stateHelpers.updateNestedSection('editor', 'session', { activeTabId: newTabId });
     
     // Wait a tick to let reactive statement complete, then manually set content
     setTimeout(() => {
       if (editorComponent) {
-        const newTab = tabs.find(t => t.id === activeTabId);
+        const newTab = tabs.find(t => t.id === newTabId);
         if (newTab) {
           sendDebugLog('INFO', 'About to load new tab content', {
             tabId: newTabId,
             tabName: newTab.name,
-            contentToLoad: newTab.content.length > 50 ? newTab.content.substring(0, 50) + '...' : newTab.content
+            contentToLoad: newTab.content.length > 50 ? newTab.content.substring(0, 50) + '...' : newTab.content,
+            allTabsInfo: tabs.map(t => ({ id: t.id, name: t.name, contentLength: t.content.length }))
           });
           
           // Force set the content to avoid race conditions
@@ -265,10 +266,16 @@
           
           sendDebugLog('INFO', 'Tab switch completed', { 
             tabName: newTab.name,
-            newTabContent: newTab.content.length > 100 ? newTab.content.substring(0, 100) + '...' : newTab.content
+            newTabContent: newTab.content.length > 100 ? newTab.content.substring(0, 100) + '...' : newTab.content,
+            verifyActiveTabId: activeTabId,
+            verifyTargetTabId: newTabId
           });
         } else {
-          sendDebugLog('ERROR', 'Tab not found after switch', { tabId: newTabId });
+          sendDebugLog('ERROR', 'Tab not found after switch', { 
+            tabId: newTabId,
+            activeTabId: activeTabId,
+            availableTabs: tabs.map(t => ({ id: t.id, name: t.name }))
+          });
         }
       }
     }, 0);
@@ -1570,7 +1577,13 @@
       sendDebugLog('INFO', 'CodeEditor initialization completed', {
         initialTabsCount: tabs.length,
         initialTabIds: tabs.map(t => t.id),
-        initialActiveTabId: activeTabId
+        initialActiveTabId: activeTabId,
+        allTabsDetails: tabs.map(t => ({ 
+          id: t.id, 
+          name: t.name, 
+          contentLength: t.content.length,
+          content: t.content.length > 30 ? t.content.substring(0, 30) + '...' : t.content
+        }))
       });
       hasInitialized = true;
     }, 50);
