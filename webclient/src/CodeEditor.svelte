@@ -1593,11 +1593,10 @@
             content: content,
             editing: false
           };
-          tabs = [...tabs, newBuffer];
           
-          // Update state with new tab and incremented nextTabId
+          // Update state with new tab and incremented nextTabId (single operation)
           stateHelpers.updateNestedSection('editor', 'session', {
-            tabs: [...tabs],
+            tabs: [...tabs, newBuffer],
             activeTabId: newBuffer.id,
             nextTabId: nextTabId + 1
           });
