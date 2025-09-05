@@ -131,11 +131,13 @@ export class TabManager {
     const bufferId = state.nextBufferId;
     const tabId = state.nextTabId;
     
+    const bufferName = options.title || `Untitled-${bufferId}`;
+    
     // Create new buffer
     const buffer = new TextBuffer(
       {
         id: bufferId,
-        name: options.title || `Untitled-${bufferId}`,
+        name: bufferName,
         language: options.language || 'python',
         source: options.source || 'manual',
         filePath: options.filePath,
@@ -144,11 +146,11 @@ export class TabManager {
       options.content || ''
     );
 
-    // Create new tab
+    // Create new tab - title comes from buffer name
     const tab = new EditorTab(
       tabId,
       bufferId,
-      options.title || `Untitled-${bufferId}`,
+      bufferName, // Tab displays buffer name
       state.tabs.size
     );
 
@@ -313,6 +315,26 @@ export class TabManager {
   }
 
   /**
+   * Update buffer name (and corresponding tab titles)
+   */
+  renameBuffer(bufferId: number, newName: string): void {
+    const state = get(this._state);
+    const buffer = state.buffers.get(bufferId);
+    
+    if (!buffer) return;
+    
+    // Update buffer name
+    buffer.rename(newName);
+    
+    // Update all tabs displaying this buffer
+    for (const tab of state.tabs.values()) {
+      if (tab.getState().bufferId === bufferId) {
+        tab.setTitle(newName);
+      }
+    }
+  }
+
+  /**
    * Check if tab switching is in progress
    */
   isTabSwitching(): boolean {
@@ -320,23 +342,168 @@ export class TabManager {
   }
 
   /**
-   * Save session to JSON
+   * Export session as concatenated content (same format as current implementation)
    */
-  toJSON(): any {
+  exportSessionContent(): string {
     const state = get(this._state);
-    return {
-      buffers: Array.from(state.buffers.entries()).map(([id, buffer]) => ({
-        id,
-        data: buffer.toJSON()
-      })),
-      tabs: Array.from(state.tabs.entries()).map(([id, tab]) => ({
-        id,
-        data: tab.toJSON()
-      })),
-      activeTabId: state.activeTabId,
-      nextBufferId: state.nextBufferId,
-      nextTabId: state.nextTabId
-    };
+    let combinedContent = "";
+    
+    // Find startup buffer
+    const startupBuffer = Array.from(state.buffers.values())
+      .find(buffer => buffer.getMetadata().isStartupFile);
+    
+    // Add startup file section if exists
+    if (startupBuffer) {
+      const startupSeparator = '//' + '='.repeat(78);
+      combinedContent += `${startupSeparator}\n`;
+      combinedContent += `// STARTUP_FILE: ${startupBuffer.getMetadata().name}\n`;
+      combinedContent += `${startupSeparator}\n`;
+      combinedContent += `${startupBuffer.getContent()}\n\n`;
+    }
+    
+    // Add regular buffers (non-startup)
+    const separator = '#'.repeat(80);
+    const regularBuffers = Array.from(state.buffers.values())
+      .filter(buffer => !buffer.getMetadata().isStartupFile);
+    
+    combinedContent += regularBuffers
+      .map(buffer => {
+        const metadata = buffer.getMetadata();
+        const nameHeader = `######## ${metadata.name}`;
+        return `${separator}\n${nameHeader}\n${separator}\n${buffer.getContent()}`;
+      })
+      .join('\n');
+    
+    return combinedContent;
+  }
+
+  /**
+   * Save session via API (same format as current implementation)
+   */
+  async saveSession(sessionName: string): Promise<boolean> {
+    try {
+      const combinedContent = this.exportSessionContent();
+      
+      const response = await fetch('/api/sessions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          filename: sessionName,
+          content: combinedContent
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to save session:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Load session from concatenated content (same format as current implementation)
+   */
+  loadSessionFromContent(content: string): void {
+    // Clear existing tabs and buffers (except startup)
+    const state = get(this._state);
+    const startupBuffer = Array.from(state.buffers.values())
+      .find(buffer => buffer.getMetadata().isStartupFile);
+    
+    // Parse the content using the same logic as current implementation
+    const startupFileMatch = content.match(/\/\/={78}\n\/\/ STARTUP_FILE: (.+?)\n\/\/={78}\n([\s\S]+?)\n\n/);
+    
+    let startupFileName = null;
+    let startupFileContent = null;
+    let remainingContent = content;
+    
+    if (startupFileMatch) {
+      startupFileName = startupFileMatch[1];
+      startupFileContent = startupFileMatch[2];
+      remainingContent = content.substring(startupFileMatch[0].length);
+    }
+    
+    const separator = '#'.repeat(80);
+    const parts = remainingContent.split(new RegExp(`\\n?${separator}\\n?`));
+    
+    // Start fresh
+    const newBuffers = new Map<number, TextBuffer>();
+    const newTabs = new Map<number, EditorTab>();
+    let nextBufferId = 1;
+    let nextTabId = 1;
+    
+    // Create or update startup buffer
+    if (startupBuffer) {
+      if (startupFileContent) {
+        startupBuffer.setContent(startupFileContent);
+      }
+      newBuffers.set(1, startupBuffer);
+    } else if (startupFileContent) {
+      const newStartupBuffer = new TextBuffer(
+        {
+          id: 1,
+          name: startupFileName || 'startup.py',
+          isStartupFile: true
+        },
+        startupFileContent
+      );
+      newBuffers.set(1, newStartupBuffer);
+    }
+    
+    // Create startup tab
+    const startupTab = new EditorTab(1, 1, startupFileName || 'startup.py', 0);
+    newTabs.set(1, startupTab);
+    nextBufferId = 2;
+    nextTabId = 2;
+    
+    // Parse regular buffers
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i].trim();
+      if (!part) continue;
+      
+      if (part.startsWith('######## ')) {
+        const nameHeaderMatch = part.match(/^######## (.+?)(?:\n|$)/);
+        if (nameHeaderMatch && i + 1 < parts.length) {
+          const bufferName = nameHeaderMatch[1];
+          const bufferContent = parts[i + 1].trim();
+          
+          // Create buffer
+          const buffer = new TextBuffer(
+            {
+              id: nextBufferId,
+              name: bufferName,
+              source: 'session'
+            },
+            bufferContent
+          );
+          
+          // Create tab for this buffer
+          const tab = new EditorTab(nextTabId, nextBufferId, bufferName, nextTabId - 1);
+          
+          newBuffers.set(nextBufferId, buffer);
+          newTabs.set(nextTabId, tab);
+          
+          nextBufferId++;
+          nextTabId++;
+          i++; // Skip the content part
+        }
+      }
+    }
+    
+    // Update state
+    this._state.update(s => ({
+      ...s,
+      buffers: newBuffers,
+      tabs: newTabs,
+      activeTabId: 1, // Default to startup tab
+      nextBufferId,
+      nextTabId
+    }));
   }
 
   /**
