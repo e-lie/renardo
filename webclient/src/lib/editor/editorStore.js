@@ -95,40 +95,163 @@ export function getActiveTabContent() {
   return tabManager.getActiveBufferContent();
 }
 
-export function saveSession() {
-  const sessionData = tabManager.toJSON();
-  localStorage.setItem('editor-session', JSON.stringify(sessionData));
+export async function saveSessionToServer(sessionName) {
+  try {
+    const success = await tabManager.saveSession(sessionName);
+    
+    if (success) {
+      sendDebugLog('INFO', 'Session saved to server', {
+        sessionName,
+        bufferCount: get(tabManager.buffers).length
+      });
+    } else {
+      sendDebugLog('ERROR', 'Failed to save session to server', {
+        sessionName
+      });
+    }
+    
+    return success;
+  } catch (error) {
+    sendDebugLog('ERROR', 'Error saving session to server', {
+      sessionName,
+      error: error.message
+    });
+    return false;
+  }
+}
+
+export function loadSessionFromContent(content) {
+  try {
+    tabManager.loadSessionFromContent(content);
+    
+    sendDebugLog('INFO', 'Session loaded from content', {
+      bufferCount: get(tabManager.buffers).length,
+      tabCount: get(tabManager.tabs).length
+    });
+    
+    return true;
+  } catch (error) {
+    sendDebugLog('ERROR', 'Failed to load session from content', {
+      error: error.message
+    });
+    return false;
+  }
+}
+
+export function exportSessionContent() {
+  try {
+    const content = tabManager.exportSessionContent();
+    
+    sendDebugLog('INFO', 'Session content exported', {
+      contentLength: content.length,
+      bufferCount: get(tabManager.buffers).length
+    });
+    
+    return content;
+  } catch (error) {
+    sendDebugLog('ERROR', 'Failed to export session content', {
+      error: error.message
+    });
+    return '';
+  }
+}
+
+export function renameBuffer(bufferId, newName) {
+  tabManager.renameBuffer(bufferId, newName);
   
-  sendDebugLog('INFO', 'Session saved', {
-    bufferCount: sessionData.buffers.length,
-    tabCount: sessionData.tabs.length
+  sendDebugLog('INFO', 'Buffer renamed', {
+    bufferId,
+    newName
   });
 }
 
-export function loadSession() {
-  const saved = localStorage.getItem('editor-session');
-  if (saved) {
-    try {
-      const sessionData = JSON.parse(saved);
-      const newManager = TabManager.fromJSON(sessionData);
-      
-      // Copy state to existing manager
-      tabManager._state.set(get(newManager._state));
-      
-      sendDebugLog('INFO', 'Session loaded', {
-        bufferCount: sessionData.buffers.length,
-        tabCount: sessionData.tabs.length
-      });
-      
-      return true;
-    } catch (error) {
-      sendDebugLog('ERROR', 'Failed to load session', {
-        error: error.message
-      });
-      return false;
-    }
+export function startEditingTabName(tabId) {
+  const state = get(tabManager);
+  const tab = state.tabs.get(tabId);
+  if (tab) {
+    tab.startEditing();
+    
+    sendDebugLog('INFO', 'Started editing tab name', {
+      tabId
+    });
   }
-  return false;
+}
+
+export function stopEditingTabName(tabId) {
+  const state = get(tabManager);
+  const tab = state.tabs.get(tabId);
+  if (tab) {
+    tab.stopEditing();
+    
+    sendDebugLog('INFO', 'Stopped editing tab name', {
+      tabId
+    });
+  }
+}
+
+export function finishEditingTabName(tabId, newName) {
+  const state = get(tabManager);
+  const tab = state.tabs.get(tabId);
+  if (tab) {
+    const tabState = tab.getState();
+    const buffer = state.buffers.get(tabState.bufferId);
+    
+    if (buffer && newName.trim()) {
+      // Rename the buffer (which will update tab titles)
+      tabManager.renameBuffer(tabState.bufferId, newName.trim());
+    }
+    
+    tab.stopEditing();
+    
+    sendDebugLog('INFO', 'Finished editing tab name', {
+      tabId,
+      newName: newName.trim()
+    });
+  }
+}
+
+export function createNewSession() {
+  // Save current startup buffer content if exists
+  const startupBuffer = get(tabManager.startupBuffer);
+  let startupContent = '# Renardo startup file\n# This file is loaded when Renardo starts\n# Add your custom code here\n';
+  
+  if (startupBuffer) {
+    startupContent = startupBuffer.getContent();
+  }
+  
+  // Clear all tabs and buffers, then recreate with startup + untitled
+  const state = get(tabManager);
+  tabManager._state.set({
+    buffers: new Map(),
+    tabs: new Map(),
+    activeTabId: null,
+    nextBufferId: 1,
+    nextTabId: 1,
+    isTabSwitching: false
+  });
+  
+  // Ensure startup tab
+  tabManager.ensureStartupTab();
+  
+  // Set startup content
+  const newStartupBuffer = get(tabManager.startupBuffer);
+  if (newStartupBuffer) {
+    newStartupBuffer.setContent(startupContent);
+  }
+  
+  // Create untitled tab
+  const untitledTabId = tabManager.createTab({
+    title: 'Untitled',
+    content: '',
+    source: 'manual'
+  });
+  
+  // Switch to untitled tab
+  tabManager.switchToTab(untitledTabId);
+  
+  sendDebugLog('INFO', 'New session created', {
+    startupContentPreserved: startupContent.length > 0
+  });
 }
 
 // Export for use in components
