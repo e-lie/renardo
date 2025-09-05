@@ -123,6 +123,13 @@ export class TabManager {
   }
 
   /**
+   * Ensure startup tab exists (alias for backward compatibility)
+   */
+  ensureStartupTab(): void {
+    this.ensureStartupBuffer();
+  }
+
+  /**
    * Create a new tab with a new buffer
    */
   createTab(options: CreateTabOptions = {}): number {
