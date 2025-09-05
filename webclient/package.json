@@ -10,8 +10,13 @@
     },
     "devDependencies": {
         "@sveltejs/vite-plugin-svelte": "^2.4.2",
+        "@tsconfig/svelte": "^5.0.5",
+        "@types/node": "^24.3.1",
         "daisyui": "^5.0.35",
+        "svelte-check": "^4.3.1",
         "tailwindcss": "^4.1.6",
+        "tslib": "^2.8.1",
+        "typescript": "^5.9.2",
         "vite": "^4.4.5"
     },
     "dependencies": {
