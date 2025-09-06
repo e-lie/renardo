@@ -4,6 +4,9 @@
     "version": "0.1.0",
     "type": "module",
     "main": "electron/main.js",
+    "description": "Renardo Web Client - Live coding with Python and SuperCollider",
+    "author": "Renardo Project <renardo@example.com>",
+    "homepage": "https://renardo.org",
     "scripts": {
         "dev": "vite",
         "dev:electron": "npm run build && electron .",
@@ -56,7 +59,7 @@
             {
                 "from": "../src/renardo",
                 "to": "renardo",
-                "filter": ["**/*.py", "**/*.json", "**/*.yaml"]
+                "filter": ["**/*.py", "**/*.json", "**/*.yaml", "**/*.conf", "**/*.txt", "**/*.md", "**/*.toml"]
             }
         ],
         "mac": {
