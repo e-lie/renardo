@@ -125,5 +125,7 @@ Temporary Items
 src/renardo/reaper_backend/reaside/rust_extension/target/
 src/renardo/reaper_backend/reaside/rust_extension/Cargo.lock
 
-
+# Electron setup
 webclient/python/**
+dist-electron
+
