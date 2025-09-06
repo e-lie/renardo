@@ -122,3 +122,6 @@ Temporary Items
 # Rust extension
 src/renardo/reaper_backend/reaside/rust_extension/target/
 src/renardo/reaper_backend/reaside/rust_extension/Cargo.lock
+
+
+webclient/python/**

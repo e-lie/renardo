@@ -11,6 +11,7 @@ import platform
 import shutil
 import tomli
 import tomli_w
+from datetime import datetime
 
 def register_api_routes(webapp):
     import requests
@@ -21,6 +22,20 @@ def register_api_routes(webapp):
     Args:
         webapp: Flask application instance
     """
+    @webapp.route('/api/health', methods=['GET'])
+    def health_check():
+        """
+        Health check endpoint for monitoring server status
+        
+        Returns:
+            JSON: Server health status
+        """
+        return jsonify({
+            "status": "ok",
+            "message": "Renardo Flask server is running",
+            "timestamp": json.dumps(datetime.now(), default=str)
+        })
+
     @webapp.route('/api/state', methods=['GET'])
     def get_state():
         """
