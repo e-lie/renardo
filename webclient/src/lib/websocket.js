@@ -31,11 +31,21 @@ export function initWebSocket() {
     pingTimer = null;
   }
   
-  // Determine WebSocket URL based on current location
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const wsUrl = import.meta.env.DEV 
-    ? 'ws://localhost:12345/ws'  // Development
-    : `${protocol}//${window.location.host}/ws`;  // Production
+  // Determine WebSocket URL based on environment
+  const isElectron = window.electronAPI !== undefined;
+  let wsUrl;
+  
+  if (isElectron) {
+    // Electron: always connect to embedded Flask server
+    wsUrl = 'ws://localhost:12345/ws';
+  } else if (import.meta.env.DEV) {
+    // Web development: connect to Flask via proxy
+    wsUrl = 'ws://localhost:12345/ws';
+  } else {
+    // Web production: use same host with appropriate protocol
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    wsUrl = `${protocol}//${window.location.host}/ws`;
+  }
 
   // Create WebSocket connection
   socket = new WebSocket(wsUrl);
