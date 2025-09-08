@@ -1,15 +1,18 @@
 import os, sys, json
+import tempfile
 from pathlib import Path
 
 from .settings_manager import settings
 
 
-TEMP_FILE : Path = settings.get_path("FOXDOT_EDITOR_ROOT") / "tmp" / "tempfile.txt"
+# Use system temp directory for temp files (writable in packaged apps)
+TEMP_FILE : Path = Path(tempfile.gettempdir()) / "renardo_foxdot_editor" / "tempfile.txt"
+TEMP_FILE.parent.mkdir(parents=True, exist_ok=True)
 TEMP_FILE.touch(exist_ok=True)
 
 settings.set_defaults_from_dict({
     "foxdot_editor" : {
-        "TEMP_FILE": "tmp/tempfile.txt",
+        "TEMP_FILE": str(TEMP_FILE),
         "FONT": 'Consolas',
         "AUTO_COMPLETE_BRACKETS": True,
         "USE_ALPHA": True,
