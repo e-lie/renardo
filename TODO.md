@@ -1,23 +1,6 @@
 
 
-
-
-Next prompt for electron migration: 
-
-ok nice ! I noticed when launching the AppImage that pip installs in the user python (Pip install: Requirement already satisfied:           │
-│   mdit-py-plugins>=0.5.0 in /home/elie/.local/lib/python3.12/site-packages).
-
-I'd like the build result to be working without python installed on the machine (using the embedded python)
-
-also error : Web client files not found. Looking in: /tmp/.mount_RenardM6sgBP/webclient/dist
-
-
-on the webclient (`./webclient`) :
-
-- [ ] rename CodeEditor.svelte to Main.svelte
-- [ ] Create a class TextBuffer that represent text editor content with a constructor that can load text into the new buffer and a method to load external into code
-
-
+<z>
 
 
 
