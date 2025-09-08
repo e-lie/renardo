@@ -60,6 +60,11 @@
                 "from": "../src/renardo",
                 "to": "renardo",
                 "filter": ["**/*.py", "**/*.json", "**/*.yaml", "**/*.conf", "**/*.txt", "**/*.md", "**/*.toml"]
+            },
+            {
+                "from": "dist",
+                "to": "renardo/webserver/static",
+                "filter": ["**/*"]
             }
         ],
         "mac": {
