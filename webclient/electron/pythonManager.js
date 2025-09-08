@@ -13,12 +13,22 @@ let pythonProcess = null;
  * Find the Python executable path based on environment
  */
 function findPython() {
+  const isWindows = process.platform === 'win32';
+  
   if (app.isPackaged) {
     // In packaged app: python is in resources
-    return join(process.resourcesPath, 'python', 'bin', 'python3.12');
+    if (isWindows) {
+      return join(process.resourcesPath, 'python', 'python.exe');
+    } else {
+      return join(process.resourcesPath, 'python', 'bin', 'python3.12');
+    }
   } else {
     // In development: python is in webclient/python
-    return join(__dirname, '..', 'python', 'bin', 'python3.12');
+    if (isWindows) {
+      return join(__dirname, '..', 'python', 'python.exe');
+    } else {
+      return join(__dirname, '..', 'python', 'bin', 'python3.12');
+    }
   }
 }
 
@@ -131,7 +141,8 @@ async function startFlaskServer() {
     // Start the Flask server by running renardo module
     // Set PYTHONPATH to include both the renardo module and local site-packages
     const localSitePackages = getLocalSitePackages();
-    const pythonPathEnv = `${localSitePackages}:${pythonPath}`;
+    const pathSeparator = process.platform === 'win32' ? ';' : ':';
+    const pythonPathEnv = `${localSitePackages}${pathSeparator}${pythonPath}`;
     
     pythonProcess = spawn(pythonExecutable, ['-m', 'renardo', '--no-browser'], {
       cwd: pythonPath,
