@@ -49,18 +49,31 @@ function findPythonPath() {
 }
 
 /**
+ * Get the local site-packages directory for the bundled Python
+ */
+function getLocalSitePackages() {
+  // Create a local site-packages directory in app's temp space
+  const tempDir = app.getPath('temp');
+  return join(tempDir, 'renardo-electron', 'site-packages');
+}
+
+/**
  * Install required dependencies in the bundled Python
  * In development, we'll run with the system Python setup
  */
 async function installDependencies() {
   if (app.isPackaged) {
     const pythonPath = findPython();
+    const localSitePackages = getLocalSitePackages();
+    
     console.log('Installing dependencies in packaged app...');
+    console.log('Local site-packages:', localSitePackages);
     
     return new Promise((resolve, reject) => {
       // Install all pip packages needed by renardo (from pyproject.toml dependencies)
+      // Use --target to install to a specific directory instead of user directory
       const installProcess = spawn(pythonPath, [
-        '-m', 'pip', 'install',
+        '-m', 'pip', 'install', '--target', localSitePackages,
         'midiutil', 'tomli', 'tomli-w', 'requests', 'psutil', 'indexed',
         'python-rtmidi', 'ttkbootstrap', 'textual<3', 'fastnumbers>=5.1.1',
         'mido>=1.3.3', 'flask>=3.1.0', 'flask-sock>=0.7.0', 'flask-cors>=3.0.10',
@@ -116,12 +129,15 @@ async function startFlaskServer() {
     }
     
     // Start the Flask server by running renardo module
-    // Set PYTHONPATH to the parent directory containing the renardo module
+    // Set PYTHONPATH to include both the renardo module and local site-packages
+    const localSitePackages = getLocalSitePackages();
+    const pythonPathEnv = `${localSitePackages}:${pythonPath}`;
+    
     pythonProcess = spawn(pythonExecutable, ['-m', 'renardo', '--no-browser'], {
       cwd: pythonPath,
       env: {
         ...process.env,
-        PYTHONPATH: pythonPath,
+        PYTHONPATH: pythonPathEnv,
         RENARDO_WEB_MODE: 'electron'
       }
     });
