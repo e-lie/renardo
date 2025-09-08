@@ -126,6 +126,6 @@ src/renardo/reaper_backend/reaside/rust_extension/target/
 src/renardo/reaper_backend/reaside/rust_extension/Cargo.lock
 
 # Electron setup
-webclient/python/**
+webclient/python
 dist-electron
 

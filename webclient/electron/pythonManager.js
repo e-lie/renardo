@@ -36,6 +36,19 @@ function findRenardoPath() {
 }
 
 /**
+ * Find the Python path (parent directory containing renardo module)
+ */
+function findPythonPath() {
+  if (app.isPackaged) {
+    // In packaged app: resources directory contains the renardo module
+    return process.resourcesPath;
+  } else {
+    // In development: src directory contains the renardo module
+    return join(__dirname, '..', '..', 'src');
+  }
+}
+
+/**
  * Install required dependencies in the bundled Python
  * In development, we'll run with the system Python setup
  */
@@ -45,10 +58,14 @@ async function installDependencies() {
     console.log('Installing dependencies in packaged app...');
     
     return new Promise((resolve, reject) => {
-      // Install pip packages needed by renardo
+      // Install all pip packages needed by renardo (from pyproject.toml dependencies)
       const installProcess = spawn(pythonPath, [
-        '-m', 'pip', 'install', 
-        'flask', 'flask-sock', 'flask-cors', 'websockets'
+        '-m', 'pip', 'install',
+        'midiutil', 'tomli', 'tomli-w', 'requests', 'psutil', 'indexed',
+        'python-rtmidi', 'ttkbootstrap', 'textual<3', 'fastnumbers>=5.1.1',
+        'mido>=1.3.3', 'flask>=3.1.0', 'flask-sock>=0.7.0', 'flask-cors>=3.0.10',
+        'websockets>=10.4', 'gunicorn', 'gevent', 'gevent-websocket',
+        'markdown>=3.5.1', 'python-reapy>=0.10.0', 'python-osc>=1.8.3'
       ]);
       
       installProcess.stdout.on('data', (data) => {
@@ -78,16 +95,18 @@ async function installDependencies() {
  * Start the Flask server
  */
 async function startFlaskServer() {
-  let pythonPath, renardoPath;
+  let pythonExecutable, renardoPath, pythonPath;
   
   if (app.isPackaged) {
     // Production: use embedded Python
-    pythonPath = findPython();
+    pythonExecutable = findPython();
     renardoPath = findRenardoPath();
+    pythonPath = findPythonPath();
     
     console.log('Production mode');
-    console.log('Python path:', pythonPath);
-    console.log('Renardo path:', renardoPath);
+    console.log('Python executable:', pythonExecutable);
+    console.log('Renardo source path:', renardoPath);
+    console.log('Python module path:', pythonPath);
     
     try {
       await installDependencies();
@@ -97,23 +116,26 @@ async function startFlaskServer() {
     }
     
     // Start the Flask server by running renardo module
-    pythonProcess = spawn(pythonPath, ['-m', 'renardo', '--no-browser'], {
-      cwd: renardoPath,
+    // Set PYTHONPATH to the parent directory containing the renardo module
+    pythonProcess = spawn(pythonExecutable, ['-m', 'renardo', '--no-browser'], {
+      cwd: pythonPath,
       env: {
         ...process.env,
-        PYTHONPATH: renardoPath,
+        PYTHONPATH: pythonPath,
         RENARDO_WEB_MODE: 'electron'
       }
     });
   } else {
     // Development: use system Python with uv
     renardoPath = findRenardoPath();
+    pythonPath = findPythonPath();
     console.log('Development mode');
-    console.log('Renardo path:', renardoPath);
+    console.log('Renardo source path:', renardoPath);
+    console.log('Python module path:', pythonPath);
     
     // Use uv to run renardo with proper environment
     pythonProcess = spawn('uv', ['run', 'python', '-m', 'renardo', '--no-browser'], {
-      cwd: renardoPath,
+      cwd: pythonPath,
       env: {
         ...process.env,
         RENARDO_WEB_MODE: 'electron'
