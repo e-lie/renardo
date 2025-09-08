@@ -176,6 +176,7 @@ def main():
         
         print("\nYou can now build the Electron application with:")
         print("  cd webclient")
+        print("  npm install")
         print("  npm run build:electron")
         
     finally:
