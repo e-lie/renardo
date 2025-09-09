@@ -3,6 +3,7 @@
   import { LayoutManager, PaneComponent } from './lib/newEditor/index';
   import ColorPicker from './components/panes/ColorPicker.svelte';
   import TextArea from './components/panes/TextArea.svelte';
+  import LayoutConfigModal from './components/modals/LayoutConfigModal.svelte';
   
   // Create layout manager instance
   let layoutManager = null;
@@ -26,7 +27,8 @@
     'bottom-right': true
   };
 
-  // Demo components for each pane
+
+  // Component assignments for each pane (user configurable)
   let paneComponents = {
     'left-top': { type: 'ColorPicker', title: 'Color Picker', id: 'color-1' },
     'left-middle': { type: 'TextArea', title: 'Notes', id: 'text-1' },
@@ -64,15 +66,15 @@
     }));
   }
 
-  // Reactive pane content rendering
-  $: leftTopContent = renderPaneContent('left-top');
-  $: leftMiddleContent = renderPaneContent('left-middle');
-  $: leftBottomContent = renderPaneContent('left-bottom');
-  $: rightTopContent = renderPaneContent('right-top');
-  $: rightMiddleContent = renderPaneContent('right-middle');
-  $: rightBottomContent = renderPaneContent('right-bottom');
-  $: bottomLeftContent = renderPaneContent('bottom-left');
-  $: bottomRightContent = renderPaneContent('bottom-right');
+  // Reactive pane content rendering (depends on paneComponents changes)
+  $: leftTopContent = (paneComponents, renderPaneContent('left-top'));
+  $: leftMiddleContent = (paneComponents, renderPaneContent('left-middle'));
+  $: leftBottomContent = (paneComponents, renderPaneContent('left-bottom'));
+  $: rightTopContent = (paneComponents, renderPaneContent('right-top'));
+  $: rightMiddleContent = (paneComponents, renderPaneContent('right-middle'));
+  $: rightBottomContent = (paneComponents, renderPaneContent('right-bottom'));
+  $: bottomLeftContent = (paneComponents, renderPaneContent('bottom-left'));
+  $: bottomRightContent = (paneComponents, renderPaneContent('bottom-right'));
   
   // Resize state
   let resizeData = null;
@@ -267,6 +269,7 @@
     const rendered = renderComponent(config.type, { componentId: config.id, title: config.title });
     return { config, rendered };
   }
+
 
   // Get pane background color based on position
   function getPaneColor(position) {
@@ -525,227 +528,13 @@
   </button>
 
   <!-- Layout Configuration Modal -->
-  {#if showLayoutModal}
-    <div class="modal modal-open">
-      <div class="modal-box max-w-4xl h-[80vh] flex flex-col">
-        <!-- Modal Header -->
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="font-bold text-lg">Layout Configuration</h3>
-          <button 
-            class="btn btn-sm btn-circle btn-ghost"
-            on:click={() => showLayoutModal = false}
-          >
-            ✕
-          </button>
-        </div>
-        
-        <!-- Modal Content -->
-        <div class="flex-1 overflow-y-auto">
-          <!-- Pane Visibility Controls -->
-          <div class="space-y-4">
-            <!-- App Navigation Bar -->
-            <div class="divider">App Navigation</div>
-            <div class="form-control">
-              <label class="label cursor-pointer">
-                <span class="label-text font-semibold">Hide App Navigation Bar</span>
-                <input 
-                  type="checkbox" 
-                  class="toggle toggle-primary"
-                  bind:checked={hideAppNavbar}
-                />
-              </label>
-              <span class="label-text-alt pl-12 text-xs opacity-70">Hides the top navigation bar from the main app</span>
-            </div>
-            
-            <div class="divider">Pane Layout</div>
-            
-            <!-- Layout Grid matching the actual pane positions -->
-            <div class="grid grid-cols-3 gap-2 p-4 bg-base-200 rounded-lg">
-              <!-- Top Row -->
-              <div class="col-span-3 flex justify-center">
-                <div class="form-control">
-                  <label class="label cursor-pointer flex-col gap-1">
-                    <span class="label-text text-xs font-semibold">Top Menu</span>
-                    <input 
-                      type="checkbox" 
-                      class="toggle toggle-primary toggle-xs"
-                      checked={paneVisibility['top-menu']}
-                      on:change={(e) => {
-                        paneVisibility['top-menu'] = e.target.checked;
-                        paneVisibility = { ...paneVisibility };
-                      }}
-                    />
-                  </label>
-                </div>
-              </div>
-              
-              <!-- Middle Row -->
-              <div class="flex flex-col gap-1">
-                <!-- Left Column -->
-                <div class="form-control">
-                  <label class="label cursor-pointer flex-col gap-1">
-                    <span class="label-text text-xs font-semibold">Left Top</span>
-                    <input 
-                      type="checkbox" 
-                      class="toggle toggle-primary toggle-xs"
-                      checked={paneVisibility['left-top']}
-                      on:change={(e) => {
-                        paneVisibility['left-top'] = e.target.checked;
-                        paneVisibility = { ...paneVisibility };
-                      }}
-                    />
-                  </label>
-                </div>
-                <div class="form-control">
-                  <label class="label cursor-pointer flex-col gap-1">
-                    <span class="label-text text-xs font-semibold">Left Mid</span>
-                    <input 
-                      type="checkbox" 
-                      class="toggle toggle-primary toggle-xs"
-                      checked={paneVisibility['left-middle']}
-                      on:change={(e) => {
-                        paneVisibility['left-middle'] = e.target.checked;
-                        paneVisibility = { ...paneVisibility };
-                      }}
-                    />
-                  </label>
-                </div>
-                <div class="form-control">
-                  <label class="label cursor-pointer flex-col gap-1">
-                    <span class="label-text text-xs font-semibold">Left Bot</span>
-                    <input 
-                      type="checkbox" 
-                      class="toggle toggle-primary toggle-xs"
-                      checked={paneVisibility['left-bottom']}
-                      on:change={(e) => {
-                        paneVisibility['left-bottom'] = e.target.checked;
-                        paneVisibility = { ...paneVisibility };
-                      }}
-                    />
-                  </label>
-                </div>
-              </div>
-              
-              <div class="flex items-center justify-center">
-                <!-- Center Area (always visible) -->
-                <div class="form-control">
-                  <label class="label cursor-pointer flex-col gap-1">
-                    <span class="label-text text-xs font-semibold text-center">Center<br/>Editor</span>
-                    <div class="w-8 h-4 bg-primary/30 rounded flex items-center justify-center">
-                      <span class="text-xs">📝</span>
-                    </div>
-                  </label>
-                </div>
-              </div>
-              
-              <div class="flex flex-col gap-1">
-                <!-- Right Column -->
-                <div class="form-control">
-                  <label class="label cursor-pointer flex-col gap-1">
-                    <span class="label-text text-xs font-semibold">Right Top</span>
-                    <input 
-                      type="checkbox" 
-                      class="toggle toggle-primary toggle-xs"
-                      checked={paneVisibility['right-top']}
-                      on:change={(e) => {
-                        paneVisibility['right-top'] = e.target.checked;
-                        paneVisibility = { ...paneVisibility };
-                      }}
-                    />
-                  </label>
-                </div>
-                <div class="form-control">
-                  <label class="label cursor-pointer flex-col gap-1">
-                    <span class="label-text text-xs font-semibold">Right Mid</span>
-                    <input 
-                      type="checkbox" 
-                      class="toggle toggle-primary toggle-xs"
-                      checked={paneVisibility['right-middle']}
-                      on:change={(e) => {
-                        paneVisibility['right-middle'] = e.target.checked;
-                        paneVisibility = { ...paneVisibility };
-                      }}
-                    />
-                  </label>
-                </div>
-                <div class="form-control">
-                  <label class="label cursor-pointer flex-col gap-1">
-                    <span class="label-text text-xs font-semibold">Right Bot</span>
-                    <input 
-                      type="checkbox" 
-                      class="toggle toggle-primary toggle-xs"
-                      checked={paneVisibility['right-bottom']}
-                      on:change={(e) => {
-                        paneVisibility['right-bottom'] = e.target.checked;
-                        paneVisibility = { ...paneVisibility };
-                      }}
-                    />
-                  </label>
-                </div>
-              </div>
-              
-              <!-- Bottom Row -->
-              <div class="col-span-3 grid grid-cols-2 gap-2 mt-2">
-                <div class="form-control">
-                  <label class="label cursor-pointer flex-col gap-1">
-                    <span class="label-text text-xs font-semibold">Bottom Left</span>
-                    <input 
-                      type="checkbox" 
-                      class="toggle toggle-primary toggle-xs"
-                      checked={paneVisibility['bottom-left']}
-                      on:change={(e) => {
-                        paneVisibility['bottom-left'] = e.target.checked;
-                        paneVisibility = { ...paneVisibility };
-                      }}
-                    />
-                  </label>
-                </div>
-                <div class="form-control">
-                  <label class="label cursor-pointer flex-col gap-1">
-                    <span class="label-text text-xs font-semibold">Bottom Right</span>
-                    <input 
-                      type="checkbox" 
-                      class="toggle toggle-primary toggle-xs"
-                      checked={paneVisibility['bottom-right']}
-                      on:change={(e) => {
-                        paneVisibility['bottom-right'] = e.target.checked;
-                        paneVisibility = { ...paneVisibility };
-                      }}
-                    />
-                  </label>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Note about center pane -->
-            <div class="alert alert-info">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              <span>The center code editor pane cannot be hidden.</span>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Modal Actions -->
-        <div class="modal-action">
-          <button 
-            class="btn btn-primary"
-            on:click={() => layoutManager && layoutManager.resetToDefault()}
-          >
-            Reset to Default
-          </button>
-          <button 
-            class="btn"
-            on:click={() => showLayoutModal = false}
-          >
-            Close
-          </button>
-        </div>
-      </div>
-      
-      <!-- Modal backdrop -->
-      <div class="modal-backdrop" on:click={() => showLayoutModal = false}></div>
-    </div>
-  {/if}
+  <LayoutConfigModal 
+    bind:showModal={showLayoutModal}
+    bind:paneVisibility={paneVisibility}
+    bind:paneComponents={paneComponents}
+    bind:hideAppNavbar={hideAppNavbar}
+    bind:layoutManager={layoutManager}
+  />
 </div>
 
 <style>
