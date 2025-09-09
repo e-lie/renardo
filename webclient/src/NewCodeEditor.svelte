@@ -34,6 +34,13 @@
     'bottom': true  // Controls entire bottom area (bottom-left, bottom-right)
   };
 
+  // Track hover states for showing/hiding buttons
+  let hoverStates = {
+    'left': false,
+    'right': false,
+    'bottom': false
+  };
+
 
   // Component assignments for each pane (user configurable)
   let paneComponents = {
@@ -114,11 +121,15 @@
       });
       unsubscribePanes.push(unsubscribe);
     });
+
+    // Add global mouse move listener for edge detection
+    document.addEventListener('mousemove', handleGlobalMouseMove);
   });
 
   onDestroy(() => {
     unsubscribeLayout?.();
     unsubscribePanes.forEach(unsub => unsub());
+    document.removeEventListener('mousemove', handleGlobalMouseMove);
   });
 
   // Resize handlers for flex layout
@@ -313,6 +324,63 @@
     };
     return colors[position] || 'bg-base-100';
   }
+
+  // Handle mouse enter/leave for pane sets
+  function handlePaneSetHover(paneSet, isHovering) {
+    hoverStates[paneSet] = isHovering;
+    // Trigger reactivity
+    hoverStates = { ...hoverStates };
+  }
+
+  // Handle global mouse movement for edge detection
+  function handleGlobalMouseMove(event) {
+    const threshold = 20; // 20px threshold from edge
+    const { clientX, clientY } = event;
+    const { innerWidth, innerHeight } = window;
+
+    // Left edge detection
+    const nearLeftEdge = clientX <= threshold;
+    if (nearLeftEdge && hasPanesVisible('left') && !paneSetVisibility['left']) {
+      handlePaneSetHover('left', true);
+    }
+
+    // Right edge detection  
+    const nearRightEdge = clientX >= innerWidth - threshold;
+    if (nearRightEdge && hasPanesVisible('right') && !paneSetVisibility['right']) {
+      handlePaneSetHover('right', true);
+    }
+
+    // Bottom edge detection
+    const nearBottomEdge = clientY >= innerHeight - threshold;
+    if (nearBottomEdge && hasPanesVisible('bottom') && !paneSetVisibility['bottom']) {
+      handlePaneSetHover('bottom', true);
+    }
+
+    // Clear hover states when not near edges and pane set is hidden
+    if (!nearLeftEdge && !paneSetVisibility['left']) {
+      // Only clear if we're not hovering the button area
+      const buttonArea = clientX <= 60; // Left button area
+      if (!buttonArea) {
+        handlePaneSetHover('left', false);
+      }
+    }
+    
+    if (!nearRightEdge && !paneSetVisibility['right']) {
+      // Only clear if we're not hovering the button area
+      const buttonArea = clientX >= innerWidth - 60; // Right button area
+      if (!buttonArea) {
+        handlePaneSetHover('right', false);
+      }
+    }
+    
+    if (!nearBottomEdge && !paneSetVisibility['bottom']) {
+      // Only clear if we're not hovering the button area
+      const buttonArea = clientY >= innerHeight - 60; // Bottom button area
+      if (!buttonArea) {
+        handlePaneSetHover('bottom', false);
+      }
+    }
+  }
 </script>
 
 <div class="new-code-editor {hideAppNavbar ? 'h-screen' : 'h-full'} bg-base-100 overflow-hidden flex flex-col">
@@ -327,7 +395,12 @@
   <div class="flex flex-grow overflow-hidden">
     <!-- Left Side -->
     {#if paneSetVisibility['left'] && (paneVisibility['left-top'] || paneVisibility['left-middle'] || paneVisibility['left-bottom'])}
-      <div class="flex flex-col h-full" style="width: {containerSizes['left-column']}px; min-width: 200px;">
+      <div 
+        class="flex flex-col h-full" 
+        style="width: {containerSizes['left-column']}px; min-width: 200px;"
+        on:mouseenter={() => handlePaneSetHover('left', true)}
+        on:mouseleave={() => handlePaneSetHover('left', false)}
+      >
         <!-- Left Top Pane -->
         {#if paneVisibility['left-top']}
           <div 
@@ -419,7 +492,12 @@
       
       <!-- Bottom Area -->
       {#if paneSetVisibility['bottom'] && (paneVisibility['bottom-left'] || paneVisibility['bottom-right'])}
-        <div class="flex" style="height: {containerSizes['bottom-area']}px; min-height: 150px;">
+        <div 
+          class="flex" 
+          style="height: {containerSizes['bottom-area']}px; min-height: 150px;"
+          on:mouseenter={() => handlePaneSetHover('bottom', true)}
+          on:mouseleave={() => handlePaneSetHover('bottom', false)}
+        >
           <!-- Bottom Left -->
           {#if paneVisibility['bottom-left']}
             <div 
@@ -473,7 +551,12 @@
 
     <!-- Right Side -->
     {#if paneSetVisibility['right'] && (paneVisibility['right-top'] || paneVisibility['right-middle'] || paneVisibility['right-bottom'])}
-      <div class="flex flex-col h-full" style="width: {containerSizes['right-column']}px; min-width: 200px;">
+      <div 
+        class="flex flex-col h-full" 
+        style="width: {containerSizes['right-column']}px; min-width: 200px;"
+        on:mouseenter={() => handlePaneSetHover('right', true)}
+        on:mouseleave={() => handlePaneSetHover('right', false)}
+      >
         <!-- Right Top Pane -->
         {#if paneVisibility['right-top']}
           <div 
@@ -565,13 +648,12 @@
   <!-- Floating Pane Set Toggle Buttons -->
   
   <!-- Left Pane Set Toggle -->
-  {#if hasPanesVisible('left')}
+  {#if hasPanesVisible('left') && hoverStates['left']}
     <button 
-      class="fixed left-4 top-1/2 transform -translate-y-1/2 btn btn-sm btn-circle btn-secondary shadow-xl z-50 hover:btn-primary transition-all duration-200"
-      on:click={() => {
-        console.log('Left toggle clicked:', paneSetVisibility['left']);
-        togglePaneSet('left');
-      }}
+      class="floating-toggle-btn left-right fixed left-4 top-1/2 w-8 h-8 rounded-full bg-transparent border-2 border-primary text-primary shadow-xl z-50 flex items-center justify-center outline-none"
+      on:click={() => togglePaneSet('left')}
+      on:mouseenter={() => handlePaneSetHover('left', true)}
+      on:mouseleave={() => handlePaneSetHover('left', false)}
       title={paneSetVisibility['left'] ? 'Hide left panes' : 'Show left panes'}
     >
       {#if paneSetVisibility['left']}
@@ -589,13 +671,12 @@
   {/if}
 
   <!-- Right Pane Set Toggle -->
-  {#if hasPanesVisible('right')}
+  {#if hasPanesVisible('right') && hoverStates['right']}
     <button 
-      class="fixed right-4 top-1/2 transform -translate-y-1/2 btn btn-sm btn-circle btn-secondary shadow-xl z-50 hover:btn-primary transition-all duration-200"
-      on:click={() => {
-        console.log('Right toggle clicked:', paneSetVisibility['right']);
-        togglePaneSet('right');
-      }}
+      class="floating-toggle-btn left-right fixed right-4 top-1/2 w-8 h-8 rounded-full bg-transparent border-2 border-primary text-primary shadow-xl z-50 flex items-center justify-center outline-none"
+      on:click={() => togglePaneSet('right')}
+      on:mouseenter={() => handlePaneSetHover('right', true)}
+      on:mouseleave={() => handlePaneSetHover('right', false)}
       title={paneSetVisibility['right'] ? 'Hide right panes' : 'Show right panes'}
     >
       {#if paneSetVisibility['right']}
@@ -613,13 +694,12 @@
   {/if}
 
   <!-- Bottom Pane Set Toggle -->
-  {#if hasPanesVisible('bottom')}
+  {#if hasPanesVisible('bottom') && hoverStates['bottom']}
     <button 
-      class="fixed bottom-2 left-1/2 transform -translate-x-1/2 btn btn-xs btn-circle btn-primary shadow-lg z-50 opacity-80 hover:opacity-100 transition-opacity"
-      on:click={() => {
-        console.log('Bottom toggle clicked:', paneSetVisibility['bottom']);
-        togglePaneSet('bottom');
-      }}
+      class="floating-toggle-btn bottom fixed bottom-2 left-1/2 w-8 h-8 rounded-full bg-transparent border-2 border-primary text-primary shadow-xl z-50 flex items-center justify-center outline-none"
+      on:click={() => togglePaneSet('bottom')}
+      on:mouseenter={() => handlePaneSetHover('bottom', true)}
+      on:mouseleave={() => handlePaneSetHover('bottom', false)}
       title={paneSetVisibility['bottom'] ? 'Hide bottom panes' : 'Show bottom panes'}
     >
       {#if paneSetVisibility['bottom']}
@@ -674,5 +754,90 @@
   .tab-active {
     background-color: oklch(var(--p));
     color: oklch(var(--pc));
+  }
+  
+  /* Floating toggle buttons - completely stable positioning */
+  .floating-toggle-btn {
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.2s ease, border-color 0.2s ease, opacity 0.3s ease !important;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-50%) scale(0.8);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(-50%) scale(1);
+    }
+  }
+
+  @keyframes fadeInBottom {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) scale(0.8);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) scale(1);
+    }
+  }
+  
+  /* Left/Right buttons - always maintain translateY(-50%) */
+  .floating-toggle-btn.left-right {
+    transform: translateY(-50%) !important;
+  }
+  
+  .floating-toggle-btn.left-right:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-color: oklch(var(--pf)) !important;
+    transform: translateY(-50%) !important;
+  }
+  
+  .floating-toggle-btn.left-right:active {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    transform: translateY(-50%) !important;
+  }
+  
+  .floating-toggle-btn.left-right:focus {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3) !important;
+    transform: translateY(-50%) !important;
+    outline: none !important;
+  }
+  
+  /* Bottom button - always maintain translateX(-50%) */
+  .floating-toggle-btn.bottom {
+    transform: translateX(-50%) !important;
+    animation: fadeInBottom 0.3s ease-out;
+  }
+  
+  .floating-toggle-btn.bottom:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-color: oklch(var(--pf)) !important;
+    transform: translateX(-50%) !important;
+  }
+  
+  .floating-toggle-btn.bottom:active {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    transform: translateX(-50%) !important;
+  }
+  
+  .floating-toggle-btn.bottom:focus {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3) !important;
+    transform: translateX(-50%) !important;
+    outline: none !important;
+  }
+  
+  /* Remove any default button behavior */
+  .floating-toggle-btn:focus:not(:focus-visible) {
+    outline: none !important;
+    box-shadow: none !important;
   }
 </style>
