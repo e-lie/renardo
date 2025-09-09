@@ -14,11 +14,32 @@
   let paneVisibility = {
     'top-menu': true,
     'left-top': true,
+    'left-middle': true,
     'left-bottom': true,
     'right-top': true,
+    'right-middle': true,
     'right-bottom': true,
     'bottom-left': true,
     'bottom-right': true
+  };
+  
+  // Track pane sizes for resizing
+  let paneSizes = {
+    'left-top': 200,
+    'left-middle': 200,
+    'left-bottom': 200,
+    'right-top': 200,
+    'right-middle': 200,
+    'right-bottom': 200,
+    'bottom-left': 400,
+    'bottom-right': 400
+  };
+  
+  // Track container sizes
+  let containerSizes = {
+    'left-column': 300,
+    'right-column': 300,
+    'bottom-area': 200
   };
   
   // Resize state
@@ -68,40 +89,53 @@
     layoutManager.startResize();
     
     const startPos = direction === 'horizontal' ? event.clientX : event.clientY;
-    let targetElement;
+    let paneKey = null;
+    let containerKey = null;
+    let startSize = 0;
     
-    // Get the appropriate element to resize based on type
+    // Map resize type to pane or container key
     switch(resizeType) {
+      case 'left-top-resize':
+        paneKey = 'left-top';
+        startSize = paneSizes[paneKey];
+        break;
+      case 'left-middle-resize':
+        paneKey = 'left-middle';
+        startSize = paneSizes[paneKey];
+        break;
+      case 'right-top-resize':
+        paneKey = 'right-top';
+        startSize = paneSizes[paneKey];
+        break;
+      case 'right-middle-resize':
+        paneKey = 'right-middle';
+        startSize = paneSizes[paneKey];
+        break;
+      case 'bottom-horizontal-resize':
+        paneKey = 'bottom-left';
+        startSize = paneSizes[paneKey];
+        break;
       case 'left-resize':
-        targetElement = document.querySelector('.flex.flex-col[style*="width: 300px"]');
+        containerKey = 'left-column';
+        startSize = containerSizes[containerKey];
         break;
       case 'right-resize':
-        targetElement = document.querySelectorAll('.flex.flex-col[style*="width: 300px"]')[1];
-        break;
-      case 'left-vertical':
-        targetElement = document.querySelector('.flex.flex-col .flex-1:first-child');
-        break;
-      case 'right-vertical':
-        targetElement = document.querySelector('.flex.flex-col:last-child .flex-1:first-child');
+        containerKey = 'right-column';
+        startSize = containerSizes[containerKey];
         break;
       case 'bottom-resize':
-        targetElement = document.querySelector('.flex[style*="height: 200px"]');
-        break;
-      case 'bottom-horizontal':
-        targetElement = document.querySelector('.flex[style*="height: 200px"] .flex-1:first-child');
+        containerKey = 'bottom-area';
+        startSize = containerSizes[containerKey];
         break;
     }
-    
-    if (!targetElement) return;
     
     resizeData = {
       resizeType,
       direction,
       startPos,
-      startSize: direction === 'horizontal' ? 
-        targetElement.offsetWidth : 
-        targetElement.offsetHeight,
-      element: targetElement
+      startSize,
+      paneKey,
+      containerKey
     };
 
     document.addEventListener('mousemove', handleResize);
@@ -111,7 +145,7 @@
   function handleResize(event) {
     if (!resizeData || !layoutManager) return;
 
-    const { resizeType, direction, startPos, startSize, element } = resizeData;
+    const { resizeType, direction, startPos, startSize, paneKey, containerKey } = resizeData;
     const currentPos = direction === 'horizontal' ? event.clientX : event.clientY;
     let delta = currentPos - startPos;
     
@@ -122,11 +156,15 @@
     
     const newSize = Math.max(100, startSize + delta); // Minimum size of 100px
 
-    // Apply the resize to the DOM element directly for flex layout
-    if (direction === 'horizontal') {
-      element.style.width = `${newSize}px`;
-    } else {
-      element.style.height = `${newSize}px`;
+    // Update the appropriate size in our state
+    if (paneKey) {
+      paneSizes[paneKey] = newSize;
+      // Trigger reactivity
+      paneSizes = { ...paneSizes };
+    } else if (containerKey) {
+      containerSizes[containerKey] = newSize;
+      // Trigger reactivity
+      containerSizes = { ...containerSizes };
     }
   }
 
@@ -188,8 +226,10 @@
     const colors = {
       'top-menu': 'bg-base-300',
       'left-top': 'bg-primary/10',
+      'left-middle': 'bg-primary/20',
       'left-bottom': 'bg-secondary/10',
       'right-top': 'bg-accent/10',
+      'right-middle': 'bg-accent/20',
       'right-bottom': 'bg-info/10',
       'bottom-left': 'bg-success/10',
       'bottom-right': 'bg-warning/10',
@@ -210,26 +250,50 @@
   <!-- Main Content Area -->
   <div class="flex flex-grow overflow-hidden">
     <!-- Left Side -->
-    {#if paneVisibility['left-top'] || paneVisibility['left-bottom']}
-      <div class="flex flex-col h-full" style="width: 300px; min-width: 200px;">
+    {#if paneVisibility['left-top'] || paneVisibility['left-middle'] || paneVisibility['left-bottom']}
+      <div class="flex flex-col h-full" style="width: {containerSizes['left-column']}px; min-width: 200px;">
         <!-- Left Top Pane -->
         {#if paneVisibility['left-top']}
-          <div class="flex-1 {getPaneColor('left-top')} p-4 flex items-center justify-center text-sm border-r border-base-300">
+          <div 
+            class="{getPaneColor('left-top')} p-4 flex items-center justify-center text-sm border-r border-base-300"
+            style="height: {paneSizes['left-top']}px; min-height: 100px;"
+          >
             🔵 Left Top Pane
           </div>
         {/if}
         
-        <!-- Horizontal Resize Handle (only show if both panes are visible) -->
-        {#if paneVisibility['left-top'] && paneVisibility['left-bottom']}
+        <!-- Resize Handle between Top and Middle -->
+        {#if paneVisibility['left-top'] && (paneVisibility['left-middle'] || paneVisibility['left-bottom'])}
           <div 
             class="h-1 bg-base-300 cursor-row-resize hover:bg-primary/30 transition-colors"
-            on:mousedown={(e) => startResize(e, 'left-vertical', 'vertical')}
+            on:mousedown={(e) => startResize(e, 'left-top-resize', 'vertical')}
+          ></div>
+        {/if}
+        
+        <!-- Left Middle Pane -->
+        {#if paneVisibility['left-middle']}
+          <div 
+            class="{getPaneColor('left-middle')} p-4 flex items-center justify-center text-sm border-r border-base-300"
+            style="{paneVisibility['left-top'] || paneVisibility['left-bottom'] ? `height: ${paneSizes['left-middle']}px; min-height: 100px;` : 'flex: 1;'}"
+          >
+            🟦 Left Middle Pane
+          </div>
+        {/if}
+        
+        <!-- Resize Handle between Middle and Bottom -->
+        {#if paneVisibility['left-middle'] && paneVisibility['left-bottom']}
+          <div 
+            class="h-1 bg-base-300 cursor-row-resize hover:bg-primary/30 transition-colors"
+            on:mousedown={(e) => startResize(e, 'left-middle-resize', 'vertical')}
           ></div>
         {/if}
         
         <!-- Left Bottom Pane -->
         {#if paneVisibility['left-bottom']}
-          <div class="flex-1 {getPaneColor('left-bottom')} p-4 flex items-center justify-center text-sm border-r border-base-300">
+          <div 
+            class="{getPaneColor('left-bottom')} p-4 flex items-center justify-center text-sm border-r border-base-300"
+            style="{paneVisibility['left-top'] || paneVisibility['left-middle'] ? `flex: 1; min-height: 100px;` : 'flex: 1;'}"
+          >
             🟢 Left Bottom Pane
           </div>
         {/if}
@@ -237,7 +301,7 @@
     {/if}
 
     <!-- Vertical Resize Handle (only show if left side has visible panes) -->
-    {#if paneVisibility['left-top'] || paneVisibility['left-bottom']}
+    {#if paneVisibility['left-top'] || paneVisibility['left-middle'] || paneVisibility['left-bottom']}
       <div 
         class="w-1 bg-base-300 cursor-col-resize hover:bg-primary/30 transition-colors"
         on:mousedown={(e) => startResize(e, 'left-resize', 'horizontal')}
@@ -261,10 +325,13 @@
       
       <!-- Bottom Area -->
       {#if paneVisibility['bottom-left'] || paneVisibility['bottom-right']}
-        <div class="flex" style="height: 200px; min-height: 150px;">
+        <div class="flex" style="height: {containerSizes['bottom-area']}px; min-height: 150px;">
           <!-- Bottom Left -->
           {#if paneVisibility['bottom-left']}
-            <div class="flex-1 {getPaneColor('bottom-left')} p-4 flex items-center justify-center text-sm border-r border-base-300">
+            <div 
+              class="{getPaneColor('bottom-left')} p-4 flex items-center justify-center text-sm border-r border-base-300"
+              style="{paneVisibility['bottom-right'] ? `width: ${paneSizes['bottom-left']}px; min-width: 200px;` : 'flex: 1;'}"
+            >
               🟡 Bottom Left
             </div>
           {/if}
@@ -273,13 +340,16 @@
           {#if paneVisibility['bottom-left'] && paneVisibility['bottom-right']}
             <div 
               class="w-1 bg-base-300 cursor-col-resize hover:bg-primary/30 transition-colors"
-              on:mousedown={(e) => startResize(e, 'bottom-horizontal', 'horizontal')}
+              on:mousedown={(e) => startResize(e, 'bottom-horizontal-resize', 'horizontal')}
             ></div>
           {/if}
           
           <!-- Bottom Right -->
           {#if paneVisibility['bottom-right']}
-            <div class="flex-1 {getPaneColor('bottom-right')} p-4 flex items-center justify-center text-sm">
+            <div 
+              class="{getPaneColor('bottom-right')} p-4 flex items-center justify-center text-sm"
+              style="flex: 1; min-width: 200px;"
+            >
               🟠 Bottom Right
             </div>
           {/if}
@@ -288,7 +358,7 @@
     </div>
 
     <!-- Vertical Resize Handle (only show if right side has visible panes) -->
-    {#if paneVisibility['right-top'] || paneVisibility['right-bottom']}
+    {#if paneVisibility['right-top'] || paneVisibility['right-middle'] || paneVisibility['right-bottom']}
       <div 
         class="w-1 bg-base-300 cursor-col-resize hover:bg-primary/30 transition-colors"
         on:mousedown={(e) => startResize(e, 'right-resize', 'horizontal')}
@@ -296,26 +366,50 @@
     {/if}
 
     <!-- Right Side -->
-    {#if paneVisibility['right-top'] || paneVisibility['right-bottom']}
-      <div class="flex flex-col h-full" style="width: 300px; min-width: 200px;">
+    {#if paneVisibility['right-top'] || paneVisibility['right-middle'] || paneVisibility['right-bottom']}
+      <div class="flex flex-col h-full" style="width: {containerSizes['right-column']}px; min-width: 200px;">
         <!-- Right Top Pane -->
         {#if paneVisibility['right-top']}
-          <div class="flex-1 {getPaneColor('right-top')} p-4 flex items-center justify-center text-sm border-l border-base-300">
+          <div 
+            class="{getPaneColor('right-top')} p-4 flex items-center justify-center text-sm border-l border-base-300"
+            style="height: {paneSizes['right-top']}px; min-height: 100px;"
+          >
             🔴 Right Top Pane
           </div>
         {/if}
         
-        <!-- Horizontal Resize Handle (only show if both panes are visible) -->
-        {#if paneVisibility['right-top'] && paneVisibility['right-bottom']}
+        <!-- Resize Handle between Top and Middle -->
+        {#if paneVisibility['right-top'] && (paneVisibility['right-middle'] || paneVisibility['right-bottom'])}
           <div 
             class="h-1 bg-base-300 cursor-row-resize hover:bg-primary/30 transition-colors"
-            on:mousedown={(e) => startResize(e, 'right-vertical', 'vertical')}
+            on:mousedown={(e) => startResize(e, 'right-top-resize', 'vertical')}
+          ></div>
+        {/if}
+        
+        <!-- Right Middle Pane -->
+        {#if paneVisibility['right-middle']}
+          <div 
+            class="{getPaneColor('right-middle')} p-4 flex items-center justify-center text-sm border-l border-base-300"
+            style="{paneVisibility['right-top'] || paneVisibility['right-bottom'] ? `height: ${paneSizes['right-middle']}px; min-height: 100px;` : 'flex: 1;'}"
+          >
+            🟥 Right Middle Pane
+          </div>
+        {/if}
+        
+        <!-- Resize Handle between Middle and Bottom -->
+        {#if paneVisibility['right-middle'] && paneVisibility['right-bottom']}
+          <div 
+            class="h-1 bg-base-300 cursor-row-resize hover:bg-primary/30 transition-colors"
+            on:mousedown={(e) => startResize(e, 'right-middle-resize', 'vertical')}
           ></div>
         {/if}
         
         <!-- Right Bottom Pane -->
         {#if paneVisibility['right-bottom']}
-          <div class="flex-1 {getPaneColor('right-bottom')} p-4 flex items-center justify-center text-sm border-l border-base-300">
+          <div 
+            class="{getPaneColor('right-bottom')} p-4 flex items-center justify-center text-sm border-l border-base-300"
+            style="{paneVisibility['right-top'] || paneVisibility['right-middle'] ? `flex: 1; min-height: 100px;` : 'flex: 1;'}"
+          >
             🟣 Right Bottom Pane
           </div>
         {/if}
@@ -394,6 +488,25 @@
               </label>
             </div>
             
+            <!-- Left Middle -->
+            <div class="form-control">
+              <label class="label cursor-pointer">
+                <span class="label-text font-semibold">Left Middle</span>
+                <input 
+                  type="checkbox" 
+                  class="toggle toggle-primary"
+                  checked={paneVisibility['left-middle']}
+                  on:change={(e) => {
+                    const pane = layoutManager?.getPaneByPosition('left-middle');
+                    if (pane) {
+                      pane.setVisible(e.target.checked);
+                      paneVisibility['left-middle'] = e.target.checked;
+                    }
+                  }}
+                />
+              </label>
+            </div>
+            
             <!-- Left Bottom -->
             <div class="form-control">
               <label class="label cursor-pointer">
@@ -426,6 +539,25 @@
                     if (pane) {
                       pane.setVisible(e.target.checked);
                       paneVisibility['right-top'] = e.target.checked;
+                    }
+                  }}
+                />
+              </label>
+            </div>
+            
+            <!-- Right Middle -->
+            <div class="form-control">
+              <label class="label cursor-pointer">
+                <span class="label-text font-semibold">Right Middle</span>
+                <input 
+                  type="checkbox" 
+                  class="toggle toggle-primary"
+                  checked={paneVisibility['right-middle']}
+                  on:change={(e) => {
+                    const pane = layoutManager?.getPaneByPosition('right-middle');
+                    if (pane) {
+                      pane.setVisible(e.target.checked);
+                      paneVisibility['right-middle'] = e.target.checked;
                     }
                   }}
                 />
