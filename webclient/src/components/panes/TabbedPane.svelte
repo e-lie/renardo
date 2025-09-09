@@ -1,0 +1,260 @@
+<script>
+  import { onMount, onDestroy } from 'svelte';
+  import { PaneTabManager } from '../../lib/newEditor/PaneTabManager';
+  import { PaneComponent } from '../../lib/newEditor/PaneComponent';
+  import ColorPicker from './ColorPicker.svelte';
+  import TextArea from './TextArea.svelte';
+
+  // Props
+  export let position = '';
+  export let initialTabs = [];
+
+  // Tab manager instance
+  let tabManager = null;
+  let tabs = [];
+  let activeTabId = null;
+  let activeComponent = null;
+
+  // Component registry
+  const componentRegistry = {
+    'ColorPicker': ColorPicker,
+    'TextArea': TextArea
+  };
+
+  // Subscription cleanup
+  let unsubscribeTabs = null;
+  let unsubscribeActiveTab = null;
+
+  onMount(() => {
+    // Initialize tab manager
+    tabManager = new PaneTabManager(initialTabs);
+
+    // Subscribe to tabs changes
+    unsubscribeTabs = tabManager.tabs.subscribe(newTabs => {
+      tabs = newTabs;
+    });
+
+    // Subscribe to active tab changes
+    unsubscribeActiveTab = tabManager.activeTabId.subscribe(newActiveTabId => {
+      activeTabId = newActiveTabId;
+      updateActiveComponent();
+    });
+
+    // Initialize active component
+    updateActiveComponent();
+  });
+
+  onDestroy(() => {
+    if (unsubscribeTabs) unsubscribeTabs();
+    if (unsubscribeActiveTab) unsubscribeActiveTab();
+    if (tabManager) tabManager.destroy();
+  });
+
+  // Update the active component based on active tab
+  function updateActiveComponent() {
+    if (!tabManager || !activeTabId) {
+      activeComponent = null;
+      return;
+    }
+
+    const activeTab = tabs.find(tab => tab.id === activeTabId);
+    if (!activeTab) {
+      activeComponent = null;
+      return;
+    }
+
+    // Get or create component for this tab
+    let component = tabManager.getComponent(activeTabId);
+    if (!component) {
+      component = new PaneComponent({
+        id: activeTab.componentId,
+        type: activeTab.componentType,
+        title: activeTab.title,
+        initialData: {}
+      });
+      tabManager.registerComponent(activeTabId, component);
+    }
+
+    activeComponent = {
+      component: componentRegistry[activeTab.componentType] || null,
+      props: {
+        componentId: activeTab.componentId,
+        title: activeTab.title
+      },
+      config: activeTab
+    };
+  }
+
+  // Handle tab click
+  function switchTab(tabId) {
+    if (tabManager) {
+      tabManager.switchToTab(tabId);
+    }
+  }
+
+  // Handle tab close
+  function closeTab(event, tabId) {
+    event.stopPropagation();
+    if (tabManager) {
+      tabManager.removeTab(tabId);
+    }
+  }
+
+  // Add new tab
+  function addNewTab(componentType = 'TextArea') {
+    if (tabManager) {
+      const tabId = tabManager.addTab({
+        title: `New ${componentType}`,
+        componentType,
+        componentId: `${componentType.toLowerCase()}-${position}-${Date.now()}`,
+        closable: true
+      });
+      
+      // Switch to the new tab
+      tabManager.switchToTab(tabId);
+    }
+  }
+
+  // Handle tab drag and drop (basic implementation)
+  function handleTabDragStart(event, tabIndex) {
+    event.dataTransfer.setData('text/plain', tabIndex.toString());
+    event.dataTransfer.effectAllowed = 'move';
+  }
+
+  function handleTabDragOver(event) {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  }
+
+  function handleTabDrop(event, dropIndex) {
+    event.preventDefault();
+    const dragIndex = parseInt(event.dataTransfer.getData('text/plain'));
+    
+    if (dragIndex !== dropIndex && tabManager) {
+      tabManager.reorderTabs(dragIndex, dropIndex);
+    }
+  }
+</script>
+
+<div class="tabbed-pane h-full flex flex-col">
+  <!-- Tab Bar -->
+  <div class="tab-bar flex items-center bg-base-200 border-b border-base-300 min-h-10">
+    <div class="flex flex-1 overflow-x-auto">
+      {#each tabs as tab, index (tab.id)}
+        <div 
+          class="tab flex items-center px-3 py-2 cursor-pointer border-r border-base-300 min-w-0 max-w-48 {tab.active ? 'bg-base-100 text-base-content' : 'bg-base-200 text-base-content/70 hover:bg-base-300'}"
+          on:click={() => switchTab(tab.id)}
+          draggable="true"
+          on:dragstart={(e) => handleTabDragStart(e, index)}
+          on:dragover={handleTabDragOver}
+          on:drop={(e) => handleTabDrop(e, index)}
+          title={tab.title}
+        >
+          <!-- Component Icon -->
+          <span class="text-xs mr-2 flex-shrink-0">
+            {#if tab.componentType === 'ColorPicker'}🎨
+            {:else if tab.componentType === 'TextArea'}📝
+            {:else}📦
+            {/if}
+          </span>
+          
+          <!-- Tab Title -->
+          <span class="text-xs truncate flex-1 min-w-0">
+            {tab.title}
+          </span>
+          
+          <!-- Close Button -->
+          {#if tab.closable && tabs.length > 1}
+            <button 
+              class="ml-2 text-xs opacity-60 hover:opacity-100 hover:text-error flex-shrink-0 w-4 h-4 flex items-center justify-center"
+              on:click={(e) => closeTab(e, tab.id)}
+              title="Close tab"
+            >
+              ×
+            </button>
+          {/if}
+        </div>
+      {/each}
+    </div>
+    
+    <!-- Add Tab Button -->
+    <div class="dropdown dropdown-end flex-shrink-0">
+      <button class="btn btn-xs btn-ghost" tabindex="0" title="Add new tab">
+        +
+      </button>
+      <ul class="dropdown-content z-10 menu p-2 shadow bg-base-100 rounded-box w-48">
+        <li>
+          <button on:click={() => addNewTab('ColorPicker')} class="text-xs">
+            🎨 Color Picker
+          </button>
+        </li>
+        <li>
+          <button on:click={() => addNewTab('TextArea')} class="text-xs">
+            📝 Text Area
+          </button>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Tab Content -->
+  <div class="tab-content flex-1 min-h-0 overflow-hidden">
+    {#if activeComponent && activeComponent.component}
+      <svelte:component 
+        this={activeComponent.component} 
+        {...activeComponent.props}
+      />
+    {:else if tabs.length === 0}
+      <!-- Empty state -->
+      <div class="h-full flex items-center justify-center text-base-content/50">
+        <div class="text-center">
+          <div class="text-4xl mb-2">📦</div>
+          <div class="text-sm">No tabs open</div>
+          <div class="text-xs opacity-70 mt-1">Click + to add a new tab</div>
+        </div>
+      </div>
+    {:else}
+      <!-- Fallback for unknown component types -->
+      <div class="h-full flex items-center justify-center text-base-content/50">
+        <div class="text-center">
+          <div class="text-4xl mb-2">❓</div>
+          <div class="text-sm">Unknown component type</div>
+          <div class="text-xs opacity-70 mt-1">{activeComponent?.config?.componentType || 'N/A'}</div>
+        </div>
+      </div>
+    {/if}
+  </div>
+</div>
+
+<style>
+  .tab-bar {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+  
+  .tab-bar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+  
+  .tab {
+    transition: background-color 0.2s ease;
+    user-select: none;
+  }
+  
+  .tab:hover {
+    background-color: oklch(var(--b3));
+  }
+  
+  .tab-content {
+    position: relative;
+  }
+  
+  /* Drag and drop visual feedback */
+  .tab:drag {
+    opacity: 0.5;
+  }
+  
+  .dropdown:focus-within .dropdown-content {
+    display: block;
+  }
+</style>
