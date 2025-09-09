@@ -1,6 +1,7 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
   import { PaneComponent } from '../../lib/newEditor/PaneComponent';
+  import { sendDebugLog } from '../../lib/websocket.js';
 
   // Props
   export let componentId = null;
@@ -28,6 +29,12 @@
   ];
 
   onMount(() => {
+    sendDebugLog('DEBUG', 'ColorPicker onMount', {
+      componentId: componentId,
+      title: title,
+      initialSelectedColor: selectedColor
+    });
+
     // Create component instance
     component = new PaneComponent({
       id: componentId,
@@ -41,6 +48,11 @@
         saturation,
         lightness
       }
+    });
+
+    sendDebugLog('DEBUG', 'ColorPicker component created', {
+      componentId: componentId,
+      componentType: component.getState().type
     });
 
     // Subscribe to global state changes
