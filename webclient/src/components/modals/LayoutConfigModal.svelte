@@ -416,76 +416,285 @@
             <span><strong>Tip:</strong> Each pane can contain multiple components in tabs. Components of the same type share synchronized state!</span>
           </div>
 
-          <!-- Tab management for each pane -->
-          <div class="grid grid-cols-1 gap-4">
-            {#each getAllPanePositions() as position}
-              <div class="card bg-base-200 shadow-sm">
-                <div class="card-body p-4">
-                  <div class="flex items-center gap-2 mb-3">
-                    <div class="w-4 h-4 rounded {getPaneColor(position)}"></div>
-                    <h4 class="card-title text-sm capitalize">
-                      {position.replace('-', ' ')}
-                    </h4>
-                    <div class="badge badge-xs badge-primary">
-                      {paneTabConfigs[position]?.length || 0} tab{(paneTabConfigs[position]?.length || 0) !== 1 ? 's' : ''}
+          <!-- Tab management visual layout matching pane positions -->
+          <div class="flex flex-col gap-2 p-4 bg-base-200 rounded-lg" style="min-height: 600px;">
+            <!-- Top Row - Top Menu -->
+            <div class="flex" style="height: 120px;">
+              <div class="flex-1 flex flex-col border-2 border-base-300 rounded-lg {getPaneColor('top-menu')} p-3">
+                {#if paneVisibility['top-menu']}
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold">Top Menu</span>
+                    <span class="badge badge-xs badge-primary">{paneTabConfigs['top-menu']?.length || 0} tabs</span>
+                  </div>
+                  <div class="flex-1 overflow-y-auto">
+                    <div class="flex flex-wrap gap-1">
+                      {#each (paneTabConfigs['top-menu'] || []) as tab, tabIndex}
+                        <div class="badge badge-sm {tab.active ? 'badge-primary' : 'badge-ghost'}" title={tab.title}>
+                          {tab.componentType === 'ColorPicker' ? '🎨' : '📝'}
+                          <span class="ml-1 truncate max-w-[60px]">{tab.title}</span>
+                        </div>
+                      {/each}
                     </div>
                   </div>
-                  
-                  <!-- Current tabs -->
-                  <div class="space-y-2 mb-3">
-                    {#each (paneTabConfigs[position] || []) as tab, tabIndex}
-                      <div class="flex items-center gap-2 p-2 bg-base-100 rounded border {tab.active ? 'ring-2 ring-primary ring-opacity-50' : ''}">
-                        <span class="text-sm">
-                          {tab.componentType === 'ColorPicker' ? '🎨' : '📝'}
-                        </span>
-                        <input 
-                          type="text" 
-                          bind:value={tab.title}
-                          on:input={(e) => updateTabTitle(position, tabIndex, e.target.value)}
-                          class="input input-xs flex-1 bg-transparent border-0 focus:outline-none"
-                        />
-                        <span class="text-xs opacity-50">{tab.componentType}</span>
-                        {#if tab.active}
-                          <span class="badge badge-xs badge-primary">Active</span>
-                        {/if}
+                  <div class="flex gap-1 mt-2">
+                    <button class="btn btn-xs btn-ghost" on:click={() => addTabToPane('top-menu', 'ColorPicker')}>+🎨</button>
+                    <button class="btn btn-xs btn-ghost" on:click={() => addTabToPane('top-menu', 'TextArea')}>+📝</button>
+                  </div>
+                {:else}
+                  <div class="flex-1 flex items-center justify-center text-base-content/30">
+                    <span class="text-xs">Pane Hidden</span>
+                  </div>
+                {/if}
+              </div>
+            </div>
+            
+            <!-- Middle Row -->
+            <div class="flex flex-1 gap-2">
+              <!-- Left Column -->
+              <div class="flex flex-col gap-2 w-[25%]">
+                <!-- Left Top -->
+                <div class="flex-1 flex flex-col border-2 border-base-300 rounded-lg {getPaneColor('left-top')} p-3 min-h-0">
+                  {#if paneVisibility['left-top']}
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-xs font-semibold">Left Top</span>
+                      <span class="badge badge-xs badge-primary">{paneTabConfigs['left-top']?.length || 0}</span>
+                    </div>
+                    <div class="flex-1 overflow-y-auto min-h-0">
+                      {#each (paneTabConfigs['left-top'] || []) as tab, tabIndex}
+                        <div class="flex items-center gap-1 p-1 mb-1 rounded text-xs {tab.active ? 'bg-primary/20' : 'bg-base-100/50'}">
+                          <span>{tab.componentType === 'ColorPicker' ? '🎨' : '📝'}</span>
+                          <span class="flex-1 truncate">{tab.title}</span>
+                          {#if tab.closable}
+                            <button class="text-error hover:bg-error/20 rounded px-1" on:click={() => removeTabFromPane('left-top', tabIndex)}>×</button>
+                          {/if}
+                        </div>
+                      {/each}
+                    </div>
+                    <div class="flex gap-1 mt-2">
+                      <button class="btn btn-xs btn-ghost flex-1" on:click={() => addTabToPane('left-top', 'ColorPicker')}>+🎨</button>
+                      <button class="btn btn-xs btn-ghost flex-1" on:click={() => addTabToPane('left-top', 'TextArea')}>+📝</button>
+                    </div>
+                  {:else}
+                    <div class="flex-1 flex items-center justify-center text-base-content/30">
+                      <span class="text-xs">Hidden</span>
+                    </div>
+                  {/if}
+                </div>
+                <!-- Left Middle -->
+                <div class="flex-1 flex flex-col border-2 border-base-300 rounded-lg {getPaneColor('left-middle')} p-3 min-h-0">
+                  {#if paneVisibility['left-middle']}
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-xs font-semibold">Left Mid</span>
+                      <span class="badge badge-xs badge-primary">{paneTabConfigs['left-middle']?.length || 0}</span>
+                    </div>
+                    <div class="flex-1 overflow-y-auto min-h-0">
+                      {#each (paneTabConfigs['left-middle'] || []) as tab, tabIndex}
+                        <div class="flex items-center gap-1 p-1 mb-1 rounded text-xs {tab.active ? 'bg-primary/20' : 'bg-base-100/50'}">
+                          <span>{tab.componentType === 'ColorPicker' ? '🎨' : '📝'}</span>
+                          <span class="flex-1 truncate">{tab.title}</span>
+                          {#if tab.closable}
+                            <button class="text-error hover:bg-error/20 rounded px-1" on:click={() => removeTabFromPane('left-middle', tabIndex)}>×</button>
+                          {/if}
+                        </div>
+                      {/each}
+                    </div>
+                    <div class="flex gap-1 mt-2">
+                      <button class="btn btn-xs btn-ghost flex-1" on:click={() => addTabToPane('left-middle', 'ColorPicker')}>+🎨</button>
+                      <button class="btn btn-xs btn-ghost flex-1" on:click={() => addTabToPane('left-middle', 'TextArea')}>+📝</button>
+                    </div>
+                  {:else}
+                    <div class="flex-1 flex items-center justify-center text-base-content/30">
+                      <span class="text-xs">Hidden</span>
+                    </div>
+                  {/if}
+                </div>
+                <!-- Left Bottom -->
+                <div class="flex-1 flex flex-col border-2 border-base-300 rounded-lg {getPaneColor('left-bottom')} p-3 min-h-0">
+                  {#if paneVisibility['left-bottom']}
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-xs font-semibold">Left Bot</span>
+                      <span class="badge badge-xs badge-primary">{paneTabConfigs['left-bottom']?.length || 0}</span>
+                    </div>
+                    <div class="flex-1 overflow-y-auto min-h-0">
+                      {#each (paneTabConfigs['left-bottom'] || []) as tab, tabIndex}
+                        <div class="flex items-center gap-1 p-1 mb-1 rounded text-xs {tab.active ? 'bg-primary/20' : 'bg-base-100/50'}">
+                          <span>{tab.componentType === 'ColorPicker' ? '🎨' : '📝'}</span>
+                          <span class="flex-1 truncate">{tab.title}</span>
+                          {#if tab.closable}
+                            <button class="text-error hover:bg-error/20 rounded px-1" on:click={() => removeTabFromPane('left-bottom', tabIndex)}>×</button>
+                          {/if}
+                        </div>
+                      {/each}
+                    </div>
+                    <div class="flex gap-1 mt-2">
+                      <button class="btn btn-xs btn-ghost flex-1" on:click={() => addTabToPane('left-bottom', 'ColorPicker')}>+🎨</button>
+                      <button class="btn btn-xs btn-ghost flex-1" on:click={() => addTabToPane('left-bottom', 'TextArea')}>+📝</button>
+                    </div>
+                  {:else}
+                    <div class="flex-1 flex items-center justify-center text-base-content/30">
+                      <span class="text-xs">Hidden</span>
+                    </div>
+                  {/if}
+                </div>
+              </div>
+              
+              <!-- Center -->
+              <div class="flex-1 flex items-center justify-center border-2 border-primary rounded-lg {getPaneColor('center')}">
+                <div class="text-center">
+                  <span class="text-2xl mb-2">📝</span>
+                  <div class="text-sm font-bold">Center Editor</div>
+                  <div class="badge badge-xs badge-primary mt-1">Always Visible</div>
+                </div>
+              </div>
+              
+              <!-- Right Column -->
+              <div class="flex flex-col gap-2 w-[25%]">
+                <!-- Right Top -->
+                <div class="flex-1 flex flex-col border-2 border-base-300 rounded-lg {getPaneColor('right-top')} p-3 min-h-0">
+                  {#if paneVisibility['right-top']}
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-xs font-semibold">Right Top</span>
+                      <span class="badge badge-xs badge-primary">{paneTabConfigs['right-top']?.length || 0}</span>
+                    </div>
+                    <div class="flex-1 overflow-y-auto min-h-0">
+                      {#each (paneTabConfigs['right-top'] || []) as tab, tabIndex}
+                        <div class="flex items-center gap-1 p-1 mb-1 rounded text-xs {tab.active ? 'bg-primary/20' : 'bg-base-100/50'}">
+                          <span>{tab.componentType === 'ColorPicker' ? '🎨' : '📝'}</span>
+                          <span class="flex-1 truncate">{tab.title}</span>
+                          {#if tab.closable}
+                            <button class="text-error hover:bg-error/20 rounded px-1" on:click={() => removeTabFromPane('right-top', tabIndex)}>×</button>
+                          {/if}
+                        </div>
+                      {/each}
+                    </div>
+                    <div class="flex gap-1 mt-2">
+                      <button class="btn btn-xs btn-ghost flex-1" on:click={() => addTabToPane('right-top', 'ColorPicker')}>+🎨</button>
+                      <button class="btn btn-xs btn-ghost flex-1" on:click={() => addTabToPane('right-top', 'TextArea')}>+📝</button>
+                    </div>
+                  {:else}
+                    <div class="flex-1 flex items-center justify-center text-base-content/30">
+                      <span class="text-xs">Hidden</span>
+                    </div>
+                  {/if}
+                </div>
+                <!-- Right Middle -->
+                <div class="flex-1 flex flex-col border-2 border-base-300 rounded-lg {getPaneColor('right-middle')} p-3 min-h-0">
+                  {#if paneVisibility['right-middle']}
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-xs font-semibold">Right Mid</span>
+                      <span class="badge badge-xs badge-primary">{paneTabConfigs['right-middle']?.length || 0}</span>
+                    </div>
+                    <div class="flex-1 overflow-y-auto min-h-0">
+                      {#each (paneTabConfigs['right-middle'] || []) as tab, tabIndex}
+                        <div class="flex items-center gap-1 p-1 mb-1 rounded text-xs {tab.active ? 'bg-primary/20' : 'bg-base-100/50'}">
+                          <span>{tab.componentType === 'ColorPicker' ? '🎨' : '📝'}</span>
+                          <span class="flex-1 truncate">{tab.title}</span>
+                          {#if tab.closable}
+                            <button class="text-error hover:bg-error/20 rounded px-1" on:click={() => removeTabFromPane('right-middle', tabIndex)}>×</button>
+                          {/if}
+                        </div>
+                      {/each}
+                    </div>
+                    <div class="flex gap-1 mt-2">
+                      <button class="btn btn-xs btn-ghost flex-1" on:click={() => addTabToPane('right-middle', 'ColorPicker')}>+🎨</button>
+                      <button class="btn btn-xs btn-ghost flex-1" on:click={() => addTabToPane('right-middle', 'TextArea')}>+📝</button>
+                    </div>
+                  {:else}
+                    <div class="flex-1 flex items-center justify-center text-base-content/30">
+                      <span class="text-xs">Hidden</span>
+                    </div>
+                  {/if}
+                </div>
+                <!-- Right Bottom -->
+                <div class="flex-1 flex flex-col border-2 border-base-300 rounded-lg {getPaneColor('right-bottom')} p-3 min-h-0">
+                  {#if paneVisibility['right-bottom']}
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-xs font-semibold">Right Bot</span>
+                      <span class="badge badge-xs badge-primary">{paneTabConfigs['right-bottom']?.length || 0}</span>
+                    </div>
+                    <div class="flex-1 overflow-y-auto min-h-0">
+                      {#each (paneTabConfigs['right-bottom'] || []) as tab, tabIndex}
+                        <div class="flex items-center gap-1 p-1 mb-1 rounded text-xs {tab.active ? 'bg-primary/20' : 'bg-base-100/50'}">
+                          <span>{tab.componentType === 'ColorPicker' ? '🎨' : '📝'}</span>
+                          <span class="flex-1 truncate">{tab.title}</span>
+                          {#if tab.closable}
+                            <button class="text-error hover:bg-error/20 rounded px-1" on:click={() => removeTabFromPane('right-bottom', tabIndex)}>×</button>
+                          {/if}
+                        </div>
+                      {/each}
+                    </div>
+                    <div class="flex gap-1 mt-2">
+                      <button class="btn btn-xs btn-ghost flex-1" on:click={() => addTabToPane('right-bottom', 'ColorPicker')}>+🎨</button>
+                      <button class="btn btn-xs btn-ghost flex-1" on:click={() => addTabToPane('right-bottom', 'TextArea')}>+📝</button>
+                    </div>
+                  {:else}
+                    <div class="flex-1 flex items-center justify-center text-base-content/30">
+                      <span class="text-xs">Hidden</span>
+                    </div>
+                  {/if}
+                </div>
+              </div>
+            </div>
+            
+            <!-- Bottom Row -->
+            <div class="flex gap-2" style="height: 150px;">
+              <!-- Bottom Left -->
+              <div class="flex-1 flex flex-col border-2 border-base-300 rounded-lg {getPaneColor('bottom-left')} p-3">
+                {#if paneVisibility['bottom-left']}
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold">Bottom Left</span>
+                    <span class="badge badge-xs badge-primary">{paneTabConfigs['bottom-left']?.length || 0}</span>
+                  </div>
+                  <div class="flex-1 overflow-y-auto">
+                    {#each (paneTabConfigs['bottom-left'] || []) as tab, tabIndex}
+                      <div class="flex items-center gap-1 p-1 mb-1 rounded text-xs {tab.active ? 'bg-primary/20' : 'bg-base-100/50'}">
+                        <span>{tab.componentType === 'ColorPicker' ? '🎨' : '📝'}</span>
+                        <span class="flex-1 truncate">{tab.title}</span>
                         {#if tab.closable}
-                          <button 
-                            class="btn btn-xs btn-ghost btn-circle text-error hover:bg-error hover:text-error-content"
-                            on:click={() => removeTabFromPane(position, tabIndex)}
-                            title="Remove tab"
-                          >
-                            ×
-                          </button>
+                          <button class="text-error hover:bg-error/20 rounded px-1" on:click={() => removeTabFromPane('bottom-left', tabIndex)}>×</button>
                         {/if}
                       </div>
                     {/each}
-                    
-                    {#if !paneTabConfigs[position] || paneTabConfigs[position].length === 0}
-                      <div class="text-center py-4 text-base-content/50">
-                        <div class="text-2xl mb-1">📦</div>
-                        <div class="text-xs">No components</div>
-                      </div>
-                    {/if}
                   </div>
-                  
-                  <!-- Add tab buttons -->
-                  <div class="flex gap-2">
-                    <button 
-                      class="btn btn-xs btn-outline"
-                      on:click={() => addTabToPane(position, 'ColorPicker')}
-                    >
-                      + 🎨 Color Picker
-                    </button>
-                    <button 
-                      class="btn btn-xs btn-outline"
-                      on:click={() => addTabToPane(position, 'TextArea')}
-                    >
-                      + 📝 Text Area
-                    </button>
+                  <div class="flex gap-1 mt-2">
+                    <button class="btn btn-xs btn-ghost flex-1" on:click={() => addTabToPane('bottom-left', 'ColorPicker')}>+🎨</button>
+                    <button class="btn btn-xs btn-ghost flex-1" on:click={() => addTabToPane('bottom-left', 'TextArea')}>+📝</button>
                   </div>
-                </div>
+                {:else}
+                  <div class="flex-1 flex items-center justify-center text-base-content/30">
+                    <span class="text-xs">Hidden</span>
+                  </div>
+                {/if}
               </div>
-            {/each}
+              <!-- Bottom Right -->
+              <div class="flex-1 flex flex-col border-2 border-base-300 rounded-lg {getPaneColor('bottom-right')} p-3">
+                {#if paneVisibility['bottom-right']}
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold">Bottom Right</span>
+                    <span class="badge badge-xs badge-primary">{paneTabConfigs['bottom-right']?.length || 0}</span>
+                  </div>
+                  <div class="flex-1 overflow-y-auto">
+                    {#each (paneTabConfigs['bottom-right'] || []) as tab, tabIndex}
+                      <div class="flex items-center gap-1 p-1 mb-1 rounded text-xs {tab.active ? 'bg-primary/20' : 'bg-base-100/50'}">
+                        <span>{tab.componentType === 'ColorPicker' ? '🎨' : '📝'}</span>
+                        <span class="flex-1 truncate">{tab.title}</span>
+                        {#if tab.closable}
+                          <button class="text-error hover:bg-error/20 rounded px-1" on:click={() => removeTabFromPane('bottom-right', tabIndex)}>×</button>
+                        {/if}
+                      </div>
+                    {/each}
+                  </div>
+                  <div class="flex gap-1 mt-2">
+                    <button class="btn btn-xs btn-ghost flex-1" on:click={() => addTabToPane('bottom-right', 'ColorPicker')}>+🎨</button>
+                    <button class="btn btn-xs btn-ghost flex-1" on:click={() => addTabToPane('bottom-right', 'TextArea')}>+📝</button>
+                  </div>
+                {:else}
+                  <div class="flex-1 flex items-center justify-center text-base-content/30">
+                    <span class="text-xs">Hidden</span>
+                  </div>
+                {/if}
+              </div>
+            </div>
           </div>
 
           <!-- Available Components Info -->
