@@ -239,7 +239,7 @@
   }
 </script>
 
-<div class="new-code-editor h-screen bg-base-100 overflow-hidden flex flex-col">
+<div class="new-code-editor h-full bg-base-100 overflow-hidden flex flex-col">
   <!-- Top Menu Bar -->
   {#if paneVisibility['top-menu']}
     <div class="top-menu {getPaneColor('top-menu')} p-3 flex items-center justify-center text-sm font-semibold border-b border-base-300" style="height: 60px; flex-shrink: 0;">
@@ -459,11 +459,8 @@
                   class="toggle toggle-primary"
                   checked={paneVisibility['top-menu']}
                   on:change={(e) => {
-                    const pane = layoutManager?.getPaneByPosition('top-menu');
-                    if (pane) {
-                      pane.setVisible(e.target.checked);
-                      paneVisibility['top-menu'] = e.target.checked;
-                    }
+                    paneVisibility['top-menu'] = e.target.checked;
+                    paneVisibility = { ...paneVisibility };
                   }}
                 />
               </label>
@@ -478,11 +475,8 @@
                   class="toggle toggle-primary"
                   checked={paneVisibility['left-top']}
                   on:change={(e) => {
-                    const pane = layoutManager?.getPaneByPosition('left-top');
-                    if (pane) {
-                      pane.setVisible(e.target.checked);
-                      paneVisibility['left-top'] = e.target.checked;
-                    }
+                    paneVisibility['left-top'] = e.target.checked;
+                    paneVisibility = { ...paneVisibility };
                   }}
                 />
               </label>
@@ -497,11 +491,8 @@
                   class="toggle toggle-primary"
                   checked={paneVisibility['left-middle']}
                   on:change={(e) => {
-                    const pane = layoutManager?.getPaneByPosition('left-middle');
-                    if (pane) {
-                      pane.setVisible(e.target.checked);
-                      paneVisibility['left-middle'] = e.target.checked;
-                    }
+                    paneVisibility['left-middle'] = e.target.checked;
+                    paneVisibility = { ...paneVisibility };
                   }}
                 />
               </label>
@@ -516,11 +507,8 @@
                   class="toggle toggle-primary"
                   checked={paneVisibility['left-bottom']}
                   on:change={(e) => {
-                    const pane = layoutManager?.getPaneByPosition('left-bottom');
-                    if (pane) {
-                      pane.setVisible(e.target.checked);
-                      paneVisibility['left-bottom'] = e.target.checked;
-                    }
+                    paneVisibility['left-bottom'] = e.target.checked;
+                    paneVisibility = { ...paneVisibility };
                   }}
                 />
               </label>
@@ -535,11 +523,8 @@
                   class="toggle toggle-primary"
                   checked={paneVisibility['right-top']}
                   on:change={(e) => {
-                    const pane = layoutManager?.getPaneByPosition('right-top');
-                    if (pane) {
-                      pane.setVisible(e.target.checked);
-                      paneVisibility['right-top'] = e.target.checked;
-                    }
+                    paneVisibility['right-top'] = e.target.checked;
+                    paneVisibility = { ...paneVisibility };
                   }}
                 />
               </label>
@@ -554,11 +539,8 @@
                   class="toggle toggle-primary"
                   checked={paneVisibility['right-middle']}
                   on:change={(e) => {
-                    const pane = layoutManager?.getPaneByPosition('right-middle');
-                    if (pane) {
-                      pane.setVisible(e.target.checked);
-                      paneVisibility['right-middle'] = e.target.checked;
-                    }
+                    paneVisibility['right-middle'] = e.target.checked;
+                    paneVisibility = { ...paneVisibility };
                   }}
                 />
               </label>
@@ -573,11 +555,8 @@
                   class="toggle toggle-primary"
                   checked={paneVisibility['right-bottom']}
                   on:change={(e) => {
-                    const pane = layoutManager?.getPaneByPosition('right-bottom');
-                    if (pane) {
-                      pane.setVisible(e.target.checked);
-                      paneVisibility['right-bottom'] = e.target.checked;
-                    }
+                    paneVisibility['right-bottom'] = e.target.checked;
+                    paneVisibility = { ...paneVisibility };
                   }}
                 />
               </label>
@@ -592,11 +571,8 @@
                   class="toggle toggle-primary"
                   checked={paneVisibility['bottom-left']}
                   on:change={(e) => {
-                    const pane = layoutManager?.getPaneByPosition('bottom-left');
-                    if (pane) {
-                      pane.setVisible(e.target.checked);
-                      paneVisibility['bottom-left'] = e.target.checked;
-                    }
+                    paneVisibility['bottom-left'] = e.target.checked;
+                    paneVisibility = { ...paneVisibility };
                   }}
                 />
               </label>
@@ -611,11 +587,8 @@
                   class="toggle toggle-primary"
                   checked={paneVisibility['bottom-right']}
                   on:change={(e) => {
-                    const pane = layoutManager?.getPaneByPosition('bottom-right');
-                    if (pane) {
-                      pane.setVisible(e.target.checked);
-                      paneVisibility['bottom-right'] = e.target.checked;
-                    }
+                    paneVisibility['bottom-right'] = e.target.checked;
+                    paneVisibility = { ...paneVisibility };
                   }}
                 />
               </label>
