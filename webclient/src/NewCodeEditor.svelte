@@ -10,6 +10,17 @@
   let isResizing = false;
   let showLayoutModal = false;
   
+  // Track pane visibility states
+  let paneVisibility = {
+    'top-menu': true,
+    'left-top': true,
+    'left-bottom': true,
+    'right-top': true,
+    'right-bottom': true,
+    'bottom-left': true,
+    'bottom-right': true
+  };
+  
   // Resize state
   let resizeData = null;
 
@@ -25,6 +36,13 @@
     unsubscribeLayout = layoutManager.subscribe((state) => {
       panes = Array.from(state.panes.values());
       isResizing = state.isResizing;
+      
+      // Update visibility states
+      for (const [position, pane] of state.panes) {
+        if (paneVisibility.hasOwnProperty(pane.getState().position)) {
+          paneVisibility[pane.getState().position] = pane.getState().isVisible;
+        }
+      }
     });
 
     // Subscribe to individual panes for reactive updates
@@ -183,134 +201,126 @@
 
 <div class="new-code-editor h-screen bg-base-100 overflow-hidden flex flex-col">
   <!-- Top Menu Bar -->
-  {#if layoutManager}
-    {@const topMenuPane = layoutManager.getPaneByPosition('top-menu')}
-    {#if topMenuPane && topMenuPane.getState().isVisible}
-      <div class="top-menu {getPaneColor('top-menu')} p-3 flex items-center justify-center text-sm font-semibold border-b border-base-300" style="height: 60px; flex-shrink: 0;">
-        🍔 Top Menu Bar
-      </div>
-    {/if}
+  {#if paneVisibility['top-menu']}
+    <div class="top-menu {getPaneColor('top-menu')} p-3 flex items-center justify-center text-sm font-semibold border-b border-base-300" style="height: 60px; flex-shrink: 0;">
+      🍔 Top Menu Bar
+    </div>
   {/if}
 
   <!-- Main Content Area -->
   <div class="flex flex-grow overflow-hidden">
     <!-- Left Side -->
-    <div class="flex flex-col h-full" style="width: 300px; min-width: 200px;">
-      <!-- Left Top Pane -->
-      {#if layoutManager}
-        {@const leftTopPane = layoutManager.getPaneByPosition('left-top')}
-        {#if leftTopPane && leftTopPane.getState().isVisible}
-          <div class="flex-1 {getPaneColor('left-top')} p-4 flex items-center justify-center text-sm border-r border-b border-base-300">
+    {#if paneVisibility['left-top'] || paneVisibility['left-bottom']}
+      <div class="flex flex-col h-full" style="width: 300px; min-width: 200px;">
+        <!-- Left Top Pane -->
+        {#if paneVisibility['left-top']}
+          <div class="flex-1 {getPaneColor('left-top')} p-4 flex items-center justify-center text-sm border-r border-base-300">
             🔵 Left Top Pane
           </div>
         {/if}
-      {/if}
-      
-      <!-- Horizontal Resize Handle -->
-      <div 
-        class="h-1 bg-base-300 cursor-row-resize hover:bg-primary/30 transition-colors"
-        on:mousedown={(e) => startResize(e, 'left-vertical', 'vertical')}
-      ></div>
-      
-      <!-- Left Bottom Pane -->
-      {#if layoutManager}
-        {@const leftBottomPane = layoutManager.getPaneByPosition('left-bottom')}
-        {#if leftBottomPane && leftBottomPane.getState().isVisible}
+        
+        <!-- Horizontal Resize Handle (only show if both panes are visible) -->
+        {#if paneVisibility['left-top'] && paneVisibility['left-bottom']}
+          <div 
+            class="h-1 bg-base-300 cursor-row-resize hover:bg-primary/30 transition-colors"
+            on:mousedown={(e) => startResize(e, 'left-vertical', 'vertical')}
+          ></div>
+        {/if}
+        
+        <!-- Left Bottom Pane -->
+        {#if paneVisibility['left-bottom']}
           <div class="flex-1 {getPaneColor('left-bottom')} p-4 flex items-center justify-center text-sm border-r border-base-300">
             🟢 Left Bottom Pane
           </div>
         {/if}
-      {/if}
-    </div>
+      </div>
+    {/if}
 
-    <!-- Vertical Resize Handle -->
-    <div 
-      class="w-1 bg-base-300 cursor-col-resize hover:bg-primary/30 transition-colors"
-      on:mousedown={(e) => startResize(e, 'left-resize', 'horizontal')}
-    ></div>
+    <!-- Vertical Resize Handle (only show if left side has visible panes) -->
+    {#if paneVisibility['left-top'] || paneVisibility['left-bottom']}
+      <div 
+        class="w-1 bg-base-300 cursor-col-resize hover:bg-primary/30 transition-colors"
+        on:mousedown={(e) => startResize(e, 'left-resize', 'horizontal')}
+      ></div>
+    {/if}
 
     <!-- Center Area -->
     <div class="flex flex-col flex-1 h-full">
-      <!-- Center Pane -->
-      {#if layoutManager}
-        {@const centerPane = layoutManager.getPaneByPosition('center')}
-        {#if centerPane && centerPane.getState().isVisible}
-          <div class="flex-1 {getPaneColor('center')} p-8 flex items-center justify-center text-lg font-semibold">
-            📝 Code Editor Area
-          </div>
-        {/if}
+      <!-- Center Pane (always visible) -->
+      <div class="flex-1 {getPaneColor('center')} p-8 flex items-center justify-center text-lg font-semibold">
+        📝 Code Editor Area
+      </div>
+      
+      <!-- Horizontal Resize Handle (only show if bottom panes are visible) -->
+      {#if paneVisibility['bottom-left'] || paneVisibility['bottom-right']}
+        <div 
+          class="h-1 bg-base-300 cursor-row-resize hover:bg-primary/30 transition-colors"
+          on:mousedown={(e) => startResize(e, 'bottom-resize', 'vertical')}
+        ></div>
       {/if}
       
-      <!-- Horizontal Resize Handle -->
-      <div 
-        class="h-1 bg-base-300 cursor-row-resize hover:bg-primary/30 transition-colors"
-        on:mousedown={(e) => startResize(e, 'bottom-resize', 'vertical')}
-      ></div>
-      
       <!-- Bottom Area -->
-      <div class="flex" style="height: 200px; min-height: 150px;">
-        <!-- Bottom Left -->
-        {#if layoutManager}
-          {@const bottomLeftPane = layoutManager.getPaneByPosition('bottom-left')}
-          {#if bottomLeftPane && bottomLeftPane.getState().isVisible}
+      {#if paneVisibility['bottom-left'] || paneVisibility['bottom-right']}
+        <div class="flex" style="height: 200px; min-height: 150px;">
+          <!-- Bottom Left -->
+          {#if paneVisibility['bottom-left']}
             <div class="flex-1 {getPaneColor('bottom-left')} p-4 flex items-center justify-center text-sm border-r border-base-300">
               🟡 Bottom Left
             </div>
           {/if}
-        {/if}
-        
-        <!-- Vertical Resize Handle -->
-        <div 
-          class="w-1 bg-base-300 cursor-col-resize hover:bg-primary/30 transition-colors"
-          on:mousedown={(e) => startResize(e, 'bottom-horizontal', 'horizontal')}
-        ></div>
-        
-        <!-- Bottom Right -->
-        {#if layoutManager}
-          {@const bottomRightPane = layoutManager.getPaneByPosition('bottom-right')}
-          {#if bottomRightPane && bottomRightPane.getState().isVisible}
+          
+          <!-- Vertical Resize Handle (only show if both bottom panes are visible) -->
+          {#if paneVisibility['bottom-left'] && paneVisibility['bottom-right']}
+            <div 
+              class="w-1 bg-base-300 cursor-col-resize hover:bg-primary/30 transition-colors"
+              on:mousedown={(e) => startResize(e, 'bottom-horizontal', 'horizontal')}
+            ></div>
+          {/if}
+          
+          <!-- Bottom Right -->
+          {#if paneVisibility['bottom-right']}
             <div class="flex-1 {getPaneColor('bottom-right')} p-4 flex items-center justify-center text-sm">
               🟠 Bottom Right
             </div>
           {/if}
-        {/if}
-      </div>
+        </div>
+      {/if}
     </div>
 
-    <!-- Vertical Resize Handle -->
-    <div 
-      class="w-1 bg-base-300 cursor-col-resize hover:bg-primary/30 transition-colors"
-      on:mousedown={(e) => startResize(e, 'right-resize', 'horizontal')}
-    ></div>
+    <!-- Vertical Resize Handle (only show if right side has visible panes) -->
+    {#if paneVisibility['right-top'] || paneVisibility['right-bottom']}
+      <div 
+        class="w-1 bg-base-300 cursor-col-resize hover:bg-primary/30 transition-colors"
+        on:mousedown={(e) => startResize(e, 'right-resize', 'horizontal')}
+      ></div>
+    {/if}
 
     <!-- Right Side -->
-    <div class="flex flex-col h-full" style="width: 300px; min-width: 200px;">
-      <!-- Right Top Pane -->
-      {#if layoutManager}
-        {@const rightTopPane = layoutManager.getPaneByPosition('right-top')}
-        {#if rightTopPane && rightTopPane.getState().isVisible}
-          <div class="flex-1 {getPaneColor('right-top')} p-4 flex items-center justify-center text-sm border-l border-b border-base-300">
+    {#if paneVisibility['right-top'] || paneVisibility['right-bottom']}
+      <div class="flex flex-col h-full" style="width: 300px; min-width: 200px;">
+        <!-- Right Top Pane -->
+        {#if paneVisibility['right-top']}
+          <div class="flex-1 {getPaneColor('right-top')} p-4 flex items-center justify-center text-sm border-l border-base-300">
             🔴 Right Top Pane
           </div>
         {/if}
-      {/if}
-      
-      <!-- Horizontal Resize Handle -->
-      <div 
-        class="h-1 bg-base-300 cursor-row-resize hover:bg-primary/30 transition-colors"
-        on:mousedown={(e) => startResize(e, 'right-vertical', 'vertical')}
-      ></div>
-      
-      <!-- Right Bottom Pane -->
-      {#if layoutManager}
-        {@const rightBottomPane = layoutManager.getPaneByPosition('right-bottom')}
-        {#if rightBottomPane && rightBottomPane.getState().isVisible}
+        
+        <!-- Horizontal Resize Handle (only show if both panes are visible) -->
+        {#if paneVisibility['right-top'] && paneVisibility['right-bottom']}
+          <div 
+            class="h-1 bg-base-300 cursor-row-resize hover:bg-primary/30 transition-colors"
+            on:mousedown={(e) => startResize(e, 'right-vertical', 'vertical')}
+          ></div>
+        {/if}
+        
+        <!-- Right Bottom Pane -->
+        {#if paneVisibility['right-bottom']}
           <div class="flex-1 {getPaneColor('right-bottom')} p-4 flex items-center justify-center text-sm border-l border-base-300">
             🟣 Right Bottom Pane
           </div>
         {/if}
-      {/if}
-    </div>
+      </div>
+    {/if}
   </div>
   
   <!-- Floating Layout Configuration Button -->
@@ -342,9 +352,148 @@
         
         <!-- Modal Content -->
         <div class="flex-1 overflow-y-auto">
-          <!-- Empty for now - layout configuration will go here -->
-          <div class="flex items-center justify-center h-full text-base-content/50">
-            <p>Layout configuration options coming soon...</p>
+          <!-- Pane Visibility Controls -->
+          <div class="space-y-4">
+            <div class="divider">Pane Visibility</div>
+            
+            <!-- Top Menu -->
+            <div class="form-control">
+              <label class="label cursor-pointer">
+                <span class="label-text font-semibold">Top Menu</span>
+                <input 
+                  type="checkbox" 
+                  class="toggle toggle-primary"
+                  checked={paneVisibility['top-menu']}
+                  on:change={(e) => {
+                    const pane = layoutManager?.getPaneByPosition('top-menu');
+                    if (pane) {
+                      pane.setVisible(e.target.checked);
+                      paneVisibility['top-menu'] = e.target.checked;
+                    }
+                  }}
+                />
+              </label>
+            </div>
+            
+            <!-- Left Top -->
+            <div class="form-control">
+              <label class="label cursor-pointer">
+                <span class="label-text font-semibold">Left Top</span>
+                <input 
+                  type="checkbox" 
+                  class="toggle toggle-primary"
+                  checked={paneVisibility['left-top']}
+                  on:change={(e) => {
+                    const pane = layoutManager?.getPaneByPosition('left-top');
+                    if (pane) {
+                      pane.setVisible(e.target.checked);
+                      paneVisibility['left-top'] = e.target.checked;
+                    }
+                  }}
+                />
+              </label>
+            </div>
+            
+            <!-- Left Bottom -->
+            <div class="form-control">
+              <label class="label cursor-pointer">
+                <span class="label-text font-semibold">Left Bottom</span>
+                <input 
+                  type="checkbox" 
+                  class="toggle toggle-primary"
+                  checked={paneVisibility['left-bottom']}
+                  on:change={(e) => {
+                    const pane = layoutManager?.getPaneByPosition('left-bottom');
+                    if (pane) {
+                      pane.setVisible(e.target.checked);
+                      paneVisibility['left-bottom'] = e.target.checked;
+                    }
+                  }}
+                />
+              </label>
+            </div>
+            
+            <!-- Right Top -->
+            <div class="form-control">
+              <label class="label cursor-pointer">
+                <span class="label-text font-semibold">Right Top</span>
+                <input 
+                  type="checkbox" 
+                  class="toggle toggle-primary"
+                  checked={paneVisibility['right-top']}
+                  on:change={(e) => {
+                    const pane = layoutManager?.getPaneByPosition('right-top');
+                    if (pane) {
+                      pane.setVisible(e.target.checked);
+                      paneVisibility['right-top'] = e.target.checked;
+                    }
+                  }}
+                />
+              </label>
+            </div>
+            
+            <!-- Right Bottom -->
+            <div class="form-control">
+              <label class="label cursor-pointer">
+                <span class="label-text font-semibold">Right Bottom</span>
+                <input 
+                  type="checkbox" 
+                  class="toggle toggle-primary"
+                  checked={paneVisibility['right-bottom']}
+                  on:change={(e) => {
+                    const pane = layoutManager?.getPaneByPosition('right-bottom');
+                    if (pane) {
+                      pane.setVisible(e.target.checked);
+                      paneVisibility['right-bottom'] = e.target.checked;
+                    }
+                  }}
+                />
+              </label>
+            </div>
+            
+            <!-- Bottom Left -->
+            <div class="form-control">
+              <label class="label cursor-pointer">
+                <span class="label-text font-semibold">Bottom Left</span>
+                <input 
+                  type="checkbox" 
+                  class="toggle toggle-primary"
+                  checked={paneVisibility['bottom-left']}
+                  on:change={(e) => {
+                    const pane = layoutManager?.getPaneByPosition('bottom-left');
+                    if (pane) {
+                      pane.setVisible(e.target.checked);
+                      paneVisibility['bottom-left'] = e.target.checked;
+                    }
+                  }}
+                />
+              </label>
+            </div>
+            
+            <!-- Bottom Right -->
+            <div class="form-control">
+              <label class="label cursor-pointer">
+                <span class="label-text font-semibold">Bottom Right</span>
+                <input 
+                  type="checkbox" 
+                  class="toggle toggle-primary"
+                  checked={paneVisibility['bottom-right']}
+                  on:change={(e) => {
+                    const pane = layoutManager?.getPaneByPosition('bottom-right');
+                    if (pane) {
+                      pane.setVisible(e.target.checked);
+                      paneVisibility['bottom-right'] = e.target.checked;
+                    }
+                  }}
+                />
+              </label>
+            </div>
+            
+            <!-- Note about center pane -->
+            <div class="alert alert-info">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              <span>The center code editor pane cannot be hidden.</span>
+            </div>
           </div>
         </div>
         
