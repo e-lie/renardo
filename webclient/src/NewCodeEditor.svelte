@@ -9,6 +9,7 @@
   let panes = [];
   let isResizing = false;
   let showLayoutModal = false;
+  let hideAppNavbar = false;
   
   // Track pane visibility states
   let paneVisibility = {
@@ -42,6 +43,13 @@
     'bottom-area': 200
   };
   
+  // React to navbar visibility changes
+  $: if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('navbarVisibilityChange', {
+      detail: { hideNavbar: hideAppNavbar }
+    }));
+  }
+  
   // Resize state
   let resizeData = null;
 
@@ -52,6 +60,11 @@
   onMount(() => {
     // Initialize layout manager
     layoutManager = new LayoutManager();
+    
+    // Dispatch initial navbar state
+    window.dispatchEvent(new CustomEvent('navbarVisibilityChange', {
+      detail: { hideNavbar: hideAppNavbar }
+    }));
     
     // Subscribe to layout manager
     unsubscribeLayout = layoutManager.subscribe((state) => {
@@ -239,7 +252,7 @@
   }
 </script>
 
-<div class="new-code-editor h-full bg-base-100 overflow-hidden flex flex-col">
+<div class="new-code-editor {hideAppNavbar ? 'h-screen' : 'h-full'} bg-base-100 overflow-hidden flex flex-col">
   <!-- Top Menu Bar -->
   {#if paneVisibility['top-menu']}
     <div class="top-menu {getPaneColor('top-menu')} p-3 flex items-center justify-center text-sm font-semibold border-b border-base-300" style="height: 60px; flex-shrink: 0;">
@@ -448,6 +461,20 @@
         <div class="flex-1 overflow-y-auto">
           <!-- Pane Visibility Controls -->
           <div class="space-y-4">
+            <!-- App Navigation Bar -->
+            <div class="divider">App Navigation</div>
+            <div class="form-control">
+              <label class="label cursor-pointer">
+                <span class="label-text font-semibold">Hide App Navigation Bar</span>
+                <input 
+                  type="checkbox" 
+                  class="toggle toggle-primary"
+                  bind:checked={hideAppNavbar}
+                />
+              </label>
+              <span class="label-text-alt pl-12 text-xs opacity-70">Hides the top navigation bar from the main app</span>
+            </div>
+            
             <div class="divider">Pane Visibility</div>
             
             <!-- Top Menu -->
