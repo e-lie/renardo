@@ -100,20 +100,6 @@
     }
   }
 
-  // Add new tab
-  function addNewTab(componentType = 'TextArea') {
-    if (tabManager) {
-      const tabId = tabManager.addTab({
-        title: `New ${componentType}`,
-        componentType,
-        componentId: `${componentType.toLowerCase()}-${position}-${Date.now()}`,
-        closable: true
-      });
-      
-      // Switch to the new tab
-      tabManager.switchToTab(tabId);
-    }
-  }
 
   // Handle tab drag and drop (basic implementation)
   function handleTabDragStart(event, tabIndex) {
@@ -137,8 +123,9 @@
 </script>
 
 <div class="tabbed-pane h-full flex flex-col">
-  <!-- Tab Bar -->
-  <div class="tab-bar flex items-center bg-base-200 border-b border-base-300 min-h-10">
+  <!-- Tab Bar (only show when multiple tabs) -->
+  {#if tabs.length > 1}
+    <div class="tab-bar flex items-center bg-base-200 border-b border-base-300 min-h-10">
     <div class="flex flex-1 overflow-x-auto">
       {#each tabs as tab, index (tab.id)}
         <div 
@@ -176,26 +163,8 @@
         </div>
       {/each}
     </div>
-    
-    <!-- Add Tab Button -->
-    <div class="dropdown dropdown-end flex-shrink-0">
-      <button class="btn btn-xs btn-ghost" tabindex="0" title="Add new tab">
-        +
-      </button>
-      <ul class="dropdown-content z-10 menu p-2 shadow bg-base-100 rounded-box w-48">
-        <li>
-          <button on:click={() => addNewTab('ColorPicker')} class="text-xs">
-            🎨 Color Picker
-          </button>
-        </li>
-        <li>
-          <button on:click={() => addNewTab('TextArea')} class="text-xs">
-            📝 Text Area
-          </button>
-        </li>
-      </ul>
     </div>
-  </div>
+  {/if}
 
   <!-- Tab Content -->
   <div class="tab-content flex-1 min-h-0 overflow-hidden">
@@ -210,7 +179,7 @@
         <div class="text-center">
           <div class="text-4xl mb-2">📦</div>
           <div class="text-sm">No tabs open</div>
-          <div class="text-xs opacity-70 mt-1">Click + to add a new tab</div>
+          <div class="text-xs opacity-70 mt-1">Configure tabs in Layout Settings</div>
         </div>
       </div>
     {:else}

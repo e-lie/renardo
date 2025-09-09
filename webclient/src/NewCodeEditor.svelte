@@ -76,17 +76,7 @@
     ]
   };
 
-  // Legacy component assignments (kept for compatibility with modal)
-  let paneComponents = {
-    'left-top': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-left-top' },
-    'left-middle': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-left-middle' },
-    'left-bottom': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-left-bottom' },
-    'right-top': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-right-top' },
-    'right-middle': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-right-middle' },
-    'right-bottom': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-right-bottom' },
-    'bottom-left': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-bottom-left' },
-    'bottom-right': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-bottom-right' }
-  };
+  // All panes now use tabbed containers by default - no need for individual component assignments
   
   // Track pane sizes for resizing
   let paneSizes = {
@@ -114,15 +104,15 @@
     }));
   }
 
-  // Reactive pane content rendering (depends on paneComponents changes)
-  $: leftTopContent = (paneComponents, renderPaneContent('left-top'));
-  $: leftMiddleContent = (paneComponents, renderPaneContent('left-middle'));
-  $: leftBottomContent = (paneComponents, renderPaneContent('left-bottom'));
-  $: rightTopContent = (paneComponents, renderPaneContent('right-top'));
-  $: rightMiddleContent = (paneComponents, renderPaneContent('right-middle'));
-  $: rightBottomContent = (paneComponents, renderPaneContent('right-bottom'));
-  $: bottomLeftContent = (paneComponents, renderPaneContent('bottom-left'));
-  $: bottomRightContent = (paneComponents, renderPaneContent('bottom-right'));
+  // Reactive pane content rendering (depends on paneTabConfigs changes)
+  $: leftTopContent = (paneTabConfigs, renderPaneContent('left-top'));
+  $: leftMiddleContent = (paneTabConfigs, renderPaneContent('left-middle'));
+  $: leftBottomContent = (paneTabConfigs, renderPaneContent('left-bottom'));
+  $: rightTopContent = (paneTabConfigs, renderPaneContent('right-top'));
+  $: rightMiddleContent = (paneTabConfigs, renderPaneContent('right-middle'));
+  $: rightBottomContent = (paneTabConfigs, renderPaneContent('right-bottom'));
+  $: bottomLeftContent = (paneTabConfigs, renderPaneContent('bottom-left'));
+  $: bottomRightContent = (paneTabConfigs, renderPaneContent('bottom-right'));
   
   // Resize state
   let resizeData = null;
@@ -294,42 +284,15 @@
     return style;
   }
 
-  // Component rendering helpers
-  function renderComponent(componentType, props = {}) {
-    switch (componentType) {
-      case 'ColorPicker':
-        return { component: ColorPicker, props };
-      case 'TextArea':
-        return { component: TextArea, props };
-      case 'TabbedPane':
-        return { component: TabbedPane, props };
-      case 'TopMenu':
-        return { component: null, content: '🍔 Menu Bar' };
-      case 'EditorPlaceholder':
-        return { component: null, content: '📝 Code Editor (Coming Soon)' };
-      default:
-        return { component: null, content: `📦 ${componentType}` };
-    }
-  }
-
-  // Get component config for a pane position
-  function getComponentConfig(position) {
-    return paneComponents[position] || { type: 'placeholder', title: 'Empty', id: null };
-  }
-
-  // Helper function to render pane content
+  // Helper function to render pane content (all panes use tabbed containers)
   function renderPaneContent(position) {
-    const config = getComponentConfig(position);
-    const props = { componentId: config.id, title: config.title };
+    const props = {
+      position: position,
+      initialTabs: paneTabConfigs[position] || []
+    };
     
-    // Add tab configuration for TabbedPane components
-    if (config.type === 'TabbedPane') {
-      props.position = position;
-      props.initialTabs = paneTabConfigs[position] || [];
-    }
-    
-    const rendered = renderComponent(config.type, props);
-    return { config, rendered };
+    const rendered = { component: TabbedPane, props };
+    return { rendered };
   }
 
 
@@ -684,7 +647,7 @@
   <LayoutConfigModal 
     bind:showModal={showLayoutModal}
     bind:paneVisibility={paneVisibility}
-    bind:paneComponents={paneComponents}
+    bind:paneTabConfigs={paneTabConfigs}
     bind:hideAppNavbar={hideAppNavbar}
     bind:layoutManager={layoutManager}
   />
