@@ -44,7 +44,7 @@
   };
   
   // React to navbar visibility changes
-  $: if (typeof window !== 'undefined') {
+  $: if (typeof window !== 'undefined' && layoutManager) {
     window.dispatchEvent(new CustomEvent('navbarVisibilityChange', {
       detail: { hideNavbar: hideAppNavbar }
     }));
@@ -70,13 +70,7 @@
     unsubscribeLayout = layoutManager.subscribe((state) => {
       panes = Array.from(state.panes.values());
       isResizing = state.isResizing;
-      
-      // Update visibility states
-      for (const [position, pane] of state.panes) {
-        if (paneVisibility.hasOwnProperty(pane.getState().position)) {
-          paneVisibility[pane.getState().position] = pane.getState().isVisible;
-        }
-      }
+      // Note: Don't sync visibility states as we manage them locally
     });
 
     // Subscribe to individual panes for reactive updates
