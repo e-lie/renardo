@@ -48,6 +48,9 @@
     'top-menu': [
       { id: 'tab-top-menu-1', title: 'Menu', componentType: 'TextArea', componentId: 'menu-1', closable: false, active: true }
     ],
+    'center': [
+      { id: 'tab-center-1', title: 'Code Editor', componentType: 'CodeEditor', componentId: 'code-main', closable: false, active: true }
+    ],
     'left-top': [
       { id: 'tab-left-top-1', title: 'Colors', componentType: 'ColorPicker', componentId: 'color-1', closable: false, active: true },
       { id: 'tab-left-top-2', title: 'Palette', componentType: 'ColorPicker', componentId: 'color-2', closable: true, active: false }
@@ -488,8 +491,11 @@
     <!-- Center Area -->
     <div class="flex flex-col flex-1 h-full">
       <!-- Center Pane (always visible) -->
-      <div class="flex-1 {getPaneColor('center')} p-8 flex items-center justify-center text-lg font-semibold">
-        📝 Code Editor Area
+      <div class="flex-1 {getPaneColor('center')} overflow-hidden">
+        <TabbedPane 
+          position="center"
+          initialTabs={paneTabConfigs['center'] || []}
+        />
       </div>
       
       <!-- Horizontal Resize Handle (only show if bottom panes are visible) -->

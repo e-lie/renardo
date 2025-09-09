@@ -4,6 +4,7 @@
   import { PaneComponent } from '../../lib/newEditor/PaneComponent';
   import ColorPicker from './ColorPicker.svelte';
   import TextArea from './TextArea.svelte';
+  import CodeEditor from './CodeEditor.svelte';
   import { sendDebugLog } from '../../lib/websocket.js';
 
   // Props
@@ -19,7 +20,8 @@
   // Component registry
   const componentRegistry = {
     'ColorPicker': ColorPicker,
-    'TextArea': TextArea
+    'TextArea': TextArea,
+    'CodeEditor': CodeEditor
   };
 
   // Subscription cleanup
@@ -152,6 +154,7 @@
           <span class="text-xs mr-2 flex-shrink-0">
             {#if tab.componentType === 'ColorPicker'}🎨
             {:else if tab.componentType === 'TextArea'}📝
+            {:else if tab.componentType === 'CodeEditor'}💻
             {:else}📦
             {/if}
           </span>
