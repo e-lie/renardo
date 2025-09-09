@@ -228,7 +228,7 @@
         <CodeEditor />
       </div>
     {:else if currentRoute === 'new-editor'}
-      <div class="h-full bg-base-100">
+      <div class="flex-1 bg-base-100 overflow-hidden">
         <NewCodeEditor />
       </div>
     {:else}
