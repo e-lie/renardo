@@ -161,7 +161,7 @@
 <!-- Layout Configuration Modal -->
 {#if showModal}
   <div class="modal modal-open">
-    <div class="modal-box max-w-5xl h-[90vh] flex flex-col">
+    <div class="modal-box max-w-[80vw] w-[80vw] h-[80vh] flex flex-col">
       <!-- Modal Header -->
       <div class="flex justify-between items-center mb-4">
         <h3 class="font-bold text-lg">Layout Configuration</h3>
@@ -194,159 +194,186 @@
           <div class="divider">Pane Layout</div>
           
           <!-- Layout Grid matching the actual pane positions -->
-          <div class="grid grid-cols-3 gap-2 p-4 bg-base-200 rounded-lg">
-            <!-- Top Row -->
-            <div class="col-span-3 flex justify-center">
-              <div class="form-control">
-                <label class="label cursor-pointer flex-col gap-1">
-                  <span class="label-text text-xs font-semibold">Top Menu</span>
-                  <input 
-                    type="checkbox" 
-                    class="toggle toggle-primary toggle-xs"
-                    checked={paneVisibility['top-menu']}
-                    on:change={(e) => {
-                      paneVisibility['top-menu'] = e.target.checked;
-                      paneVisibility = { ...paneVisibility };
-                    }}
-                  />
-                </label>
+          <div class="flex flex-col gap-2 p-4 bg-base-200 rounded-lg h-[400px]">
+            <!-- Top Row - Top Menu -->
+            <div class="flex h-[15%]">
+              <div class="flex-1 flex items-center justify-center border-2 border-base-300 rounded-lg {getPaneColor('top-menu')}">
+                <div class="form-control">
+                  <label class="label cursor-pointer flex-col gap-1">
+                    <span class="label-text text-xs font-semibold">Top Menu</span>
+                    <input 
+                      type="checkbox" 
+                      class="toggle toggle-primary toggle-sm"
+                      checked={paneVisibility['top-menu']}
+                      on:change={(e) => {
+                        paneVisibility['top-menu'] = e.target.checked;
+                        paneVisibility = { ...paneVisibility };
+                      }}
+                    />
+                  </label>
+                </div>
               </div>
             </div>
             
             <!-- Middle Row -->
-            <div class="flex flex-col gap-1">
+            <div class="flex flex-1 gap-2">
               <!-- Left Column -->
-              <div class="form-control">
-                <label class="label cursor-pointer flex-col gap-1">
-                  <span class="label-text text-xs font-semibold">Left Top</span>
-                  <input 
-                    type="checkbox" 
-                    class="toggle toggle-primary toggle-xs"
-                    checked={paneVisibility['left-top']}
-                    on:change={(e) => {
-                      paneVisibility['left-top'] = e.target.checked;
-                      paneVisibility = { ...paneVisibility };
-                    }}
-                  />
-                </label>
-              </div>
-              <div class="form-control">
-                <label class="label cursor-pointer flex-col gap-1">
-                  <span class="label-text text-xs font-semibold">Left Mid</span>
-                  <input 
-                    type="checkbox" 
-                    class="toggle toggle-primary toggle-xs"
-                    checked={paneVisibility['left-middle']}
-                    on:change={(e) => {
-                      paneVisibility['left-middle'] = e.target.checked;
-                      paneVisibility = { ...paneVisibility };
-                    }}
-                  />
-                </label>
-              </div>
-              <div class="form-control">
-                <label class="label cursor-pointer flex-col gap-1">
-                  <span class="label-text text-xs font-semibold">Left Bot</span>
-                  <input 
-                    type="checkbox" 
-                    class="toggle toggle-primary toggle-xs"
-                    checked={paneVisibility['left-bottom']}
-                    on:change={(e) => {
-                      paneVisibility['left-bottom'] = e.target.checked;
-                      paneVisibility = { ...paneVisibility };
-                    }}
-                  />
-                </label>
-              </div>
-            </div>
-            
-            <div class="flex items-center justify-center">
-              <!-- Center Area (always visible) -->
-              <div class="form-control">
-                <label class="label cursor-pointer flex-col gap-1">
-                  <span class="label-text text-xs font-semibold text-center">Center<br/>Editor</span>
-                  <div class="w-8 h-4 bg-primary/30 rounded flex items-center justify-center">
-                    <span class="text-xs">📝</span>
+              <div class="flex flex-col gap-2 w-[25%]">
+                <!-- Left Top -->
+                <div class="flex-1 flex items-center justify-center border-2 border-base-300 rounded-lg {getPaneColor('left-top')}">
+                  <div class="form-control">
+                    <label class="label cursor-pointer flex-col gap-1">
+                      <span class="label-text text-xs font-semibold">Left Top</span>
+                      <input 
+                        type="checkbox" 
+                        class="toggle toggle-primary toggle-sm"
+                        checked={paneVisibility['left-top']}
+                        on:change={(e) => {
+                          paneVisibility['left-top'] = e.target.checked;
+                          paneVisibility = { ...paneVisibility };
+                        }}
+                      />
+                    </label>
                   </div>
-                </label>
+                </div>
+                <!-- Left Middle -->
+                <div class="flex-1 flex items-center justify-center border-2 border-base-300 rounded-lg {getPaneColor('left-middle')}">
+                  <div class="form-control">
+                    <label class="label cursor-pointer flex-col gap-1">
+                      <span class="label-text text-xs font-semibold">Left Mid</span>
+                      <input 
+                        type="checkbox" 
+                        class="toggle toggle-primary toggle-sm"
+                        checked={paneVisibility['left-middle']}
+                        on:change={(e) => {
+                          paneVisibility['left-middle'] = e.target.checked;
+                          paneVisibility = { ...paneVisibility };
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+                <!-- Left Bottom -->
+                <div class="flex-1 flex items-center justify-center border-2 border-base-300 rounded-lg {getPaneColor('left-bottom')}">
+                  <div class="form-control">
+                    <label class="label cursor-pointer flex-col gap-1">
+                      <span class="label-text text-xs font-semibold">Left Bot</span>
+                      <input 
+                        type="checkbox" 
+                        class="toggle toggle-primary toggle-sm"
+                        checked={paneVisibility['left-bottom']}
+                        on:change={(e) => {
+                          paneVisibility['left-bottom'] = e.target.checked;
+                          paneVisibility = { ...paneVisibility };
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
               </div>
-            </div>
-            
-            <div class="flex flex-col gap-1">
+              
+              <!-- Center -->
+              <div class="flex-1 flex items-center justify-center border-2 border-primary rounded-lg {getPaneColor('center')}">
+                <div class="form-control">
+                  <label class="label cursor-pointer flex-col gap-1">
+                    <span class="text-2xl mb-2">📝</span>
+                    <span class="label-text text-sm font-bold">Center Editor</span>
+                    <span class="badge badge-xs badge-primary">Always Visible</span>
+                  </label>
+                </div>
+              </div>
+              
               <!-- Right Column -->
-              <div class="form-control">
-                <label class="label cursor-pointer flex-col gap-1">
-                  <span class="label-text text-xs font-semibold">Right Top</span>
-                  <input 
-                    type="checkbox" 
-                    class="toggle toggle-primary toggle-xs"
-                    checked={paneVisibility['right-top']}
-                    on:change={(e) => {
-                      paneVisibility['right-top'] = e.target.checked;
-                      paneVisibility = { ...paneVisibility };
-                    }}
-                  />
-                </label>
-              </div>
-              <div class="form-control">
-                <label class="label cursor-pointer flex-col gap-1">
-                  <span class="label-text text-xs font-semibold">Right Mid</span>
-                  <input 
-                    type="checkbox" 
-                    class="toggle toggle-primary toggle-xs"
-                    checked={paneVisibility['right-middle']}
-                    on:change={(e) => {
-                      paneVisibility['right-middle'] = e.target.checked;
-                      paneVisibility = { ...paneVisibility };
-                    }}
-                  />
-                </label>
-              </div>
-              <div class="form-control">
-                <label class="label cursor-pointer flex-col gap-1">
-                  <span class="label-text text-xs font-semibold">Right Bot</span>
-                  <input 
-                    type="checkbox" 
-                    class="toggle toggle-primary toggle-xs"
-                    checked={paneVisibility['right-bottom']}
-                    on:change={(e) => {
-                      paneVisibility['right-bottom'] = e.target.checked;
-                      paneVisibility = { ...paneVisibility };
-                    }}
-                  />
-                </label>
+              <div class="flex flex-col gap-2 w-[25%]">
+                <!-- Right Top -->
+                <div class="flex-1 flex items-center justify-center border-2 border-base-300 rounded-lg {getPaneColor('right-top')}">
+                  <div class="form-control">
+                    <label class="label cursor-pointer flex-col gap-1">
+                      <span class="label-text text-xs font-semibold">Right Top</span>
+                      <input 
+                        type="checkbox" 
+                        class="toggle toggle-primary toggle-sm"
+                        checked={paneVisibility['right-top']}
+                        on:change={(e) => {
+                          paneVisibility['right-top'] = e.target.checked;
+                          paneVisibility = { ...paneVisibility };
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+                <!-- Right Middle -->
+                <div class="flex-1 flex items-center justify-center border-2 border-base-300 rounded-lg {getPaneColor('right-middle')}">
+                  <div class="form-control">
+                    <label class="label cursor-pointer flex-col gap-1">
+                      <span class="label-text text-xs font-semibold">Right Mid</span>
+                      <input 
+                        type="checkbox" 
+                        class="toggle toggle-primary toggle-sm"
+                        checked={paneVisibility['right-middle']}
+                        on:change={(e) => {
+                          paneVisibility['right-middle'] = e.target.checked;
+                          paneVisibility = { ...paneVisibility };
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+                <!-- Right Bottom -->
+                <div class="flex-1 flex items-center justify-center border-2 border-base-300 rounded-lg {getPaneColor('right-bottom')}">
+                  <div class="form-control">
+                    <label class="label cursor-pointer flex-col gap-1">
+                      <span class="label-text text-xs font-semibold">Right Bot</span>
+                      <input 
+                        type="checkbox" 
+                        class="toggle toggle-primary toggle-sm"
+                        checked={paneVisibility['right-bottom']}
+                        on:change={(e) => {
+                          paneVisibility['right-bottom'] = e.target.checked;
+                          paneVisibility = { ...paneVisibility };
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
             
             <!-- Bottom Row -->
-            <div class="col-span-3 grid grid-cols-2 gap-2 mt-2">
-              <div class="form-control">
-                <label class="label cursor-pointer flex-col gap-1">
-                  <span class="label-text text-xs font-semibold">Bottom Left</span>
-                  <input 
-                    type="checkbox" 
-                    class="toggle toggle-primary toggle-xs"
-                    checked={paneVisibility['bottom-left']}
-                    on:change={(e) => {
-                      paneVisibility['bottom-left'] = e.target.checked;
-                      paneVisibility = { ...paneVisibility };
-                    }}
-                  />
-                </label>
+            <div class="flex h-[25%] gap-2">
+              <!-- Bottom Left -->
+              <div class="flex-1 flex items-center justify-center border-2 border-base-300 rounded-lg {getPaneColor('bottom-left')}">
+                <div class="form-control">
+                  <label class="label cursor-pointer flex-col gap-1">
+                    <span class="label-text text-xs font-semibold">Bottom Left</span>
+                    <input 
+                      type="checkbox" 
+                      class="toggle toggle-primary toggle-sm"
+                      checked={paneVisibility['bottom-left']}
+                      on:change={(e) => {
+                        paneVisibility['bottom-left'] = e.target.checked;
+                        paneVisibility = { ...paneVisibility };
+                      }}
+                    />
+                  </label>
+                </div>
               </div>
-              <div class="form-control">
-                <label class="label cursor-pointer flex-col gap-1">
-                  <span class="label-text text-xs font-semibold">Bottom Right</span>
-                  <input 
-                    type="checkbox" 
-                    class="toggle toggle-primary toggle-xs"
-                    checked={paneVisibility['bottom-right']}
-                    on:change={(e) => {
-                      paneVisibility['bottom-right'] = e.target.checked;
-                      paneVisibility = { ...paneVisibility };
-                    }}
-                  />
-                </label>
+              <!-- Bottom Right -->
+              <div class="flex-1 flex items-center justify-center border-2 border-base-300 rounded-lg {getPaneColor('bottom-right')}">
+                <div class="form-control">
+                  <label class="label cursor-pointer flex-col gap-1">
+                    <span class="label-text text-xs font-semibold">Bottom Right</span>
+                    <input 
+                      type="checkbox" 
+                      class="toggle toggle-primary toggle-sm"
+                      checked={paneVisibility['bottom-right']}
+                      on:change={(e) => {
+                        paneVisibility['bottom-right'] = e.target.checked;
+                        paneVisibility = { ...paneVisibility };
+                      }}
+                    />
+                  </label>
+                </div>
               </div>
             </div>
           </div>
