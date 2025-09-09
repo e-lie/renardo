@@ -27,6 +27,13 @@
     'bottom-right': true
   };
 
+  // Track pane set visibility (independent from individual pane visibility)
+  let paneSetVisibility = {
+    'left': true,   // Controls entire left column (left-top, left-middle, left-bottom)
+    'right': true,  // Controls entire right column (right-top, right-middle, right-bottom)
+    'bottom': true  // Controls entire bottom area (bottom-left, bottom-right)
+  };
+
 
   // Component assignments for each pane (user configurable)
   let paneComponents = {
@@ -271,6 +278,25 @@
   }
 
 
+  // Toggle pane set visibility
+  function togglePaneSet(setName) {
+    paneSetVisibility[setName] = !paneSetVisibility[setName];
+    // Trigger reactivity
+    paneSetVisibility = { ...paneSetVisibility };
+  }
+
+  // Check if any pane in a set is individually visible
+  function hasPanesVisible(setName) {
+    if (setName === 'left') {
+      return paneVisibility['left-top'] || paneVisibility['left-middle'] || paneVisibility['left-bottom'];
+    } else if (setName === 'right') {
+      return paneVisibility['right-top'] || paneVisibility['right-middle'] || paneVisibility['right-bottom'];
+    } else if (setName === 'bottom') {
+      return paneVisibility['bottom-left'] || paneVisibility['bottom-right'];
+    }
+    return false;
+  }
+
   // Get pane background color based on position
   function getPaneColor(position) {
     const colors = {
@@ -300,7 +326,7 @@
   <!-- Main Content Area -->
   <div class="flex flex-grow overflow-hidden">
     <!-- Left Side -->
-    {#if paneVisibility['left-top'] || paneVisibility['left-middle'] || paneVisibility['left-bottom']}
+    {#if paneSetVisibility['left'] && (paneVisibility['left-top'] || paneVisibility['left-middle'] || paneVisibility['left-bottom'])}
       <div class="flex flex-col h-full" style="width: {containerSizes['left-column']}px; min-width: 200px;">
         <!-- Left Top Pane -->
         {#if paneVisibility['left-top']}
@@ -369,7 +395,7 @@
     {/if}
 
     <!-- Vertical Resize Handle (only show if left side has visible panes) -->
-    {#if paneVisibility['left-top'] || paneVisibility['left-middle'] || paneVisibility['left-bottom']}
+    {#if paneSetVisibility['left'] && (paneVisibility['left-top'] || paneVisibility['left-middle'] || paneVisibility['left-bottom'])}
       <div 
         class="w-1 bg-base-300 cursor-col-resize hover:bg-primary/30 transition-colors"
         on:mousedown={(e) => startResize(e, 'left-resize', 'horizontal')}
@@ -384,7 +410,7 @@
       </div>
       
       <!-- Horizontal Resize Handle (only show if bottom panes are visible) -->
-      {#if paneVisibility['bottom-left'] || paneVisibility['bottom-right']}
+      {#if paneSetVisibility['bottom'] && (paneVisibility['bottom-left'] || paneVisibility['bottom-right'])}
         <div 
           class="h-1 bg-base-300 cursor-row-resize hover:bg-primary/30 transition-colors"
           on:mousedown={(e) => startResize(e, 'bottom-resize', 'vertical')}
@@ -392,7 +418,7 @@
       {/if}
       
       <!-- Bottom Area -->
-      {#if paneVisibility['bottom-left'] || paneVisibility['bottom-right']}
+      {#if paneSetVisibility['bottom'] && (paneVisibility['bottom-left'] || paneVisibility['bottom-right'])}
         <div class="flex" style="height: {containerSizes['bottom-area']}px; min-height: 150px;">
           <!-- Bottom Left -->
           {#if paneVisibility['bottom-left']}
@@ -438,7 +464,7 @@
     </div>
 
     <!-- Vertical Resize Handle (only show if right side has visible panes) -->
-    {#if paneVisibility['right-top'] || paneVisibility['right-middle'] || paneVisibility['right-bottom']}
+    {#if paneSetVisibility['right'] && (paneVisibility['right-top'] || paneVisibility['right-middle'] || paneVisibility['right-bottom'])}
       <div 
         class="w-1 bg-base-300 cursor-col-resize hover:bg-primary/30 transition-colors"
         on:mousedown={(e) => startResize(e, 'right-resize', 'horizontal')}
@@ -446,7 +472,7 @@
     {/if}
 
     <!-- Right Side -->
-    {#if paneVisibility['right-top'] || paneVisibility['right-middle'] || paneVisibility['right-bottom']}
+    {#if paneSetVisibility['right'] && (paneVisibility['right-top'] || paneVisibility['right-middle'] || paneVisibility['right-bottom'])}
       <div class="flex flex-col h-full" style="width: {containerSizes['right-column']}px; min-width: 200px;">
         <!-- Right Top Pane -->
         {#if paneVisibility['right-top']}
@@ -535,6 +561,81 @@
     bind:hideAppNavbar={hideAppNavbar}
     bind:layoutManager={layoutManager}
   />
+
+  <!-- Floating Pane Set Toggle Buttons -->
+  
+  <!-- Left Pane Set Toggle -->
+  {#if hasPanesVisible('left')}
+    <button 
+      class="fixed left-4 top-1/2 transform -translate-y-1/2 btn btn-sm btn-circle btn-secondary shadow-xl z-50 hover:btn-primary transition-all duration-200"
+      on:click={() => {
+        console.log('Left toggle clicked:', paneSetVisibility['left']);
+        togglePaneSet('left');
+      }}
+      title={paneSetVisibility['left'] ? 'Hide left panes' : 'Show left panes'}
+    >
+      {#if paneSetVisibility['left']}
+        <!-- Left arrow (hide) -->
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+        </svg>
+      {:else}
+        <!-- Right arrow (show) -->
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+        </svg>
+      {/if}
+    </button>
+  {/if}
+
+  <!-- Right Pane Set Toggle -->
+  {#if hasPanesVisible('right')}
+    <button 
+      class="fixed right-4 top-1/2 transform -translate-y-1/2 btn btn-sm btn-circle btn-secondary shadow-xl z-50 hover:btn-primary transition-all duration-200"
+      on:click={() => {
+        console.log('Right toggle clicked:', paneSetVisibility['right']);
+        togglePaneSet('right');
+      }}
+      title={paneSetVisibility['right'] ? 'Hide right panes' : 'Show right panes'}
+    >
+      {#if paneSetVisibility['right']}
+        <!-- Right arrow (hide) -->
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+        </svg>
+      {:else}
+        <!-- Left arrow (show) -->
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+        </svg>
+      {/if}
+    </button>
+  {/if}
+
+  <!-- Bottom Pane Set Toggle -->
+  {#if hasPanesVisible('bottom')}
+    <button 
+      class="fixed bottom-2 left-1/2 transform -translate-x-1/2 btn btn-xs btn-circle btn-primary shadow-lg z-50 opacity-80 hover:opacity-100 transition-opacity"
+      on:click={() => {
+        console.log('Bottom toggle clicked:', paneSetVisibility['bottom']);
+        togglePaneSet('bottom');
+      }}
+      title={paneSetVisibility['bottom'] ? 'Hide bottom panes' : 'Show bottom panes'}
+    >
+      {#if paneSetVisibility['bottom']}
+        <!-- Down arrow (hide) -->
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+      {:else}
+        <!-- Up arrow (show) -->
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+        </svg>
+      {/if}
+    </button>
+  {/if}
+
 </div>
 
 <style>
