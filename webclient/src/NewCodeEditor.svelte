@@ -8,6 +8,7 @@
   // Layout state
   let panes = [];
   let isResizing = false;
+  let showLayoutModal = false;
   
   // Resize state
   let resizeData = null;
@@ -94,7 +95,13 @@
 
     const { resizeType, direction, startPos, startSize, element } = resizeData;
     const currentPos = direction === 'horizontal' ? event.clientX : event.clientY;
-    const delta = currentPos - startPos;
+    let delta = currentPos - startPos;
+    
+    // Invert delta for right-side and bottom panels
+    if (resizeType === 'right-resize' || resizeType === 'bottom-resize') {
+      delta = -delta;
+    }
+    
     const newSize = Math.max(100, startSize + delta); // Minimum size of 100px
 
     // Apply the resize to the DOM element directly for flex layout
@@ -174,21 +181,21 @@
   }
 </script>
 
-<div class="new-code-editor h-screen bg-base-100 overflow-hidden">
+<div class="new-code-editor h-screen bg-base-100 overflow-hidden flex flex-col">
   <!-- Top Menu Bar -->
   {#if layoutManager}
     {@const topMenuPane = layoutManager.getPaneByPosition('top-menu')}
     {#if topMenuPane && topMenuPane.getState().isVisible}
-      <div class="top-menu {getPaneColor('top-menu')} p-3 flex items-center justify-center text-sm font-semibold border-b border-base-300">
+      <div class="top-menu {getPaneColor('top-menu')} p-3 flex items-center justify-center text-sm font-semibold border-b border-base-300" style="height: 60px; flex-shrink: 0;">
         🍔 Top Menu Bar
       </div>
     {/if}
   {/if}
 
   <!-- Main Content Area -->
-  <div class="flex flex-1 overflow-hidden">
+  <div class="flex flex-grow overflow-hidden">
     <!-- Left Side -->
-    <div class="flex flex-col" style="width: 300px; min-width: 200px;">
+    <div class="flex flex-col h-full" style="width: 300px; min-width: 200px;">
       <!-- Left Top Pane -->
       {#if layoutManager}
         {@const leftTopPane = layoutManager.getPaneByPosition('left-top')}
@@ -223,7 +230,7 @@
     ></div>
 
     <!-- Center Area -->
-    <div class="flex flex-col flex-1" style="min-height: 500px;">
+    <div class="flex flex-col flex-1 h-full">
       <!-- Center Pane -->
       {#if layoutManager}
         {@const centerPane = layoutManager.getPaneByPosition('center')}
@@ -277,7 +284,7 @@
     ></div>
 
     <!-- Right Side -->
-    <div class="flex flex-col" style="width: 300px; min-width: 200px;">
+    <div class="flex flex-col h-full" style="width: 300px; min-width: 200px;">
       <!-- Right Top Pane -->
       {#if layoutManager}
         {@const rightTopPane = layoutManager.getPaneByPosition('right-top')}
@@ -306,22 +313,62 @@
     </div>
   </div>
   
-  <!-- Debug Panel (temporary) -->
-  <div class="fixed bottom-4 right-4 bg-base-300 p-4 rounded-lg shadow-lg max-w-sm">
-    <h3 class="font-bold text-sm mb-2">Layout Debug</h3>
-    <div class="text-xs space-y-1">
-      <div>Panes: {panes.length}</div>
-      <div>Resizing: {isResizing ? 'Yes' : 'No'}</div>
-      <div class="mt-2">
-        <button 
-          class="btn btn-xs btn-primary"
-          on:click={() => layoutManager && layoutManager.resetToDefault()}
-        >
-          Reset Layout
-        </button>
+  <!-- Floating Layout Configuration Button -->
+  <button 
+    class="fixed top-4 right-4 btn btn-circle btn-primary shadow-lg z-50"
+    on:click={() => showLayoutModal = true}
+    title="Configure Layout"
+  >
+    <!-- Window Icon SVG -->
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+    </svg>
+  </button>
+
+  <!-- Layout Configuration Modal -->
+  {#if showLayoutModal}
+    <div class="modal modal-open">
+      <div class="modal-box max-w-4xl h-[80vh] flex flex-col">
+        <!-- Modal Header -->
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="font-bold text-lg">Layout Configuration</h3>
+          <button 
+            class="btn btn-sm btn-circle btn-ghost"
+            on:click={() => showLayoutModal = false}
+          >
+            ✕
+          </button>
+        </div>
+        
+        <!-- Modal Content -->
+        <div class="flex-1 overflow-y-auto">
+          <!-- Empty for now - layout configuration will go here -->
+          <div class="flex items-center justify-center h-full text-base-content/50">
+            <p>Layout configuration options coming soon...</p>
+          </div>
+        </div>
+        
+        <!-- Modal Actions -->
+        <div class="modal-action">
+          <button 
+            class="btn btn-primary"
+            on:click={() => layoutManager && layoutManager.resetToDefault()}
+          >
+            Reset to Default
+          </button>
+          <button 
+            class="btn"
+            on:click={() => showLayoutModal = false}
+          >
+            Close
+          </button>
+        </div>
       </div>
+      
+      <!-- Modal backdrop -->
+      <div class="modal-backdrop" on:click={() => showLayoutModal = false}></div>
     </div>
-  </div>
+  {/if}
 </div>
 
 <style>
