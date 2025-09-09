@@ -1,6 +1,7 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
   import { PaneComponent } from '../../lib/newEditor/PaneComponent';
+  import { sendDebugLog } from '../../lib/websocket.js';
 
   // Props
   export let componentId = null;
@@ -36,6 +37,11 @@
   let saveTimer = null;
 
   onMount(() => {
+    sendDebugLog('DEBUG', 'TextArea onMount', {
+      componentId: componentId,
+      title: title
+    });
+
     // Create component instance
     component = new PaneComponent({
       id: componentId,

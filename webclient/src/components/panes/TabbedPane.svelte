@@ -4,6 +4,7 @@
   import { PaneComponent } from '../../lib/newEditor/PaneComponent';
   import ColorPicker from './ColorPicker.svelte';
   import TextArea from './TextArea.svelte';
+  import { sendDebugLog } from '../../lib/websocket.js';
 
   // Props
   export let position = '';
@@ -54,12 +55,14 @@
   function updateActiveComponent() {
     if (!tabManager || !activeTabId) {
       activeComponent = null;
+      sendDebugLog('DEBUG', 'TabbedPane: no tabManager or activeTabId', { tabManager: !!tabManager, activeTabId });
       return;
     }
 
     const activeTab = tabs.find(tab => tab.id === activeTabId);
     if (!activeTab) {
       activeComponent = null;
+      sendDebugLog('DEBUG', 'TabbedPane: no activeTab found', { activeTabId, tabsLength: tabs.length });
       return;
     }
 
@@ -83,6 +86,14 @@
       },
       config: activeTab
     };
+
+    sendDebugLog('DEBUG', 'TabbedPane: activeComponent set', { 
+      position,
+      hasActiveComponent: !!activeComponent,
+      hasComponent: !!activeComponent?.component,
+      componentName: activeComponent?.component?.name || 'null',
+      componentType: activeTab.componentType
+    });
   }
 
   // Handle tab click
@@ -167,12 +178,14 @@
   {/if}
 
   <!-- Tab Content -->
-  <div class="tab-content flex-1 min-h-0 overflow-hidden">
+  <div class="tab-content flex-1 min-h-0 overflow-hidden" style="display: block !important;">
     {#if activeComponent && activeComponent.component}
-      <svelte:component 
-        this={activeComponent.component} 
-        {...activeComponent.props}
-      />
+      <div class="h-full w-full">
+        <svelte:component 
+          this={activeComponent.component} 
+          {...activeComponent.props}
+        />
+      </div>
     {:else if tabs.length === 0}
       <!-- Empty state -->
       <div class="h-full flex items-center justify-center text-base-content/50">
@@ -216,6 +229,13 @@
   
   .tab-content {
     position: relative;
+    height: 100%;
+  }
+  
+  .tabbed-pane {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
   
   /* Drag and drop visual feedback */
