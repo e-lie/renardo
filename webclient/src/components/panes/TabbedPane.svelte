@@ -161,16 +161,6 @@
             {tab.title}
           </span>
           
-          <!-- Close Button -->
-          {#if tab.closable && tabs.length > 1}
-            <button 
-              class="ml-2 text-xs opacity-60 hover:opacity-100 hover:text-error flex-shrink-0 w-4 h-4 flex items-center justify-center"
-              on:click={(e) => closeTab(e, tab.id)}
-              title="Close tab"
-            >
-              ×
-            </button>
-          {/if}
         </div>
       {/each}
     </div>
