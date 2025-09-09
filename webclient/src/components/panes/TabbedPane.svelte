@@ -178,7 +178,7 @@
   {/if}
 
   <!-- Tab Content -->
-  <div class="tab-content flex-1 min-h-0 overflow-hidden" style="display: block !important;">
+  <div class="tab-content" style="flex: 1; min-height: 0; overflow: hidden; display: block;">
     {#if activeComponent && activeComponent.component}
       <div class="h-full w-full">
         <svelte:component 
