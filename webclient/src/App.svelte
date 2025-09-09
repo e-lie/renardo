@@ -5,6 +5,7 @@
   import { initWebSocket, incrementCounter, incrementCounterFallback, sendMessage } from './lib/websocket.js';
   import RenardoInit from './RenardoInit.svelte';
   import CodeEditor from './CodeEditor.svelte';
+  import NewCodeEditor from './NewCodeEditor.svelte';
   import Collections from './Collections.svelte';
   import Configuration from './Configuration.svelte';
   import AudioBackend from './AudioBackend.svelte';
@@ -206,6 +207,7 @@
         <div class="navbar-center hidden lg:flex">
           <ul class="menu menu-horizontal px-1">
             <li><a href="#editor" class:active={currentRoute === 'editor'}>Code Editor</a></li>
+            <li><a href="#new-editor" class:active={currentRoute === 'new-editor'}>New Editor</a></li>
             <li><a href="#init" class:active={currentRoute === 'init'}>Initialize</a></li>
             <li><a href="#scbackend" class:active={currentRoute === 'scbackend'}>Audio Backends</a></li>
             <li><a href="#collections" class:active={currentRoute === 'collections'}>Collections</a></li>
@@ -224,6 +226,10 @@
     {#if currentRoute === 'editor'}
       <div class="h-full bg-base-100">
         <CodeEditor />
+      </div>
+    {:else if currentRoute === 'new-editor'}
+      <div class="h-full bg-base-100">
+        <NewCodeEditor />
       </div>
     {:else}
       <div class="flex-1 bg-base-100 overflow-y-auto">
@@ -249,6 +255,7 @@
     <ul class="menu p-4 w-64 min-h-full bg-base-200 text-base-content">
       <li class="menu-title">Renardo ฅ^•ﻌ•^ฅ</li>
       <li><a href="#editor" class:active={currentRoute === 'editor'}>Code Editor</a></li>
+      <li><a href="#new-editor" class:active={currentRoute === 'new-editor'}>New Editor</a></li>
       <li><a href="#init" class:active={currentRoute === 'init'}>Initialize</a></li>
       <li><a href="#scbackend" class:active={currentRoute === 'scbackend'}>Audio Backends</a></li>
       <li><a href="#collections" class:active={currentRoute === 'collections'}>Collections</a></li>
