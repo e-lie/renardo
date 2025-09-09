@@ -567,11 +567,8 @@
   <!-- Left Pane Set Toggle -->
   {#if hasPanesVisible('left')}
     <button 
-      class="fixed left-4 top-1/2 transform -translate-y-1/2 btn btn-sm btn-circle btn-secondary shadow-xl z-50 hover:btn-primary transition-all duration-200"
-      on:click={() => {
-        console.log('Left toggle clicked:', paneSetVisibility['left']);
-        togglePaneSet('left');
-      }}
+      class="floating-toggle-btn left-right fixed left-4 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full bg-primary text-primary-content shadow-xl z-50 hover:bg-primary-focus active:bg-primary-focus flex items-center justify-center border-0 outline-none"
+      on:click={() => togglePaneSet('left')}
       title={paneSetVisibility['left'] ? 'Hide left panes' : 'Show left panes'}
     >
       {#if paneSetVisibility['left']}
@@ -591,11 +588,8 @@
   <!-- Right Pane Set Toggle -->
   {#if hasPanesVisible('right')}
     <button 
-      class="fixed right-4 top-1/2 transform -translate-y-1/2 btn btn-sm btn-circle btn-secondary shadow-xl z-50 hover:btn-primary transition-all duration-200"
-      on:click={() => {
-        console.log('Right toggle clicked:', paneSetVisibility['right']);
-        togglePaneSet('right');
-      }}
+      class="floating-toggle-btn left-right fixed right-4 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full bg-primary text-primary-content shadow-xl z-50 hover:bg-primary-focus active:bg-primary-focus flex items-center justify-center border-0 outline-none"
+      on:click={() => togglePaneSet('right')}
       title={paneSetVisibility['right'] ? 'Hide right panes' : 'Show right panes'}
     >
       {#if paneSetVisibility['right']}
@@ -615,11 +609,8 @@
   <!-- Bottom Pane Set Toggle -->
   {#if hasPanesVisible('bottom')}
     <button 
-      class="fixed bottom-2 left-1/2 transform -translate-x-1/2 btn btn-xs btn-circle btn-primary shadow-lg z-50 opacity-80 hover:opacity-100 transition-opacity"
-      on:click={() => {
-        console.log('Bottom toggle clicked:', paneSetVisibility['bottom']);
-        togglePaneSet('bottom');
-      }}
+      class="floating-toggle-btn bottom fixed bottom-2 left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full bg-primary text-primary-content shadow-xl z-50 hover:bg-primary-focus active:bg-primary-focus flex items-center justify-center border-0 outline-none"
+      on:click={() => togglePaneSet('bottom')}
       title={paneSetVisibility['bottom'] ? 'Hide bottom panes' : 'Show bottom panes'}
     >
       {#if paneSetVisibility['bottom']}
@@ -674,5 +665,38 @@
   .tab-active {
     background-color: oklch(var(--p));
     color: oklch(var(--pc));
+  }
+  
+  /* Floating toggle buttons - prevent any movement or unwanted states */
+  .floating-toggle-btn {
+    transform-origin: center;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease !important;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Ensure buttons maintain their transform on all states */
+  .floating-toggle-btn:hover,
+  .floating-toggle-btn:active,
+  .floating-toggle-btn:focus {
+    outline: none !important;
+  }
+  
+  /* Specific rules for left/right buttons */
+  .floating-toggle-btn.left-right:hover,
+  .floating-toggle-btn.left-right:active,
+  .floating-toggle-btn.left-right:focus {
+    transform: translateY(-50%) !important;
+  }
+  
+  /* Specific rules for bottom button */
+  .floating-toggle-btn.bottom:hover,
+  .floating-toggle-btn.bottom:active,
+  .floating-toggle-btn.bottom:focus {
+    transform: translateX(-50%) !important;
+  }
+  
+  .floating-toggle-btn:focus:not(:focus-visible) {
+    outline: none !important;
   }
 </style>
