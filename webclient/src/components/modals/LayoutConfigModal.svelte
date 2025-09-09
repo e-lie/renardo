@@ -2,16 +2,14 @@
   // Props
   export let showModal = false;
   export let paneVisibility = {};
-  export let paneComponents = {};
+  export let paneTabConfigs = {};
   export let hideAppNavbar = false;
   export let layoutManager = null;
 
-  // Available component types
+  // Available component types (for individual tabs within panes)
   const availableComponents = [
     { type: 'ColorPicker', title: 'Color Picker', icon: '🎨', description: 'Interactive color picker with HSL controls' },
-    { type: 'TextArea', title: 'Text Area', icon: '📝', description: 'Rich text editor with markdown support' },
-    { type: 'TabbedPane', title: 'Tabbed Pane', icon: '🗂️', description: 'Multiple components in tabs with drag & drop support' },
-    { type: 'placeholder', title: 'Empty', icon: '📦', description: 'Empty pane placeholder' }
+    { type: 'TextArea', title: 'Text Area', icon: '📝', description: 'Rich text editor with markdown support' }
   ];
 
   // Get all pane positions (except center)
@@ -19,78 +17,121 @@
     return ['left-top', 'left-middle', 'left-bottom', 'right-top', 'right-middle', 'right-bottom', 'bottom-left', 'bottom-right'];
   }
 
-  // Update component assignment for a pane
-  function updatePaneComponent(position, componentType) {
+  // Add a new tab to a pane
+  function addTabToPane(position, componentType) {
     const componentInfo = availableComponents.find(c => c.type === componentType) || availableComponents[0];
-    const newId = `${componentType}-${position}-${Date.now()}`;
+    const newId = `${componentType.toLowerCase()}-${position}-${Date.now()}`;
     
-    paneComponents[position] = {
-      type: componentType,
+    if (!paneTabConfigs[position]) {
+      paneTabConfigs[position] = [];
+    }
+    
+    // Deactivate other tabs
+    paneTabConfigs[position].forEach(tab => tab.active = false);
+    
+    // Add new tab as active
+    paneTabConfigs[position].push({
       title: componentInfo.title,
-      id: newId
-    };
+      componentType: componentType,
+      componentId: newId,
+      closable: paneTabConfigs[position].length > 0, // First tab is not closable
+      active: true
+    });
     
     // Trigger reactivity
-    paneComponents = { ...paneComponents };
+    paneTabConfigs = { ...paneTabConfigs };
   }
 
-  // Preset configurations
+  // Remove tab from pane
+  function removeTabFromPane(position, tabIndex) {
+    if (!paneTabConfigs[position] || paneTabConfigs[position].length <= 1) {
+      return; // Cannot remove if only one tab or no tabs
+    }
+    
+    const wasActive = paneTabConfigs[position][tabIndex]?.active;
+    paneTabConfigs[position].splice(tabIndex, 1);
+    
+    // If removed tab was active, activate another tab
+    if (wasActive && paneTabConfigs[position].length > 0) {
+      const newActiveIndex = Math.min(tabIndex, paneTabConfigs[position].length - 1);
+      paneTabConfigs[position][newActiveIndex].active = true;
+    }
+    
+    // Update closable status (first tab should not be closable)
+    if (paneTabConfigs[position].length > 0) {
+      paneTabConfigs[position][0].closable = paneTabConfigs[position].length > 1;
+    }
+    
+    // Trigger reactivity
+    paneTabConfigs = { ...paneTabConfigs };
+  }
+
+  // Update tab title
+  function updateTabTitle(position, tabIndex, newTitle) {
+    if (paneTabConfigs[position] && paneTabConfigs[position][tabIndex]) {
+      paneTabConfigs[position][tabIndex].title = newTitle;
+      paneTabConfigs = { ...paneTabConfigs };
+    }
+  }
+
+  // Preset configurations for tab layouts
   function applyPresetConfiguration(preset) {
     const presets = {
-      'all-color': {
-        'left-top': { type: 'ColorPicker', title: 'Color Picker', id: 'color-preset-1' },
-        'left-middle': { type: 'ColorPicker', title: 'Color Picker', id: 'color-preset-2' },
-        'left-bottom': { type: 'ColorPicker', title: 'Color Picker', id: 'color-preset-3' },
-        'right-top': { type: 'ColorPicker', title: 'Color Picker', id: 'color-preset-4' },
-        'right-middle': { type: 'ColorPicker', title: 'Color Picker', id: 'color-preset-5' },
-        'right-bottom': { type: 'ColorPicker', title: 'Color Picker', id: 'color-preset-6' },
-        'bottom-left': { type: 'ColorPicker', title: 'Color Picker', id: 'color-preset-7' },
-        'bottom-right': { type: 'ColorPicker', title: 'Color Picker', id: 'color-preset-8' }
+      'single': {
+        'left-top': [{ title: 'Colors', componentType: 'ColorPicker', componentId: 'color-1', closable: false, active: true }],
+        'left-middle': [{ title: 'Notes', componentType: 'TextArea', componentId: 'text-1', closable: false, active: true }],
+        'left-bottom': [{ title: 'Colors', componentType: 'ColorPicker', componentId: 'color-2', closable: false, active: true }],
+        'right-top': [{ title: 'Text', componentType: 'TextArea', componentId: 'text-2', closable: false, active: true }],
+        'right-middle': [{ title: 'Colors', componentType: 'ColorPicker', componentId: 'color-3', closable: false, active: true }],
+        'right-bottom': [{ title: 'Notes', componentType: 'TextArea', componentId: 'text-3', closable: false, active: true }],
+        'bottom-left': [{ title: 'Draft', componentType: 'TextArea', componentId: 'text-4', closable: false, active: true }],
+        'bottom-right': [{ title: 'Palette', componentType: 'ColorPicker', componentId: 'color-4', closable: false, active: true }]
       },
-      'all-text': {
-        'left-top': { type: 'TextArea', title: 'Text Area', id: 'text-preset-1' },
-        'left-middle': { type: 'TextArea', title: 'Text Area', id: 'text-preset-2' },
-        'left-bottom': { type: 'TextArea', title: 'Text Area', id: 'text-preset-3' },
-        'right-top': { type: 'TextArea', title: 'Text Area', id: 'text-preset-4' },
-        'right-middle': { type: 'TextArea', title: 'Text Area', id: 'text-preset-5' },
-        'right-bottom': { type: 'TextArea', title: 'Text Area', id: 'text-preset-6' },
-        'bottom-left': { type: 'TextArea', title: 'Text Area', id: 'text-preset-7' },
-        'bottom-right': { type: 'TextArea', title: 'Text Area', id: 'text-preset-8' }
-      },
-      'mixed': {
-        'left-top': { type: 'ColorPicker', title: 'Color Picker', id: 'mixed-color-1' },
-        'left-middle': { type: 'TextArea', title: 'Notes', id: 'mixed-text-1' },
-        'left-bottom': { type: 'ColorPicker', title: 'Color Picker', id: 'mixed-color-2' },
-        'right-top': { type: 'TextArea', title: 'Text Area', id: 'mixed-text-2' },
-        'right-middle': { type: 'ColorPicker', title: 'Shared Colors', id: 'mixed-color-3' },
-        'right-bottom': { type: 'TextArea', title: 'Shared Notes', id: 'mixed-text-3' },
-        'bottom-left': { type: 'TextArea', title: 'Draft', id: 'mixed-text-4' },
-        'bottom-right': { type: 'ColorPicker', title: 'Palette', id: 'mixed-color-4' }
-      },
-      'tabbed': {
-        'left-top': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-left-top' },
-        'left-middle': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-left-middle' },
-        'left-bottom': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-left-bottom' },
-        'right-top': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-right-top' },
-        'right-middle': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-right-middle' },
-        'right-bottom': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-right-bottom' },
-        'bottom-left': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-bottom-left' },
-        'bottom-right': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-bottom-right' }
+      'multi': {
+        'left-top': [
+          { title: 'Colors', componentType: 'ColorPicker', componentId: 'color-1', closable: false, active: true },
+          { title: 'Palette', componentType: 'ColorPicker', componentId: 'color-1b', closable: true, active: false }
+        ],
+        'left-middle': [
+          { title: 'Notes', componentType: 'TextArea', componentId: 'text-1', closable: false, active: true }
+        ],
+        'left-bottom': [
+          { title: 'Scratch', componentType: 'TextArea', componentId: 'text-scratch', closable: false, active: true },
+          { title: 'Colors', componentType: 'ColorPicker', componentId: 'color-scratch', closable: true, active: false }
+        ],
+        'right-top': [
+          { title: 'Workspace', componentType: 'TextArea', componentId: 'text-2', closable: false, active: true }
+        ],
+        'right-middle': [
+          { title: 'Shared Colors', componentType: 'ColorPicker', componentId: 'color-3', closable: false, active: true },
+          { title: 'Tools', componentType: 'TextArea', componentId: 'text-tools', closable: true, active: false }
+        ],
+        'right-bottom': [
+          { title: 'Shared Notes', componentType: 'TextArea', componentId: 'text-3', closable: false, active: true }
+        ],
+        'bottom-left': [
+          { title: 'Draft', componentType: 'TextArea', componentId: 'text-4', closable: false, active: true },
+          { title: 'Debug', componentType: 'TextArea', componentId: 'text-debug', closable: true, active: false }
+        ],
+        'bottom-right': [
+          { title: 'Palette', componentType: 'ColorPicker', componentId: 'color-4', closable: false, active: true },
+          { title: 'Export', componentType: 'TextArea', componentId: 'text-export', closable: true, active: false }
+        ]
       },
       'empty': {
-        'left-top': { type: 'placeholder', title: 'Empty', id: null },
-        'left-middle': { type: 'placeholder', title: 'Empty', id: null },
-        'left-bottom': { type: 'placeholder', title: 'Empty', id: null },
-        'right-top': { type: 'placeholder', title: 'Empty', id: null },
-        'right-middle': { type: 'placeholder', title: 'Empty', id: null },
-        'right-bottom': { type: 'placeholder', title: 'Empty', id: null },
-        'bottom-left': { type: 'placeholder', title: 'Empty', id: null },
-        'bottom-right': { type: 'placeholder', title: 'Empty', id: null }
+        'left-top': [],
+        'left-middle': [],
+        'left-bottom': [],
+        'right-top': [],
+        'right-middle': [],
+        'right-bottom': [],
+        'bottom-left': [],
+        'bottom-right': []
       }
     };
 
     if (presets[preset]) {
-      paneComponents = { ...presets[preset] };
+      paneTabConfigs = { ...presets[preset] };
     }
   }
 
@@ -319,30 +360,18 @@
 
         <!-- Quick Presets Section -->
         <div class="divider">Quick Presets</div>
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
           <button 
             class="btn btn-sm btn-outline"
-            on:click={() => applyPresetConfiguration('all-color')}
+            on:click={() => applyPresetConfiguration('single')}
           >
-            🎨 All Colors
+            📄 Single Components
           </button>
           <button 
             class="btn btn-sm btn-outline"
-            on:click={() => applyPresetConfiguration('all-text')}
+            on:click={() => applyPresetConfiguration('multi')}
           >
-            📝 All Text
-          </button>
-          <button 
-            class="btn btn-sm btn-outline"
-            on:click={() => applyPresetConfiguration('mixed')}
-          >
-            🔄 Mixed (Default)
-          </button>
-          <button 
-            class="btn btn-sm btn-outline"
-            on:click={() => applyPresetConfiguration('tabbed')}
-          >
-            🗂️ All Tabbed
+            🗂️ Multi-Tab Layout
           </button>
           <button 
             class="btn btn-sm btn-outline"
@@ -352,75 +381,96 @@
           </button>
         </div>
 
-        <!-- Component Selection Section -->
-        <div class="divider">Component Assignment</div>
+        <!-- Tab Management Section -->
+        <div class="divider">Pane Tab Management</div>
         <div class="space-y-4">
-          <div class="alert alert-success">
+          <div class="alert alert-info">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <span><strong>Tip:</strong> Components of the same type share synchronized state across all panes!</span>
+            <span><strong>Tip:</strong> Each pane can contain multiple components in tabs. Components of the same type share synchronized state!</span>
           </div>
 
-          <!-- Component assignment for each pane -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Tab management for each pane -->
+          <div class="grid grid-cols-1 gap-4">
             {#each getAllPanePositions() as position}
-              <div class="card card-compact bg-base-200 shadow-sm">
-                <div class="card-body">
-                  <div class="flex items-center gap-2 mb-2">
+              <div class="card bg-base-200 shadow-sm">
+                <div class="card-body p-4">
+                  <div class="flex items-center gap-2 mb-3">
                     <div class="w-4 h-4 rounded {getPaneColor(position)}"></div>
                     <h4 class="card-title text-sm capitalize">
                       {position.replace('-', ' ')}
                     </h4>
+                    <div class="badge badge-xs badge-primary">
+                      {paneTabConfigs[position]?.length || 0} tab{(paneTabConfigs[position]?.length || 0) !== 1 ? 's' : ''}
+                    </div>
                   </div>
                   
-                  <div class="form-control">
-                    <label class="label py-1">
-                      <span class="label-text text-xs">Component Type</span>
-                    </label>
-                    <select 
-                      class="select select-xs select-bordered w-full"
-                      bind:value={paneComponents[position].type}
-                      on:change={(e) => updatePaneComponent(position, e.target.value)}
-                    >
-                      {#each availableComponents as component}
-                        <option value={component.type}>
-                          {component.icon} {component.title}
-                        </option>
-                      {/each}
-                    </select>
-                    <label class="label py-1">
-                      <span class="label-text-alt text-xs opacity-70">
-                        {availableComponents.find(c => c.type === paneComponents[position].type)?.description || ''}
-                      </span>
-                    </label>
-                  </div>
-                  
-                  <div class="flex items-center gap-1 text-xs opacity-70">
-                    <span class="badge badge-xs">
-                      {paneComponents[position].type === 'ColorPicker' ? '🎨' : 
-                       paneComponents[position].type === 'TextArea' ? '📝' : '📦'} 
-                      {paneComponents[position].type}
-                    </span>
-                    {#if paneComponents[position].type !== 'placeholder'}
-                      <span class="text-xs opacity-50">ID: {paneComponents[position].id?.split('-').slice(-1)[0] || 'N/A'}</span>
+                  <!-- Current tabs -->
+                  <div class="space-y-2 mb-3">
+                    {#each (paneTabConfigs[position] || []) as tab, tabIndex}
+                      <div class="flex items-center gap-2 p-2 bg-base-100 rounded border {tab.active ? 'ring-2 ring-primary ring-opacity-50' : ''}">
+                        <span class="text-sm">
+                          {tab.componentType === 'ColorPicker' ? '🎨' : '📝'}
+                        </span>
+                        <input 
+                          type="text" 
+                          bind:value={tab.title}
+                          on:input={(e) => updateTabTitle(position, tabIndex, e.target.value)}
+                          class="input input-xs flex-1 bg-transparent border-0 focus:outline-none"
+                        />
+                        <span class="text-xs opacity-50">{tab.componentType}</span>
+                        {#if tab.active}
+                          <span class="badge badge-xs badge-primary">Active</span>
+                        {/if}
+                        {#if tab.closable}
+                          <button 
+                            class="btn btn-xs btn-ghost btn-circle text-error hover:bg-error hover:text-error-content"
+                            on:click={() => removeTabFromPane(position, tabIndex)}
+                            title="Remove tab"
+                          >
+                            ×
+                          </button>
+                        {/if}
+                      </div>
+                    {/each}
+                    
+                    {#if !paneTabConfigs[position] || paneTabConfigs[position].length === 0}
+                      <div class="text-center py-4 text-base-content/50">
+                        <div class="text-2xl mb-1">📦</div>
+                        <div class="text-xs">No components</div>
+                      </div>
                     {/if}
+                  </div>
+                  
+                  <!-- Add tab buttons -->
+                  <div class="flex gap-2">
+                    <button 
+                      class="btn btn-xs btn-outline"
+                      on:click={() => addTabToPane(position, 'ColorPicker')}
+                    >
+                      + 🎨 Color Picker
+                    </button>
+                    <button 
+                      class="btn btn-xs btn-outline"
+                      on:click={() => addTabToPane(position, 'TextArea')}
+                    >
+                      + 📝 Text Area
+                    </button>
                   </div>
                 </div>
               </div>
             {/each}
           </div>
 
-          <!-- Component Info Section -->
+          <!-- Available Components Info -->
           <div class="divider">Available Components</div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
             {#each availableComponents as component}
               <div class="card card-compact bg-base-100 border border-base-300">
                 <div class="card-body items-center text-center">
                   <div class="text-2xl mb-1">{component.icon}</div>
                   <h4 class="card-title text-sm">{component.title}</h4>
                   <p class="text-xs opacity-70">{component.description}</p>
-                  {#if component.type !== 'placeholder'}
-                    <div class="badge badge-sm badge-primary">Synchronized</div>
-                  {/if}
+                  <div class="badge badge-sm badge-primary">Synchronized</div>
                 </div>
               </div>
             {/each}
