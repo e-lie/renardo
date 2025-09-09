@@ -45,34 +45,37 @@
 
   // Pane tab configurations (each pane can have multiple tabs)
   let paneTabConfigs = {
+    'top-menu': [
+      { id: 'tab-top-menu-1', title: 'Menu', componentType: 'TextArea', componentId: 'menu-1', closable: false, active: true }
+    ],
     'left-top': [
-      { title: 'Colors', componentType: 'ColorPicker', componentId: 'color-1', closable: false, active: true },
-      { title: 'Palette', componentType: 'ColorPicker', componentId: 'color-2', closable: true, active: false }
+      { id: 'tab-left-top-1', title: 'Colors', componentType: 'ColorPicker', componentId: 'color-1', closable: false, active: true },
+      { id: 'tab-left-top-2', title: 'Palette', componentType: 'ColorPicker', componentId: 'color-2', closable: true, active: false }
     ],
     'left-middle': [
-      { title: 'Notes', componentType: 'TextArea', componentId: 'text-1', closable: false, active: true }
+      { id: 'tab-left-middle-1', title: 'Notes', componentType: 'TextArea', componentId: 'text-1', closable: false, active: true }
     ],
     'left-bottom': [
-      { title: 'Scratch', componentType: 'TextArea', componentId: 'text-scratch', closable: false, active: true },
-      { title: 'Colors', componentType: 'ColorPicker', componentId: 'color-scratch', closable: true, active: false }
+      { id: 'tab-left-bottom-1', title: 'Scratch', componentType: 'TextArea', componentId: 'text-scratch', closable: false, active: true },
+      { id: 'tab-left-bottom-2', title: 'Colors', componentType: 'ColorPicker', componentId: 'color-scratch', closable: true, active: false }
     ],
     'right-top': [
-      { title: 'Workspace', componentType: 'TextArea', componentId: 'text-2', closable: false, active: true }
+      { id: 'tab-right-top-1', title: 'Workspace', componentType: 'TextArea', componentId: 'text-2', closable: false, active: true }
     ],
     'right-middle': [
-      { title: 'Shared Colors', componentType: 'ColorPicker', componentId: 'color-3', closable: false, active: true },
-      { title: 'Tools', componentType: 'TextArea', componentId: 'text-tools', closable: true, active: false }
+      { id: 'tab-right-middle-1', title: 'Shared Colors', componentType: 'ColorPicker', componentId: 'color-3', closable: false, active: true },
+      { id: 'tab-right-middle-2', title: 'Tools', componentType: 'TextArea', componentId: 'text-tools', closable: true, active: false }
     ],
     'right-bottom': [
-      { title: 'Shared Notes', componentType: 'TextArea', componentId: 'text-3', closable: false, active: true }
+      { id: 'tab-right-bottom-1', title: 'Shared Notes', componentType: 'TextArea', componentId: 'text-3', closable: false, active: true }
     ],
     'bottom-left': [
-      { title: 'Draft', componentType: 'TextArea', componentId: 'text-4', closable: false, active: true },
-      { title: 'Debug', componentType: 'TextArea', componentId: 'text-debug', closable: true, active: false }
+      { id: 'tab-bottom-left-1', title: 'Draft', componentType: 'TextArea', componentId: 'text-4', closable: false, active: true },
+      { id: 'tab-bottom-left-2', title: 'Debug', componentType: 'TextArea', componentId: 'text-debug', closable: true, active: false }
     ],
     'bottom-right': [
-      { title: 'Palette', componentType: 'ColorPicker', componentId: 'color-4', closable: false, active: true },
-      { title: 'Export', componentType: 'TextArea', componentId: 'text-export', closable: true, active: false }
+      { id: 'tab-bottom-right-1', title: 'Palette', componentType: 'ColorPicker', componentId: 'color-4', closable: false, active: true },
+      { id: 'tab-bottom-right-2', title: 'Export', componentType: 'TextArea', componentId: 'text-export', closable: true, active: false }
     ]
   };
 
