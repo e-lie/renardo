@@ -3,6 +3,7 @@
   import { LayoutManager, PaneComponent } from './lib/newEditor/index';
   import ColorPicker from './components/panes/ColorPicker.svelte';
   import TextArea from './components/panes/TextArea.svelte';
+  import TabbedPane from './components/panes/TabbedPane.svelte';
   import LayoutConfigModal from './components/modals/LayoutConfigModal.svelte';
   
   // Create layout manager instance
@@ -42,16 +43,49 @@
   };
 
 
-  // Component assignments for each pane (user configurable)
+  // Pane tab configurations (each pane can have multiple tabs)
+  let paneTabConfigs = {
+    'left-top': [
+      { title: 'Colors', componentType: 'ColorPicker', componentId: 'color-1', closable: false, active: true },
+      { title: 'Palette', componentType: 'ColorPicker', componentId: 'color-2', closable: true, active: false }
+    ],
+    'left-middle': [
+      { title: 'Notes', componentType: 'TextArea', componentId: 'text-1', closable: false, active: true }
+    ],
+    'left-bottom': [
+      { title: 'Scratch', componentType: 'TextArea', componentId: 'text-scratch', closable: false, active: true },
+      { title: 'Colors', componentType: 'ColorPicker', componentId: 'color-scratch', closable: true, active: false }
+    ],
+    'right-top': [
+      { title: 'Workspace', componentType: 'TextArea', componentId: 'text-2', closable: false, active: true }
+    ],
+    'right-middle': [
+      { title: 'Shared Colors', componentType: 'ColorPicker', componentId: 'color-3', closable: false, active: true },
+      { title: 'Tools', componentType: 'TextArea', componentId: 'text-tools', closable: true, active: false }
+    ],
+    'right-bottom': [
+      { title: 'Shared Notes', componentType: 'TextArea', componentId: 'text-3', closable: false, active: true }
+    ],
+    'bottom-left': [
+      { title: 'Draft', componentType: 'TextArea', componentId: 'text-4', closable: false, active: true },
+      { title: 'Debug', componentType: 'TextArea', componentId: 'text-debug', closable: true, active: false }
+    ],
+    'bottom-right': [
+      { title: 'Palette', componentType: 'ColorPicker', componentId: 'color-4', closable: false, active: true },
+      { title: 'Export', componentType: 'TextArea', componentId: 'text-export', closable: true, active: false }
+    ]
+  };
+
+  // Legacy component assignments (kept for compatibility with modal)
   let paneComponents = {
-    'left-top': { type: 'ColorPicker', title: 'Color Picker', id: 'color-1' },
-    'left-middle': { type: 'TextArea', title: 'Notes', id: 'text-1' },
-    'left-bottom': { type: 'ColorPicker', title: 'Color Picker 2', id: 'color-2' },
-    'right-top': { type: 'TextArea', title: 'Text Area', id: 'text-2' },
-    'right-middle': { type: 'ColorPicker', title: 'Shared Colors', id: 'color-3' },
-    'right-bottom': { type: 'TextArea', title: 'Shared Notes', id: 'text-3' },
-    'bottom-left': { type: 'TextArea', title: 'Draft', id: 'text-4' },
-    'bottom-right': { type: 'ColorPicker', title: 'Palette', id: 'color-4' }
+    'left-top': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-left-top' },
+    'left-middle': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-left-middle' },
+    'left-bottom': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-left-bottom' },
+    'right-top': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-right-top' },
+    'right-middle': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-right-middle' },
+    'right-bottom': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-right-bottom' },
+    'bottom-left': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-bottom-left' },
+    'bottom-right': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-bottom-right' }
   };
   
   // Track pane sizes for resizing
@@ -267,6 +301,8 @@
         return { component: ColorPicker, props };
       case 'TextArea':
         return { component: TextArea, props };
+      case 'TabbedPane':
+        return { component: TabbedPane, props };
       case 'TopMenu':
         return { component: null, content: '🍔 Menu Bar' };
       case 'EditorPlaceholder':
@@ -284,7 +320,15 @@
   // Helper function to render pane content
   function renderPaneContent(position) {
     const config = getComponentConfig(position);
-    const rendered = renderComponent(config.type, { componentId: config.id, title: config.title });
+    const props = { componentId: config.id, title: config.title };
+    
+    // Add tab configuration for TabbedPane components
+    if (config.type === 'TabbedPane') {
+      props.position = position;
+      props.initialTabs = paneTabConfigs[position] || [];
+    }
+    
+    const rendered = renderComponent(config.type, props);
     return { config, rendered };
   }
 
