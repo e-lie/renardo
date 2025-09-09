@@ -2,3 +2,4 @@
 export { PaneTab } from './PaneTab';
 export { Pane } from './Pane';
 export { LayoutManager } from './LayoutManager';
+export { PaneComponent } from './PaneComponent';
