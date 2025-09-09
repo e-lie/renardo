@@ -1,6 +1,8 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
-  import { LayoutManager } from './lib/newEditor/index';
+  import { LayoutManager, PaneComponent } from './lib/newEditor/index';
+  import ColorPicker from './components/panes/ColorPicker.svelte';
+  import TextArea from './components/panes/TextArea.svelte';
   
   // Create layout manager instance
   let layoutManager = null;
@@ -22,6 +24,18 @@
     'right-bottom': true,
     'bottom-left': true,
     'bottom-right': true
+  };
+
+  // Demo components for each pane
+  let paneComponents = {
+    'left-top': { type: 'ColorPicker', title: 'Color Picker', id: 'color-1' },
+    'left-middle': { type: 'TextArea', title: 'Notes', id: 'text-1' },
+    'left-bottom': { type: 'ColorPicker', title: 'Color Picker 2', id: 'color-2' },
+    'right-top': { type: 'TextArea', title: 'Text Area', id: 'text-2' },
+    'right-middle': { type: 'ColorPicker', title: 'Shared Colors', id: 'color-3' },
+    'right-bottom': { type: 'TextArea', title: 'Shared Notes', id: 'text-3' },
+    'bottom-left': { type: 'TextArea', title: 'Draft', id: 'text-4' },
+    'bottom-right': { type: 'ColorPicker', title: 'Palette', id: 'color-4' }
   };
   
   // Track pane sizes for resizing
@@ -49,6 +63,16 @@
       detail: { hideNavbar: hideAppNavbar }
     }));
   }
+
+  // Reactive pane content rendering
+  $: leftTopContent = renderPaneContent('left-top');
+  $: leftMiddleContent = renderPaneContent('left-middle');
+  $: leftBottomContent = renderPaneContent('left-bottom');
+  $: rightTopContent = renderPaneContent('right-top');
+  $: rightMiddleContent = renderPaneContent('right-middle');
+  $: rightBottomContent = renderPaneContent('right-bottom');
+  $: bottomLeftContent = renderPaneContent('bottom-left');
+  $: bottomRightContent = renderPaneContent('bottom-right');
   
   // Resize state
   let resizeData = null;
@@ -217,8 +241,12 @@
   }
 
   // Component rendering helpers
-  function renderComponent(componentType, props) {
+  function renderComponent(componentType, props = {}) {
     switch (componentType) {
+      case 'ColorPicker':
+        return { component: ColorPicker, props };
+      case 'TextArea':
+        return { component: TextArea, props };
       case 'TopMenu':
         return { component: null, content: '🍔 Menu Bar' };
       case 'EditorPlaceholder':
@@ -226,6 +254,18 @@
       default:
         return { component: null, content: `📦 ${componentType}` };
     }
+  }
+
+  // Get component config for a pane position
+  function getComponentConfig(position) {
+    return paneComponents[position] || { type: 'placeholder', title: 'Empty', id: null };
+  }
+
+  // Helper function to render pane content
+  function renderPaneContent(position) {
+    const config = getComponentConfig(position);
+    const rendered = renderComponent(config.type, { componentId: config.id, title: config.title });
+    return { config, rendered };
   }
 
   // Get pane background color based on position
@@ -262,10 +302,16 @@
         <!-- Left Top Pane -->
         {#if paneVisibility['left-top']}
           <div 
-            class="{getPaneColor('left-top')} p-4 flex items-center justify-center text-sm border-r border-base-300"
+            class="{getPaneColor('left-top')} border-r border-base-300 overflow-hidden"
             style="height: {paneSizes['left-top']}px; min-height: 100px;"
           >
-            🔵 Left Top Pane
+            {#if leftTopContent.rendered.component}
+              <svelte:component this={leftTopContent.rendered.component} {...leftTopContent.rendered.props} />
+            {:else}
+              <div class="p-4 flex items-center justify-center text-sm">
+                {leftTopContent.rendered.content}
+              </div>
+            {/if}
           </div>
         {/if}
         
@@ -280,10 +326,16 @@
         <!-- Left Middle Pane -->
         {#if paneVisibility['left-middle']}
           <div 
-            class="{getPaneColor('left-middle')} p-4 flex items-center justify-center text-sm border-r border-base-300"
+            class="{getPaneColor('left-middle')} border-r border-base-300 overflow-hidden"
             style="{paneVisibility['left-top'] || paneVisibility['left-bottom'] ? `height: ${paneSizes['left-middle']}px; min-height: 100px;` : 'flex: 1;'}"
           >
-            🟦 Left Middle Pane
+            {#if leftMiddleContent.rendered.component}
+              <svelte:component this={leftMiddleContent.rendered.component} {...leftMiddleContent.rendered.props} />
+            {:else}
+              <div class="p-4 flex items-center justify-center text-sm">
+                {leftMiddleContent.rendered.content}
+              </div>
+            {/if}
           </div>
         {/if}
         
@@ -298,10 +350,16 @@
         <!-- Left Bottom Pane -->
         {#if paneVisibility['left-bottom']}
           <div 
-            class="{getPaneColor('left-bottom')} p-4 flex items-center justify-center text-sm border-r border-base-300"
+            class="{getPaneColor('left-bottom')} border-r border-base-300 overflow-hidden"
             style="{paneVisibility['left-top'] || paneVisibility['left-middle'] ? `flex: 1; min-height: 100px;` : 'flex: 1;'}"
           >
-            🟢 Left Bottom Pane
+            {#if leftBottomContent.rendered.component}
+              <svelte:component this={leftBottomContent.rendered.component} {...leftBottomContent.rendered.props} />
+            {:else}
+              <div class="p-4 flex items-center justify-center text-sm">
+                {leftBottomContent.rendered.content}
+              </div>
+            {/if}
           </div>
         {/if}
       </div>
@@ -336,10 +394,16 @@
           <!-- Bottom Left -->
           {#if paneVisibility['bottom-left']}
             <div 
-              class="{getPaneColor('bottom-left')} p-4 flex items-center justify-center text-sm border-r border-base-300"
+              class="{getPaneColor('bottom-left')} border-r border-base-300 overflow-hidden"
               style="{paneVisibility['bottom-right'] ? `width: ${paneSizes['bottom-left']}px; min-width: 200px;` : 'flex: 1;'}"
             >
-              🟡 Bottom Left
+              {#if bottomLeftContent.rendered.component}
+                <svelte:component this={bottomLeftContent.rendered.component} {...bottomLeftContent.rendered.props} />
+              {:else}
+                <div class="p-4 flex items-center justify-center text-sm">
+                  {bottomLeftContent.rendered.content}
+                </div>
+              {/if}
             </div>
           {/if}
           
@@ -354,10 +418,16 @@
           <!-- Bottom Right -->
           {#if paneVisibility['bottom-right']}
             <div 
-              class="{getPaneColor('bottom-right')} p-4 flex items-center justify-center text-sm"
+              class="{getPaneColor('bottom-right')} overflow-hidden"
               style="flex: 1; min-width: 200px;"
             >
-              🟠 Bottom Right
+              {#if bottomRightContent.rendered.component}
+                <svelte:component this={bottomRightContent.rendered.component} {...bottomRightContent.rendered.props} />
+              {:else}
+                <div class="p-4 flex items-center justify-center text-sm">
+                  {bottomRightContent.rendered.content}
+                </div>
+              {/if}
             </div>
           {/if}
         </div>
@@ -378,10 +448,16 @@
         <!-- Right Top Pane -->
         {#if paneVisibility['right-top']}
           <div 
-            class="{getPaneColor('right-top')} p-4 flex items-center justify-center text-sm border-l border-base-300"
+            class="{getPaneColor('right-top')} border-l border-base-300 overflow-hidden"
             style="height: {paneSizes['right-top']}px; min-height: 100px;"
           >
-            🔴 Right Top Pane
+            {#if rightTopContent.rendered.component}
+              <svelte:component this={rightTopContent.rendered.component} {...rightTopContent.rendered.props} />
+            {:else}
+              <div class="p-4 flex items-center justify-center text-sm">
+                {rightTopContent.rendered.content}
+              </div>
+            {/if}
           </div>
         {/if}
         
@@ -396,10 +472,16 @@
         <!-- Right Middle Pane -->
         {#if paneVisibility['right-middle']}
           <div 
-            class="{getPaneColor('right-middle')} p-4 flex items-center justify-center text-sm border-l border-base-300"
+            class="{getPaneColor('right-middle')} border-l border-base-300 overflow-hidden"
             style="{paneVisibility['right-top'] || paneVisibility['right-bottom'] ? `height: ${paneSizes['right-middle']}px; min-height: 100px;` : 'flex: 1;'}"
           >
-            🟥 Right Middle Pane
+            {#if rightMiddleContent.rendered.component}
+              <svelte:component this={rightMiddleContent.rendered.component} {...rightMiddleContent.rendered.props} />
+            {:else}
+              <div class="p-4 flex items-center justify-center text-sm">
+                {rightMiddleContent.rendered.content}
+              </div>
+            {/if}
           </div>
         {/if}
         
@@ -414,10 +496,16 @@
         <!-- Right Bottom Pane -->
         {#if paneVisibility['right-bottom']}
           <div 
-            class="{getPaneColor('right-bottom')} p-4 flex items-center justify-center text-sm border-l border-base-300"
+            class="{getPaneColor('right-bottom')} border-l border-base-300 overflow-hidden"
             style="{paneVisibility['right-top'] || paneVisibility['right-middle'] ? `flex: 1; min-height: 100px;` : 'flex: 1;'}"
           >
-            🟣 Right Bottom Pane
+            {#if rightBottomContent.rendered.component}
+              <svelte:component this={rightBottomContent.rendered.component} {...rightBottomContent.rendered.props} />
+            {:else}
+              <div class="p-4 flex items-center justify-center text-sm">
+                {rightBottomContent.rendered.content}
+              </div>
+            {/if}
           </div>
         {/if}
       </div>
