@@ -51,6 +51,9 @@
   
   // Zen mode state
   let zenMode = false;
+  
+  // Navbar visibility state for NewCodeEditor
+  let hideNavbarForNewEditor = false;
 
   // Check if WebSockets are supported
   const webSocketSupported = 'WebSocket' in window;
@@ -125,12 +128,20 @@
       window.addEventListener('zenModeChange', (event) => {
         zenMode = event.detail.zenMode;
       });
+      
+      // Listen for navbar visibility changes from NewCodeEditor
+      window.addEventListener('navbarVisibilityChange', (event) => {
+        hideNavbarForNewEditor = event.detail.hideNavbar;
+      });
 
       // Clean up event listeners on component unmount, but keep WebSocket connection
       return () => {
         window.removeEventListener('hashchange', handleHashChange);
         window.removeEventListener('zenModeChange', (event) => {
           zenMode = event.detail.zenMode;
+        });
+        window.removeEventListener('navbarVisibilityChange', (event) => {
+          hideNavbarForNewEditor = event.detail.hideNavbar;
         });
         
         // Do NOT close the WebSocket here - it should stay open for the app's lifetime
@@ -193,7 +204,7 @@
   <input id="drawer-toggle" type="checkbox" class="drawer-toggle" /> 
   <div class="drawer-content flex flex-col h-screen overflow-hidden">
     <!-- Navbar -->
-    {#if !zenMode || currentRoute !== 'editor'}
+    {#if (!zenMode || currentRoute !== 'editor') && !(currentRoute === 'new-editor' && hideNavbarForNewEditor)}
       <div class="navbar bg-base-300" transition:slide>
         <div class="navbar-start">
           <label for="drawer-toggle" class="btn btn-square btn-ghost drawer-button lg:hidden">
@@ -228,7 +239,7 @@
         <CodeEditor />
       </div>
     {:else if currentRoute === 'new-editor'}
-      <div class="flex-1 bg-base-100 overflow-hidden">
+      <div class="{hideNavbarForNewEditor ? 'h-full' : 'flex-1'} bg-base-100 overflow-hidden">
         <NewCodeEditor />
       </div>
     {:else}
