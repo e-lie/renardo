@@ -334,7 +334,7 @@
 
   // Handle global mouse movement for edge detection
   function handleGlobalMouseMove(event) {
-    const threshold = 10; // 10px threshold from edge
+    const threshold = 20; // 20px threshold from edge
     const { clientX, clientY } = event;
     const { innerWidth, innerHeight } = window;
 
