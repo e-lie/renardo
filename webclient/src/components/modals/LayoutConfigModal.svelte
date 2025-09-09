@@ -10,6 +10,7 @@
   const availableComponents = [
     { type: 'ColorPicker', title: 'Color Picker', icon: '🎨', description: 'Interactive color picker with HSL controls' },
     { type: 'TextArea', title: 'Text Area', icon: '📝', description: 'Rich text editor with markdown support' },
+    { type: 'TabbedPane', title: 'Tabbed Pane', icon: '🗂️', description: 'Multiple components in tabs with drag & drop support' },
     { type: 'placeholder', title: 'Empty', icon: '📦', description: 'Empty pane placeholder' }
   ];
 
@@ -65,6 +66,16 @@
         'right-bottom': { type: 'TextArea', title: 'Shared Notes', id: 'mixed-text-3' },
         'bottom-left': { type: 'TextArea', title: 'Draft', id: 'mixed-text-4' },
         'bottom-right': { type: 'ColorPicker', title: 'Palette', id: 'mixed-color-4' }
+      },
+      'tabbed': {
+        'left-top': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-left-top' },
+        'left-middle': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-left-middle' },
+        'left-bottom': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-left-bottom' },
+        'right-top': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-right-top' },
+        'right-middle': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-right-middle' },
+        'right-bottom': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-right-bottom' },
+        'bottom-left': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-bottom-left' },
+        'bottom-right': { type: 'TabbedPane', title: 'Tabbed Pane', id: 'tabbed-bottom-right' }
       },
       'empty': {
         'left-top': { type: 'placeholder', title: 'Empty', id: null },
@@ -308,7 +319,7 @@
 
         <!-- Quick Presets Section -->
         <div class="divider">Quick Presets</div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
           <button 
             class="btn btn-sm btn-outline"
             on:click={() => applyPresetConfiguration('all-color')}
@@ -326,6 +337,12 @@
             on:click={() => applyPresetConfiguration('mixed')}
           >
             🔄 Mixed (Default)
+          </button>
+          <button 
+            class="btn btn-sm btn-outline"
+            on:click={() => applyPresetConfiguration('tabbed')}
+          >
+            🗂️ All Tabbed
           </button>
           <button 
             class="btn btn-sm btn-outline"
