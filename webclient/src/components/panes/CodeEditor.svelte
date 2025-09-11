@@ -305,6 +305,24 @@
       componentId: componentId,
       title: title
     });
+    
+    // Register this editor globally for action buttons
+    if (typeof window !== 'undefined') {
+      window.globalEditorComponent = {
+        getAllText: () => {
+          if (editor) {
+            const text = editor.getValue();
+            const lastLine = editor.lineCount() - 1;
+            return {
+              text: text,
+              from: { line: 0, ch: 0 },
+              to: { line: lastLine, ch: editor.getLine(lastLine).length }
+            };
+          }
+          return { text: '', from: { line: 0, ch: 0 }, to: { line: 0, ch: 0 } };
+        }
+      };
+    }
 
     // Subscribe to global editor settings
     settingsUnsubscribe = editorSettings.subscribe(settings => {
