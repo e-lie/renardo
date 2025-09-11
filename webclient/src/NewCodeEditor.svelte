@@ -169,12 +169,20 @@
 
     // Add global mouse move listener for edge detection
     document.addEventListener('mousemove', handleGlobalMouseMove);
+    
+    // Set up keyboard shortcuts for code evaluation
+    document.addEventListener('keydown', handleKeyDown);
+    
+    // Listen for code execution completion
+    document.addEventListener('codeExecutionComplete', handleCodeExecutionComplete);
   });
 
   onDestroy(() => {
     unsubscribeLayout?.();
     unsubscribePanes.forEach(unsub => unsub());
     document.removeEventListener('mousemove', handleGlobalMouseMove);
+    document.removeEventListener('keydown', handleKeyDown);
+    document.removeEventListener('codeExecutionComplete', handleCodeExecutionComplete);
   });
 
   // Resize handlers for flex layout
@@ -305,7 +313,79 @@
     return style;
   }
 
-  // Action button functions (from main CodeEditor.svelte)
+  // Code evaluation functions
+  function sendCodeToExecute(codeToExecute, executionType = 'paragraph', from = null, to = null) {
+    if (!codeToExecute || !codeToExecute.trim()) {
+      return;
+    }
+
+    const requestId = Date.now();
+
+    // Highlight the executed code if we have position info
+    if (from && to) {
+      const globalEditor = typeof window !== 'undefined' ? window.globalEditorComponent : null;
+      if (globalEditor && globalEditor.highlightExecutedCode) {
+        globalEditor.highlightExecutedCode(from, to, requestId);
+      }
+    }
+
+    sendMessage({
+      type: 'execute_code',
+      data: {
+        code: codeToExecute,
+        requestId: requestId
+      }
+    });
+  }
+  
+  // Execute code (selection or paragraph)
+  function executeCode() {
+    const globalEditor = typeof window !== 'undefined' ? window.globalEditorComponent : null;
+    if (!globalEditor) {
+      sendDebugLog('WARNING', 'No editor component available for code execution');
+      return;
+    }
+    
+    let codeToExecute;
+    let executionType;
+    let from, to;
+    
+    const selection = globalEditor.getSelection ? globalEditor.getSelection() : null;
+    if (selection) {
+      codeToExecute = selection.text;
+      executionType = 'selection';
+      from = selection.from;
+      to = selection.to;
+    } else {
+      const paragraph = globalEditor.getCurrentParagraph ? globalEditor.getCurrentParagraph() : null;
+      if (paragraph) {
+        codeToExecute = paragraph.text;
+        executionType = 'paragraph';
+        from = paragraph.from;
+        to = paragraph.to;
+      }
+    }
+    
+    if (codeToExecute) {
+      sendCodeToExecute(codeToExecute, executionType, from, to);
+    }
+  }
+  
+  // Execute current line
+  function executeCurrentLine() {
+    const globalEditor = typeof window !== 'undefined' ? window.globalEditorComponent : null;
+    if (!globalEditor) {
+      sendDebugLog('WARNING', 'No editor component available for code execution');
+      return;
+    }
+    
+    const line = globalEditor.getCurrentLine ? globalEditor.getCurrentLine() : null;
+    if (line) {
+      sendCodeToExecute(line.text, 'line', line.from, line.to);
+    }
+  }
+  
+  // Execute all code in editor
   function executeAllCode() {
     const globalEditor = typeof window !== 'undefined' ? window.globalEditorComponent : null;
     if (globalEditor) {
@@ -370,20 +450,47 @@
     }
   }
   
-  function sendCodeToExecute(codeToExecute, executionType = 'all', from = null, to = null) {
-    if (!codeToExecute || !codeToExecute.trim()) {
+  // Keyboard shortcut handlers
+  function handleKeyDown(event) {
+    // Ctrl+. or Cmd+. to stop music
+    if ((event.ctrlKey || event.metaKey) && event.key === '.') {
+      event.preventDefault();
+      stopMusic();
       return;
     }
-
-    const requestId = Date.now();
-
-    sendMessage({
-      type: 'execute_code',
-      data: {
-        code: codeToExecute,
-        requestId: requestId
-      }
-    });
+    
+    // Only handle shortcuts if we're not focused in an input field
+    const globalEditor = typeof window !== 'undefined' ? window.globalEditorComponent : null;
+    if (globalEditor && globalEditor.hasFocus && globalEditor.hasFocus()) {
+      return; // Let CodeMirror handle its own shortcuts
+    }
+    
+    // Ctrl+Enter or Cmd+Enter to execute paragraph/selection
+    if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key === 'Enter') {
+      event.preventDefault();
+      executeCode();
+    }
+    // Alt+Enter to execute current line (or Cmd+Alt+Enter on Mac)
+    else if (event.altKey && event.key === 'Enter' && (!event.ctrlKey || event.metaKey)) {
+      event.preventDefault();
+      executeCurrentLine();
+    }
+  }
+  
+  // Handle code execution completion
+  function handleCodeExecutionComplete(event) {
+    const { requestId, success, error } = event.detail;
+    
+    const globalEditor = typeof window !== 'undefined' ? window.globalEditorComponent : null;
+    if (globalEditor && globalEditor.removeExecutionHighlight) {
+      globalEditor.removeExecutionHighlight(requestId);
+    }
+    
+    if (success) {
+      sendDebugLog('INFO', 'Code execution completed successfully', { requestId });
+    } else {
+      sendDebugLog('ERROR', 'Code execution failed', { requestId, error });
+    }
   }
   
   // Helper function to render pane content (all panes use tabbed containers)
@@ -563,9 +670,9 @@
       <!-- Right Side: Keyboard Shortcuts -->
       <div class="flex flex-wrap gap-2 text-xs">
         <span class="badge badge-sm">Alt+Enter: Run current line</span>
-        <span class="badge badge-sm">Ctrl+Enter: Run paragraph or selection</span>
-        <span class="badge badge-sm">Ctrl+.: Stop all music</span>
-        <span class="badge badge-sm">Run Code button: Run all code</span>
+        <span class="badge badge-sm">Ctrl+Enter: Run paragraph/selection</span>
+        <span class="badge badge-sm">Ctrl+.: Stop music</span>
+        <span class="badge badge-sm">Run Code: Execute all</span>
       </div>
     </div>
   {/if}

@@ -145,6 +145,114 @@
 
         // Apply font settings to CodeMirror
         updateEditorFont();
+        
+        // Add CodeMirror-level keyboard shortcuts
+        editor.setOption('extraKeys', {
+          'Ctrl-Enter': function(cm) {
+            const cursor = cm.getCursor();
+            let codeToExecute, from, to;
+            
+            if (cm.somethingSelected()) {
+              codeToExecute = cm.getSelection();
+              from = cm.getCursor('from');
+              to = cm.getCursor('to');
+            } else {
+              // Get current paragraph
+              const line = cursor.line;
+              
+              let startLine = line;
+              while (startLine > 0) {
+                const prevLine = cm.getLine(startLine - 1);
+                if (!prevLine || prevLine.trim() === '') {
+                  break;
+                }
+                startLine--;
+              }
+              
+              let endLine = line;
+              const totalLines = cm.lineCount();
+              while (endLine < totalLines - 1) {
+                const nextLine = cm.getLine(endLine + 1);
+                if (!nextLine || nextLine.trim() === '') {
+                  break;
+                }
+                endLine++;
+              }
+              
+              from = { line: startLine, ch: 0 };
+              to = { line: endLine, ch: cm.getLine(endLine).length };
+              codeToExecute = cm.getRange(from, to);
+            }
+            
+            if (codeToExecute && codeToExecute.trim()) {
+              executeCode(codeToExecute, 'paragraph', from, to);
+            }
+          },
+          'Alt-Enter': function(cm) {
+            const cursor = cm.getCursor();
+            const line = cursor.line;
+            const text = cm.getLine(line);
+            const from = { line, ch: 0 };
+            const to = { line, ch: text.length };
+            
+            if (text && text.trim()) {
+              executeCode(text, 'line', from, to);
+            }
+          },
+          'Cmd-Enter': function(cm) {
+            // Same as Ctrl-Enter for Mac
+            const cursor = cm.getCursor();
+            let codeToExecute, from, to;
+            
+            if (cm.somethingSelected()) {
+              codeToExecute = cm.getSelection();
+              from = cm.getCursor('from');
+              to = cm.getCursor('to');
+            } else {
+              // Get current paragraph
+              const line = cursor.line;
+              
+              let startLine = line;
+              while (startLine > 0) {
+                const prevLine = cm.getLine(startLine - 1);
+                if (!prevLine || prevLine.trim() === '') {
+                  break;
+                }
+                startLine--;
+              }
+              
+              let endLine = line;
+              const totalLines = cm.lineCount();
+              while (endLine < totalLines - 1) {
+                const nextLine = cm.getLine(endLine + 1);
+                if (!nextLine || nextLine.trim() === '') {
+                  break;
+                }
+                endLine++;
+              }
+              
+              from = { line: startLine, ch: 0 };
+              to = { line: endLine, ch: cm.getLine(endLine).length };
+              codeToExecute = cm.getRange(from, to);
+            }
+            
+            if (codeToExecute && codeToExecute.trim()) {
+              executeCode(codeToExecute, 'paragraph', from, to);
+            }
+          },
+          'Cmd-Alt-Enter': function(cm) {
+            // Alt-Enter for Mac with Cmd
+            const cursor = cm.getCursor();
+            const line = cursor.line;
+            const text = cm.getLine(line);
+            const from = { line, ch: 0 };
+            const to = { line, ch: text.length };
+            
+            if (text && text.trim()) {
+              executeCode(text, 'line', from, to);
+            }
+          }
+        });
 
         // Refresh the editor
         setTimeout(() => {
