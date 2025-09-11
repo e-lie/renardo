@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { fade } from 'svelte/transition';
   import { appState } from './lib/appState.js';
+  import { editorSettings, themeOptions, fontSizes, fontFamilies } from './stores/editorSettings.js';
   
   // State for settings data
   let settingsData = {};
@@ -19,6 +20,10 @@
   
   // Track settings that have been modified but not saved
   let modifiedSettings = {};
+  
+  // Code Editor Settings
+  let currentEditorSettings = {};
+  let editorSettingsUnsubscribe = null;
   
   // Generate settings schema dynamically based on settings structure
   function generateSettingsSchema() {
@@ -547,15 +552,31 @@
     }
   });
   
+  // Save editor settings
+  function saveEditorSetting(key, value) {
+    editorSettings.update(settings => ({
+      ...settings,
+      [key]: value
+    }));
+  }
+  
   // Load settings on mount
   onMount(() => {
     loadSettings();
     loadUserDirectory();
+    
+    // Subscribe to editor settings
+    editorSettingsUnsubscribe = editorSettings.subscribe(settings => {
+      currentEditorSettings = { ...settings };
+    });
   });
   
   // Cleanup on destroy
   onDestroy(() => {
     unsubscribe();
+    if (editorSettingsUnsubscribe) {
+      editorSettingsUnsubscribe();
+    }
   });
   
   // Prevent navigation if there are unsaved changes
@@ -588,6 +609,123 @@
       <span class="loading loading-spinner loading-lg text-primary"></span>
     </div>
   {:else}
+    <!-- Code Editor Settings Section -->
+    <div class="card bg-base-100 shadow-xl mb-6">
+      <div class="card-body">
+        <h2 class="card-title text-lg mb-4">Code Editor</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Theme Selection -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Color Scheme</span>
+            </label>
+            <select 
+              class="select select-bordered w-full"
+              value={currentEditorSettings.theme}
+              on:change={(e) => saveEditorSetting('theme', e.target.value)}
+            >
+              {#each themeOptions as option}
+                <option value={option.value}>{option.label}</option>
+              {/each}
+            </select>
+          </div>
+          
+          <!-- Font Size -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Font Size</span>
+            </label>
+            <select 
+              class="select select-bordered w-full"
+              value={currentEditorSettings.fontSize}
+              on:change={(e) => saveEditorSetting('fontSize', parseInt(e.target.value))}
+            >
+              {#each fontSizes as size}
+                <option value={size}>{size}px</option>
+              {/each}
+            </select>
+          </div>
+          
+          <!-- Font Family -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Font Family</span>
+            </label>
+            <select 
+              class="select select-bordered w-full"
+              value={currentEditorSettings.fontFamily}
+              on:change={(e) => saveEditorSetting('fontFamily', e.target.value)}
+            >
+              {#each fontFamilies as font}
+                <option value={font.value}>{font.name}</option>
+              {/each}
+            </select>
+          </div>
+          
+          <!-- Tab Size -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Tab Size: {currentEditorSettings.tabSize}</span>
+            </label>
+            <input 
+              type="range" 
+              min="2" 
+              max="8" 
+              value={currentEditorSettings.tabSize}
+              on:input={(e) => saveEditorSetting('tabSize', parseInt(e.target.value))}
+              class="range range-primary"
+            />
+            <div class="w-full flex justify-between text-xs px-2">
+              <span>2</span>
+              <span>4</span>
+              <span>6</span>
+              <span>8</span>
+            </div>
+          </div>
+          
+          <!-- Boolean Settings -->
+          <div class="space-y-3">
+            <div class="form-control">
+              <label class="label cursor-pointer justify-start gap-3">
+                <input 
+                  type="checkbox" 
+                  class="toggle toggle-primary"
+                  checked={currentEditorSettings.showLineNumbers}
+                  on:change={(e) => saveEditorSetting('showLineNumbers', e.target.checked)}
+                />
+                <span class="label-text">Show Line Numbers</span>
+              </label>
+            </div>
+            
+            <div class="form-control">
+              <label class="label cursor-pointer justify-start gap-3">
+                <input 
+                  type="checkbox" 
+                  class="toggle toggle-primary"
+                  checked={currentEditorSettings.lineWrapping}
+                  on:change={(e) => saveEditorSetting('lineWrapping', e.target.checked)}
+                />
+                <span class="label-text">Line Wrapping</span>
+              </label>
+            </div>
+            
+            <div class="form-control">
+              <label class="label cursor-pointer justify-start gap-3">
+                <input 
+                  type="checkbox" 
+                  class="toggle toggle-primary"
+                  checked={currentEditorSettings.vimModeEnabled}
+                  on:change={(e) => saveEditorSetting('vimModeEnabled', e.target.checked)}
+                />
+                <span class="label-text">Vim Mode</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
     <!-- User Directory Section -->
     <div class="card bg-base-100 shadow-xl mb-6">
       <div class="card-body">
