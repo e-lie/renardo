@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { fade } from 'svelte/transition';
   import { appState } from './lib/appState.js';
-  import { editorSettings, themeOptions, fontSizes, fontFamilies } from './stores/editorSettings.js';
+  import { editorSettings, themeOptions, fontSizes, fontFamilies, lineHeights } from './stores/editorSettings.js';
   
   // State for settings data
   let settingsData = {};
@@ -659,6 +659,22 @@
             >
               {#each fontFamilies as font}
                 <option value={font.value}>{font.name}</option>
+              {/each}
+            </select>
+          </div>
+          
+          <!-- Line Height -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Line Height</span>
+            </label>
+            <select 
+              class="select select-bordered w-full"
+              value={currentEditorSettings.lineHeight}
+              on:change={(e) => saveEditorSetting('lineHeight', parseFloat(e.target.value))}
+            >
+              {#each lineHeights as height}
+                <option value={height.value}>{height.label}</option>
               {/each}
             </select>
           </div>

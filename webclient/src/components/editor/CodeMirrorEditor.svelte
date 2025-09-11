@@ -9,6 +9,7 @@
   let theme = 'dracula';
   let fontSize = 14;
   let fontFamily = 'fira-code';
+  let lineHeight = 1.5;
   let tabSize = 4;
   let showLineNumbers = true;
   let lineWrapping = true;
@@ -315,13 +316,14 @@
     }
   }
   
-  // Update editor font size and family
+  // Update editor font settings
   function updateEditorFont() {
     if (editor) {
       const wrapper = editor.getWrapperElement();
       if (wrapper) {
         wrapper.style.fontSize = `${fontSize}px`;
         wrapper.style.fontFamily = getFontFamilyCSS(fontFamily);
+        wrapper.style.lineHeight = lineHeight.toString();
         editor.refresh();
       }
     }
@@ -349,7 +351,7 @@
     // Subscribe to global editor settings
     settingsUnsubscribe = editorSettings.subscribe(settings => {
       const themeChanged = theme !== settings.theme;
-      const fontChanged = fontSize !== settings.fontSize || fontFamily !== settings.fontFamily;
+      const fontChanged = fontSize !== settings.fontSize || fontFamily !== settings.fontFamily || lineHeight !== settings.lineHeight;
       const tabSizeChanged = tabSize !== settings.tabSize;
       const lineNumbersChanged = showLineNumbers !== settings.showLineNumbers;
       const lineWrappingChanged = lineWrapping !== settings.lineWrapping;
@@ -358,6 +360,7 @@
       theme = settings.theme;
       fontSize = settings.fontSize;
       fontFamily = settings.fontFamily;
+      lineHeight = settings.lineHeight;
       tabSize = settings.tabSize;
       showLineNumbers = settings.showLineNumbers;
       lineWrapping = settings.lineWrapping;
