@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { PaneComponent } from '../../lib/newEditor/PaneComponent';
   import { sendDebugLog } from '../../lib/websocket.js';
+  import { editorSettings } from '../../stores/editorSettings.js';
 
   // Props
   export let componentId = null;
@@ -18,25 +19,19 @@
 
   // Local state synchronized with global state
   let content = '';
-  let theme = 'dracula';
   let activeHighlights = new Map();
+  
+  // Editor settings from global store
+  let theme = 'dracula';
   let vimModeEnabled = false;
   let showLineNumbers = true;
   let fontSize = 14;
+  let fontFamily = 'fira-code';
   let tabSize = 4;
   let lineWrapping = true;
-
-  // Theme options
-  const themeOptions = [
-    { value: 'dracula', label: 'Dracula' },
-    { value: 'monokai', label: 'Monokai' },
-    { value: 'material', label: 'Material' },
-    { value: 'solarized', label: 'Solarized' },
-    { value: 'default', label: 'Default' }
-  ];
-
-  // Font size options
-  const fontSizes = [10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24];
+  
+  // Subscribe to global editor settings
+  let settingsUnsubscribe = null;
 
   // Function to load a script dynamically
   const loadScript = (src) => {
@@ -147,8 +142,8 @@
           });
         }
 
-        // Apply fontSize to CodeMirror
-        updateEditorFontSize();
+        // Apply font settings to CodeMirror
+        updateEditorFont();
 
         // Refresh the editor
         setTimeout(() => {
@@ -168,38 +163,52 @@
     }
   }
 
-  // Update editor font size
-  function updateEditorFontSize() {
+  // Update editor font size and family
+  function updateEditorFont() {
     if (editor) {
       const wrapper = editor.getWrapperElement();
       if (wrapper) {
         wrapper.style.fontSize = `${fontSize}px`;
+        wrapper.style.fontFamily = getFontFamilyCSS(fontFamily);
         editor.refresh();
       }
     }
   }
+  
+  // Get CSS font family string from font family value
+  function getFontFamilyCSS(fontFamilyValue) {
+    const fontMap = {
+      'fira-code': "'Fira Code', 'Menlo', 'Monaco', 'Courier New', monospace",
+      'source-code-pro': "'Source Code Pro', 'Menlo', 'Monaco', 'Courier New', monospace",
+      'jetbrains-mono': "'JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', monospace",
+      'jgs': "'JGS', 'Courier New', monospace",
+      'jgs5': "'JGS5', 'Courier New', monospace",
+      'jgs7': "'JGS7', 'Courier New', monospace",
+      'jgs9': "'JGS9', 'Courier New', monospace",
+      'monaco': "'Monaco', 'Menlo', 'Courier New', monospace",
+      'consolas': "'Consolas', 'Monaco', 'Courier New', monospace",
+      'menlo': "'Menlo', 'Monaco', 'Courier New', monospace",
+      'sf-mono': "'SF Mono', 'Monaco', 'Courier New', monospace"
+    };
+    return fontMap[fontFamilyValue] || fontMap['fira-code'];
+  }
 
   // Update theme
-  function updateTheme() {
-    if (editor) {
-      loadCSS(`/codemirror-themes/${theme}.css`).then(() => {
-        editor.setOption('theme', theme);
+  function updateTheme(newTheme) {
+    if (editor && newTheme) {
+      loadCSS(`/codemirror-themes/${newTheme}.css`).then(() => {
+        editor.setOption('theme', newTheme);
         if (component) {
-          component.setDataProperty('theme', theme);
+          component.setDataProperty('theme', newTheme);
         }
       });
     }
   }
 
-  // Toggle vim mode
-  function toggleVimMode() {
-    vimModeEnabled = !vimModeEnabled;
-    if (component) {
-      component.setDataProperty('vimModeEnabled', vimModeEnabled);
-    }
-
+  // Apply vim mode settings
+  function applyVimMode(enabled) {
     if (editor) {
-      if (vimModeEnabled) {
+      if (enabled) {
         loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/keymap/vim.min.js').then(() => {
           if (window.CodeMirror.Vim) {
             window.CodeMirror.Vim.map('jk', '<Esc>', 'insert');
@@ -207,55 +216,10 @@
           }
         }).catch(err => {
           console.error('Failed to load Vim mode:', err);
-          vimModeEnabled = false;
-          if (component) {
-            component.setDataProperty('vimModeEnabled', false);
-          }
         });
       } else {
         editor.setOption('keyMap', 'default');
       }
-    }
-  }
-
-  // Toggle line numbers
-  function toggleLineNumbers() {
-    showLineNumbers = !showLineNumbers;
-    if (editor) {
-      editor.setOption('lineNumbers', showLineNumbers);
-    }
-    if (component) {
-      component.setDataProperty('showLineNumbers', showLineNumbers);
-    }
-  }
-
-  // Toggle line wrapping
-  function toggleLineWrapping() {
-    lineWrapping = !lineWrapping;
-    if (editor) {
-      editor.setOption('lineWrapping', lineWrapping);
-    }
-    if (component) {
-      component.setDataProperty('lineWrapping', lineWrapping);
-    }
-  }
-
-  // Update font size
-  function updateFontSize() {
-    if (component) {
-      component.setDataProperty('fontSize', fontSize);
-    }
-    updateEditorFontSize();
-  }
-
-  // Update tab size
-  function updateTabSize() {
-    if (editor) {
-      editor.setOption('tabSize', tabSize);
-      editor.setOption('indentUnit', tabSize);
-    }
-    if (component) {
-      component.setDataProperty('tabSize', tabSize);
     }
   }
 
@@ -340,6 +304,37 @@
       title: title
     });
 
+    // Subscribe to global editor settings
+    settingsUnsubscribe = editorSettings.subscribe(settings => {
+      const themeChanged = theme !== settings.theme;
+      const fontChanged = fontSize !== settings.fontSize || fontFamily !== settings.fontFamily;
+      const tabSizeChanged = tabSize !== settings.tabSize;
+      const lineNumbersChanged = showLineNumbers !== settings.showLineNumbers;
+      const lineWrappingChanged = lineWrapping !== settings.lineWrapping;
+      const vimModeChanged = vimModeEnabled !== settings.vimModeEnabled;
+      
+      theme = settings.theme;
+      fontSize = settings.fontSize;
+      fontFamily = settings.fontFamily;
+      tabSize = settings.tabSize;
+      showLineNumbers = settings.showLineNumbers;
+      lineWrapping = settings.lineWrapping;
+      vimModeEnabled = settings.vimModeEnabled;
+      
+      // Apply changes to existing editor
+      if (editor) {
+        if (themeChanged) updateTheme(theme);
+        if (fontChanged) updateEditorFont();
+        if (tabSizeChanged) {
+          editor.setOption('tabSize', tabSize);
+          editor.setOption('indentUnit', tabSize);
+        }
+        if (lineNumbersChanged) editor.setOption('lineNumbers', showLineNumbers);
+        if (lineWrappingChanged) editor.setOption('lineWrapping', lineWrapping);
+        if (vimModeChanged) applyVimMode(vimModeEnabled);
+      }
+    });
+
     // Create component instance
     component = new PaneComponent({
       id: componentId,
@@ -347,42 +342,16 @@
       title: title,
       initialData: {
         content,
-        theme,
-        vimModeEnabled,
-        showLineNumbers,
-        fontSize,
-        tabSize,
-        lineWrapping,
         lastModified: new Date().toISOString()
       }
     });
 
-    // Subscribe to global state changes
+    // Subscribe to component state changes (for content only)
     unsubscribe = component.getGlobalState().subscribe((data) => {
       if (data.content !== undefined && data.content !== content) {
         content = data.content;
         if (editor && editor.getValue() !== content) {
           editor.setValue(content);
-        }
-      }
-      if (data.theme !== undefined && data.theme !== theme) {
-        theme = data.theme;
-        updateTheme();
-      }
-      if (data.vimModeEnabled !== undefined) vimModeEnabled = data.vimModeEnabled;
-      if (data.showLineNumbers !== undefined) showLineNumbers = data.showLineNumbers;
-      if (data.fontSize !== undefined) {
-        fontSize = data.fontSize;
-        updateEditorFontSize();
-      }
-      if (data.tabSize !== undefined) {
-        tabSize = data.tabSize;
-        updateTabSize();
-      }
-      if (data.lineWrapping !== undefined) {
-        lineWrapping = data.lineWrapping;
-        if (editor) {
-          editor.setOption('lineWrapping', lineWrapping);
         }
       }
     });
@@ -397,6 +366,9 @@
     if (unsubscribe) {
       unsubscribe();
     }
+    if (settingsUnsubscribe) {
+      settingsUnsubscribe();
+    }
     if (component) {
       component.setActive(false);
     }
@@ -407,118 +379,7 @@
 </script>
 
 <div class="code-editor-pane h-full flex flex-col">
-  <!-- Header with controls -->
-  <div class="flex items-center justify-between p-2 border-b border-base-300 flex-shrink-0 bg-base-200">
-    <h3 class="text-sm font-semibold">Code Editor</h3>
-    <div class="flex items-center gap-2">
-      <!-- Theme Selector -->
-      <div class="dropdown dropdown-end">
-        <label tabindex="0" class="btn btn-xs btn-ghost">🎨</label>
-        <div tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-48">
-          <div class="form-control mb-2">
-            <label class="label py-1">
-              <span class="label-text text-xs">Theme</span>
-            </label>
-            <select 
-              bind:value={theme}
-              on:change={updateTheme}
-              class="select select-xs w-full"
-            >
-              {#each themeOptions as themeOption}
-                <option value={themeOption.value}>{themeOption.label}</option>
-              {/each}
-            </select>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Settings -->
-      <div class="dropdown dropdown-end">
-        <label tabindex="0" class="btn btn-xs btn-ghost">⚙️</label>
-        <div tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-64">
-          <!-- Font Size -->
-          <div class="form-control mb-2">
-            <label class="label py-1">
-              <span class="label-text text-xs">Font Size: {fontSize}px</span>
-            </label>
-            <select 
-              bind:value={fontSize}
-              on:change={updateFontSize}
-              class="select select-xs w-full"
-            >
-              {#each fontSizes as size}
-                <option value={size}>{size}px</option>
-              {/each}
-            </select>
-          </div>
-          
-          <!-- Tab Size -->
-          <div class="form-control mb-2">
-            <label class="label py-1">
-              <span class="label-text text-xs">Tab Size: {tabSize}</span>
-            </label>
-            <input 
-              type="range" 
-              min="2" 
-              max="8" 
-              bind:value={tabSize}
-              on:input={updateTabSize}
-              class="range range-xs"
-            />
-          </div>
-          
-          <!-- Toggles -->
-          <div class="form-control">
-            <label class="cursor-pointer label py-1">
-              <span class="label-text text-xs">Line Numbers</span>
-              <input 
-                type="checkbox" 
-                bind:checked={showLineNumbers}
-                on:change={toggleLineNumbers}
-                class="toggle toggle-xs"
-              />
-            </label>
-          </div>
-          
-          <div class="form-control">
-            <label class="cursor-pointer label py-1">
-              <span class="label-text text-xs">Line Wrapping</span>
-              <input 
-                type="checkbox" 
-                bind:checked={lineWrapping}
-                on:change={toggleLineWrapping}
-                class="toggle toggle-xs"
-              />
-            </label>
-          </div>
-          
-          <div class="form-control">
-            <label class="cursor-pointer label py-1">
-              <span class="label-text text-xs">Vim Mode</span>
-              <input 
-                type="checkbox" 
-                bind:checked={vimModeEnabled}
-                on:change={toggleVimMode}
-                class="toggle toggle-xs"
-              />
-            </label>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Execute buttons -->
-      <div class="dropdown dropdown-end">
-        <label tabindex="0" class="btn btn-xs btn-primary">▶</label>
-        <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-48">
-          <li><button on:click={() => executeCode('paragraph')} class="text-xs">Run Paragraph (Ctrl+Enter)</button></li>
-          <li><button on:click={() => executeCode('line')} class="text-xs">Run Line (Alt+Enter)</button></li>
-          <li><button on:click={() => executeCode('selection')} class="text-xs">Run Selection</button></li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
-  <!-- Editor Container -->
+  <!-- Editor Container (no header) -->
   <div class="flex-1 min-h-0 relative" style="flex: 1; min-height: 0; overflow: hidden;">
     <div class="w-full h-full" bind:this={editorContainer}>
       <textarea bind:this={textarea}>{content}</textarea>

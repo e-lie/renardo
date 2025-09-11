@@ -28,8 +28,8 @@
     - [ ] top right button that open a big modal for layout customization
     - [ ] system logs modal also with a top right button
     - [ ] responsiveness : only editor with collapsible panes
-  - [ ] add
-  - [ ] multiwindow mode for electron only (less prio)
+  - [ ] add a customizable clock widget
+  - [ ] multiwindow mode for electron only (less prio) -> no ! floating panes first -> is better
 
 # Electron packaging
 
