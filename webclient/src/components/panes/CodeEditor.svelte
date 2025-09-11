@@ -26,6 +26,7 @@
   let vimModeEnabled = false;
   let showLineNumbers = true;
   let fontSize = 14;
+  let fontFamily = 'fira-code';
   let tabSize = 4;
   let lineWrapping = true;
   
@@ -141,8 +142,8 @@
           });
         }
 
-        // Apply fontSize to CodeMirror
-        updateEditorFontSize();
+        // Apply font settings to CodeMirror
+        updateEditorFont();
 
         // Refresh the editor
         setTimeout(() => {
@@ -162,15 +163,34 @@
     }
   }
 
-  // Update editor font size
-  function updateEditorFontSize() {
+  // Update editor font size and family
+  function updateEditorFont() {
     if (editor) {
       const wrapper = editor.getWrapperElement();
       if (wrapper) {
         wrapper.style.fontSize = `${fontSize}px`;
+        wrapper.style.fontFamily = getFontFamilyCSS(fontFamily);
         editor.refresh();
       }
     }
+  }
+  
+  // Get CSS font family string from font family value
+  function getFontFamilyCSS(fontFamilyValue) {
+    const fontMap = {
+      'fira-code': "'Fira Code', 'Menlo', 'Monaco', 'Courier New', monospace",
+      'source-code-pro': "'Source Code Pro', 'Menlo', 'Monaco', 'Courier New', monospace",
+      'jetbrains-mono': "'JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', monospace",
+      'jgs': "'JGS', 'Courier New', monospace",
+      'jgs5': "'JGS5', 'Courier New', monospace",
+      'jgs7': "'JGS7', 'Courier New', monospace",
+      'jgs9': "'JGS9', 'Courier New', monospace",
+      'monaco': "'Monaco', 'Menlo', 'Courier New', monospace",
+      'consolas': "'Consolas', 'Monaco', 'Courier New', monospace",
+      'menlo': "'Menlo', 'Monaco', 'Courier New', monospace",
+      'sf-mono': "'SF Mono', 'Monaco', 'Courier New', monospace"
+    };
+    return fontMap[fontFamilyValue] || fontMap['fira-code'];
   }
 
   // Update theme
@@ -287,7 +307,7 @@
     // Subscribe to global editor settings
     settingsUnsubscribe = editorSettings.subscribe(settings => {
       const themeChanged = theme !== settings.theme;
-      const fontSizeChanged = fontSize !== settings.fontSize;
+      const fontChanged = fontSize !== settings.fontSize || fontFamily !== settings.fontFamily;
       const tabSizeChanged = tabSize !== settings.tabSize;
       const lineNumbersChanged = showLineNumbers !== settings.showLineNumbers;
       const lineWrappingChanged = lineWrapping !== settings.lineWrapping;
@@ -295,6 +315,7 @@
       
       theme = settings.theme;
       fontSize = settings.fontSize;
+      fontFamily = settings.fontFamily;
       tabSize = settings.tabSize;
       showLineNumbers = settings.showLineNumbers;
       lineWrapping = settings.lineWrapping;
@@ -303,7 +324,7 @@
       // Apply changes to existing editor
       if (editor) {
         if (themeChanged) updateTheme(theme);
-        if (fontSizeChanged) updateEditorFontSize();
+        if (fontChanged) updateEditorFont();
         if (tabSizeChanged) {
           editor.setOption('tabSize', tabSize);
           editor.setOption('indentUnit', tabSize);
