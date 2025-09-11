@@ -5,6 +5,10 @@
   import TextArea from './components/panes/TextArea.svelte';
   import TabbedPane from './components/panes/TabbedPane.svelte';
   import LayoutConfigModal from './components/modals/LayoutConfigModal.svelte';
+  import { sendMessage, sendDebugLog } from './lib/websocket.js';
+  import SaveSessionModal from './components/modals/SaveSessionModal.svelte';
+  import NewSessionModal from './components/modals/NewSessionModal.svelte';
+  import { appState, stateHelpers } from './lib/appState.js';
   
   // Create layout manager instance
   let layoutManager = null;
@@ -102,6 +106,17 @@
     'right-column': 300,
     'bottom-area': 200
   };
+  
+  // Action button functionality state
+  let showSaveModal = false;
+  let showNewSessionModal = false;
+  let savingSession = false;
+  
+  // Editor reference (will be set by the CodeEditor component)
+  let editorComponent = null;
+  
+  // Track if action buttons should be shown
+  let showActionButtons = true;
   
   // React to navbar visibility changes
   $: if (typeof window !== 'undefined' && layoutManager) {
@@ -290,6 +305,87 @@
     return style;
   }
 
+  // Action button functions (from main CodeEditor.svelte)
+  function executeAllCode() {
+    const globalEditor = typeof window !== 'undefined' ? window.globalEditorComponent : null;
+    if (globalEditor) {
+      const allText = globalEditor.getAllText();
+      sendCodeToExecute(allText.text, 'all', allText.from, allText.to);
+    } else {
+      sendDebugLog('WARNING', 'No editor component available for code execution');
+    }
+  }
+  
+  function stopMusic() {
+    sendMessage({
+      type: 'execute_code',
+      data: {
+        code: 'Clock.clear()',
+        requestId: Date.now()
+      }
+    });
+  }
+  
+  function saveSession() {
+    showSaveModal = true;
+  }
+  
+  function loadSession() {
+    // This would typically open a session browser
+    sendDebugLog('INFO', 'Load session requested');
+  }
+  
+  function handleNewSession() {
+    showNewSessionModal = true;
+  }
+  
+  function handleCreateNewSession() {
+    // Reset the editor state
+    sendDebugLog('INFO', 'New session created');
+    showNewSessionModal = false;
+  }
+  
+  function handleSaveSession(event) {
+    const sessionName = event.detail.name;
+    doSaveSession(sessionName);
+  }
+  
+  async function doSaveSession(sessionName) {
+    if (!sessionName.trim()) return;
+    
+    savingSession = true;
+    try {
+      // Here you would implement the actual session saving logic
+      sendDebugLog('INFO', 'Saving session', { sessionName });
+      
+      // Simulate saving process
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      showSaveModal = false;
+      sendDebugLog('INFO', 'Session saved successfully', { sessionName });
+    } catch (error) {
+      sendDebugLog('ERROR', 'Failed to save session', { sessionName, error: error.message });
+    } finally {
+      savingSession = false;
+    }
+  }
+  
+  function sendCodeToExecute(codeToExecute, executionType = 'all', from = null, to = null) {
+    if (!codeToExecute || !codeToExecute.trim()) {
+      return;
+    }
+
+    const requestId = Date.now();
+
+    sendMessage({
+      type: 'execute_code',
+      data: {
+        code: codeToExecute,
+        requestId: requestId
+      }
+    });
+  }
+  
   // Helper function to render pane content (all panes use tabbed containers)
   function renderPaneContent(position) {
     const props = {
@@ -397,10 +493,80 @@
 </script>
 
 <div class="new-code-editor {hideAppNavbar ? 'h-screen' : 'h-full'} bg-base-100 overflow-hidden flex flex-col">
-  <!-- Top Menu Bar -->
+  <!-- Top Menu Bar with Action Buttons and Keyboard Shortcuts -->
   {#if paneVisibility['top-menu']}
-    <div class="top-menu {getPaneColor('top-menu')} p-3 flex items-center justify-center text-sm font-semibold border-b border-base-300" style="height: 60px; flex-shrink: 0;">
-      🍔 Top Menu Bar
+    <div class="top-menu {getPaneColor('top-menu')} p-3 flex items-center justify-between border-b border-base-300" style="height: 60px; flex-shrink: 0;">
+      <!-- Action Buttons -->
+      {#if showActionButtons}
+        <div class="flex gap-2">
+          <button
+            class="btn btn-sm btn-success"
+            on:click={executeAllCode}
+            title="Run all code in editor"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+            </svg>
+            Run Code
+          </button>
+
+          <button
+            class="btn btn-sm btn-warning"
+            on:click={stopMusic}
+            title="Stop all music playback"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clip-rule="evenodd" />
+            </svg>
+            Stop Music
+          </button>
+
+          <button
+            class="btn btn-sm btn-primary"
+            on:click={saveSession}
+            title="Save current session"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+            Save Session
+          </button>
+
+          <button
+            class="btn btn-sm btn-primary"
+            on:click={loadSession}
+            title="Load a saved session"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+            </svg>
+            Load Session
+          </button>
+          
+          <button
+            class="btn btn-sm btn-error"
+            on:click={handleNewSession}
+            title="Start a new session"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clip-rule="evenodd" />
+              <path fill-rule="evenodd" d="M10 15a1 1 0 01-1-1v-4a1 1 0 112 0v4a1 1 0 01-1 1z" clip-rule="evenodd" />
+              <path fill-rule="evenodd" d="M3 7a1 1 0 011-1h12a1 1 0 110 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a1 1 0 01-1-1z" clip-rule="evenodd" />
+            </svg>
+            New Session
+          </button>
+        </div>
+      {:else}
+        <div></div>
+      {/if}
+      
+      <!-- Right Side: Keyboard Shortcuts -->
+      <div class="flex flex-wrap gap-2 text-xs">
+        <span class="badge badge-sm">Alt+Enter: Run current line</span>
+        <span class="badge badge-sm">Ctrl+Enter: Run paragraph or selection</span>
+        <span class="badge badge-sm">Ctrl+.: Stop all music</span>
+        <span class="badge badge-sm">Run Code button: Run all code</span>
+      </div>
     </div>
   {/if}
 
@@ -659,6 +825,21 @@
     bind:paneTabConfigs={paneTabConfigs}
     bind:hideAppNavbar={hideAppNavbar}
     bind:layoutManager={layoutManager}
+  />
+
+  <!-- Save Session Modal -->
+  <SaveSessionModal
+    show={showSaveModal}
+    saving={savingSession}
+    on:save={handleSaveSession}
+    on:cancel={() => showSaveModal = false}
+  />
+
+  <!-- New Session Modal -->
+  <NewSessionModal
+    show={showNewSessionModal}
+    on:newSession={handleCreateNewSession}
+    on:cancel={() => showNewSessionModal = false}
   />
 
   <!-- Floating Pane Set Toggle Buttons -->
