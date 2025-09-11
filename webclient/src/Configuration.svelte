@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { fade } from 'svelte/transition';
   import { appState } from './lib/appState.js';
-  import { editorSettings, themeOptions, fontSizes } from './stores/editorSettings.js';
+  import { editorSettings, themeOptions, fontSizes, fontFamilies } from './stores/editorSettings.js';
   
   // State for settings data
   let settingsData = {};
@@ -643,6 +643,22 @@
             >
               {#each fontSizes as size}
                 <option value={size}>{size}px</option>
+              {/each}
+            </select>
+          </div>
+          
+          <!-- Font Family -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Font Family</span>
+            </label>
+            <select 
+              class="select select-bordered w-full"
+              value={currentEditorSettings.fontFamily}
+              on:change={(e) => saveEditorSetting('fontFamily', e.target.value)}
+            >
+              {#each fontFamilies as font}
+                <option value={font.value}>{font.name}</option>
               {/each}
             </select>
           </div>
