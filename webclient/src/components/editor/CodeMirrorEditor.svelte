@@ -1,9 +1,19 @@
 <script>
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
+  import { editorSettings } from '../../stores/editorSettings.js';
   
   export let content = '';
-  export let theme = 'dracula';
   export let activeHighlights = new Map();
+  
+  // Editor settings from global store
+  let theme = 'dracula';
+  let fontSize = 14;
+  let tabSize = 4;
+  let showLineNumbers = true;
+  let lineWrapping = true;
+  let vimModeEnabled = false;
+  
+  let settingsUnsubscribe = null;
   
   const dispatch = createEventDispatcher();
   
@@ -81,17 +91,17 @@
       // Initialize CodeMirror
       const codeMirrorOptions = {
         value: content,
-        lineNumbers: true,
+        lineNumbers: showLineNumbers,
         mode: {
           name: 'python',
           version: 3,
           singleLineStringErrors: false
         },
         theme: theme,
-        tabSize: 4,
+        tabSize: tabSize,
         indentWithTabs: false,
-        indentUnit: 4,
-        lineWrapping: true,
+        indentUnit: tabSize,
+        lineWrapping: lineWrapping,
         viewportMargin: Infinity,
         matchBrackets: true,
         autoCloseBrackets: true,
@@ -118,24 +128,11 @@
           'Alt-Cmd-Enter': () => dispatch('execute', { mode: 'line' })
         });
 
-        // Apply saved settings
-        const showLineNumbers = localStorage.getItem('editor-show-line-numbers') !== 'false';
-        const vimModeEnabled = localStorage.getItem('editor-vim-mode') === 'true';
-
-        editor.setOption('lineNumbers', showLineNumbers);
-
         // Handle Vim mode if enabled
-        if (vimModeEnabled) {
-          loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/keymap/vim.min.js').then(() => {
-            if (window.CodeMirror.Vim) {
-              window.CodeMirror.Vim.map('jk', '<Esc>', 'insert');
-              editor.setOption('keyMap', 'vim');
-            }
-          }).catch(err => {
-            console.error('Failed to load Vim mode:', err);
-            localStorage.setItem('editor-vim-mode', 'false');
-          });
-        }
+        applyVimMode(vimModeEnabled);
+        
+        // Apply font size
+        updateEditorFontSize();
 
         // Refresh the editor
         setTimeout(() => {
@@ -299,11 +296,73 @@
     }
   }
   
+  // Apply vim mode settings
+  function applyVimMode(enabled) {
+    if (editor) {
+      if (enabled) {
+        loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/keymap/vim.min.js').then(() => {
+          if (window.CodeMirror.Vim) {
+            window.CodeMirror.Vim.map('jk', '<Esc>', 'insert');
+            editor.setOption('keyMap', 'vim');
+          }
+        }).catch(err => {
+          console.error('Failed to load Vim mode:', err);
+        });
+      } else {
+        editor.setOption('keyMap', 'default');
+      }
+    }
+  }
+  
+  // Update editor font size
+  function updateEditorFontSize() {
+    if (editor) {
+      const wrapper = editor.getWrapperElement();
+      if (wrapper) {
+        wrapper.style.fontSize = `${fontSize}px`;
+        editor.refresh();
+      }
+    }
+  }
+  
   onMount(() => {
+    // Subscribe to global editor settings
+    settingsUnsubscribe = editorSettings.subscribe(settings => {
+      const themeChanged = theme !== settings.theme;
+      const fontSizeChanged = fontSize !== settings.fontSize;
+      const tabSizeChanged = tabSize !== settings.tabSize;
+      const lineNumbersChanged = showLineNumbers !== settings.showLineNumbers;
+      const lineWrappingChanged = lineWrapping !== settings.lineWrapping;
+      const vimModeChanged = vimModeEnabled !== settings.vimModeEnabled;
+      
+      theme = settings.theme;
+      fontSize = settings.fontSize;
+      tabSize = settings.tabSize;
+      showLineNumbers = settings.showLineNumbers;
+      lineWrapping = settings.lineWrapping;
+      vimModeEnabled = settings.vimModeEnabled;
+      
+      // Apply changes to existing editor
+      if (editor) {
+        if (themeChanged) setTheme(theme);
+        if (fontSizeChanged) updateEditorFontSize();
+        if (tabSizeChanged) {
+          editor.setOption('tabSize', tabSize);
+          editor.setOption('indentUnit', tabSize);
+        }
+        if (lineNumbersChanged) editor.setOption('lineNumbers', showLineNumbers);
+        if (lineWrappingChanged) editor.setOption('lineWrapping', lineWrapping);
+        if (vimModeChanged) applyVimMode(vimModeEnabled);
+      }
+    });
+    
     initEditor();
   });
   
   onDestroy(() => {
+    if (settingsUnsubscribe) {
+      settingsUnsubscribe();
+    }
     if (editor) {
       editor.toTextArea();
     }
@@ -320,7 +379,6 @@
     height: 100% !important;
     width: 100%;
     font-family: 'Fira Code', 'Menlo', 'Monaco', 'Courier New', monospace;
-    font-size: 14px;
     line-height: 1.5;
   }
   
