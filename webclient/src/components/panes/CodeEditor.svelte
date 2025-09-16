@@ -1,5 +1,7 @@
 <script>
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
+  
+  const dispatch = createEventDispatcher();
   import { PaneComponent } from '../../lib/newEditor/PaneComponent';
   import { sendDebugLog, sendMessage } from '../../lib/websocket.js';
   import { sendCodeToExecute } from '../../lib/codeExecution.ts';
@@ -8,6 +10,7 @@
   // Props
   export let componentId = null;
   export let title = 'Code Editor';
+  export let content = '';
 
   // Component instance
   let component = null;
@@ -18,8 +21,7 @@
   let editor;
   let textarea;
 
-  // Local state synchronized with global state
-  let content = '';
+  // Local state
   let activeHighlights = new Map();
   
   // Editor settings from global store
@@ -34,6 +36,11 @@
   
   // Subscribe to global editor settings
   let settingsUnsubscribe = null;
+
+  // React to external content changes
+  $: if (editor && editor.getValue() !== content) {
+    editor.setValue(content);
+  }
 
   // Function to load a script dynamically
   const loadScript = (src) => {
@@ -124,11 +131,13 @@
       if (textarea) {
         editor = window.CodeMirror.fromTextArea(textarea, codeMirrorOptions);
 
-        // Update local content and sync with global state when editor changes
+        // Update content and dispatch changes when editor changes
         editor.on('change', (instance) => {
-          content = instance.getValue();
+          const newContent = instance.getValue();
+          content = newContent;
+          dispatch('contentChange', newContent);
           if (component) {
-            component.updateData({ content, lastModified: new Date().toISOString() });
+            component.updateData({ content: newContent, lastModified: new Date().toISOString() });
           }
         });
 
