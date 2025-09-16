@@ -1,7 +1,8 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
   import { PaneComponent } from '../../lib/newEditor/PaneComponent';
-  import { sendDebugLog } from '../../lib/websocket.js';
+  import { sendDebugLog, sendMessage } from '../../lib/websocket.js';
+  import { sendCodeToExecute } from '../../lib/codeExecution.ts';
   import { editorSettings } from '../../stores/editorSettings.js';
 
   // Props
@@ -243,45 +244,6 @@
     }
   }
 
-  // Execute current selection/paragraph/line
-  // Send code to backend for execution
-  function sendCodeToBackend(codeToExecute, executionType, from, to) {
-    if (!codeToExecute || !codeToExecute.trim()) {
-      return;
-    }
-
-    const requestId = Date.now();
-    
-    sendDebugLog('INFO', 'CodeEditor: Executing code', {
-      executionType,
-      codeLength: codeToExecute.length,
-      from,
-      to,
-      requestId
-    });
-    
-    // Highlight the executed code
-    highlightExecutedCode(from, to, requestId);
-
-    // Send code to backend for execution
-    sendMessage({
-      type: 'execute_code',
-      data: {
-        code: codeToExecute,
-        requestId: requestId
-      }
-    });
-    
-    // Update component state
-    if (component) {
-      component.setDataProperty('lastExecuted', {
-        code: codeToExecute,
-        type: executionType,
-        timestamp: new Date().toISOString()
-      });
-    }
-  }
-  
   // Execute code by mode (used by keyboard shortcuts)
   function executeCode(mode = 'paragraph') {
     if (!editor) return;
@@ -330,24 +292,54 @@
     }
 
     if (codeToExecute.trim()) {
-      // Send code to backend
-      sendCodeToBackend(codeToExecute, mode, from, to);
+      // Use the shared library to send code to backend
+      sendCodeToExecute(codeToExecute, mode, from, to, (from, to, requestId) => {
+        highlightExecutedCode(from, to, requestId);
+      });
+      
+      // Update component state
+      if (component) {
+        component.setDataProperty('lastExecuted', {
+          code: codeToExecute,
+          type: mode,
+          timestamp: new Date().toISOString()
+        });
+      }
     }
   }
 
+  // Track active highlights is already declared above
+  
   // Highlight executed code
-  function highlightExecutedCode(from, to) {
+  function highlightExecutedCode(from, to, requestId) {
     if (!editor) return;
 
     const marker = editor.markText(from, to, {
       className: 'executed-code-highlight',
       clearOnEnter: false
     });
+    
+    if (requestId) {
+      // Store the marker with requestId for later removal
+      activeHighlights.set(requestId, marker);
+    }
 
-    // Remove highlight after animation
+    // Remove highlight after animation (timeout as fallback)
     setTimeout(() => {
       marker.clear();
-    }, 800);
+      if (requestId && activeHighlights.has(requestId)) {
+        activeHighlights.delete(requestId);
+      }
+    }, 1000);
+  }
+  
+  // Remove execution highlight
+  function removeExecutionHighlight(requestId) {
+    if (activeHighlights.has(requestId)) {
+      const marker = activeHighlights.get(requestId);
+      marker.clear();
+      activeHighlights.delete(requestId);
+    }
   }
 
   onMount(() => {
