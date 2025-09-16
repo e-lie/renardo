@@ -1,7 +1,8 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
   import { PaneComponent } from '../../lib/newEditor/PaneComponent';
-  import { sendDebugLog } from '../../lib/websocket.js';
+  import { sendDebugLog, sendMessage } from '../../lib/websocket.js';
+  import { sendCodeToExecute } from '../../lib/codeExecution.ts';
   import { editorSettings } from '../../stores/editorSettings.js';
 
   // Props
@@ -149,108 +150,18 @@
         // Add CodeMirror-level keyboard shortcuts
         editor.setOption('extraKeys', {
           'Ctrl-Enter': function(cm) {
-            const cursor = cm.getCursor();
-            let codeToExecute, from, to;
-            
-            if (cm.somethingSelected()) {
-              codeToExecute = cm.getSelection();
-              from = cm.getCursor('from');
-              to = cm.getCursor('to');
-            } else {
-              // Get current paragraph
-              const line = cursor.line;
-              
-              let startLine = line;
-              while (startLine > 0) {
-                const prevLine = cm.getLine(startLine - 1);
-                if (!prevLine || prevLine.trim() === '') {
-                  break;
-                }
-                startLine--;
-              }
-              
-              let endLine = line;
-              const totalLines = cm.lineCount();
-              while (endLine < totalLines - 1) {
-                const nextLine = cm.getLine(endLine + 1);
-                if (!nextLine || nextLine.trim() === '') {
-                  break;
-                }
-                endLine++;
-              }
-              
-              from = { line: startLine, ch: 0 };
-              to = { line: endLine, ch: cm.getLine(endLine).length };
-              codeToExecute = cm.getRange(from, to);
-            }
-            
-            if (codeToExecute && codeToExecute.trim()) {
-              executeCode(codeToExecute, 'paragraph', from, to);
-            }
+            executeCode('paragraph');
           },
           'Alt-Enter': function(cm) {
-            const cursor = cm.getCursor();
-            const line = cursor.line;
-            const text = cm.getLine(line);
-            const from = { line, ch: 0 };
-            const to = { line, ch: text.length };
-            
-            if (text && text.trim()) {
-              executeCode(text, 'line', from, to);
-            }
+            executeCode('line');
           },
           'Cmd-Enter': function(cm) {
             // Same as Ctrl-Enter for Mac
-            const cursor = cm.getCursor();
-            let codeToExecute, from, to;
-            
-            if (cm.somethingSelected()) {
-              codeToExecute = cm.getSelection();
-              from = cm.getCursor('from');
-              to = cm.getCursor('to');
-            } else {
-              // Get current paragraph
-              const line = cursor.line;
-              
-              let startLine = line;
-              while (startLine > 0) {
-                const prevLine = cm.getLine(startLine - 1);
-                if (!prevLine || prevLine.trim() === '') {
-                  break;
-                }
-                startLine--;
-              }
-              
-              let endLine = line;
-              const totalLines = cm.lineCount();
-              while (endLine < totalLines - 1) {
-                const nextLine = cm.getLine(endLine + 1);
-                if (!nextLine || nextLine.trim() === '') {
-                  break;
-                }
-                endLine++;
-              }
-              
-              from = { line: startLine, ch: 0 };
-              to = { line: endLine, ch: cm.getLine(endLine).length };
-              codeToExecute = cm.getRange(from, to);
-            }
-            
-            if (codeToExecute && codeToExecute.trim()) {
-              executeCode(codeToExecute, 'paragraph', from, to);
-            }
+            executeCode('paragraph');
           },
           'Cmd-Alt-Enter': function(cm) {
             // Alt-Enter for Mac with Cmd
-            const cursor = cm.getCursor();
-            const line = cursor.line;
-            const text = cm.getLine(line);
-            const from = { line, ch: 0 };
-            const to = { line, ch: text.length };
-            
-            if (text && text.trim()) {
-              executeCode(text, 'line', from, to);
-            }
+            executeCode('line');
           }
         });
 
@@ -333,7 +244,7 @@
     }
   }
 
-  // Execute current selection/paragraph/line
+  // Execute code by mode (used by keyboard shortcuts)
   function executeCode(mode = 'paragraph') {
     if (!editor) return;
 
@@ -344,6 +255,7 @@
       codeToExecute = editor.getSelection();
       from = editor.getCursor('from');
       to = editor.getCursor('to');
+      mode = 'selection';
     } else if (mode === 'line') {
       const cursor = editor.getCursor();
       const line = cursor.line;
@@ -380,32 +292,54 @@
     }
 
     if (codeToExecute.trim()) {
-      sendDebugLog('INFO', 'CodeEditor: Code execution requested', {
-        mode,
-        codeLength: codeToExecute.length,
-        from,
-        to
+      // Use the shared library to send code to backend
+      sendCodeToExecute(codeToExecute, mode, from, to, (from, to, requestId) => {
+        highlightExecutedCode(from, to, requestId);
       });
-
-      // Here you would integrate with the execution system
-      // For now, just highlight the executed code
-      highlightExecutedCode(from, to);
+      
+      // Update component state
+      if (component) {
+        component.setDataProperty('lastExecuted', {
+          code: codeToExecute,
+          type: mode,
+          timestamp: new Date().toISOString()
+        });
+      }
     }
   }
 
+  // Track active highlights is already declared above
+  
   // Highlight executed code
-  function highlightExecutedCode(from, to) {
+  function highlightExecutedCode(from, to, requestId) {
     if (!editor) return;
 
     const marker = editor.markText(from, to, {
       className: 'executed-code-highlight',
       clearOnEnter: false
     });
+    
+    if (requestId) {
+      // Store the marker with requestId for later removal
+      activeHighlights.set(requestId, marker);
+    }
 
-    // Remove highlight after animation
+    // Remove highlight after animation (timeout as fallback)
     setTimeout(() => {
       marker.clear();
-    }, 800);
+      if (requestId && activeHighlights.has(requestId)) {
+        activeHighlights.delete(requestId);
+      }
+    }, 1000);
+  }
+  
+  // Remove execution highlight
+  function removeExecutionHighlight(requestId) {
+    if (activeHighlights.has(requestId)) {
+      const marker = activeHighlights.get(requestId);
+      marker.clear();
+      activeHighlights.delete(requestId);
+    }
   }
 
   onMount(() => {
