@@ -9,6 +9,14 @@
   import SaveSessionModal from './components/modals/SaveSessionModal.svelte';
   import NewSessionModal from './components/modals/NewSessionModal.svelte';
   import { appState, stateHelpers } from './lib/appState.js';
+  import { 
+    sendCodeToExecute, 
+    executeCode as executeCodeLib, 
+    executeCurrentLine as executeCurrentLineLib, 
+    executeAllCode as executeAllCodeLib,
+    stopMusic as stopMusicLib,
+    handleCodeExecutionComplete as handleCodeExecutionCompleteLib
+  } from './lib/codeExecution.ts';
   
   // Create layout manager instance
   let layoutManager = null;
@@ -313,97 +321,45 @@
     return style;
   }
 
-  // Code evaluation functions
-  function sendCodeToExecute(codeToExecute, executionType = 'paragraph', from = null, to = null) {
-    if (!codeToExecute || !codeToExecute.trim()) {
-      return;
-    }
-
-    const requestId = Date.now();
-
-    // Highlight the executed code if we have position info
-    if (from && to) {
-      const globalEditor = typeof window !== 'undefined' ? window.globalEditorComponent : null;
-      if (globalEditor && globalEditor.highlightExecutedCode) {
-        globalEditor.highlightExecutedCode(from, to, requestId);
-      }
-    }
-
-    sendMessage({
-      type: 'execute_code',
-      data: {
-        code: codeToExecute,
-        requestId: requestId
-      }
-    });
+  // Helper to get the global editor and highlight callback
+  function getEditorAndHighlight() {
+    const globalEditor = typeof window !== 'undefined' ? window.globalEditorComponent : null;
+    const highlightCallback = globalEditor && globalEditor.highlightExecutedCode 
+      ? (from, to, requestId) => globalEditor.highlightExecutedCode(from, to, requestId)
+      : null;
+    return { globalEditor, highlightCallback };
   }
   
-  // Execute code (selection or paragraph)
+  // Code evaluation wrapper functions using the shared library
   function executeCode() {
-    const globalEditor = typeof window !== 'undefined' ? window.globalEditorComponent : null;
-    if (!globalEditor) {
-      sendDebugLog('WARNING', 'No editor component available for code execution');
-      return;
-    }
-    
-    let codeToExecute;
-    let executionType;
-    let from, to;
-    
-    const selection = globalEditor.getSelection ? globalEditor.getSelection() : null;
-    if (selection) {
-      codeToExecute = selection.text;
-      executionType = 'selection';
-      from = selection.from;
-      to = selection.to;
-    } else {
-      const paragraph = globalEditor.getCurrentParagraph ? globalEditor.getCurrentParagraph() : null;
-      if (paragraph) {
-        codeToExecute = paragraph.text;
-        executionType = 'paragraph';
-        from = paragraph.from;
-        to = paragraph.to;
-      }
-    }
-    
-    if (codeToExecute) {
-      sendCodeToExecute(codeToExecute, executionType, from, to);
-    }
-  }
-  
-  // Execute current line
-  function executeCurrentLine() {
-    const globalEditor = typeof window !== 'undefined' ? window.globalEditorComponent : null;
-    if (!globalEditor) {
-      sendDebugLog('WARNING', 'No editor component available for code execution');
-      return;
-    }
-    
-    const line = globalEditor.getCurrentLine ? globalEditor.getCurrentLine() : null;
-    if (line) {
-      sendCodeToExecute(line.text, 'line', line.from, line.to);
-    }
-  }
-  
-  // Execute all code in editor
-  function executeAllCode() {
-    const globalEditor = typeof window !== 'undefined' ? window.globalEditorComponent : null;
+    const { globalEditor, highlightCallback } = getEditorAndHighlight();
     if (globalEditor) {
-      const allText = globalEditor.getAllText();
-      sendCodeToExecute(allText.text, 'all', allText.from, allText.to);
+      executeCodeLib(globalEditor, highlightCallback);
+    } else {
+      sendDebugLog('WARNING', 'No editor component available for code execution');
+    }
+  }
+  
+  function executeCurrentLine() {
+    const { globalEditor, highlightCallback } = getEditorAndHighlight();
+    if (globalEditor) {
+      executeCurrentLineLib(globalEditor, highlightCallback);
+    } else {
+      sendDebugLog('WARNING', 'No editor component available for code execution');
+    }
+  }
+  
+  function executeAllCode() {
+    const { globalEditor, highlightCallback } = getEditorAndHighlight();
+    if (globalEditor) {
+      executeAllCodeLib(globalEditor, highlightCallback);
     } else {
       sendDebugLog('WARNING', 'No editor component available for code execution');
     }
   }
   
   function stopMusic() {
-    sendMessage({
-      type: 'execute_code',
-      data: {
-        code: 'Clock.clear()',
-        requestId: Date.now()
-      }
-    });
+    stopMusicLib();
   }
   
   function saveSession() {
@@ -479,18 +435,12 @@
   
   // Handle code execution completion
   function handleCodeExecutionComplete(event) {
-    const { requestId, success, error } = event.detail;
-    
     const globalEditor = typeof window !== 'undefined' ? window.globalEditorComponent : null;
-    if (globalEditor && globalEditor.removeExecutionHighlight) {
-      globalEditor.removeExecutionHighlight(requestId);
-    }
+    const removeHighlightCallback = globalEditor && globalEditor.removeExecutionHighlight
+      ? (requestId) => globalEditor.removeExecutionHighlight(requestId)
+      : null;
     
-    if (success) {
-      sendDebugLog('INFO', 'Code execution completed successfully', { requestId });
-    } else {
-      sendDebugLog('ERROR', 'Code execution failed', { requestId, error });
-    }
+    handleCodeExecutionCompleteLib(event, removeHighlightCallback);
   }
   
   // Helper function to render pane content (all panes use tabbed containers)
