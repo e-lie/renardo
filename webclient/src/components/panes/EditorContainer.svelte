@@ -211,7 +211,7 @@
 
   // Remove tab from leaf container
   function removeTab(tabId) {
-    if (containerType !== CONTAINER_TYPES.LEAF || tabs.length <= 1) return;
+    if (containerType !== CONTAINER_TYPES.LEAF) return;
     
     const tabIndex = tabs.findIndex(tab => tab.id === tabId);
     if (tabIndex === -1) return;
@@ -225,6 +225,13 @@
     }
     
     sendDebugLog('DEBUG', 'CodeEditor tab removed', { containerId, tabId });
+    
+    // If this was the last tab and we're in a split, notify parent to remove this container
+    if (tabs.length === 0 && depth > 0) {
+      dispatch('removeContainer', { containerId });
+      return;
+    }
+    
     notifyParentOfChange();
   }
 
@@ -253,25 +260,6 @@
     });
     
     notifyParentOfChange();
-  }
-
-  // Remove split and merge back into leaf container
-  function removeSplit() {
-    if (containerType === CONTAINER_TYPES.LEAF) return;
-    
-    // Find the child container with tabs and merge its content
-    const childWithTabs = children.find(child => child.type === CONTAINER_TYPES.LEAF && child.tabs?.length > 0);
-    
-    if (childWithTabs) {
-      containerType = CONTAINER_TYPES.LEAF;
-      tabs = [...childWithTabs.tabs];
-      activeTabId = childWithTabs.activeTabId;
-      children = [];
-      splitPosition = 50;
-      
-      sendDebugLog('DEBUG', 'Split removed, merged to leaf with CodeEditor', { containerId });
-      notifyParentOfChange();
-    }
   }
 
   // Start resizing splits
@@ -330,101 +318,96 @@
     notifyParentOfChange();
   }
 
+  // Handle child container removal
+  function handleChildRemoval(event) {
+    const { containerId: removedContainerId } = event.detail;
+    
+    // Remove the child that requested removal
+    children = children.filter(child => child.id !== removedContainerId);
+    
+    // If only one child remains, collapse this split container
+    if (children.length === 1) {
+      const remainingChild = children[0];
+      
+      // Adopt the remaining child's properties
+      containerType = remainingChild.type;
+      tabs = remainingChild.tabs || [];
+      activeTabId = remainingChild.activeTabId || null;
+      children = remainingChild.children || [];
+      splitPosition = remainingChild.splitPosition || 50;
+      
+      sendDebugLog('DEBUG', 'Container collapsed after child removal', { 
+        containerId,
+        newType: containerType 
+      });
+    }
+    
+    notifyParentOfChange();
+  }
+
   // Get the active tab object
   $: activeTab = tabs.find(tab => tab.id === activeTabId);
 </script>
 
 <div class="editor-container h-full flex flex-col">
-  <!-- Container Controls -->
-  <div class="container-controls flex items-center justify-between bg-base-200 border-b border-base-300 px-2 py-1">
-    <!-- Left: Split Controls -->
-    <div class="flex items-center gap-1">
-      {#if containerType === CONTAINER_TYPES.LEAF}
-        <button 
-          class="btn btn-xs btn-ghost" 
-          on:click={splitVertical}
-          title="Split Vertical"
-        >
-          ⫿
-        </button>
-        <button 
-          class="btn btn-xs btn-ghost" 
-          on:click={splitHorizontal}
-          title="Split Horizontal"
-        >
-          ⬓
-        </button>
-      {:else}
-        <button 
-          class="btn btn-xs btn-ghost" 
-          on:click={removeSplit}
-          title="Remove Split"
-        >
-          ⊡
-        </button>
-      {/if}
-    </div>
-
-    <!-- Center: Container Info -->
-    <div class="flex items-center gap-2 text-xs text-base-content/70">
-      <span>
-        {#if containerType === CONTAINER_TYPES.LEAF}
-          CodeEditors: {tabs.length}
-        {:else}
-          Split: {containerType}
-        {/if}
-      </span>
-      <span>Depth: {depth}</span>
-    </div>
-
-    <!-- Right: Tab Controls (only for leaf containers) -->
-    <div class="flex items-center gap-1">
-      {#if containerType === CONTAINER_TYPES.LEAF}
-        <button 
-          class="btn btn-xs btn-ghost" 
-          on:click={addTab}
-          title="New CodeEditor Tab"
-        >
-          ＋
-        </button>
-      {/if}
-    </div>
-  </div>
-
   <!-- Container Content -->
   <div class="container-content flex-1">
     {#if containerType === CONTAINER_TYPES.LEAF}
       <!-- Leaf Container: Tabs + CodeEditor -->
       <div class="leaf-container h-full flex flex-col">
-        <!-- Tab Bar (show only if multiple tabs) -->
-        {#if tabs.length > 1}
-          <div class="tab-bar flex items-center bg-base-200 border-b border-base-300">
-            <div class="tabs flex-1 flex overflow-x-auto">
-              {#each tabs as tab (tab.id)}
-                <div 
-                  class="tab flex items-center px-3 py-2 cursor-pointer border-r border-base-300 min-w-0 max-w-48 {tab.id === activeTabId ? 'bg-base-100 text-base-content' : 'bg-base-200 text-base-content/70 hover:bg-base-300'}"
-                  on:click={() => switchToTab(tab.id)}
-                  role="tab"
-                  tabindex="0"
-                  on:keydown={(e) => e.key === 'Enter' && switchToTab(tab.id)}
-                >
-                  <span class="text-xs mr-1 flex-shrink-0">💻</span>
-                  <span class="text-xs truncate flex-1 min-w-0">
-                    {tab.title}{tab.isDirty ? '*' : ''}
-                  </span>
-                  {#if tabs.length > 1}
-                    <button 
-                      class="ml-1 text-xs opacity-50 hover:opacity-100"
-                      on:click|stopPropagation={() => removeTab(tab.id)}
-                    >
-                      ×
-                    </button>
-                  {/if}
-                </div>
-              {/each}
-            </div>
+        <!-- Tab Bar (always visible for leaf containers) -->
+        <div class="tab-bar flex items-center bg-base-200 border-b border-base-300">
+          <!-- Tabs -->
+          <div class="tabs flex-1 flex overflow-x-auto">
+            {#each tabs as tab (tab.id)}
+              <div 
+                class="tab flex items-center px-3 py-2 cursor-pointer border-r border-base-300 min-w-0 max-w-48 {tab.id === activeTabId ? 'bg-base-100 text-base-content' : 'bg-base-200 text-base-content/70 hover:bg-base-300'}"
+                on:click={() => switchToTab(tab.id)}
+                role="tab"
+                tabindex="0"
+                on:keydown={(e) => e.key === 'Enter' && switchToTab(tab.id)}
+              >
+                <span class="text-xs mr-1 flex-shrink-0">💻</span>
+                <span class="text-xs truncate flex-1 min-w-0">
+                  {tab.title}{tab.isDirty ? '*' : ''}
+                </span>
+                {#if tabs.length > 1}
+                  <button 
+                    class="ml-1 text-xs opacity-50 hover:opacity-100"
+                    on:click|stopPropagation={() => removeTab(tab.id)}
+                  >
+                    ×
+                  </button>
+                {/if}
+              </div>
+            {/each}
           </div>
-        {/if}
+          
+          <!-- Tab Controls -->
+          <div class="flex items-center gap-1 px-2">
+            <button 
+              class="btn btn-xs btn-ghost" 
+              on:click={addTab}
+              title="New CodeEditor Tab"
+            >
+              ＋
+            </button>
+            <button 
+              class="btn btn-xs btn-ghost" 
+              on:click={splitVertical}
+              title="Split Vertical"
+            >
+              ⫿
+            </button>
+            <button 
+              class="btn btn-xs btn-ghost" 
+              on:click={splitHorizontal}
+              title="Split Horizontal"
+            >
+              ⬓
+            </button>
+          </div>
+        </div>
 
         <!-- Active Tab Content (CodeEditor) -->
         <div class="tab-content flex-1">
@@ -452,6 +435,7 @@
               containerData={child}
               depth={depth + 1}
               on:containerChange={handleChildChange}
+              on:removeContainer={handleChildRemoval}
             />
           </div>
 
@@ -479,6 +463,7 @@
               containerData={child}
               depth={depth + 1}
               on:containerChange={handleChildChange}
+              on:removeContainer={handleChildRemoval}
             />
           </div>
 
