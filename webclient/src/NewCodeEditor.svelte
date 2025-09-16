@@ -4,6 +4,7 @@
   import ColorPicker from './components/panes/ColorPicker.svelte';
   import TextArea from './components/panes/TextArea.svelte';
   import TabbedPane from './components/panes/TabbedPane.svelte';
+  import EditorContainer from './components/panes/EditorContainer.svelte';
   import LayoutConfigModal from './components/modals/LayoutConfigModal.svelte';
   import { sendMessage, sendDebugLog } from './lib/websocket.js';
   import SaveSessionModal from './components/modals/SaveSessionModal.svelte';
@@ -442,6 +443,25 @@
     
     handleCodeExecutionCompleteLib(event, removeHighlightCallback);
   }
+
+  // Handle editor container changes
+  function handleEditorContainerChange(event) {
+    const containerState = event.detail;
+    sendDebugLog('DEBUG', 'Editor container changed', { 
+      containerId: containerState.id,
+      type: containerState.type,
+      tabCount: containerState.tabs?.length || 0,
+      childrenCount: containerState.children?.length || 0
+    });
+    // Store the editor container state if needed for persistence
+  }
+
+  // Handle editor container removal (shouldn't happen for root container)
+  function handleEditorContainerRemoval(event) {
+    const { containerId } = event.detail;
+    sendDebugLog('WARNING', 'Root editor container removal requested', { containerId });
+    // Root container should not be removed
+  }
   
   // Helper function to render pane content (all panes use tabbed containers)
   function renderPaneContent(position) {
@@ -715,9 +735,11 @@
     <div class="flex flex-col flex-1 h-full">
       <!-- Center Pane (always visible) -->
       <div class="flex-1 {getPaneColor('center')} overflow-hidden">
-        <TabbedPane 
-          position="center"
-          initialTabs={paneTabConfigs['center'] || []}
+        <EditorContainer 
+          containerId="root-editor-container"
+          depth={0}
+          on:containerChange={handleEditorContainerChange}
+          on:removeContainer={handleEditorContainerRemoval}
         />
       </div>
       
