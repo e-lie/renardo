@@ -101,22 +101,35 @@ def register_api_routes(webapp):
         def __init__(self, collection_type, collection_name):
             self.collection_type = collection_type
             self.collection_name = collection_name
-            
+
         def write_line(self, message, level="INFO"):
             # Add log message to state service
             log_entry = state_helper.add_log_message(message, level)
-            
+
             # Print to console as well
             print(f"[{level}] {message}")
-            
+
             # Broadcast to WebSocket clients
             websocket_utils.broadcast_to_clients({
                 "type": "log_message",
                 "data": log_entry
             })
-            
+
         def write_error(self, message):
             self.write_line(message, "ERROR")
+
+        # Add standard Python logger methods for compatibility
+        def info(self, message):
+            self.write_line(message, "INFO")
+
+        def error(self, message):
+            self.write_line(message, "ERROR")
+
+        def warning(self, message):
+            self.write_line(message, "WARNING")
+
+        def debug(self, message):
+            self.write_line(message, "DEBUG")
     
     @webapp.route('/api/collections/<collection_type>/<collection_name>/download', methods=['POST'])
     def download_collection(collection_type, collection_name):
