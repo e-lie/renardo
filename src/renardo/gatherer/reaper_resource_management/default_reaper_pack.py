@@ -52,7 +52,7 @@ def download_reaper_pack(pack_name, logger=None):
         bool: True if the download was successful, False otherwise
     """
     if logger:
-        logger.write_line(
+        logger.info(
             f"Downloading Reaper Resources Pack {pack_name} from {settings.get('core.COLLECTIONS_DOWNLOAD_SERVER')}\n"
         )
     
@@ -77,7 +77,7 @@ def download_reaper_pack(pack_name, logger=None):
         
         if not success:
             if logger:
-                logger.write_error(f"Failed to download Reaper resource pack {pack_name}")
+                logger.error(f"Failed to download Reaper resource pack {pack_name}")
             return False
         
         # Create a downloaded_at file to mark this pack as initialized
@@ -88,12 +88,12 @@ def download_reaper_pack(pack_name, logger=None):
             file.write(str(datetime.now()))
             
         if logger:
-            logger.write_line(f"Reaper resource pack {pack_name} downloaded successfully!")
+            logger.info(f"Reaper resource pack {pack_name} downloaded successfully!")
             
         return True
     except Exception as e:
         error_msg = f"Error downloading Reaper resource pack {pack_name}: {str(e)}"
         print(error_msg)
         if logger:
-            logger.write_error(error_msg)
+            logger.error(error_msg)
         return False
