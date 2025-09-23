@@ -26,7 +26,7 @@ def download_special_sccode_pack(logger=None):
     
     # Download special code files first
     if logger:
-        logger.write_line(
+        logger.info(
             "Downloading core sccode from {}\n".format(
                 settings.get("core.COLLECTIONS_DOWNLOAD_SERVER")
             )
@@ -52,12 +52,12 @@ def download_special_sccode_pack(logger=None):
                 file.write(str(datetime.now()))
                 
             if logger:
-                logger.write_line("Special SCLang code downloaded successfully!")
+                logger.info("Special SCLang code downloaded successfully!")
     except Exception as e:
         error_msg = f"Error downloading special sccode: {str(e)}"
         print(error_msg)
         if logger:
-            logger.write_error(error_msg)
+            logger.error(error_msg)
         success = False
     
     # Return overall success
@@ -75,7 +75,7 @@ def download_sccode_pack(pack_name, logger=None):
         bool: True if the download was successful, False otherwise
     """
     if logger:
-        logger.write_line(
+        logger.info(
             f"Downloading Instruments and Effects Pack {pack_name} from {settings.get('core.COLLECTIONS_DOWNLOAD_SERVER')}\n"
         )
     
@@ -106,13 +106,13 @@ def download_sccode_pack(pack_name, logger=None):
             file.write(str(datetime.now()))
             
         if logger:
-            logger.write_line(f"SuperCollider code pack {pack_name} downloaded successfully!")
+            logger.info(f"SuperCollider code pack {pack_name} downloaded successfully!")
             
         return True
     except Exception as e:
         error_msg = f"Error downloading SuperCollider code pack {pack_name}: {str(e)}"
         print(error_msg)
         if logger:
-            logger.write_error(error_msg)
+            logger.error(error_msg)
         return False
 
