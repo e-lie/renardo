@@ -11,7 +11,7 @@ def download_file_in_pool(url, dest_path: Path, retries=5, delay=1, logger=None)
     for attempt in range(retries):
         try:
             if logger:
-                logger.write_line(f"Downloading {filename}...")
+                logger.info(f"Downloading {filename}...")
             
             response = requests.get(url, stream=True)
             response.raise_for_status()
@@ -27,21 +27,21 @@ def download_file_in_pool(url, dest_path: Path, retries=5, delay=1, logger=None)
                         # Log progress for large files (over 1MB) periodically
                         if total_size > 1048576 and logger and downloaded_size % 1048576 < 8192:  # Log roughly every 1MB
                             percent = int(downloaded_size * 100 / total_size) if total_size > 0 else 0
-                            logger.write_line(f"Downloading {filename}: {percent}% ({downloaded_size // 1024}KB/{total_size // 1024}KB)")
+                            logger.info(f"Downloading {filename}: {percent}% ({downloaded_size // 1024}KB/{total_size // 1024}KB)")
             
             if logger:
-                logger.write_line(f"✅ Downloaded {filename} successfully")
+                logger.info(f"✅ Downloaded {filename} successfully")
             return True
         except requests.RequestException as e:
             if logger:
-                logger.write_line(f"Error downloading {url}: {e}")
+                logger.info(f"Error downloading {url}: {e}")
             if attempt < retries - 1:
                 if logger:
-                    logger.write_line(f"Retrying ({attempt + 1}/{retries})...")
+                    logger.info(f"Retrying ({attempt + 1}/{retries})...")
                 time.sleep(delay)
             else:
                 if logger:
-                    logger.write_line(f"❌ Failed to download {url} after {retries} attempts")
+                    logger.info(f"❌ Failed to download {url} after {retries} attempts")
                 return False
 
 
@@ -55,7 +55,7 @@ def download_files_from_json_index_concurrent(json_url, download_dir, max_worker
             return response.json()
         except requests.exceptions.RequestException as e:
             if logger:
-                logger.write_line(f"Error downloading collection JSON index: {e}")
+                logger.info(f"Error downloading collection JSON index: {e}")
             return None
 
     def process_node(node, base_url="", current_dir=Path()):
@@ -80,12 +80,12 @@ def download_files_from_json_index_concurrent(json_url, download_dir, max_worker
 
     # Download JSON content from URL
     if logger:
-        logger.write_line(f"Downloading collection index from {json_url}")
+        logger.info(f"Downloading collection index from {json_url}")
     
     file_tree = download_json_index_from_url(json_url)
     if not file_tree:
         if logger:
-            logger.write_line("Failed to download collection index")
+            logger.info("Failed to download collection index")
         return False
 
     # Generate list of all files to download
@@ -93,7 +93,7 @@ def download_files_from_json_index_concurrent(json_url, download_dir, max_worker
     total_files = len(download_tasks)
     
     if logger:
-        logger.write_line(f"Found {total_files} files to download")
+        logger.info(f"Found {total_files} files to download")
     
     # Use ThreadPoolExecutor to download files concurrently
     completed_files = 0
@@ -113,18 +113,18 @@ def download_files_from_json_index_concurrent(json_url, download_dir, max_worker
                 success_count += 1
             else:
                 if logger:
-                    logger.write_line("A download failed.")
+                    logger.info("A download failed.")
             
             # Log progress for every file to provide more frequent updates
             if logger:
                 progress_percent = int((completed_files / total_files) * 100)
-                logger.write_line(f"Overall Progress: {completed_files}/{total_files} files processed ({progress_percent}%)")
+                logger.info(f"Overall Progress: {completed_files}/{total_files} files processed ({progress_percent}%)")
     
     if logger:
         if success_count == total_files:
-            logger.write_line(f"✅ DOWNLOAD COMPLETE: All {total_files} files were downloaded successfully!", "SUCCESS")
+            logger.info(f"✅ DOWNLOAD COMPLETE: All {total_files} files were downloaded successfully!", "SUCCESS")
         else:
-            logger.write_line(f"⚠️ DOWNLOAD PARTIALLY COMPLETE: {success_count}/{total_files} files downloaded. Some files failed.", "WARN")
+            logger.info(f"⚠️ DOWNLOAD PARTIALLY COMPLETE: {success_count}/{total_files} files downloaded. Some files failed.", "WARN")
     
     # Return True if all downloads were successful
     return success_count == total_files
