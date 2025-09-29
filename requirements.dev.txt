@@ -8,6 +8,7 @@ fastnumbers
 python-reapy
 mido
 JACK-Client
+pylive
 
 textual
 
