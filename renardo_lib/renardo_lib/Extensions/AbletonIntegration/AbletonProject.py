@@ -24,15 +24,15 @@ class AbletonProject:
     def __init__(self, scan: bool = True):
         """
         Initialize connection to Ableton Live set
-        
+
         Args:
             scan: Whether to automatically scan tracks on initialization
         """
-        self._set = live.Set()
+        self._set = live.Set(scan=scan)
         self._track_map = {}
         self._parameter_map = {}
         self._instruments = {}
-        
+
         if scan:
             self.scan_tracks()
     
@@ -44,20 +44,19 @@ class AbletonProject:
     def scan_tracks(self, max_tracks: int = 16):
         """
         Scan the first N MIDI tracks and build parameter maps
-        
+
         Args:
             max_tracks: Maximum number of tracks to scan (default 16)
         """
         self._track_map.clear()
         self._parameter_map.clear()
-        
-        # Scan the set to populate tracks and devices
-        self._set.scan(get_tracks=True, get_devices=True, get_clips=False)
-        
+
+        # The set was already scanned in __init__, so tracks are available
+
         track_count = 0
         for track_idx, track in enumerate(self._set.tracks):
             # Only process MIDI tracks
-            if not track.has_midi_input or track_count >= max_tracks:
+            if not track.is_midi_track or track_count >= max_tracks:
                 continue
             
             track_name = make_snake_name(track.name)
@@ -81,14 +80,14 @@ class AbletonProject:
                 for param_idx, parameter in enumerate(device.parameters):
                     param_name = make_snake_name(parameter.name)
                     param_key = f"{track_name}_{device_name}_{param_name}"
-                    
+
                     # Store parameter info in device map
                     self._track_map[track_name]['devices'][device_name]['parameters'][param_name] = {
                         'index': param_idx,
                         'parameter': parameter,
                         'min': parameter.min,
                         'max': parameter.max,
-                        'default': parameter.default_value
+                        'value': parameter._value  # Current value, no default_value in pylive
                     }
                     
                     # Store flattened parameter map for quick lookup
@@ -132,10 +131,10 @@ class AbletonProject:
             return False
         
         parameter = param_info['parameter']
-        
+
         # Scale value to parameter range
         if hasattr(value, '__iter__'):  # Handle patterns
-            value = value[0] if len(value) > 0 else parameter.default_value
+            value = value[0] if len(value) > 0 else parameter.min
         
         # Clamp to parameter range
         value = max(parameter.min, min(parameter.max, float(value)))
@@ -144,7 +143,7 @@ class AbletonProject:
         parameter.value = value
         return True
     
-    def get_track(self, track_name: str) -> Optional[live.Track]:
+    def get_track(self, track_name: str):
         """Get a track by name"""
         track_info = self._track_map.get(make_snake_name(track_name))
         return track_info['track'] if track_info else None
@@ -169,4 +168,4 @@ class AbletonProject:
             for device_name, device_info in track_info['devices'].items():
                 print(f"  Device: {device_name} (index: {device_info['index']})")
                 for param_name, param_info in device_info['parameters'].items():
-                    print(f"    {param_name}: min={param_info['min']}, max={param_info['max']}, default={param_info['default']}")
+                    print(f"    {param_name}: min={param_info['min']}, max={param_info['max']}, value={param_info['value']}")
