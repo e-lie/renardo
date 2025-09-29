@@ -6,6 +6,9 @@ Scans the Live set and creates a mapping of tracks, devices, and parameters
 import live
 from typing import Dict, Optional, List
 import re
+import threading
+import time
+from renardo_lib.TimeVar import TimeVar
 
 
 def make_snake_name(name: str) -> str:
@@ -33,8 +36,17 @@ class AbletonProject:
         self._parameter_map = {}
         self._instruments = {}
 
+        # TimeVar automation support
+        self._timevar_params = {}  # Maps param_name -> TimeVar instance
+        self._timevar_lock = threading.Lock()
+        self._timevar_thread = None
+        self._timevar_running = False
+
         if scan:
             self.scan_tracks()
+
+        # Start TimeVar update thread
+        self.start_timevar_thread()
     
     @property
     def set(self):
@@ -115,31 +127,49 @@ class AbletonProject:
         """
         return self._parameter_map.get(param_fullname)
     
-    def set_parameter(self, param_fullname: str, value: float) -> bool:
+    def set_parameter(self, param_fullname: str, value) -> bool:
         """
         Set a parameter value by its full name
-        
+
         Args:
             param_fullname: Full parameter name (e.g., "bass_operator_cutoff")
-            value: Parameter value (will be scaled to parameter range)
-            
+            value: Parameter value (will be scaled to parameter range) or TimeVar
+
         Returns:
             True if parameter was set, False if not found
         """
         param_info = self.get_parameter_info(param_fullname)
         if not param_info:
             return False
-        
+
         parameter = param_info['parameter']
 
-        # Scale value to parameter range
-        if hasattr(value, '__iter__'):  # Handle patterns
-            value = value[0] if len(value) > 0 else parameter.min
-        
+        # Check if value is a TimeVar (linvar, sinvar, expvar, etc.)
+        if isinstance(value, TimeVar):
+            # Register TimeVar for continuous updates
+            with self._timevar_lock:
+                self._timevar_params[param_fullname] = value
+            # Set initial value
+            current_value = float(value.now())
+            value = max(parameter.min, min(parameter.max, current_value))
+            parameter.value = value
+            return True
+
+        # Handle Pattern objects
+        if hasattr(value, '__iter__') and not isinstance(value, str):
+            try:
+                # Try to get first element
+                value = value[0] if hasattr(value, '__getitem__') else parameter.min
+            except (IndexError, TypeError):
+                value = parameter.min
+
         # Clamp to parameter range
         value = max(parameter.min, min(parameter.max, float(value)))
-        
-        # Set the parameter
+
+        # Set the parameter and remove from TimeVar tracking if it was there
+        with self._timevar_lock:
+            self._timevar_params.pop(param_fullname, None)
+
         parameter.value = value
         return True
     
@@ -160,6 +190,56 @@ class AbletonProject:
         """Get registered AbletonInstrument for a track"""
         return self._instruments.get(make_snake_name(track_name))
     
+    def start_timevar_thread(self):
+        """Start the TimeVar update thread (100Hz update rate)"""
+        if self._timevar_thread is not None:
+            return  # Already running
+
+        self._timevar_running = True
+        self._timevar_thread = threading.Thread(target=self._timevar_update_loop, daemon=True)
+        self._timevar_thread.start()
+
+    def stop_timevar_thread(self):
+        """Stop the TimeVar update thread"""
+        self._timevar_running = False
+        if self._timevar_thread is not None:
+            self._timevar_thread.join(timeout=1.0)
+            self._timevar_thread = None
+
+    def _timevar_update_loop(self):
+        """Update loop that runs at 100Hz to update TimeVar parameters"""
+        update_interval = 0.003333  # 300Hz = 3.333ms interval
+
+        while self._timevar_running:
+            start_time = time.time()
+
+            # Update all registered TimeVar parameters
+            with self._timevar_lock:
+                params_to_update = list(self._timevar_params.items())
+
+            for param_name, timevar in params_to_update:
+                try:
+                    # Get current TimeVar value
+                    current_value = float(timevar.now())
+
+                    # Get parameter info
+                    param_info = self.get_parameter_info(param_name)
+                    if param_info:
+                        parameter = param_info['parameter']
+                        # Clamp to parameter range
+                        clamped_value = max(parameter.min, min(parameter.max, current_value))
+                        # Update parameter in Live
+                        parameter.value = clamped_value
+                except Exception as e:
+                    # Silently ignore errors to avoid breaking the update loop
+                    pass
+
+            # Sleep for the remaining time to maintain 100Hz
+            elapsed = time.time() - start_time
+            sleep_time = max(0, update_interval - elapsed)
+            if sleep_time > 0:
+                time.sleep(sleep_time)
+
     def print_parameter_map(self):
         """Print the parameter map for debugging"""
         print("=== Ableton Parameter Map ===")
@@ -169,3 +249,7 @@ class AbletonProject:
                 print(f"  Device: {device_name} (index: {device_info['index']})")
                 for param_name, param_info in device_info['parameters'].items():
                     print(f"    {param_name}: min={param_info['min']}, max={param_info['max']}, value={param_info['value']}")
+
+    def __del__(self):
+        """Cleanup when the object is destroyed"""
+        self.stop_timevar_thread()
