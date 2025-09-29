@@ -488,7 +488,11 @@ class Player(Repeatable):
                 # Try to get parameter info from Ableton
                 param_info = ableton_project.get_parameter_info(name)
                 if param_info is not None:
-                    return param_info['parameter'].value
+                    # Get the value - pylive's query returns a list, we want the last element
+                    value_result = param_info['parameter'].value
+                    if isinstance(value_result, (list, tuple)) and len(value_result) > 0:
+                        return value_result[-1]  # Last element is usually the actual value
+                    return value_result
 
             # This checks for aliases, not the actual keys
             name = self.alias.get(name, name)
