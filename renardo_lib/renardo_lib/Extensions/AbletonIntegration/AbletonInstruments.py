@@ -121,6 +121,8 @@ class AbletonInstrumentFacade:
             channel=self._midi_channel - 1,  # Convert to 0-based
             degree=degree,
             sus=sus,
+            ableton_track=self._track,  # Pass track for __getattr__ support in Player
+            ableton_project_ref=self._ableton_project,  # Pass project for parameter queries
             **processed_kwargs
         )
     

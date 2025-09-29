@@ -482,6 +482,14 @@ class Player(Repeatable):
                     if device is not None:
                         return get_reaper_param(reatrack, name)
 
+            # Get the parameter value from ableton if it exists
+            if "ableton_track" in self.attr.keys() and "ableton_project_ref" in self.attr.keys():
+                ableton_project = self.attr["ableton_project_ref"][0]
+                # Try to get parameter info from Ableton
+                param_info = ableton_project.get_parameter_info(name)
+                if param_info is not None:
+                    return param_info['parameter'].value
+
             # This checks for aliases, not the actual keys
             name = self.alias.get(name, name)
             if name in self.attr and name not in self.__dict__:
