@@ -115,30 +115,65 @@ class AbletonProject:
             
             track_count += 1
     
-    def get_parameter_info(self, param_fullname: str) -> Optional[Dict]:
+    def get_parameter_info(self, param_fullname: str, track_name: str = None) -> Optional[Dict]:
         """
         Get parameter information from the flattened parameter map
-        
+
         Args:
-            param_fullname: Full parameter name (e.g., "bass_operator_cutoff")
-            
+            param_fullname: Parameter name (e.g., "operator_cutoff" or "cutoff")
+            track_name: Optional track name to scope the search
+
         Returns:
             Dictionary with parameter info or None if not found
         """
-        return self._parameter_map.get(param_fullname)
+        # Try direct lookup first (full track_device_param format)
+        result = self._parameter_map.get(param_fullname)
+        if result:
+            return result
+
+        # If track_name provided, try lookup with shortcuts
+        if track_name:
+            track_snake = make_snake_name(track_name)
+
+            # Try with track prefix: track_device_param or track_param
+            full_with_track = f"{track_snake}_{param_fullname}"
+            result = self._parameter_map.get(full_with_track)
+            if result:
+                return result
+
+            # Try as device_param (without track prefix)
+            # Search for any param that ends with _param_fullname in this track
+            track_info = self._track_map.get(track_snake)
+            if track_info:
+                # Look for device_param pattern
+                for full_param_name in self._parameter_map:
+                    if full_param_name.startswith(track_snake + "_") and full_param_name.endswith("_" + param_fullname):
+                        return self._parameter_map[full_param_name]
+
+                # Shortcut: Try first device if param name has no device prefix
+                if "_" not in param_fullname and len(track_info['devices']) > 0:
+                    # Get first device
+                    first_device_name = list(track_info['devices'].keys())[0]
+                    first_device_param = f"{track_snake}_{first_device_name}_{param_fullname}"
+                    result = self._parameter_map.get(first_device_param)
+                    if result:
+                        return result
+
+        return None
     
-    def set_parameter(self, param_fullname: str, value) -> bool:
+    def set_parameter(self, param_fullname: str, value, track_name: str = None) -> bool:
         """
         Set a parameter value by its full name
 
         Args:
-            param_fullname: Full parameter name (e.g., "bass_operator_cutoff")
+            param_fullname: Parameter name (e.g., "operator_cutoff" or "cutoff")
             value: Parameter value (will be scaled to parameter range) or TimeVar
+            track_name: Optional track name to scope the search
 
         Returns:
             True if parameter was set, False if not found
         """
-        param_info = self.get_parameter_info(param_fullname)
+        param_info = self.get_parameter_info(param_fullname, track_name)
         if not param_info:
             return False
 
