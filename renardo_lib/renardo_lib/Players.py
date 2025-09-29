@@ -484,15 +484,22 @@ class Player(Repeatable):
 
             # Get the parameter value from ableton if it exists
             if "ableton_track" in self.attr.keys() and "ableton_project_ref" in self.attr.keys():
+                ableton_track = self.attr["ableton_track"][0]
                 ableton_project = self.attr["ableton_project_ref"][0]
-                # Try to get parameter info from Ableton
-                param_info = ableton_project.get_parameter_info(name)
-                if param_info is not None:
-                    # Get the value - pylive's query returns a list, we want the last element
-                    value_result = param_info['parameter'].value
-                    if isinstance(value_result, (list, tuple)) and len(value_result) > 0:
-                        return value_result[-1]  # Last element is usually the actual value
-                    return value_result
+                # Check if it's actually the objects (not 0 from reset)
+                if hasattr(ableton_project, 'get_parameter_info') and hasattr(ableton_track, 'name'):
+                    # Get track name directly from track object and convert to snake_case
+                    from renardo_lib.Extensions.AbletonIntegration.AbletonProject import make_snake_name
+                    track_name = make_snake_name(ableton_track.name)
+
+                    # Try to get parameter info from Ableton with track name for shortcuts
+                    param_info = ableton_project.get_parameter_info(name, track_name)
+                    if param_info is not None:
+                        # Get the value - pylive's query returns a list, we want the last element
+                        value_result = param_info['parameter'].value
+                        if isinstance(value_result, (list, tuple)) and len(value_result) > 0:
+                            return value_result[-1]  # Last element is usually the actual value
+                        return value_result
 
             # This checks for aliases, not the actual keys
             name = self.alias.get(name, name)
@@ -530,15 +537,23 @@ class Player(Repeatable):
                             return
 
                 # Apply the parameter in ableton if it exists
-                if "ableton_project_ref" in self.attr.keys():
+                if "ableton_track" in self.attr.keys() and "ableton_project_ref" in self.attr.keys():
+                    ableton_track = self.attr["ableton_track"][0]
                     ableton_project = self.attr["ableton_project_ref"][0]
-                    # Try to set parameter in Ableton
-                    param_info = ableton_project.get_parameter_info(name)
-                    if param_info is not None:
-                        # Parameter exists in Ableton, set it
-                        ableton_project.set_parameter(name, value)
-                        # Continue to also store it in player attributes
-                        # (don't return early like Reaper does)
+                    # Check if it's actually the objects (not 0 from reset)
+                    if hasattr(ableton_project, 'get_parameter_info') and hasattr(ableton_track, 'name'):
+                        # Get track name directly from track object and convert to snake_case
+                        from renardo_lib.Extensions.AbletonIntegration.AbletonProject import make_snake_name
+                        track_name = make_snake_name(ableton_track.name)
+
+                        # Try to set parameter in Ableton with track name for shortcuts
+                        param_info = ableton_project.get_parameter_info(name, track_name)
+                        if param_info is not None:
+                            # Parameter exists in Ableton, set it
+                            ableton_project.set_parameter(name, value, track_name)
+                            # Return early - don't store in player attributes
+                            # This ensures reading the param always queries Ableton for current value
+                            return
 
                 # Get any alias
 
