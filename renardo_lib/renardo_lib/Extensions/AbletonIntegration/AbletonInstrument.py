@@ -41,6 +41,11 @@ class AbletonInstrument(MidiOut):
         # Add channel to MIDI parameters
         self._non_ableton_params['channel'] = channel
 
+        # Add Ableton references to MIDI params so they persist in Player.attr
+        # (similar to how ReaperInstrument passes reatrack)
+        self._non_ableton_params['ableton_project_ref'] = ableton_project
+        self._non_ableton_params['ableton_track'] = kwargs.get('ableton_track')
+
         # Initialize parent with MIDI-only parameters
         super().__init__(degree, **self._non_ableton_params)
         
