@@ -527,19 +527,14 @@ class Player(Repeatable):
 
                 # Apply the parameter in ableton if it exists
                 if "ableton_project_ref" in self.attr.keys():
-                    print(f"[Ableton Debug] Found ableton_project_ref for param: {name}")
                     ableton_project = self.attr["ableton_project_ref"][0]
                     # Try to set parameter in Ableton
                     param_info = ableton_project.get_parameter_info(name)
-                    print(f"[Ableton Debug] param_info for {name}: {param_info is not None}")
                     if param_info is not None:
                         # Parameter exists in Ableton, set it
-                        success = ableton_project.set_parameter(name, value)
-                        print(f"[Ableton] Setting {name} = {value}, success: {success}")
+                        ableton_project.set_parameter(name, value)
                         # Continue to also store it in player attributes
                         # (don't return early like Reaper does)
-                else:
-                    print(f"[Ableton Debug] No ableton_project_ref in attr for param: {name}")
 
                 # Get any alias
 
