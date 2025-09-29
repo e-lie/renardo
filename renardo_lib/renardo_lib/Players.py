@@ -694,12 +694,12 @@ class Player(Repeatable):
         
         if not isinstance(self.event["dur"], Rest):
 
-            try:
-                self._send_osc_messages_to_server(verbose=(self.metro.solo == self and kwargs.get('verbose', True)))
+            # try:
+            self._send_osc_messages_to_server(verbose=(self.metro.solo == self and kwargs.get('verbose', True)))
 
-            except Exception as err:
+            # except Exception as err:
 
-                print("Error in Player {}: {}".format(self.id, err))
+            # print("Error in Player {}: {}".format(self.id, err))
         
         # If using custom bpm
 

@@ -16,13 +16,15 @@ class AbletonInstrumentWrapper:
     def __init__(self, facade):
         self._facade = facade
         self.name = f"AbletonInstrument_{facade._snake_name}"
-        
+
     def __call__(self, degree=0, **kwargs):
         """
-        Return an AbletonInstrument instance configured for this track
+        Return an AbletonInstrument (SynthDefProxy) configured for this track
         This is what gets passed to the Player via >>
         """
-        return self._facade.create_instrument(degree, **kwargs)
+        # AbletonInstrument is already a SynthDefProxy (via MidiOut -> SynthDefProxy)
+        # So we can return it directly
+        return self._facade.create_instrument(degree=degree, **kwargs)
 
 
 class AbletonInstrumentFacade:
@@ -71,15 +73,15 @@ class AbletonInstrumentFacade:
         """
         return AbletonInstrumentWrapper(self)
     
-    def create_instrument(self, *args, sus=None, **kwargs):
+    def create_instrument(self, degree=0, sus=None, **kwargs):
         """
         Create and return an AbletonInstrument instance
-        
+
         Args:
-            *args: Positional arguments (typically degree pattern)
+            degree: Note degree pattern (default 0)
             sus: Sustain pattern
             **kwargs: Additional parameters including device parameters
-            
+
         Returns:
             AbletonInstrument instance
         """
@@ -87,7 +89,7 @@ class AbletonInstrumentFacade:
         midi_map_name = kwargs.pop("midi_map", self._midi_map)
         if midi_map_name:
             kwargs["midi_map"] = MidiMapFactory.generate_midimap(midi_map_name)
-        
+
         # Handle sustain
         if sus is None:
             sus = self._default_sus
@@ -97,7 +99,7 @@ class AbletonInstrumentFacade:
             sus = Pattern(dur) - 0.03
         else:
             sus = Pattern(sus)
-        
+
         # Add track-specific parameter prefix for any device parameters
         # This ensures parameters can be specified without the track prefix
         processed_kwargs = {}
@@ -112,13 +114,13 @@ class AbletonInstrumentFacade:
                     processed_kwargs[key] = value
             else:
                 processed_kwargs[key] = value
-        
+
         return AbletonInstrument(
             ableton_project=self._ableton_project,
             track_name=self._snake_name,
             channel=self._midi_channel - 1,  # Convert to 0-based
+            degree=degree,
             sus=sus,
-            *args,
             **processed_kwargs
         )
     

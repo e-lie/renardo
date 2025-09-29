@@ -37,9 +37,12 @@ class AbletonInstrument(MidiOut):
         # Separate Ableton parameters from MIDI parameters
         if ableton_project and track_name:
             self._separate_parameters(kwargs)
-        
+
+        # Add channel to MIDI parameters
+        self._non_ableton_params['channel'] = channel
+
         # Initialize parent with MIDI-only parameters
-        super().__init__(degree, channel=channel, **self._non_ableton_params)
+        super().__init__(degree, **self._non_ableton_params)
         
         # Apply Ableton parameters
         if self._ableton_params:
