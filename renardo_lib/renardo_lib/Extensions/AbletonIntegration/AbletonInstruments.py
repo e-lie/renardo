@@ -9,6 +9,22 @@ from renardo_lib.Patterns import Pattern
 from typing import Dict, Optional
 
 
+class AbletonInstrumentWrapper:
+    """
+    Wrapper class that acts like a SynthDef but creates AbletonInstrument instances
+    """
+    def __init__(self, facade):
+        self._facade = facade
+        self.name = f"AbletonInstrument_{facade._snake_name}"
+        
+    def __call__(self, degree=0, **kwargs):
+        """
+        Return an AbletonInstrument instance configured for this track
+        This is what gets passed to the Player via >>
+        """
+        return self._facade.create_instrument(degree, **kwargs)
+
+
 class AbletonInstrumentFacade:
     """
     Facade for creating and managing AbletonInstrument instances
@@ -48,7 +64,14 @@ class AbletonInstrumentFacade:
         # Register this instrument facade
         ableton_project.register_instrument(track_name, self)
     
-    def out(self, *args, sus=None, **kwargs):
+    @property
+    def out(self):
+        """
+        Return a wrapper that acts like a SynthDef for use with >> operator
+        """
+        return AbletonInstrumentWrapper(self)
+    
+    def create_instrument(self, *args, sus=None, **kwargs):
         """
         Create and return an AbletonInstrument instance
         

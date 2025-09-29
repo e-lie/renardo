@@ -24,6 +24,9 @@ from renardo_lib.SCLang import SynthDefs, Env, SynthDef, CompiledSynthDef
 from renardo_lib.Root import Root
 from renardo_lib.Scale import Scale, Tuning
 
+from renardo_lib.Extensions.AbletonIntegration import create_ableton_instruments
+
+
 @PatternMethod
 def __getitem__(self, key):
     """ Overrides the Pattern.__getitem__ to allow indexing
