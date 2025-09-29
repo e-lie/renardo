@@ -198,8 +198,12 @@ class AbletonProject:
             except (IndexError, TypeError):
                 value = parameter.min
 
-        # Clamp to parameter range
-        value = max(parameter.min, min(parameter.max, float(value)))
+        # Convert to float and clamp to 0-1 range
+        value = float(value)
+        value = max(0.0, min(1.0, value))
+
+        # Normalize to parameter's min/max range (0 = min, 1 = max)
+        value = parameter.min + (value * (parameter.max - parameter.min))
 
         # Set the parameter and remove from TimeVar tracking if it was there
         with self._timevar_lock:
