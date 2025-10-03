@@ -21,12 +21,14 @@ class ReaperInstrumentFacade:
         plugin_preset=None,
         instrument_params=None,
         scan_all_params=True,
-        is_chain=False
+        is_chain=False,
+        midi_off=False
     ):
         self._reaproject = reaproject
         self._presets = presets
         self._reatrack = reaproject.get_track(track_name)
         self.track_name = track_name
+        self.midi_off=midi_off
         try:
             self._reafx_instrument = self._reatrack.reafxs[track_name]
         except:
@@ -124,6 +126,7 @@ class ReaperInstrumentFacade:
         return ReaperInstrument(
             reatrack=self._reatrack,
             channel=self._midi_channel - 1,
+            midi_off=self.midi_off,
             sus=sus,
             *args,
             **remaining_param_dict,
