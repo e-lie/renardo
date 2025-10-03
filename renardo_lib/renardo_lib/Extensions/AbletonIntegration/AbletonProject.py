@@ -183,10 +183,12 @@ class AbletonProject:
         if isinstance(value, TimeVar):
             # Register TimeVar for continuous updates
             with self._timevar_lock:
-                self._timevar_params[param_fullname] = value
+                self._timevar_params[param_fullname] = (value, parameter)
             # Set initial value
             current_value = float(value.now())
-            value = max(parameter.min, min(parameter.max, current_value))
+            # Clamp to 0-1 and normalize to parameter range
+            current_value = max(0.0, min(1.0, current_value))
+            value = parameter.min + (current_value * (parameter.max - parameter.min))
             parameter.value = value
             return True
 
@@ -256,19 +258,17 @@ class AbletonProject:
             with self._timevar_lock:
                 params_to_update = list(self._timevar_params.items())
 
-            for param_name, timevar in params_to_update:
+            for param_name, (timevar, parameter) in params_to_update:
                 try:
                     # Get current TimeVar value
                     current_value = float(timevar.now())
 
-                    # Get parameter info
-                    param_info = self.get_parameter_info(param_name)
-                    if param_info:
-                        parameter = param_info['parameter']
-                        # Clamp to parameter range
-                        clamped_value = max(parameter.min, min(parameter.max, current_value))
-                        # Update parameter in Live
-                        parameter.value = clamped_value
+                    # Clamp to 0-1 and normalize to parameter range
+                    current_value = max(0.0, min(1.0, current_value))
+                    normalized_value = parameter.min + (current_value * (parameter.max - parameter.min))
+
+                    # Update parameter in Live
+                    parameter.value = normalized_value
                 except Exception as e:
                     # Silently ignore errors to avoid breaking the update loop
                     pass
