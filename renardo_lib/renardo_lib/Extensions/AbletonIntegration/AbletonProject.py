@@ -160,7 +160,35 @@ class AbletonProject:
                         return result
 
         return None
-    
+
+    def freeze_timevars_for_track(self, track_name: str) -> None:
+        """
+        Freeze all TimeVar parameters for a given track.
+        Replaces TimeVars with their current fixed value.
+
+        Args:
+            track_name: Snake_case track name
+        """
+        with self._timevar_lock:
+            params_to_freeze = []
+            for param_name, (timevar, parameter) in list(self._timevar_params.items()):
+                # Check if this parameter belongs to the specified track
+                if param_name.startswith(track_name + "_") or self._parameter_map.get(param_name, {}).get('track_snake') == track_name:
+                    params_to_freeze.append((param_name, timevar, parameter))
+
+            # Remove from timevar tracking and set to current value
+            for param_name, timevar, parameter in params_to_freeze:
+                # Get current value and freeze it
+                current_value = float(timevar.now())
+                current_value = max(0.0, min(1.0, current_value))
+                frozen_value = parameter.min + (current_value * (parameter.max - parameter.min))
+
+                # Set the frozen value
+                parameter.value = frozen_value
+
+                # Remove from TimeVar tracking
+                self._timevar_params.pop(param_name, None)
+
     def set_parameter(self, param_fullname: str, value, track_name: str = None) -> bool:
         """
         Set a parameter value by its full name

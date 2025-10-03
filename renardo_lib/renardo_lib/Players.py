@@ -1584,16 +1584,25 @@ class Player(Repeatable):
 
     def kill(self):
         """ Removes this object from the Clock and resets itself"""
-        
+
         self.isplaying = False
         self.stopping = True
-        
+
+        # Freeze Ableton TimeVars before reset
+        if "ableton_track" in self.attr.keys() and "ableton_project_ref" in self.attr.keys():
+            ableton_track = self.attr["ableton_track"][0]
+            ableton_project = self.attr["ableton_project_ref"][0]
+            if hasattr(ableton_project, 'freeze_timevars_for_track') and hasattr(ableton_track, 'name'):
+                from renardo_lib.Extensions.AbletonIntegration.AbletonProject import make_snake_name
+                track_name = make_snake_name(ableton_track.name)
+                ableton_project.freeze_timevars_for_track(track_name)
+
         self.reset()
 
         if self in self.metro.playing:
-        
+
             self.metro.playing.remove(self)
-        
+
         return
         
     def stop(self, N=0):

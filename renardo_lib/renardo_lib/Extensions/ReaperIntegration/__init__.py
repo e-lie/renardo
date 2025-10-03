@@ -60,7 +60,7 @@ class ReaperInstrumentFactory:
             instrument_dict[instrument_name] = self.create_instrument_facade(**instrument_kwargs)
         return instrument_dict
 
-    def add_instrument(self, name, plugin_name, track_name=None, preset=None, params={}, scan_all_params=True, is_chain=True):
+    def add_instrument(self, name, plugin_name, track_name=None, preset=None, params={}, scan_all_params=True, is_chain=True, midi_off=False):
         midi_channel = -1
         if track_name is None:
             free_indexes = [index for index in range(1,17) if index not in self.used_track_indexes]
@@ -84,7 +84,8 @@ class ReaperInstrumentFactory:
             plugin_preset=preset,
             instrument_params=params,
             scan_all_params=scan_all_params,
-            is_chain=is_chain
+            is_chain=is_chain,
+            midi_off=midi_off
         )
     
     def add_chains(*args, scan_all_params=True, is_chain=True):
@@ -101,9 +102,9 @@ class ReaperInstrumentFactory:
         selff.instru_facades += facades
         return tuple([facade.out for facade in facades])
 
-    def instanciate(selff, track_name, chain_name, scan_all_params=True, is_chain=True):
+    def instanciate(selff, track_name, chain_name, scan_all_params=True, is_chain=True, midi_off=False):
         try:
-            facade_obj = selff.add_instrument(chain_name, chain_name, track_name=track_name, scan_all_params=scan_all_params, is_chain=is_chain)
+            facade_obj = selff.add_instrument(chain_name, chain_name, track_name=track_name, scan_all_params=scan_all_params, is_chain=is_chain, midi_off=midi_off)
             return facade_obj.out
         except Exception as e:
             print(f"Error adding chain {chain_name}: {e}")
