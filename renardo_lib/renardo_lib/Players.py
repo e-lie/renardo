@@ -495,11 +495,20 @@ class Player(Repeatable):
                     # Try to get parameter info from Ableton with track name for shortcuts
                     param_info = ableton_project.get_parameter_info(name, track_name)
                     if param_info is not None:
+                        parameter = param_info['parameter']
                         # Get the value - pylive's query returns a list, we want the last element
-                        value_result = param_info['parameter'].value
+                        value_result = parameter.value
                         if isinstance(value_result, (list, tuple)) and len(value_result) > 0:
-                            return value_result[-1]  # Last element is usually the actual value
-                        return value_result
+                            raw_value = value_result[-1]  # Last element is usually the actual value
+                        else:
+                            raw_value = value_result
+
+                        # Normalize to 0-1 range
+                        param_range = parameter.max - parameter.min
+                        if param_range > 0:
+                            normalized = (raw_value - parameter.min) / param_range
+                            return max(0.0, min(1.0, normalized))
+                        return raw_value
 
             # This checks for aliases, not the actual keys
             name = self.alias.get(name, name)
