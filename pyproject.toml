@@ -39,12 +39,12 @@ dependencies = [
     "gevent",
     "gevent-websocket",
     "markdown>=3.5.1",
-    "python-reapy>=0.10.0",
     "python-osc>=1.8.3",
 ]
 
 [project.scripts]
 renardo = "renardo:main"
+cli = "renardo.cli_entrypoint:main"
 
 [project.urls]
 Homepage = "http://renardo.org/"
