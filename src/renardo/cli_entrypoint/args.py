@@ -24,6 +24,8 @@ def parse_arguments(args=None) -> Dict[str, Any]:
         epilog="""
 Examples:
   uv run cli --pipe          # Interactive pipe mode with separate runtime
+  uv run cli --sclang        # Start with SuperCollider instance  
+  uv run cli --sclang --pipe # Pipe mode with SuperCollider
   uv run cli --version       # Show version information
   uv run cli --help          # Show this help message
 
@@ -74,6 +76,19 @@ For more information, visit: https://renardo.org/
         type=float,
         default=30.0,
         help='Timeout for process operations in seconds (default: 30.0)'
+    )
+    
+    # SuperCollider options
+    parser.add_argument(
+        '--sclang',
+        action='store_true',
+        help='Launch SuperCollider (sclang) instance before starting pipe mode'
+    )
+    
+    parser.add_argument(
+        '--sclang-path',
+        type=str,
+        help='Path to sclang executable (auto-detected if not specified)'
     )
     
     # Development options
