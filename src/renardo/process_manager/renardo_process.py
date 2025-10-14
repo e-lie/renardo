@@ -74,9 +74,9 @@ class RenardoRuntimeProcess(ManagedProcess):
             self.logger.warning("Cannot execute code in non-running Renardo runtime")
             return False
         
-        # Wrap code in execute() function for consistency with Flok integration
-        wrapped_code = f'execute("{code.replace(chr(34), chr(92)+chr(34)).replace(chr(10), chr(92)+"n")}")\n'
-        return self.send_command(wrapped_code)
+        # For now, execute code directly without wrapper
+        # TODO: Implement execute() function in Renardo runtime for consistency
+        return self.execute_raw(code)
     
     def execute_raw(self, code: str) -> bool:
         """
