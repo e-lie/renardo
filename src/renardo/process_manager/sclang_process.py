@@ -25,6 +25,7 @@ class SclangProcess(ManagedProcess):
         super().__init__(process_id, 'sclang', config)
         
         self.sclang_exec = None
+        self.check_exec = None
         self.supercollider_ready = None
         self._find_sclang_executable()
     
@@ -32,7 +33,8 @@ class SclangProcess(ManagedProcess):
         """Find the sclang executable based on platform."""
         # Check if path is provided in config
         if 'sclang_path' in self.config:
-            self.sclang_exec = [self.config['sclang_path']]
+            self.sclang_exec = [self.config['sclang_path'], '-i', 'scqt']
+            self.check_exec = [self.config['sclang_path'], '--version']
             return
         
         # Auto-detect based on platform
@@ -42,10 +44,12 @@ class SclangProcess(ManagedProcess):
                 sc_dir = path_glob[0]
                 os.environ["PATH"] += f"{sc_dir};"
                 sclang_path = sc_dir / "sclang.exe"
-                self.sclang_exec = [str(sclang_path)]
+                self.sclang_exec = [str(sclang_path), '-i', 'scqt']
+                self.check_exec = [str(sclang_path), '--version']
             else:
                 self.logger.warning("SuperCollider not found in standard Windows location")
-                self.sclang_exec = ["sclang"]  # Hope it's in PATH
+                self.sclang_exec = ["sclang", '-i', 'scqt']
+                self.check_exec = ["sclang", '--version']
         
         elif platform == "darwin":  # macOS
             # Standard macOS application paths
@@ -59,22 +63,22 @@ class SclangProcess(ManagedProcess):
                 if os.path.exists(path):
                     sclang_path = os.path.join(path, "Contents/MacOS/sclang")
                     if os.path.exists(sclang_path):
-                        self.sclang_exec = [sclang_path]
+                        self.sclang_exec = [sclang_path, '-i', 'scqt']
+                        self.check_exec = [sclang_path, '--version']
                         sclang_found = True
                         break
             
             if not sclang_found:
-                self.sclang_exec = ["sclang"]  # Fallback to system sclang
+                self.sclang_exec = ["sclang", '-i', 'scqt']
+                self.check_exec = ["sclang", '--version']
         
         else:  # Linux
-            self.sclang_exec = ["sclang"]
+            self.sclang_exec = ["sclang", '-i', 'scqt']
+            self.check_exec = ["sclang", '--version']
     
     def _build_command(self) -> list:
         """Build the sclang command line."""
         command = self.sclang_exec.copy()
-        
-        # Add interactive mode arguments
-        command.extend(['-i', 'scqt'])
         
         # Add additional arguments from config
         if 'args' in self.config:
@@ -89,8 +93,7 @@ class SclangProcess(ManagedProcess):
         
         try:
             import subprocess
-            check_cmd = self.sclang_exec + ['-version']
-            completed_process = subprocess.run(check_cmd, capture_output=True)
+            completed_process = subprocess.run(self.check_exec, capture_output=True)
             self.supercollider_ready = completed_process.returncode == 0
         except:
             self.supercollider_ready = False
