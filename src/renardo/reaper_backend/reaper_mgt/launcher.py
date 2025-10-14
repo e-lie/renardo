@@ -1,8 +1,8 @@
 """
 REAPER launching and configuration utilities for Renardo.
 
-This module provides functions for launching REAPER with the correct environment,
-initializing Reapy integration, and managing REAPER configuration.
+This module provides functions for launching REAPER with the correct environment
+using the unified process manager.
 Cross-platform support for macOS, Windows, and Linux.
 """
 import os
@@ -16,46 +16,71 @@ import platform
 from pathlib import Path
 
 from .shared_library import get_python_shared_library, is_windows, is_apple
+from ...process_manager import ProcessType, get_process_manager
+from ...logger import get_main_logger
 
 
 def launch_reaper_with_pythonhome():
     """
-    Launch REAPER with the correct PYTHONHOME environment variable.
-    
-    Cross-platform implementation supporting:
-    - macOS: Launches from /Applications/REAPER.app
-    - Windows: Launches from standard Program Files location or registry path
-    - Linux: Launches from standard locations or PATH
-    
-    This function:
-    1. Uses get_python_shared_library to find the current Python library path
-    2. Extracts the Python home directory from the library path
-    3. Sets PYTHONHOME environment variable to point to the current Python installation
-    4. Detects platform and launches REAPER from the appropriate location
-    5. Detaches the REAPER process from the Python script
+    Launch REAPER with the correct PYTHONHOME environment variable using process manager.
     
     Returns:
-        tuple: (bool, str) - Success status and PYTHONHOME path used
+        tuple: (bool, str) - Success status and process ID
     """
+    logger = get_main_logger()
+    process_manager = get_process_manager()
+    
     try:
         # Get the Python shared library path
         python_lib_path = get_python_shared_library()
-        print(f"Python shared library found at: {python_lib_path}")
+        logger.info(f"Python shared library found at: {python_lib_path}")
         
-        # Extract the Python home directory from the library path
-        if is_windows():
-            if "\\lib\\python" in python_lib_path or "\\DLLs\\" in python_lib_path:
-                # Windows paths may have python under lib or DLLs
-                python_home = python_lib_path.split("\\lib\\python")[0] if "\\lib\\python" in python_lib_path else python_lib_path.split("\\DLLs\\")[0]
-            else:
-                # Fallback to a reasonable guess if the expected pattern isn't found
-                python_home = str(Path(sys.executable).parent)
-        elif is_apple() or "lib/libpython" in python_lib_path:
-            # macOS or Linux with standard lib pattern
-            python_home = python_lib_path.split("lib/libpython")[0]
+        # Extract Python home directory
+        python_home = _extract_python_home(python_lib_path)
+        logger.info(f"Setting PYTHONHOME to: {python_home}")
+        
+        # Prepare configuration for process manager
+        config = {
+            'pythonhome': python_home,
+            'detached': True
+        }
+        
+        # Start Reaper via process manager
+        process_id = process_manager.start_process(ProcessType.REAPER, config)
+        
+        if process_id:
+            logger.info(f"REAPER launched successfully with process ID: {process_id}")
+            return True, process_id
         else:
-            # Generic fallback for other platforms
-            python_home = str(Path(sys.executable).parent.parent)
+            logger.error("Failed to launch REAPER")
+            return False, None
+            
+    except Exception as e:
+        logger.error(f"Error launching REAPER: {e}")
+        return False, None
+
+
+def _extract_python_home(python_lib_path):
+    """Extract Python home directory from library path."""
+    # Extract the Python home directory from the library path
+    if is_windows():
+        if "\\lib\\python" in python_lib_path or "\\DLLs\\" in python_lib_path:
+            # Windows paths may have python under lib or DLLs
+            python_home = python_lib_path.split("\\lib\\python")[0] if "\\lib\\python" in python_lib_path else python_lib_path.split("\\DLLs\\")[0]
+        else:
+            # Fallback to a reasonable guess if the expected pattern isn't found
+            python_home = str(Path(sys.executable).parent)
+    elif is_apple() or "lib/libpython" in python_lib_path:
+        # macOS or Linux with standard lib pattern
+        python_home = python_lib_path.split("lib/libpython")[0]
+    else:
+        # Generic fallback for other platforms
+        python_home = str(Path(sys.executable).parent.parent)
+    
+    return python_home
+
+
+# Functions below are kept for reference but should use process manager instead
         
         print(f"Setting PYTHONHOME to: {python_home}")
         
@@ -205,63 +230,7 @@ def launch_reaper_with_pythonhome():
         return False, None
 
 
-def initialize_reapy():
-    """
-    Performs a simplified Reapy initialization procedure with user confirmations:
-    
-    1. Starts REAPER with the correct PYTHONHOME
-    2. Waits for user confirmation when REAPER is fully loaded
-    3. Executes basic Reapy configuration
-    4. Restarts REAPER to ensure changes take effect
-    
-    Returns:
-        bool: True if initialization was successful, False otherwise
-    """
-    try:
-        # Step 1: Launch REAPER with correct PYTHONHOME
-        print("\n===== Step 1: Launching REAPER with correct PYTHONHOME =====")
-        success, pythonhome = launch_reaper_with_pythonhome()
-        if not success:
-            print("Failed to launch REAPER")
-            return False
-        
-        # Step 2: Wait for user confirmation that REAPER is loaded
-        input("\nREAPER has been launched. Please wait until REAPER is fully loaded, then press Enter to continue...")
-        
-        # Step 3: Execute Reapy configuration
-        print("\n===== Step 2: Configuring Reapy =====")
-        try:
-            import reapy
-            
-            response = input("Would you like to run reapy.configure_reaper()? (y/n): ")
-            if response.lower() in ['y', 'yes']:
-                print("Configuring Reapy...")
-                reapy.configure_reaper()
-                print("Reapy configuration successful")
-        except Exception as e:
-            print(f"Error during Reapy configuration: {e}")
-            return False
-        
-        # Step 4: Close and restart REAPER
-        print("\n===== Step 3: Restarting REAPER =====")
-        print("Please close REAPER manually.")
-        input("Press Enter once REAPER is closed...")
-            
-        print("Restarting REAPER...")
-        success, pythonhome = launch_reaper_with_pythonhome()
-        if not success:
-            print("Failed to restart REAPER")
-            return False
-        
-        input("REAPER has been restarted. Please wait until REAPER is fully loaded, then press Enter to continue...")
-        
-        print("\n===== Reapy initialization completed =====")
-        print("You can now use Reapy to control REAPER.")
-        return True
-    
-    except Exception as e:
-        print(f"Error during Reapy initialization process: {e}")
-        return False
+# Legacy reapy functions removed - use process manager instead
 
 
 def reinit_reaper_with_backup():
@@ -447,21 +416,6 @@ def reinit_reaper_with_backup():
         return False
 
 
-def test_reaper_integration():
-    import reapy
-    project = reapy.Project()
-    # Create a new track for audio
-    audio_track = project.add_track(index=-1, name="Test Track")
-    if audio_track:
-        result = {
-            "success": True,
-            "message": audio_track.name
-        }
-    else:
-        result = {
-            "success": False,
-            "message": ""
-        }
-    return result
+# Legacy reapy test function removed - use process manager instead
         
         

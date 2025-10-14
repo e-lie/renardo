@@ -3,14 +3,22 @@ import subprocess
 from sys import platform
 import pathlib
 import psutil
+from ...process_manager import ProcessManager, ProcessType, get_process_manager
+from ...logger import get_main_logger
 
 
 class SupercolliderInstance:
 
     def __init__(self):
+        # Legacy attributes for backward compatibility
         self.sclang_process = None
         self.supercollider_ready = None
         self.sc_app_path = None
+        
+        # New process manager integration
+        self.process_manager = get_process_manager()
+        self.logger = get_main_logger()
+        self.sclang_process_id = None
 
         if platform == "win32":
             path_glob = list(pathlib.Path("C:\\Program Files").glob("SuperCollider*"))
@@ -86,51 +94,65 @@ class SupercolliderInstance:
 
 
     def start_sclang_subprocess(self):
-        # First check if we already have a process running
-        if self.sclang_process is not None:
-            try:
-                # Check if it's still running
-                if self.sclang_process.poll() is None:
-                    return True  # Process is already running
-                # If we reach here, the process has terminated
-            except:
-                pass  # Process reference is invalid, create a new one
+        # Check if we already have a managed process running
+        if self.sclang_process_id and self.process_manager.get_process_status(self.sclang_process_id):
+            from ...process_manager.base import ProcessStatus
+            status = self.process_manager.get_process_status(self.sclang_process_id)
+            if status == ProcessStatus.RUNNING:
+                return True
         
-        # At this point, either we don't have a process or it's not running
-        # Check if there's any other sclang running that might interfere
+        # Check for existing sclang processes
         for process in psutil.process_iter():
             try:
                 if 'sclang' in process.name():
-                    print(f"Warning: Found existing sclang process (PID: {process.pid})")
-                    # Don't try to kill it here, just notify
+                    self.logger.warning(f"Found existing sclang process (PID: {process.pid})")
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                 pass
         
-        # Start a new sclang process
+        # Prepare configuration for process manager
+        config = {
+            'capture_output': True
+        }
+        
+        # Add sclang path if we have it from legacy detection
+        if hasattr(self, 'sclang_exec') and self.sclang_exec:
+            config['sclang_path'] = self.sclang_exec[0]
+        
+        # Start sclang process via process manager
         try:
-            self.sclang_process = subprocess.Popen(
-                args=self.sclang_exec,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                stdin=subprocess.PIPE,
-                bufsize=1,  # Line buffered
-                universal_newlines=False  # Use binary mode
+            self.sclang_process_id = self.process_manager.start_process(
+                ProcessType.SCLANG, 
+                config
             )
             
-            # Wait a short time to ensure the process starts properly
-            import time
-            time.sleep(1)
-            
-            # Check if the process is actually running
-            if self.sclang_process.poll() is not None:
-                print(f"Error: sclang process failed to start (exit code: {self.sclang_process.returncode})")
-                self.sclang_process = None
+            if self.sclang_process_id:
+                # Update legacy attribute for backward compatibility
+                process_info = self.process_manager.get_process_info(self.sclang_process_id)
+                if process_info and 'pid' in process_info:
+                    # Create a mock process object for backward compatibility
+                    class MockProcess:
+                        def __init__(self, pid):
+                            self.pid = pid
+                            self.stdin = None
+                            self.stdout = None
+                            self.stderr = None
+                        
+                        def poll(self):
+                            # Check with process manager
+                            from ...process_manager.base import ProcessStatus
+                            status = self.process_manager.get_process_status(self.sclang_process_id)
+                            return None if status == ProcessStatus.RUNNING else 0
+                    
+                    self.sclang_process = MockProcess(process_info['pid'])
+                
+                self.logger.info("sclang process started successfully via process manager")
+                return True
+            else:
+                self.logger.error("Failed to start sclang process")
                 return False
                 
-            return True
         except Exception as e:
-            print(f"Error starting sclang: {e}")
-            self.sclang_process = None
+            self.logger.error(f"Error starting sclang: {e}")
             return False
 
     def read_stdout_line(self):
@@ -164,6 +186,14 @@ class SupercolliderInstance:
         return ""
 
     def evaluate_sclang_code(self, code_string):
+        # Use process manager if available
+        if self.sclang_process_id:
+            success = self.process_manager.execute_code(self.sclang_process_id, code_string)
+            if not success:
+                raise RuntimeError("Failed to execute code via process manager")
+            return
+        
+        # Fallback to legacy method
         if self.sclang_process is None or self.sclang_process.stdin is None:
             raise RuntimeError("SuperCollider process is not running or stdin is not available")
             
@@ -175,14 +205,15 @@ class SupercolliderInstance:
         # TODO : find a way to name/tag the sclang/synth processes with name renardo to find it better
         # TODO : Use name renardo for scsynth audio server (for example with JACK Driver)
 
-    def __del__(self):
-        pass
-        # self.popen.kill() # TODO: fix that the destructor is not called
-        # need to clarify the launch and close process of foxdot/renardo !
-        # self.popen.wait()
-
     def is_sclang_running(self):
-        # First check if our stored process is running
+        # Check via process manager first
+        if self.sclang_process_id:
+            from ...process_manager.base import ProcessStatus
+            status = self.process_manager.get_process_status(self.sclang_process_id)
+            if status == ProcessStatus.RUNNING:
+                return True
+        
+        # Legacy check if our stored process is running
         if self.sclang_process is not None:
             try:
                 # Check if process still exists and is running
