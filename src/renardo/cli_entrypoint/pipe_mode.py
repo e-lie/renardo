@@ -31,6 +31,7 @@ class PipeMode:
         self.config = config
         self.running = False
         self.renardo_process_id: Optional[str] = None
+        self.sclang_process_id: Optional[str] = None
         self.input_buffer = ""
         self.output_queue = queue.Queue()
         
@@ -65,6 +66,11 @@ class PipeMode:
         """
         try:
             self.logger.info("Starting Renardo CLI pipe mode")
+            
+            # Start SuperCollider if requested
+            if self.config.get('sclang'):
+                if not self._start_sclang():
+                    self.logger.warning("Failed to start SuperCollider, continuing without it")
             
             # Start Renardo runtime process
             if not self._start_renardo_runtime():
@@ -107,7 +113,65 @@ class PipeMode:
             except Exception as e:
                 self.logger.error(f"Error stopping Renardo runtime: {e}")
         
+        # Stop SuperCollider process
+        if self.sclang_process_id:
+            try:
+                success = self.process_manager.stop_process(self.sclang_process_id, timeout=5.0)
+                if success:
+                    self.logger.info("SuperCollider stopped successfully")
+                else:
+                    self.logger.warning("Failed to stop SuperCollider gracefully")
+            except Exception as e:
+                self.logger.error(f"Error stopping SuperCollider: {e}")
+        
         print("\nGoodbye!")
+    
+    def _start_sclang(self) -> bool:
+        """
+        Start the SuperCollider sclang process.
+        
+        Returns:
+            True if started successfully, False otherwise
+        """
+        try:
+            # Prepare configuration for SuperCollider
+            sclang_config = {
+                'capture_output': True
+            }
+            
+            # Add sclang path if specified
+            if self.config.get('sclang_path'):
+                sclang_config['sclang_path'] = self.config['sclang_path']
+            
+            self.logger.info("Starting SuperCollider (sclang)")
+            
+            # Start the process
+            self.sclang_process_id = self.process_manager.start_process(
+                ProcessType.SCLANG,
+                sclang_config
+            )
+            
+            if self.sclang_process_id:
+                self.logger.info(f"SuperCollider started with process ID: {self.sclang_process_id}")
+                
+                # Wait a moment for the process to initialize
+                time.sleep(2)
+                
+                # Check if process is still running
+                from ..process_manager.base import ProcessStatus
+                status = self.process_manager.get_process_status(self.sclang_process_id)
+                if status == ProcessStatus.RUNNING:
+                    return True
+                else:
+                    self.logger.error(f"SuperCollider failed to start properly (status: {status})")
+                    return False
+            else:
+                self.logger.error("Failed to start SuperCollider process")
+                return False
+                
+        except Exception as e:
+            self.logger.error(f"Error starting SuperCollider: {e}")
+            return False
     
     def _start_renardo_runtime(self) -> bool:
         """
@@ -179,6 +243,17 @@ class PipeMode:
             print("="*60)
         
         print("Pipe mode: Enter code and press Enter twice to execute")
+        
+        # Show active processes
+        active_processes = []
+        if self.renardo_process_id:
+            active_processes.append("Renardo Runtime")
+        if self.sclang_process_id:
+            active_processes.append("SuperCollider")
+        
+        if active_processes:
+            print(f"Active processes: {', '.join(active_processes)}")
+        
         print("Commands:")
         print("  Ctrl+C or Ctrl+D: Exit")
         print("  Empty double newline: Clear current input")
