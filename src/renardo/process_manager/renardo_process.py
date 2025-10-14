@@ -22,9 +22,10 @@ class RenardoRuntimeProcess(ManagedProcess):
         """
         super().__init__(process_id, 'renardo_runtime', config)
         
-        # Default configuration
+        # Default configuration  
         self.config.setdefault('python_path', 'uv run python')
-        self.config.setdefault('init_code', 'from renardo_lib import *')
+        # Disable auto-import for now to avoid module errors
+        self.config.setdefault('init_code', None)
         self.config.setdefault('capture_output', True)
     
     def _build_command(self) -> list:
@@ -50,7 +51,7 @@ class RenardoRuntimeProcess(ManagedProcess):
         """Start the Renardo runtime process."""
         success = super().start()
         
-        if success and 'init_code' in self.config:
+        if success and self.config.get('init_code'):
             # Give the process time to start
             import time
             time.sleep(1)
