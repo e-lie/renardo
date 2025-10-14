@@ -24,8 +24,8 @@ class RenardoRuntimeProcess(ManagedProcess):
         
         # Default configuration  
         self.config.setdefault('python_path', 'uv run python')
-        # Disable auto-import for now to avoid module errors
-        self.config.setdefault('init_code', None)
+        # Import renardo runtime for live coding
+        self.config.setdefault('init_code', 'from renardo.runtime import *')
         self.config.setdefault('capture_output', True)
     
     def _build_command(self) -> list:
