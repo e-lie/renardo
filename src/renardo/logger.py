@@ -78,58 +78,100 @@ class WebSocketHandler(logging.Handler):
 
 class RenardoLoggerManager:
     """Manager for Renardo's multiple logger system."""
-    
+
     def __init__(self):
         self._configured = False
         self._config_file = None
         self._websocket_handler = None
-        
-    def configure(self, config_file: Optional[Path] = None):
-        """Configure logging from configuration file."""
+        self._separate_log_files = True  # Enable separate log files by default
+
+    def configure(self, config_file: Optional[Path] = None, separate_log_files: bool = True):
+        """
+        Configure logging from configuration file.
+
+        Args:
+            config_file: Path to logging configuration file. If None, uses default.
+            separate_log_files: If True, creates separate log files for each logger source.
+                               Default is True. Files will be created as /tmp/renardo-<source>.log
+        """
         if self._configured:
             return
-            
+
+        self._separate_log_files = separate_log_files
+
         # Determine config file path
         if config_file is None:
             config_file = Path(__file__).parent / "logging.conf"
-            
+
         if not config_file.exists():
             raise FileNotFoundError(f"Logging configuration file not found: {config_file}")
-            
+
         self._config_file = config_file
-        
+
         # Ensure /tmp directory exists and is writable
         log_dir = Path("/tmp")
         if not log_dir.exists() or not os.access(log_dir, os.W_OK):
-            print("Warning: /tmp is not writable, using current directory for log file", file=sys.stderr)
-            # Update config to use current directory
-            config_content = config_file.read_text()
-            config_content = config_content.replace("'/tmp/renardo.log'", "'./renardo.log'")
-            # Write temporary config file
-            temp_config = Path("temp_logging.conf")
-            temp_config.write_text(config_content)
-            config_file = temp_config
-        
+            print("Warning: /tmp is not writable, using current directory for log files", file=sys.stderr)
+            log_dir = Path(".")
+
         # Load configuration
         logging.config.fileConfig(str(config_file), disable_existing_loggers=False)
-        
+
+        # Add separate file handlers if enabled
+        if self._separate_log_files:
+            self._add_separate_file_handlers(log_dir)
+
         # Add WebSocket handler programmatically to avoid circular import issues
         to_webclient_logger = logging.getLogger('renardo.to_webclient')
         self._websocket_handler = WebSocketHandler()
         self._websocket_handler.setLevel(logging.DEBUG)
-        
+
         # Set formatter for WebSocket handler
         ws_formatter = logging.Formatter('%(levelname)s: %(message)s')
         self._websocket_handler.setFormatter(ws_formatter)
-        
+
         # Add to to_webclient_logger only (from_webclient_logger doesn't get WebSocket handler)
         to_webclient_logger.addHandler(self._websocket_handler)
-                
+
         self._configured = True
-        
-        # Clean up temporary config file if created
-        if config_file.name == "temp_logging.conf":
-            config_file.unlink()
+
+    def _add_separate_file_handlers(self, log_dir: Path):
+        """
+        Add separate file handlers for each logger source.
+
+        Args:
+            log_dir: Directory where log files will be created
+        """
+        # Define logger sources and their names
+        logger_sources = {
+            'renardo.main': 'main',
+            'renardo.to_webclient': 'to_webclient',
+            'renardo.from_webclient': 'from_webclient'
+        }
+
+        # Create formatter for detailed logging
+        detail_formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s'
+        )
+
+        # Add file handler for each logger
+        for logger_name, source_name in logger_sources.items():
+            logger = logging.getLogger(logger_name)
+
+            # Create log file path
+            log_file = log_dir / f"renardo-{source_name}.log"
+
+            # Create and configure file handler
+            try:
+                file_handler = logging.FileHandler(str(log_file), mode='a')
+                file_handler.setLevel(logging.DEBUG)
+                file_handler.setFormatter(detail_formatter)
+
+                # Add handler to logger
+                logger.addHandler(file_handler)
+
+            except Exception as e:
+                print(f"Warning: Could not create log file {log_file}: {e}", file=sys.stderr)
     
     def get_main_logger(self) -> logging.Logger:
         """Get the main application logger."""
@@ -198,14 +240,16 @@ class RenardoLoggerManager:
 _manager = RenardoLoggerManager()
 
 
-def configure_logging(config_file: Optional[Path] = None):
+def configure_logging(config_file: Optional[Path] = None, separate_log_files: bool = True):
     """
     Configure the logging system from configuration file.
-    
+
     Args:
         config_file: Path to logging configuration file. If None, uses default.
+        separate_log_files: If True, creates separate log files for each logger source.
+                           Default is True. Files will be created as /tmp/renardo-<source>.log
     """
-    _manager.configure(config_file)
+    _manager.configure(config_file, separate_log_files)
 
 
 def get_main_logger() -> logging.Logger:
