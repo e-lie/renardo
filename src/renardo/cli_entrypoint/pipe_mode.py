@@ -120,7 +120,7 @@ class PipeMode:
             # Prepare configuration for Renardo runtime
             runtime_config = {
                 'python_path': self.config.get('python_path', 'uv run python'),
-                'init_code': 'from renardo_lib import *',
+                'init_code': None,  # No auto-import for now
                 'capture_output': True
             }
             
