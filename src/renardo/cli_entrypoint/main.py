@@ -7,6 +7,7 @@ from typing import Dict, Any
 
 from .args import parse_arguments, validate_arguments
 from .pipe_mode import run_pipe_mode
+from .webclient_mode import run_webclient_mode
 from ..logger import get_main_logger
 
 
@@ -45,6 +46,9 @@ def main(args=None) -> int:
         if config.get('pipe'):
             logger.info("Starting pipe mode")
             return run_pipe_mode(config)
+        elif config.get('webclient'):
+            logger.info("Starting webclient mode")
+            return run_webclient_mode(config)
         else:
             # This shouldn't happen due to argument parsing defaults
             print("Error: No mode specified", file=sys.stderr)
