@@ -24,7 +24,8 @@ def parse_arguments(args=None) -> Dict[str, Any]:
         epilog="""
 Examples:
   uv run cli --pipe          # Interactive pipe mode with separate runtime
-  uv run cli --sclang        # Start with SuperCollider instance  
+  uv run cli --webclient     # Start web client application (Svelte + FastAPI)
+  uv run cli --sclang        # Start with SuperCollider instance
   uv run cli --sclang --pipe # Pipe mode with SuperCollider
   uv run cli --version       # Show version information
   uv run cli --help          # Show this help message
@@ -47,6 +48,12 @@ For more information, visit: https://renardo.org/
         '--pipe',
         action='store_true',
         help='Start interactive pipe mode (execute code on double newline)'
+    )
+
+    mode_group.add_argument(
+        '--webclient',
+        action='store_true',
+        help='Start the web client application (Svelte frontend + FastAPI backend)'
     )
     
     # Logging options
@@ -118,7 +125,7 @@ For more information, visit: https://renardo.org/
         result['log_level'] = 'DEBUG'
     
     # If no mode is specified, default to pipe mode
-    if not any([result.get('pipe')]):
+    if not any([result.get('pipe'), result.get('webclient')]):
         result['pipe'] = True
     
     return result
