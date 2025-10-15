@@ -111,9 +111,10 @@ class SupercolliderInstance:
         
         # Prepare configuration for process manager
         config = {
-            'capture_output': True
+            'capture_output': True,
+            'init_code': 'Renardo.start; Renardo.midi;'
         }
-        
+
         # Add sclang path if we have it from legacy detection
         if hasattr(self, 'sclang_exec') and self.sclang_exec:
             config['sclang_path'] = self.sclang_exec[0]
