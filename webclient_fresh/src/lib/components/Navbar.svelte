@@ -20,6 +20,7 @@
       <ul class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
         <li><button class="text-base-content" on:click={() => navigateTo('posts')}>Posts</button></li>
         <li><button class="text-base-content" on:click={() => navigateTo('authors')}>Authors</button></li>
+        <li><button class="text-base-content" on:click={() => navigateTo('editor')}>Code Editor</button></li>
       </ul>
     </div>
     <button class="btn btn-ghost text-xl" on:click={() => navigateTo('posts')}>Renardo Blog</button>
@@ -28,6 +29,7 @@
     <ul class="menu menu-horizontal px-1">
       <li><button on:click={() => navigateTo('posts')}>Posts</button></li>
       <li><button on:click={() => navigateTo('authors')}>Authors</button></li>
+      <li><button on:click={() => navigateTo('editor')}>Code Editor</button></li>
     </ul>
   </div>
   <div class="navbar-end">
