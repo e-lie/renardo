@@ -29,7 +29,7 @@ print(reapy.Project()) # output should be something like : Project("(ReaProject*
 # Part three - Configure MIDI connection
 
 # Reaper needs to be prepared with 16 midi tracks (one per channel) before creating the instruments. Execute the following after reaper is completely loaded :
-ensure_16_midi_tracks() # Midi tracks should appear in Reaper interface.
+# ensure_16_midi_tracks() # Midi tracks should appear in Reaper interface. TODO update with new reaper control
 
 # Enable one MIDI input in Reaper in Preference > MIDI Inputs
 
