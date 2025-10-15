@@ -6,6 +6,8 @@ import os
 import sys
 import shutil
 import platform
+import subprocess
+import time
 from pathlib import Path
 from typing import Optional, Dict, Any
 from .base import ManagedProcess, ProcessStatus
@@ -93,17 +95,17 @@ class ReaperProcess(ManagedProcess):
                         install_path = winreg.QueryValueEx(key, "InstallPath")[0]
                         if install_path:
                             possible_paths.insert(0, os.path.join(install_path, "reaper.exe"))
-                except:
+                except FileNotFoundError:
                     # Try 64-bit specific registry key
                     try:
                         with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\REAPER") as key:
                             install_path = winreg.QueryValueEx(key, "InstallPath")[0]
                             if install_path:
                                 possible_paths.insert(0, os.path.join(install_path, "reaper.exe"))
-                    except:
+                    except FileNotFoundError:
                         pass
             except ImportError:
-                pass
+                self.logger.debug("winreg module not available, skipping registry check")
             
             # Find first existing path
             for path in possible_paths:
@@ -199,20 +201,125 @@ class ReaperProcess(ManagedProcess):
         return env
     
     def start(self) -> bool:
-        """Start the Reaper process."""
+        """Start the Reaper process with platform-specific optimizations."""
         if not self.reaper_path:
-            self.logger.error(f"Reaper executable not found. Checked standard locations.")
+            # Log the paths that were checked for better debugging
+            self.logger.error("REAPER application not found. Checked locations:")
+            if platform.system() == 'Windows':
+                program_files = os.environ.get("ProgramFiles", "C:\\Program Files")
+                program_files_x86 = os.environ.get("ProgramFiles(x86)", "C:\\Program Files (x86)")
+                checked_paths = [
+                    os.path.join(program_files, "REAPER (x64)", "reaper.exe"),
+                    os.path.join(program_files, "REAPER", "reaper.exe"),
+                    os.path.join(program_files_x86, "REAPER", "reaper.exe")
+                ]
+                for path in checked_paths:
+                    self.logger.error(f"  - {path}")
+            elif platform.system() == 'Darwin':
+                self.logger.error("  - /Applications/REAPER.app")
+                self.logger.error("  - ~/Applications/REAPER.app")
+            else:
+                checked_paths = [
+                    "/usr/local/bin/reaper",
+                    "/usr/bin/reaper",
+                    os.path.expanduser("~/bin/reaper"),
+                    "/opt/REAPER/reaper"
+                ]
+                for path in checked_paths:
+                    self.logger.error(f"  - {path}")
+                self.logger.error("  - PATH environment variable")
+
             self._set_status(ProcessStatus.ERROR, "Reaper not found")
             return False
-        
+
         if not os.path.exists(self.reaper_path):
             self.logger.error(f"Reaper path does not exist: {self.reaper_path}")
             self._set_status(ProcessStatus.ERROR, f"Reaper not found at {self.reaper_path}")
             return False
-        
-        self.logger.info(f"Starting Reaper from: {self.reaper_path}")
-        return super().start()
+
+        if self.status == ProcessStatus.RUNNING:
+            self.logger.warning(f"Process {self.process_id} is already running")
+            return True
+
+        try:
+            self._set_status(ProcessStatus.STARTING)
+
+            self.logger.info(f"Starting Reaper from: {self.reaper_path} (detached)")
+            if self.python_home:
+                self.logger.info(f"Setting PYTHONHOME to: {self.python_home}")
+
+            # Build command and environment
+            command = self._build_command()
+            env = self._prepare_environment()
+
+            # Platform-specific launch methods with enhanced Windows support
+            if platform.system() == 'Windows':
+                # Windows-specific launch with enhanced startup configuration
+                startupinfo = None
+                try:
+                    # Use subprocess with Windows-specific options
+                    startupinfo = subprocess.STARTUPINFO()
+                    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                    startupinfo.wShowWindow = 1  # SW_SHOWNORMAL
+
+                    self.process = subprocess.Popen(
+                        command,
+                        env=env,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        stdin=subprocess.DEVNULL,
+                        startupinfo=startupinfo,
+                        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS
+                    )
+                except Exception as e:
+                    self.logger.warning(f"Error with Windows-specific launch: {e}, falling back to basic launch")
+                    self.process = subprocess.Popen(
+                        command,
+                        env=env,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        stdin=subprocess.DEVNULL
+                    )
+            else:
+                # Linux or MacOS launch
+                self.process = subprocess.Popen(
+                    command,
+                    env=env,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    stdin=subprocess.DEVNULL,
+                    start_new_session=True  # Create a new session
+                )
+
+            # Wait a moment to check if process started successfully
+            time.sleep(0.5)
+
+            if self.process.poll() is None:
+                self._set_status(ProcessStatus.RUNNING)
+                self.logger.info(f"REAPER process started. PID: {self.process.pid}")
+                return True
+            else:
+                self._set_status(ProcessStatus.ERROR, f"Process exited immediately with code {self.process.returncode}")
+                return False
+
+        except Exception as e:
+            error_msg = f"Error launching REAPER: {e}"
+            self.logger.error(error_msg)
+            self._set_status(ProcessStatus.ERROR, error_msg)
+            return False
     
     def is_reaper_installed(self) -> bool:
         """Check if Reaper is installed."""
         return self.reaper_path is not None and os.path.exists(self.reaper_path)
+
+    def launch_with_pythonhome(self) -> tuple[bool, Optional[str]]:
+        """
+        Launch REAPER with PYTHONHOME environment variable.
+
+        This method provides compatibility with the original launcher interface.
+
+        Returns:
+            tuple: (success: bool, python_home: str | None)
+        """
+        success = self.start()
+        return success, self.python_home if success else None

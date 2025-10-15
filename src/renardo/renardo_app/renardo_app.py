@@ -9,7 +9,6 @@ from renardo.webserver import create_webapp
 from renardo.webserver.config import HOST, PORT, DEBUG
 from renardo.reaper_backend.reaper_mgt.launcher import (
     launch_reaper_with_pythonhome,
-    initialize_reapy,
     reinit_reaper_with_backup
 )
 
@@ -67,17 +66,6 @@ class RenardoApp:
                 print("REAPER launched successfully")
             else:
                 print("Failed to launch REAPER")
-            return
-                
-        elif self.args.initialize_reapy:
-            print("Starting Reapy initialization process...")
-            success = initialize_reapy()
-            if success:
-                print("Reapy initialization completed successfully")
-                # Update the state
-                self.state_manager.update_renardo_init_status("reaperIntegration", True)
-            else:
-                print("Reapy initialization failed")
             return
                 
         elif self.args.reinit_reaper:
