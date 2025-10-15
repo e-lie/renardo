@@ -6,6 +6,9 @@ dist/
 wheels/
 *.egg-info
 
+# Ignored files folder
+ignored_files
+
 # Web client Svelte
 
 node_modules
