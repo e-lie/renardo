@@ -1,6 +1,8 @@
 import strawberry
-from typing import List, Optional
+from typing import List, Optional, AsyncGenerator
 from datetime import datetime
+import asyncio
+from collections import deque
 from .models import SAMPLE_AUTHORS, SAMPLE_POSTS, Author as AuthorModel, Post as PostModel
 
 
@@ -108,4 +110,55 @@ class Query:
         )
 
 
-schema = strawberry.Schema(query=Query)
+@strawberry.type
+class LogEntry:
+    id: str
+    timestamp: datetime
+    level: str
+    logger: str
+    source: str
+    message: str
+    extra: Optional[str] = None
+
+
+# Global log buffer for subscriptions
+LOG_BUFFER: deque = deque(maxlen=1000)
+LOG_SUBSCRIBERS: List[asyncio.Queue] = []
+
+
+async def broadcast_log(log_entry: LogEntry):
+    """Broadcast a log entry to all subscribers"""
+    LOG_BUFFER.append(log_entry)
+    for queue in LOG_SUBSCRIBERS:
+        try:
+            await queue.put(log_entry)
+        except:
+            pass  # Ignore closed queues
+
+
+@strawberry.type
+class Subscription:
+    @strawberry.subscription
+    async def logs(self, filter_level: Optional[str] = None) -> AsyncGenerator[LogEntry, None]:
+        """Subscribe to real-time log updates"""
+        queue = asyncio.Queue()
+        LOG_SUBSCRIBERS.append(queue)
+
+        try:
+            # Send existing logs from buffer
+            for log in LOG_BUFFER:
+                if not filter_level or log.level == filter_level:
+                    yield log
+
+            # Stream new logs as they arrive
+            while True:
+                log_entry = await queue.get()
+                if not filter_level or log_entry.level == filter_level:
+                    yield log_entry
+        finally:
+            # Clean up when subscription ends
+            if queue in LOG_SUBSCRIBERS:
+                LOG_SUBSCRIBERS.remove(queue)
+
+
+schema = strawberry.Schema(query=Query, subscription=Subscription)

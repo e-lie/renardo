@@ -1,15 +1,36 @@
 <script lang="ts">
-  import { setContextClient, createClient, fetchExchange } from '@urql/svelte'
+  import { setContextClient, createClient, fetchExchange, subscriptionExchange } from '@urql/svelte'
+  import { createClient as createWSClient } from 'graphql-ws'
   import { currentPage, selectedPost, currentSession } from './lib/stores'
   import PostList from './lib/components/PostList.svelte'
   import AuthorList from './lib/components/AuthorList.svelte'
   import PostDetail from './lib/components/PostDetail.svelte'
   import FlokEditor from './lib/components/FlokEditor.svelte'
+  import LogViewer from './lib/components/LogViewer.svelte'
   import Navbar from './lib/components/Navbar.svelte'
+
+  // WebSocket client for subscriptions
+  const wsClient = createWSClient({
+    url: 'ws://localhost:8000/graphql',
+  })
 
   const client = createClient({
     url: 'http://localhost:8000/graphql',
-    exchanges: [fetchExchange],
+    exchanges: [
+      fetchExchange,
+      subscriptionExchange({
+        forwardSubscription(operation) {
+          return {
+            subscribe: (sink) => {
+              const dispose = wsClient.subscribe(operation, sink)
+              return {
+                unsubscribe: dispose,
+              }
+            },
+          }
+        },
+      }),
+    ],
   })
 
   setContextClient(client)
@@ -21,6 +42,9 @@
   {#if $currentPage === 'editor'}
     <!-- Full screen editor -->
     <FlokEditor sessionName={$currentSession} height="calc(100vh - 64px)" />
+  {:else if $currentPage === 'logs'}
+    <!-- Full screen logs -->
+    <LogViewer />
   {:else}
     <!-- Regular layout for other pages -->
     <main class="container mx-auto px-4 py-8">
