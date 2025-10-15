@@ -34,7 +34,7 @@ def download_sample_pack(pack_name, logger=None):
         bool: True if the download was successful, False otherwise
     """
     if logger:
-        logger.info(
+        logger.write_line(
             f"Downloading Sample Pack {pack_name} from {settings.get('core.COLLECTIONS_DOWNLOAD_SERVER')}\n"
         )
     
@@ -65,13 +65,13 @@ def download_sample_pack(pack_name, logger=None):
             file.write(str(datetime.now()))
             
         if logger:
-            logger.info(f"Sample pack {pack_name} downloaded successfully!")
+            logger.write_line(f"Sample pack {pack_name} downloaded successfully!")
             
         return True
     except Exception as e:
         error_msg = f"Error downloading sample pack {pack_name}: {str(e)}"
         print(error_msg)
         if logger:
-            logger.error(error_msg)
+            logger.write_error(error_msg)
         return False
 
