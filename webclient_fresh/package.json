@@ -38,6 +38,7 @@
     "@urql/core": "^4.0.15",
     "@urql/svelte": "^4.0.4",
     "graphql": "^16.8.1",
-    "graphql-tag": "^2.12.6"
+    "graphql-tag": "^2.12.6",
+    "graphql-ws": "^5.14.2"
   }
 }

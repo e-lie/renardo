@@ -21,6 +21,7 @@
         <li><button class="text-base-content" on:click={() => navigateTo('posts')}>Posts</button></li>
         <li><button class="text-base-content" on:click={() => navigateTo('authors')}>Authors</button></li>
         <li><button class="text-base-content" on:click={() => navigateTo('editor')}>Code Editor</button></li>
+        <li><button class="text-base-content" on:click={() => navigateTo('logs')}>Logs</button></li>
       </ul>
     </div>
     <button class="btn btn-ghost text-xl" on:click={() => navigateTo('posts')}>Renardo Blog</button>
@@ -30,6 +31,7 @@
       <li><button on:click={() => navigateTo('posts')}>Posts</button></li>
       <li><button on:click={() => navigateTo('authors')}>Authors</button></li>
       <li><button on:click={() => navigateTo('editor')}>Code Editor</button></li>
+      <li><button on:click={() => navigateTo('logs')}>Logs</button></li>
     </ul>
   </div>
   <div class="navbar-end">

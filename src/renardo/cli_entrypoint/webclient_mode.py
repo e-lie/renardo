@@ -291,11 +291,25 @@ def log_process_output(process: subprocess.Popen, prefix: str):
             if line.strip():
                 logger.info(f"[{prefix}] {line.strip()}")
 
+                # Also send to GraphQL if possible
+                try:
+                    from ..webserver_fresh.log_handler import capture_subprocess_output
+                    capture_subprocess_output(prefix, line.strip(), "INFO")
+                except:
+                    pass  # Silently fail if GraphQL not available
+
     # Log stderr
     def log_stderr():
         for line in iter(process.stderr.readline, ''):
             if line.strip():
                 logger.warning(f"[{prefix}] {line.strip()}")
+
+                # Also send to GraphQL if possible
+                try:
+                    from ..webserver_fresh.log_handler import capture_subprocess_output
+                    capture_subprocess_output(prefix, line.strip(), "WARNING")
+                except:
+                    pass  # Silently fail if GraphQL not available
 
     # Start threads for both stdout and stderr
     stdout_thread = threading.Thread(target=log_stdout, daemon=True)
