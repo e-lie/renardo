@@ -12,6 +12,13 @@ from pathlib import Path
 import os
 import logging
 
+# Import subprocess logger creation
+try:
+    from renardo.logger import create_subprocess_logger
+except ImportError:
+    # Fallback if import fails
+    create_subprocess_logger = None
+
 
 class ProcessStatus(Enum):
     """Status of a managed process."""
@@ -29,37 +36,50 @@ class ManagedProcess:
     def __init__(self, process_id: str, process_type: str, config: Dict[str, Any] = None):
         """
         Initialize a managed process.
-        
+
         Args:
             process_id: Unique identifier for this process
             process_type: Type of process (e.g., 'sclang', 'reaper')
             config: Configuration dictionary for the process
+                - log_with_timestamp: bool - Include timestamps in log file (default: False)
+                - log_dir: Path - Directory for log files (default: /tmp)
         """
         self.process_id = process_id
         self.process_type = process_type
         self.config = config or {}
-        
+
         # Process state
         self.process: Optional[subprocess.Popen] = None
         self.status = ProcessStatus.STOPPED
         self.error_message: Optional[str] = None
-        
+
         # Communication queues
         self.output_queue = queue.Queue()
         self.command_queue = queue.Queue()
-        
+
         # Threading
         self.output_thread: Optional[threading.Thread] = None
         self.error_thread: Optional[threading.Thread] = None
         self.monitor_thread: Optional[threading.Thread] = None
         self._stop_event = threading.Event()
-        
+
         # Callbacks
         self.output_callback: Optional[Callable[[str, str], None]] = None
         self.status_callback: Optional[Callable[[ProcessStatus], None]] = None
-        
-        # Logger
-        self.logger = logging.getLogger(f'renardo.process.{process_type}.{process_id}')
+
+        # Logger - create subprocess logger with separate log file
+        if create_subprocess_logger:
+            include_timestamp = self.config.get('log_with_timestamp', False)
+            log_dir = self.config.get('log_dir', None)
+            self.logger = create_subprocess_logger(
+                process_type=process_type,
+                process_id=process_id,
+                include_timestamp=include_timestamp,
+                log_dir=Path(log_dir) if log_dir else None
+            )
+        else:
+            # Fallback to standard logger
+            self.logger = logging.getLogger(f'renardo.process.{process_type}.{process_id}')
     
     def set_output_callback(self, callback: Callable[[str, str], None]):
         """
@@ -315,35 +335,46 @@ class ManagedProcess:
     def _capture_output(self, stream, stream_type: str):
         """
         Capture output from a stream and route it.
-        
+
         Args:
             stream: The stream to capture from
             stream_type: Type of stream ('stdout' or 'stderr')
         """
         if not stream:
             return
-        
+
         try:
             while not self._stop_event.is_set():
                 line = stream.readline()
                 if not line:
                     break
-                
+
                 # Decode and strip line
                 try:
                     line_str = line.decode('utf-8', errors='replace').rstrip()
                 except:
                     line_str = str(line).rstrip()
-                
-                # Put in queue and call callback
+
+                # Skip empty lines
+                if not line_str:
+                    continue
+
+                # Put in queue
                 self.output_queue.put((line_str, stream_type))
-                
+
+                # Log to subprocess log file
+                if stream_type == 'stderr':
+                    self.logger.error(line_str)
+                else:
+                    self.logger.info(line_str)
+
+                # Call output callback if set
                 if self.output_callback:
                     try:
                         self.output_callback(line_str, stream_type)
                     except Exception as e:
                         self.logger.error(f"Error in output callback: {e}")
-                        
+
         except Exception as e:
             if not self._stop_event.is_set():
                 self.logger.error(f"Error capturing {stream_type}: {e}")
