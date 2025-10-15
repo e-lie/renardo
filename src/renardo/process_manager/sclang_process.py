@@ -107,18 +107,36 @@ class SclangProcess(ManagedProcess):
             self.logger.error("SuperCollider is not installed or not ready")
             self._set_status(ProcessStatus.ERROR, "SuperCollider not available")
             return False
-        
+
         # Start the process
         success = super().start()
-        
+
         if success:
-            # Wait a moment for sclang to initialize
-            time.sleep(1)
-            
+            # Wait for sclang to be fully initialized by checking for "Welcome to" message
+            self.logger.info("Waiting for sclang to initialize...")
+            timeout = 10  # seconds
+            start_time = time.time()
+            sclang_ready = False
+
+            while (time.time() - start_time) < timeout:
+                line = self.read_output_line()
+                if line:
+                    self.logger.debug(f"sclang: {line.strip()}")
+                    if "Welcome to" in line:
+                        self.logger.info("sclang initialized successfully")
+                        sclang_ready = True
+                        break
+                time.sleep(0.1)
+
+            if not sclang_ready:
+                self.logger.warning("Did not detect sclang initialization message, proceeding anyway")
+
             # Execute initialization code if provided
             if 'init_code' in self.config:
+                self.logger.info(f"Executing initialization code: {self.config['init_code']}")
                 self.execute_code(self.config['init_code'])
-        
+                time.sleep(0.5)  # Give time for init code to execute
+
         return success
     
     def execute_code(self, code: str) -> bool:
