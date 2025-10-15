@@ -84,6 +84,7 @@ class RenardoLoggerManager:
         self._config_file = None
         self._websocket_handler = None
         self._separate_log_files = True  # Enable separate log files by default
+        self._subprocess_loggers = {}  # Track subprocess loggers
 
     def configure(self, config_file: Optional[Path] = None, separate_log_files: bool = True):
         """
@@ -228,12 +229,92 @@ class RenardoLoggerManager:
         """List all configured loggers and their levels."""
         if not self._configured:
             self.configure()
-            
+
         loggers = {}
         for name in ['main', 'to_webclient', 'from_webclient']:
             logger = logging.getLogger(f'renardo.{name}')
             loggers[name] = logging.getLevelName(logger.level)
         return loggers
+
+    def create_subprocess_logger(
+        self,
+        process_type: str,
+        process_id: str,
+        include_timestamp: bool = False,
+        log_dir: Optional[Path] = None
+    ) -> logging.Logger:
+        """
+        Create a logger for a subprocess with its own log file.
+
+        Args:
+            process_type: Type of process (e.g., 'sclang', 'reaper')
+            process_id: Unique identifier for this process
+            include_timestamp: If True, includes timestamp in log file output. Default is False.
+            log_dir: Directory for log files. Defaults to /tmp
+
+        Returns:
+            Logger instance configured with file handler
+        """
+        logger_name = f'renardo.process.{process_type}.{process_id}'
+
+        # Return existing logger if already created
+        if logger_name in self._subprocess_loggers:
+            return logging.getLogger(logger_name)
+
+        # Determine log directory
+        if log_dir is None:
+            log_dir = Path("/tmp")
+            if not log_dir.exists() or not os.access(log_dir, os.W_OK):
+                log_dir = Path(".")
+
+        # Create logger
+        logger = logging.getLogger(logger_name)
+        logger.setLevel(logging.DEBUG)
+        logger.propagate = False  # Don't propagate to parent loggers
+
+        # Create log file path
+        log_file = log_dir / f"renardo-{process_type}-{process_id}.log"
+
+        # Create formatter (with or without timestamp)
+        if include_timestamp:
+            formatter = logging.Formatter(
+                '%(asctime)s - %(levelname)s - %(message)s',
+                datefmt='%Y-%m-%d %H:%M:%S'
+            )
+        else:
+            # Simple format without timestamp
+            formatter = logging.Formatter('%(levelname)s - %(message)s')
+
+        # Create and configure file handler
+        try:
+            file_handler = logging.FileHandler(str(log_file), mode='a')
+            file_handler.setLevel(logging.DEBUG)
+            file_handler.setFormatter(formatter)
+            logger.addHandler(file_handler)
+
+            # Also add a console handler for convenience (with timestamp)
+            console_handler = logging.StreamHandler(sys.stderr)
+            console_handler.setLevel(logging.INFO)
+            console_formatter = logging.Formatter(
+                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            )
+            console_handler.setFormatter(console_formatter)
+            logger.addHandler(console_handler)
+
+            # Track this logger
+            self._subprocess_loggers[logger_name] = {
+                'logger': logger,
+                'log_file': log_file,
+                'file_handler': file_handler,
+                'console_handler': console_handler
+            }
+
+            logger.info(f"Subprocess logger created: {log_file}")
+
+        except Exception as e:
+            print(f"Warning: Could not create log file {log_file}: {e}", file=sys.stderr)
+
+        return logger
 
 
 # Global manager instance
@@ -327,6 +408,35 @@ def set_log_level(level: str, logger_name: Optional[str] = None):
 def list_loggers() -> Dict[str, str]:
     """List all configured loggers and their levels."""
     return _manager.list_loggers()
+
+
+def create_subprocess_logger(
+    process_type: str,
+    process_id: str,
+    include_timestamp: bool = False,
+    log_dir: Optional[Path] = None
+) -> logging.Logger:
+    """
+    Create a logger for a subprocess with its own log file.
+
+    Args:
+        process_type: Type of process (e.g., 'sclang', 'reaper')
+        process_id: Unique identifier for this process
+        include_timestamp: If True, includes timestamp in log file output. Default is False.
+        log_dir: Directory for log files. Defaults to /tmp
+
+    Returns:
+        Logger instance configured with file handler in /tmp/renardo-{process_type}-{process_id}.log
+
+    Examples:
+        # Create a logger for sclang process without timestamps
+        logger = create_subprocess_logger('sclang', 'default')
+        logger.info("sclang started")
+
+        # Create a logger with timestamps
+        logger = create_subprocess_logger('reaper', 'default', include_timestamp=True)
+    """
+    return _manager.create_subprocess_logger(process_type, process_id, include_timestamp, log_dir)
 
 
 # Convenience functions for backward compatibility
