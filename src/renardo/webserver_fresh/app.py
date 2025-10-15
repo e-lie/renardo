@@ -1,9 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from strawberry.fastapi import GraphQLRouter
+from strawberry.subscriptions import GRAPHQL_TRANSPORT_WS_PROTOCOL, GRAPHQL_WS_PROTOCOL
 from .schema import schema
+from .log_handler import setup_log_capture
 
 app = FastAPI(title="Renardo WebServer Fresh", version="1.0.0")
+
+# Setup log capture
+setup_log_capture()
 
 # Configure CORS
 app.add_middleware(
@@ -14,8 +19,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# GraphQL endpoint
-graphql_app = GraphQLRouter(schema)
+# GraphQL endpoint with WebSocket support for subscriptions
+graphql_app = GraphQLRouter(
+    schema,
+    subscription_protocols=[GRAPHQL_TRANSPORT_WS_PROTOCOL, GRAPHQL_WS_PROTOCOL]
+)
 app.include_router(graphql_app, prefix="/graphql")
 
 
