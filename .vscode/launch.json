@@ -1,0 +1,156 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Renardo (uv run)",
+            "type": "python",
+            "request": "launch",
+            "module": "renardo",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src:${env:PYTHONPATH}",
+                "UV_PROJECT_ENVIRONMENT": "${workspaceFolder}/.venv"
+            },
+            "args": [],
+            "justMyCode": false,
+            "stopOnEntry": false,
+            "preLaunchTask": "Ensure uv sync"
+        },
+        {
+            "name": "Debug Renardo with CLI args",
+            "type": "python",
+            "request": "launch",
+            "module": "renardo",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src:${env:PYTHONPATH}",
+                "UV_PROJECT_ENVIRONMENT": "${workspaceFolder}/.venv"
+            },
+            "args": [
+                "--help"
+            ],
+            "justMyCode": false,
+            "stopOnEntry": false,
+            "preLaunchTask": "Ensure uv sync"
+        },
+        {
+            "name": "Debug Renardo Pipe Mode",
+            "type": "python",
+            "request": "launch",
+            "module": "renardo",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src:${env:PYTHONPATH}",
+                "UV_PROJECT_ENVIRONMENT": "${workspaceFolder}/.venv"
+            },
+            "args": [
+                "--pipe"
+            ],
+            "justMyCode": false,
+            "stopOnEntry": false,
+            "preLaunchTask": "Ensure uv sync"
+        },
+        {
+            "name": "Debug Renardo FoxDot Editor",
+            "type": "python",
+            "request": "launch",
+            "module": "renardo",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src:${env:PYTHONPATH}",
+                "UV_PROJECT_ENVIRONMENT": "${workspaceFolder}/.venv"
+            },
+            "args": [
+                "--foxdot-editor"
+            ],
+            "justMyCode": false,
+            "stopOnEntry": false,
+            "preLaunchTask": "Ensure uv sync"
+        },
+        {
+            "name": "Debug Renardo with REAPER",
+            "type": "python",
+            "request": "launch",
+            "module": "renardo",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src:${env:PYTHONPATH}",
+                "UV_PROJECT_ENVIRONMENT": "${workspaceFolder}/.venv"
+            },
+            "args": [
+                "--launch-reaper"
+            ],
+            "justMyCode": false,
+            "stopOnEntry": false,
+            "preLaunchTask": "Ensure uv sync"
+        },
+        {
+            "name": "Debug CLI entrypoint",
+            "type": "python",
+            "request": "launch",
+            "module": "renardo.cli_entrypoint",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src:${env:PYTHONPATH}",
+                "UV_PROJECT_ENVIRONMENT": "${workspaceFolder}/.venv"
+            },
+            "args": [
+                "--help"
+            ],
+            "justMyCode": false,
+            "stopOnEntry": false,
+            "preLaunchTask": "Ensure uv sync"
+        },
+        {
+            "name": "Debug CLI Pipe Mode",
+            "type": "python",
+            "request": "launch",
+            "module": "renardo.cli_entrypoint",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src:${env:PYTHONPATH}",
+                "UV_PROJECT_ENVIRONMENT": "${workspaceFolder}/.venv"
+            },
+            "args": [
+                "--pipe"
+            ],
+            "justMyCode": false,
+            "stopOnEntry": false,
+            "preLaunchTask": "Ensure uv sync"
+        },
+        {
+            "name": "Debug Tests",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src:${env:PYTHONPATH}",
+                "UV_PROJECT_ENVIRONMENT": "${workspaceFolder}/.venv"
+            },
+            "args": [
+                "tests/",
+                "-v"
+            ],
+            "justMyCode": false,
+            "stopOnEntry": false,
+            "preLaunchTask": "Ensure uv sync"
+        }
+    ]
+}
