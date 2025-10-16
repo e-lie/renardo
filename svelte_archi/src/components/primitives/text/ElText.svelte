@@ -1,27 +1,31 @@
 <script lang="ts">
-  // expose a property called testid
-  export let testid: string = 'not-set'
-  // expose a property called testid
-  export let id: string = 'id-not-set'
-  // expose a property called tag
-  export let tag: string = 'span'
-  // expose a property called text
-  export let text: string = 'text-not-set'
-  // expose a property called addCss
-  export let addCss: string = ''
+  // Svelte 5: use $props() rune to define props
+  let {
+    testid = 'not-set',
+    id = 'id-not-set',
+    tag = 'span',
+    text = 'text-not-set',
+    addCss = ''
+  }: {
+    testid?: string
+    id?: string
+    tag?: string
+    text?: string
+    addCss?: string
+  } = $props()
 
-  // a computed property that returns the css class value
-  $: cssClass = (): string => {
+  // Svelte 5: use $derived rune for computed values
+  const cssClass = $derived(() => {
     const cssClasses = ['p-1']
     if ((addCss || '').trim().length > 0) {
       cssClasses.push(addCss.trim())
     }
     return cssClasses.join(' ').trim()
-  }
+  })
 
-  const render = () => {
-    return `<${tag} id="${id}"" data-testid="${testid}" class="${cssClass()}">${text}</${tag}>`
-  }
+  const render = $derived(() => {
+    return `<${tag} id="${id}" data-testid="${testid}" class="${cssClass()}">${text}</${tag}>`
+  })
 </script>
 
 {@html render()}

@@ -1,23 +1,23 @@
 <script lang="ts">
-  // import createEventDispatcher from Svelte:
-  import { createEventDispatcher } from 'svelte'
+  // Svelte 5: use $props() rune instead of export let
+  let {
+    testid = 'not-set',
+    id = 'not-set',
+    checked = false,
+    disabled = false,
+    addCss = '',
+    onclick
+  }: {
+    testid?: string
+    id?: string
+    checked?: boolean
+    disabled?: boolean
+    addCss?: string
+    onclick?: (event: { id: string }) => void
+  } = $props()
 
-  // expose a property called testid
-  export let testid: string = 'not-set'
-  // expose a property called id
-  export let id: string = 'not-set'
-  // expose a property called checked
-  export let checked = false
-  // expose a property called disabled
-  export let disabled = false
-  // expose a property called addCss
-  export let addCss: string = ''
-
-  // create an instance of Svelte event dispatcher
-  const dispatch = createEventDispatcher()
-
-  // a computed property that returns the css class of the outer element
-  $: cssClass = (): string => {
+  // Svelte 5: use $derived rune for computed properties
+  const cssClass = $derived(() => {
     const result = [
       'relative inline-flex flex-shrink-0 h-6 w-12 border-1 rounded-full cursor-pointer transition-colors duration-200 focus:outline-none'
     ]
@@ -33,9 +33,9 @@
       result.push(addCss.trim())
     }
     return result.join(' ').trim()
-  }
+  })
 
-  $: innerCssClass = (): string => {
+  const innerCssClass = $derived(() => {
     const result = [
       'bg-white shadow pointer-events-none inline-block h-6 w-6 rounded-full transform ring-0 transition duration-200'
     ]
@@ -45,16 +45,12 @@
       result.push('translate-x-0')
     }
     return result.join(' ').trim()
-  }
+  })
 
-  // click handler
-  const handleClick = () => {
-    // proceed only if the button is not disabled, otherwise ignore the click
-    if (!disabled) {
-      // dispatch a 'clicked' even through Svelte dispatch
-      dispatch('clicked', {
-        id
-      })
+  // Svelte 5: regular function for event handling, call the prop callback
+  function handleClick() {
+    if (!disabled && onclick) {
+      onclick({ id })
     }
   }
 </script>
@@ -66,7 +62,7 @@
   aria-checked={checked}
   {disabled}
   class={cssClass()}
-  on:click={() => handleClick()}
+  onclick={handleClick}
 >
   <span class={innerCssClass()} />
 </button>
