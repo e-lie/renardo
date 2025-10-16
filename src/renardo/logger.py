@@ -12,6 +12,100 @@ from pathlib import Path
 import os
 
 
+class SharedStoreHandler(logging.Handler):
+    """Custom handler that stores log messages in SharedStore."""
+
+    def __init__(self):
+        super().__init__()
+        self._shared_store = None
+
+    def _get_shared_store(self):
+        """Lazy initialization of SharedStore to avoid circular imports."""
+        if self._shared_store is None:
+            try:
+                from .shared_store import get_shared_store
+                self._shared_store = get_shared_store()
+            except ImportError:
+                # SharedStore not available, disable this handler
+                return None
+        return self._shared_store
+
+    def emit(self, record):
+        """Store log record in SharedStore."""
+        try:
+            store = self._get_shared_store()
+            if store is None:
+                return
+
+            # Extract module path from record
+            module_path = None
+            if hasattr(record, 'pathname'):
+                module_path = record.pathname
+
+            # Format the message
+            formatted_message = self.format(record)
+
+            # Determine source type
+            source = "renardo"
+            if "subprocess" in record.name.lower() or "process" in record.name.lower():
+                source = "subprocess"
+
+            # Determine process name
+            process = "MAIN"
+            if "to_webclient" in record.name:
+                process = "TO_WEBCLIENT"
+            elif "from_webclient" in record.name:
+                process = "FROM_WEBCLIENT"
+            elif "process" in record.name:
+                # Extract process type from logger name (e.g., renardo.process.sclang.default)
+                parts = record.name.split('.')
+                if len(parts) >= 3 and parts[1] == "process":
+                    process = parts[2].upper()
+
+            # Store in SharedStore
+            store.add_log(
+                level=record.levelname,
+                logger=record.name,
+                message=formatted_message,
+                source=source,
+                process=process,
+                module_path=module_path,
+                extra=None
+            )
+
+            # Also broadcast to GraphQL subscriptions if possible
+            try:
+                from .webserver_fresh.schema import LogEntry, broadcast_log
+                import asyncio
+
+                # Create GraphQL log entry
+                graphql_log_entry = LogEntry(
+                    id=str(__import__('uuid').uuid4()),
+                    timestamp=__import__('datetime').datetime.fromtimestamp(record.created),
+                    level=record.levelname,
+                    logger=record.name,
+                    source=source,
+                    message=formatted_message,
+                    extra=None
+                )
+
+                # Try to broadcast if event loop is available
+                try:
+                    loop = asyncio.get_running_loop()
+                    asyncio.create_task(broadcast_log(graphql_log_entry))
+                except RuntimeError:
+                    # No running loop, skip GraphQL broadcast
+                    pass
+
+            except ImportError:
+                # webserver_fresh not available, skip GraphQL broadcast
+                pass
+
+        except Exception as e:
+            # Don't let SharedStore errors break logging
+            print(f"Error storing log in SharedStore: {e}", file=sys.stderr)
+
+
 class WebSocketHandler(logging.Handler):
     """Custom handler that sends log messages to WebSocket clients."""
     
@@ -83,6 +177,7 @@ class RenardoLoggerManager:
         self._configured = False
         self._config_file = None
         self._websocket_handler = None
+        self._shared_store_handler = None
         self._separate_log_files = True  # Enable separate log files by default
         self._subprocess_loggers = {}  # Track subprocess loggers
 
@@ -133,6 +228,19 @@ class RenardoLoggerManager:
 
         # Add to to_webclient_logger only (from_webclient_logger doesn't get WebSocket handler)
         to_webclient_logger.addHandler(self._websocket_handler)
+
+        # Add SharedStore handler to all Renardo loggers
+        self._shared_store_handler = SharedStoreHandler()
+        self._shared_store_handler.setLevel(logging.DEBUG)
+
+        # Set formatter for SharedStore handler (simple format to avoid duplication)
+        store_formatter = logging.Formatter('%(message)s')
+        self._shared_store_handler.setFormatter(store_formatter)
+
+        # Add SharedStore handler to all main loggers
+        for logger_name in ['renardo.main', 'renardo.to_webclient', 'renardo.from_webclient']:
+            logger = logging.getLogger(logger_name)
+            logger.addHandler(self._shared_store_handler)
 
         self._configured = True
 
@@ -300,6 +408,10 @@ class RenardoLoggerManager:
             )
             console_handler.setFormatter(console_formatter)
             logger.addHandler(console_handler)
+
+            # Add SharedStore handler if available
+            if self._shared_store_handler:
+                logger.addHandler(self._shared_store_handler)
 
             # Track this logger
             self._subprocess_loggers[logger_name] = {
