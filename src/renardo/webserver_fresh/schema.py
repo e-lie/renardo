@@ -4,6 +4,7 @@ from datetime import datetime
 import asyncio
 from collections import deque
 from .models import SAMPLE_AUTHORS, SAMPLE_POSTS, Author as AuthorModel, Post as PostModel
+from ..shared_store import get_shared_store
 
 
 @strawberry.type
@@ -49,6 +50,17 @@ class Post:
             name=author_model.name,
             email=author_model.email
         )
+
+
+@strawberry.type
+class LogEntry:
+    id: str
+    timestamp: datetime
+    level: str
+    logger: str
+    source: str
+    message: str
+    extra: Optional[str] = None
 
 
 @strawberry.type
@@ -109,16 +121,29 @@ class Query:
             email=author_model.email
         )
 
+    @strawberry.field
+    def historical_logs(self, limit: int = 1000) -> List[LogEntry]:
+        """Get historical logs from persistent storage"""
+        try:
+            store = get_shared_store()
+            stored_logs = store.get_recent_logs(limit)
 
-@strawberry.type
-class LogEntry:
-    id: str
-    timestamp: datetime
-    level: str
-    logger: str
-    source: str
-    message: str
-    extra: Optional[str] = None
+            # Convert shared_store.LogEntry to GraphQL LogEntry
+            return [
+                LogEntry(
+                    id=log.id,
+                    timestamp=log.timestamp,
+                    level=log.level,
+                    logger=log.logger,
+                    source=log.source,
+                    message=log.message,
+                    extra=log.extra
+                )
+                for log in stored_logs
+            ]
+        except Exception as e:
+            print(f"Error fetching historical logs: {e}")
+            return []
 
 
 # Global log buffer for subscriptions
