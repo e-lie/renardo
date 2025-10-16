@@ -1,0 +1,52 @@
+graph LR
+    subgraph "Component Layer"
+        View["📄 Posts.view.svelte<br/><b>View Component</b>"]
+    end
+
+    subgraph "Store Layer"
+        Store["🗄️ Posts.store.ts<br/><b>State Management</b><br/>• actions.loadPosts()<br/>• getters.posts"]
+    end
+
+    subgraph "GraphQL Layer"
+        Client["🔌 urql Client<br/><b>GraphQL Client</b><br/>• client.query()<br/>• client.mutation()"]
+        Queries["📋 queries.ts<br/><b>GraphQL Definitions</b><br/>• GET_POSTS<br/>• GET_AUTHORS<br/>• etc."]
+    end
+
+    subgraph "Network Layer"
+        HTTP["🌐 HTTP Request<br/><b>POST /graphql</b>"]
+        API["🖥️ GraphQL API<br/><b>Backend Server</b><br/>• Schema validation<br/>• Resolvers<br/>• Database queries"]
+    end
+
+    subgraph "Data Flow"
+        Request["📤 Request Flow"]
+        Response["📥 Response Flow"]
+    end
+
+    %% Request Flow (Component -> API)
+    View -->|"1. Call action"| Store
+    Store -->|"2. Get context client"| Client
+    Client -->|"3. Use query definition"| Queries
+    Queries -->|"4. Execute query"| HTTP
+    HTTP -->|"5. Send GraphQL query"| API
+
+    %% Response Flow (API -> Component)
+    API -->|"6. Return data"| HTTP
+    HTTP -->|"7. Parse response"| Client
+    Client -->|"8. Return result"| Store
+    Store -->|"9. Update state"| Store
+    Store -.->|"10. Reactive update"| View
+
+    %% Example query annotation
+    Request -.->|"Example:<br/>query GetPosts {<br/>  posts {<br/>    id title content<br/>    author { name }<br/>  }<br/>}"| Queries
+
+    Response -.->|"Example:<br/>{<br/>  data: {<br/>    posts: [...]<br/>  }<br/>}"| Store
+
+    %% Styling
+    style View fill:#2196F3,stroke:#1565C0,color:#fff
+    style Store fill:#9C27B0,stroke:#6A1B9A,color:#fff
+    style Client fill:#FF9800,stroke:#E65100,color:#fff
+    style Queries fill:#FF9800,stroke:#E65100,color:#fff
+    style HTTP fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style API fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style Request fill:#FFC107,stroke:#F57F17
+    style Response fill:#00BCD4,stroke:#006064

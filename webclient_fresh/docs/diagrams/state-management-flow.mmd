@@ -1,0 +1,38 @@
+sequenceDiagram
+    participant Component as Component
+    participant Action as Action
+    participant GraphQL as GraphQL Client
+    participant API as API Server
+    participant Store as Writable Store
+    participant Getter as Getter
+
+    Note over Component,Getter: 1. Component mounts and calls action
+
+    Component->>Action: postsStore.actions.loadPosts()
+    Note right of Component: $effect() on mount
+
+    Note over Action,Store: 2. Action updates state (loading: true)
+
+    Action->>Store: update({ loading: true })
+    Store->>Getter: Notify change
+    Getter->>Component: Update UI - Show loading
+
+    Note over Action,API: 3. Action fetches data via GraphQL
+
+    Action->>GraphQL: client.query(GET_POSTS)
+    GraphQL->>API: POST /graphql
+    API->>GraphQL: { data: { posts: [...] } }
+    GraphQL->>Action: result.data.posts
+
+    Note over Action,Store: 4. Action updates state with data
+
+    Action->>Store: update({ loading: false, posts: data })
+    Store->>Getter: Notify change
+    Getter->>Component: Update UI - Render posts
+
+    Note over Component,Getter: 5. User selects a post
+
+    Component->>Action: postsStore.actions.selectPost(post)
+    Action->>Store: update({ selectedPost: post })
+    Store->>Getter: Notify change
+    Getter->>Component: Navigate to detail view
