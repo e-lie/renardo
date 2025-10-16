@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Dict, Any
 
 from ..logger import get_main_logger
+from ..shared_store import initialize_shared_store
 
 
 def run_webclient_mode(config: Dict[str, Any]) -> int:
@@ -25,6 +26,13 @@ def run_webclient_mode(config: Dict[str, Any]) -> int:
         Exit code (0 for success, non-zero for error)
     """
     logger = get_main_logger()
+
+    # Initialize shared store for this session
+    try:
+        initialize_shared_store(command="uv run cli --webclient")
+        logger.info("Shared store initialized successfully")
+    except Exception as e:
+        logger.warning(f"Failed to initialize shared store: {e}")
 
     # Find project root directory - look for pyproject.toml to identify the root
     current_path = Path(__file__).resolve()

@@ -4,6 +4,7 @@ Log handler to capture Renardo logs and broadcast them via GraphQL subscriptions
 
 import asyncio
 import logging
+import inspect
 from datetime import datetime
 from typing import Optional
 import uuid
@@ -20,29 +21,29 @@ class GraphQLLogHandler(logging.Handler):
         self.loop: Optional[asyncio.AbstractEventLoop] = None
 
     def emit(self, record: logging.LogRecord):
-        """Emit a log record to GraphQL subscribers"""
+        """Emit a log record to GraphQL subscribers only (SharedStore is handled by logger.py)"""
         try:
-            # Create log entry
+            formatted_message = self.format(record)
+
+            # Create GraphQL log entry
             log_entry = LogEntry(
                 id=str(uuid.uuid4()),
                 timestamp=datetime.fromtimestamp(record.created),
                 level=record.levelname,
                 logger=record.name,
                 source=self.source,
-                message=self.format(record),
+                message=formatted_message,
                 extra=None
             )
 
-            # Get or create event loop
+            # Get or create event loop for GraphQL broadcast
             try:
                 loop = asyncio.get_running_loop()
+                # Schedule the broadcast
+                asyncio.create_task(broadcast_log(log_entry))
             except RuntimeError:
-                # No running loop, try to get one
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-
-            # Schedule the broadcast
-            asyncio.create_task(broadcast_log(log_entry))
+                # No running loop, skip GraphQL broadcast
+                pass
 
         except Exception as e:
             # Silently fail to avoid infinite recursion
@@ -77,20 +78,27 @@ def setup_log_capture():
 
 
 def capture_subprocess_output(process_name: str, line: str, level: str = "INFO"):
-    """Capture output from subprocess and send to GraphQL"""
+    """Capture output from subprocess and send to GraphQL only (SharedStore is handled by logger.py)"""
     try:
+        stripped_line = line.strip()
+
+        # Create GraphQL log entry
         log_entry = LogEntry(
             id=str(uuid.uuid4()),
             timestamp=datetime.now(),
             level=level,
             logger=process_name,
             source="subprocess",
-            message=line.strip(),
+            message=stripped_line,
             extra=None
         )
 
         # Get event loop and broadcast
-        loop = asyncio.get_running_loop()
-        asyncio.create_task(broadcast_log(log_entry))
+        try:
+            loop = asyncio.get_running_loop()
+            asyncio.create_task(broadcast_log(log_entry))
+        except RuntimeError:
+            # No running loop, skip GraphQL broadcast
+            pass
     except:
         pass  # Silently fail
