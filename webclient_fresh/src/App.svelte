@@ -1,12 +1,11 @@
 <script lang="ts">
   import { setContextClient, createClient, fetchExchange, subscriptionExchange } from '@urql/svelte'
   import { createClient as createWSClient } from 'graphql-ws'
-  import { currentPage, selectedPost, currentSession, logModalOpen } from './lib/stores'
+  import { currentPage, selectedPost, currentSession } from './lib/stores'
   import PostList from './lib/components/PostList.svelte'
   import AuthorList from './lib/components/AuthorList.svelte'
   import PostDetail from './lib/components/PostDetail.svelte'
   import FlokEditor from './lib/components/FlokEditor.svelte'
-  import LogModal from './lib/components/LogModal.svelte'
   import Navbar from './lib/components/Navbar.svelte'
 
   // WebSocket client for subscriptions
@@ -65,7 +64,4 @@
       </div>
     </main>
   {/if}
-
-  <!-- Log Modal -->
-  <LogModal bind:isOpen={$logModalOpen} />
 </div>
