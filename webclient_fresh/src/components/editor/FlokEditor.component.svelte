@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import { currentPage } from '../stores'
+  import { currentPage } from '../../store/root/Root.store'
 
   export let sessionName: string = 'renardo-session'
   export let height: string = '100vh'
