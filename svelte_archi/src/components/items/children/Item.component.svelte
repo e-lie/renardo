@@ -1,10 +1,8 @@
 <script lang="ts">
-  // Svelte 5: import types
   import type { ItemInterface } from '@/models'
   import ElText from '../../primitives/text/ElText.svelte'
   import ElToggle from '../../primitives/toggles/ElToggle.svelte'
 
-  // Svelte 5: use $props() rune for props
   let {
     testid = 'not-set',
     isLast = false,
@@ -21,7 +19,6 @@
     onselectitem?: (event: { item: ItemInterface }) => void
   } = $props()
 
-  // Svelte 5: use $derived rune for computed properties
   const cssClass = $derived(() => {
     let css = 'item flex items-center justify-between cursor-pointer border border-l-4 list-none rounded-sm px-3 py-3'
     if (item.selected) {
@@ -35,7 +32,6 @@
     return css.trim()
   })
 
-  // Svelte 5: regular function for event handling
   function handleClick() {
     if (onselectitem) {
       onselectitem({ item })

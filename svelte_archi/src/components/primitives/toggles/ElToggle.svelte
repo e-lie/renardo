@@ -1,5 +1,4 @@
 <script lang="ts">
-  // Svelte 5: use $props() rune instead of export let
   let {
     testid = 'not-set',
     id = 'not-set',
@@ -16,7 +15,6 @@
     onclick?: (event: { id: string }) => void
   } = $props()
 
-  // Svelte 5: use $derived rune for computed properties
   const cssClass = $derived(() => {
     const result = [
       'relative inline-flex flex-shrink-0 h-6 w-12 border-1 rounded-full cursor-pointer transition-colors duration-200 focus:outline-none'
@@ -47,7 +45,6 @@
     return result.join(' ').trim()
   })
 
-  // Svelte 5: regular function for event handling, call the prop callback
   function handleClick() {
     if (!disabled && onclick) {
       onclick({ id })

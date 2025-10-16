@@ -1,6 +1,8 @@
 // file: src/store/items/Items.store.ts
 
 import { writable, derived } from 'svelte/store'
+import { getContextClient } from '@urql/svelte'
+import { GET_ITEMS, TOGGLE_ITEM } from '../../api-client/graphql/queries'
 import type {
   ItemsStateInterface,
   ItemsStoreInterface,
@@ -8,7 +10,6 @@ import type {
   ItemsStoreGettersInterface
 } from './models'
 import type { ItemInterface } from '../../models/items/Item.interface'
-import { apiClient } from '../../api-client'
 
 // Create the private writable store
 const writableItemsStore = writable<ItemsStateInterface>({
@@ -18,42 +19,46 @@ const writableItemsStore = writable<ItemsStateInterface>({
 
 // Hook to use the store in components
 export function useItemsStore(): ItemsStoreInterface {
+  const client = getContextClient()
+
   // Actions implementation
   const actions: ItemsStoreActionsInterface = {
-    // Action to load items from API
     loadItems: async () => {
-      // Set loading to true and clear current data
-      writableItemsStore.update((state) => {
-        state.loading = true
-        state.items = []
-        return state
-      })
+      writableItemsStore.update((state) => ({
+        ...state,
+        loading: true,
+        items: []
+      }))
 
-      // Fetch data from API (REST or GraphQL)
-      const data = await apiClient.items.fetchItems()
+      // Fetch data from GraphQL
+      const result = await client.query(GET_ITEMS, {})
 
-      // Update state with fetched data
-      writableItemsStore.update((state) => {
-        state.items = data
-        state.loading = false
-        return state
-      })
+      if (result.data?.items) {
+        writableItemsStore.update((state) => ({
+          ...state,
+          items: result.data.items,
+          loading: false
+        }))
+      }
     },
 
-    // Action to toggle an item's selected property
     toggleItemSelected: async (item: ItemInterface) => {
       console.log('ItemsStore: action: toggleItemSelected', item)
-      // Update state
-      writableItemsStore.update((state) => {
-        const itemIndex = (state.items || []).findIndex((a) => a.id === item.id)
-        if (itemIndex < 0) {
-          console.warn('ItemsStore: action: toggleItemSelected: Could not find item in state')
+
+      // Call GraphQL mutation
+      const result = await client.mutation(TOGGLE_ITEM, { id: item.id })
+
+      if (result.data?.toggleItem) {
+        writableItemsStore.update((state) => {
+          const itemIndex = state.items.findIndex((a) => a.id === item.id)
+          if (itemIndex >= 0) {
+            const updatedItems = [...state.items]
+            updatedItems[itemIndex] = result.data.toggleItem
+            return { ...state, items: updatedItems }
+          }
           return state
-        }
-        // Toggle selected
-        state.items[itemIndex].selected = !state.items[itemIndex].selected
-        return state
-      })
+        })
+      }
     }
   }
 
