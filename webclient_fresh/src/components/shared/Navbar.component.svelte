@@ -2,7 +2,7 @@
   import { ElButton } from '../primitives'
   import { currentPage } from '../../store/root/Root.store'
 
-  function navigateTo(page: 'posts' | 'authors' | 'editor') {
+  function navigateTo(page: 'posts' | 'authors' | 'editor' | 'logs') {
     currentPage.set(page)
   }
 </script>
@@ -26,6 +26,11 @@
       <li>
         <ElButton variant="ghost" onclick={() => navigateTo('editor')}>
           Editor
+        </ElButton>
+      </li>
+      <li>
+        <ElButton variant="ghost" onclick={() => navigateTo('logs')}>
+          Logs
         </ElButton>
       </li>
     </ul>
