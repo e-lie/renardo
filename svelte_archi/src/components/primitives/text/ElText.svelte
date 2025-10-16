@@ -1,5 +1,4 @@
 <script lang="ts">
-  // Svelte 5: use $props() rune to define props
   let {
     testid = 'not-set',
     id = 'id-not-set',
@@ -14,7 +13,6 @@
     addCss?: string
   } = $props()
 
-  // Svelte 5: use $derived rune for computed values
   const cssClass = $derived(() => {
     const cssClasses = ['p-1']
     if ((addCss || '').trim().length > 0) {
