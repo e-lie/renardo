@@ -4,3 +4,6 @@ import { writable } from 'svelte/store'
 export const currentPage = writable('posts')
 export const selectedPost = writable(null)
 export const currentSession = writable('renardo-session')
+
+// Log modal state
+export const logModalOpen = writable(false)
