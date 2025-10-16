@@ -1,7 +1,33 @@
 
-# This document is a app design guideline for svelte app
+# This document is an app design guideline for Svelte 5 applications
 
-the partial result it refers to is inside `./src` next to this file 
+This guide has been updated for **Svelte 5** with runes and modern patterns.
+The partial implementation examples are inside `./src` next to this file.
+
+## Key Svelte 5 Changes from Svelte 4
+
+### 1. **Props with $props() rune**
+- **Old (Svelte 4):** `export let propName = defaultValue`
+- **New (Svelte 5):** `let { propName = defaultValue } = $props()`
+
+### 2. **Computed values with $derived rune**
+- **Old (Svelte 4):** `$: computed = (() => { ... })()`
+- **New (Svelte 5):** `const computed = $derived(() => { ... })`
+
+### 3. **Event handlers**
+- **Old (Svelte 4):** `on:click={handler}` with `createEventDispatcher()`
+- **New (Svelte 5):** `onclick={handler}` with callback props
+
+### 4. **Reactive state with $state rune**
+- **Old (Svelte 4):** `let count = 0` (automatically reactive)
+- **New (Svelte 5):** `let count = $state(0)` (explicit reactivity in `.ts` files)
+
+### 5. **Effects with $effect rune**
+- **Old (Svelte 4):** `$: { /* side effect */ }`
+- **New (Svelte 5):** `$effect(() => { /* side effect */ })`
+
+### 6. **Stores remain compatible**
+Svelte stores (`writable`, `readable`, `derived`) work the same way in Svelte 5! 
 
 ## data model interfaces
 
@@ -55,33 +81,37 @@ Create the following 5 sub-directories to get started:
 • src/components/primitives/buttons
 • src/components/primitives/text
 
-`ElText.svelte` :
+`ElText.svelte` (Svelte 5 with runes):
 
 ```svelte
 <script lang="ts">
-  // expose a property called testid
-  export let testid: string = 'not-set'
-  // expose a property called testid
-  export let id: string = 'id-not-set'
-  // expose a property called tag
-  export let tag: string = 'span'
-  // expose a property called text
-  export let text: string = 'text-not-set'
-  // expose a property called addCss
-  export let addCss: string = ''
+  // Svelte 5: use $props() rune to define props
+  let {
+    testid = 'not-set',
+    id = 'id-not-set',
+    tag = 'span',
+    text = 'text-not-set',
+    addCss = ''
+  }: {
+    testid?: string
+    id?: string
+    tag?: string
+    text?: string
+    addCss?: string
+  } = $props()
 
-  // a computed property that returns the css class value
-  $: cssClass = (): string => {
+  // Svelte 5: use $derived rune for computed values
+  const cssClass = $derived(() => {
     const cssClasses = ['p-1']
     if ((addCss || '').trim().length > 0) {
       cssClasses.push(addCss.trim())
     }
     return cssClasses.join(' ').trim()
-  }
+  })
 
-  const render = () => {
-    return `<${tag} id="${id}"" data-testid="${testid}" class="${cssClass()}">${text}</${tag}>`
-  }
+  const render = $derived(() => {
+    return `<${tag} id="${id}" data-testid="${testid}" class="${cssClass()}">${text}</${tag}>`
+  })
 </script>
 
 {@html render()}
@@ -92,29 +122,29 @@ Create the following 5 sub-directories to get started:
 • src/components/primitives/icons
 • src/components/primitives/toggles
 
-`ElToggle.svelte` :
+`ElToggle.svelte` (Svelte 5 with runes):
 
 ```svelte
 <script lang="ts">
-  // import createEventDispatcher from Svelte:
-  import { createEventDispatcher } from 'svelte'
+  // Svelte 5: use $props() rune instead of export let
+  let {
+    testid = 'not-set',
+    id = 'not-set',
+    checked = false,
+    disabled = false,
+    addCss = '',
+    onclick
+  }: {
+    testid?: string
+    id?: string
+    checked?: boolean
+    disabled?: boolean
+    addCss?: string
+    onclick?: (event: { id: string }) => void
+  } = $props()
 
-  // expose a property called testid
-  export let testid: string = 'not-set'
-  // expose a property called id
-  export let id: string = 'not-set'
-  // expose a property called checked
-  export let checked = false
-  // expose a property called disabled
-  export let disabled = false
-  // expose a property called addCss
-  export let addCss: string = ''
-
-  // create an instance of Svelte event dispatcher
-  const dispatch = createEventDispatcher()
-
-  // a computed property that returns the css class of the outer element
-  $: cssClass = (): string => {
+  // Svelte 5: use $derived rune for computed properties
+  const cssClass = $derived(() => {
     const result = [
       'relative inline-flex flex-shrink-0 h-6 w-12 border-1 rounded-full cursor-pointer transition-colors duration-200 focus:outline-none'
     ]
@@ -130,9 +160,9 @@ Create the following 5 sub-directories to get started:
       result.push(addCss.trim())
     }
     return result.join(' ').trim()
-  }
+  })
 
-  $: innerCssClass = (): string => {
+  const innerCssClass = $derived(() => {
     const result = [
       'bg-white shadow pointer-events-none inline-block h-6 w-6 rounded-full transform ring-0 transition duration-200'
     ]
@@ -142,16 +172,12 @@ Create the following 5 sub-directories to get started:
       result.push('translate-x-0')
     }
     return result.join(' ').trim()
-  }
+  })
 
-  // click handler
-  const handleClick = () => {
-    // proceed only if the button is not disabled, otherwise ignore the click
-    if (!disabled) {
-      // dispatch a 'clicked' even through Svelte dispatch
-      dispatch('clicked', {
-        id
-      })
+  // Svelte 5: regular function for event handling, call the prop callback
+  function handleClick() {
+    if (!disabled && onclick) {
+      onclick({ id })
     }
   }
 </script>
@@ -163,7 +189,7 @@ Create the following 5 sub-directories to get started:
   aria-checked={checked}
   {disabled}
   class={cssClass()}
-  on:click={() => handleClick()}
+  onclick={handleClick}
 >
   <span class={innerCssClass()} />
 </button>
@@ -179,25 +205,23 @@ Here is a code example for an hypotethical Button component:
 
 ```svelte
 <script lang="ts">
-// a computed property to return a different css class based on the selected value
-$: cssClass = (): string => {
-// here we concatenate the default CSS with 'disabled' only if disabled is true
-const defaultClasses = 'p-6' // in TailwindCSS this means we want a padding of 6
-return `${ defaultClasses } ${ this.disabled ? 'disabled' : '' }`.trim()
-// alternativately you could use an array that is initialized with
-// the default CSS, and if disabled is true, then add 'disabled'
-// and return the result by joining the array with space as the separator
-// (I usually feavor this approach especially when there
-// is more than one check and additional logic)
-const cssClasses = ['p-6']
-if (this.disabled) {
-cssClasses.push('disabled')
-}
-return cssClasses.join(' ')
-}
+  // Svelte 5: define props with $props() rune
+  let { disabled = false, label = '' } = $props()
+
+  // Svelte 5: use $derived rune for computed properties
+  const cssClass = $derived(() => {
+    // here we use an array that is initialized with the default CSS
+    // if disabled is true, we add 'disabled'
+    // and return the result by joining the array with space as the separator
+    const cssClasses = ['p-6'] // in TailwindCSS this means we want a padding of 6
+    if (disabled) {
+      cssClasses.push('disabled')
+    }
+    return cssClasses.join(' ')
+  })
 </script>
 <button type="button" class={cssClass()}>
-<span class="name">{ label }</span>
+  <span class="name">{label}</span>
 </button>
 ```
 
@@ -240,30 +264,30 @@ observe the example :
 
 ```svelte
 <script lang="ts">
-  // import createEventDispatcher from Svelte:
-  import { createEventDispatcher } from 'svelte'
-  // import a reference to our ItemInterace
+  // import a reference to our ItemInterface
   import type { ItemInterface } from '@/models'
-  // add the following two lines:
   import ElText from '../../primitives/text/ElText.svelte'
   import ElToggle from '../../primitives/toggles/ElToggle.svelte'
 
-  // expose a property called testid
-  export let testid: string = 'not-set'
-  // expose a property called isLast
-  export let isLast: boolean = false
-  // expose a property called item
-  export let item: ItemInterface = {
-    id: -1,
-    name: '',
-    selected: false
-  }
+  // Svelte 5: use $props() rune for props
+  let {
+    testid = 'not-set',
+    isLast = false,
+    item = {
+      id: -1,
+      name: '',
+      selected: false
+    },
+    onselectitem
+  }: {
+    testid?: string
+    isLast?: boolean
+    item?: ItemInterface
+    onselectitem?: (event: { item: ItemInterface }) => void
+  } = $props()
 
-  // create an instance of Svelte event dispatcher
-  const dispatch = createEventDispatcher()
-
-  // a computed property to return a different css class based on the selected value
-  $: cssClass = (): string => {
+  // Svelte 5: use $derived rune for computed properties
+  const cssClass = $derived(() => {
     let css = 'item flex items-center justify-between cursor-pointer border border-l-4 list-none rounded-sm px-3 py-3'
     if (item.selected) {
       css += ' font-bold bg-pink-200 hover:bg-pink-100 selected'
@@ -274,42 +298,45 @@ observe the example :
       css += ' border-b-0'
     }
     return css.trim()
-  }
+  })
 
-  // item click handler
-  function handleClick(item: ItemInterface) {
-    // dispatch a 'selectItem' even through Svelte dispatch
-    dispatch('selectItem', {
-      item
-    })
+  // Svelte 5: regular function for event handling
+  function handleClick() {
+    if (onselectitem) {
+      onselectitem({ item })
+    }
   }
 </script>
 
-<li role="button" data-testid={testid} class={cssClass()} on:click={() => handleClick(item)}>
+<li role="button" data-testid={testid} class={cssClass()} onclick={handleClick}>
   <ElText testid={`${testid}-text`} tag="div" text={item.name} />
   <ElToggle testid={`${testid}-toggle`} checked={item.selected} />
 </li>
 ```
 
-Et puis `src/components/items/children/Item.component.svelte`
+Et puis `src/components/items/ItemsList.component.svelte`
 
 ```svelte
 <script lang="ts">
   // import localization
   import { useLocalization } from '../../localization'
-  // import a reference to our ItemInterace
+  // import a reference to our ItemInterface
   import type { ItemInterface } from '../../models/items/Item.interface'
   // import a reference to our Item component
   import ItemComponent from './children/Item.component.svelte'
   // import a reference to our Loader component:
   import Loader from '../shared/Loader.component.svelte'
 
-  // expose loading property:
-  export let loading = false
-  // expose a property called items with a default value of a blank array
-  export let items: ItemInterface[] = []
-  // expose a property to pass our selectItem event to the parent component
-  export let selectItem: (event: CustomEvent<{ item: ItemInterface }>) => void
+  // Svelte 5: use $props() rune for props
+  let {
+    loading = false,
+    items = [],
+    onselectitem
+  }: {
+    loading?: boolean
+    items?: ItemInterface[]
+    onselectitem?: (event: { item: ItemInterface }) => void
+  } = $props()
 
   // private
   const { t } = useLocalization()
@@ -327,7 +354,7 @@ Et puis `src/components/items/children/Item.component.svelte`
           testid={`items.list.item.${item.id}`}
           {item}
           isLast={index === items.length - 1}
-          on:selectItem={selectItem}
+          {onselectitem}
         />
       {/each}
     </ul>
@@ -335,39 +362,435 @@ Et puis `src/components/items/children/Item.component.svelte`
 </div>
 ```
 
+## GraphQL Integration with urql
+
+For applications that need to communicate with a GraphQL API, the `@urql/svelte` library provides an excellent solution with built-in support for queries, mutations, and subscriptions.
+
+### Setting up urql client
+
+First, install the required dependencies:
+
+```bash
+npm install @urql/svelte graphql graphql-tag graphql-ws
+```
+
+In your main `App.svelte`, configure the urql client:
+
+```svelte
+<script lang="ts">
+  import { setContextClient, createClient, fetchExchange } from '@urql/svelte'
+
+  // Create the urql client
+  const client = createClient({
+    url: 'http://localhost:8000/graphql',
+    exchanges: [fetchExchange]
+  })
+
+  // Make the client available to all child components
+  setContextClient(client)
+</script>
+```
+
+### Defining GraphQL queries for Items
+
+Create a `src/api-client/graphql/queries.ts` file to centralize your GraphQL queries:
+
+```typescript
+import { gql } from 'graphql-tag'
+
+export const GET_ITEMS = gql`
+  query GetItems {
+    items {
+      id
+      name
+      selected
+    }
+  }
+`
+
+export const TOGGLE_ITEM = gql`
+  mutation ToggleItem($id: Int!) {
+    toggleItem(id: $id) {
+      id
+      name
+      selected
+    }
+  }
+`
+```
+
+The types remain in `src/models/items/Item.interface.ts` as before:
+
+```typescript
+export interface ItemInterface {
+  id: number
+  name: string
+  selected: boolean
+}
+```
+
+### Using GraphQL in the Items Store
+
+Update `src/store/items/Items.store.ts` to use GraphQL instead of REST:
+
+```typescript
+import { writable, derived } from 'svelte/store'
+import type { ItemInterface } from '../../models/items/Item.interface'
+import { getContextClient } from '@urql/svelte'
+import { GET_ITEMS, TOGGLE_ITEM } from '../../api-client/graphql/queries'
+
+interface ItemsState {
+  loading: boolean
+  items: ItemInterface[]
+}
+
+const writableItemsStore = writable<ItemsState>({
+  loading: false,
+  items: []
+})
+
+export function useItemsStore() {
+  const client = getContextClient()
+
+  const actions = {
+    loadItems: async () => {
+      writableItemsStore.update(state => ({
+        ...state,
+        loading: true,
+        items: []
+      }))
+
+      const result = await client.query(GET_ITEMS, {})
+
+      if (result.data?.items) {
+        writableItemsStore.update(state => ({
+          ...state,
+          items: result.data.items,
+          loading: false
+        }))
+      }
+    },
+
+    toggleItemSelected: async (item: ItemInterface) => {
+      const result = await client.mutation(TOGGLE_ITEM, { id: item.id })
+
+      if (result.data?.toggleItem) {
+        writableItemsStore.update(state => {
+          const itemIndex = state.items.findIndex(a => a.id === item.id)
+          if (itemIndex >= 0) {
+            const updatedItems = [...state.items]
+            updatedItems[itemIndex] = result.data.toggleItem
+            return { ...state, items: updatedItems }
+          }
+          return state
+        })
+      }
+    }
+  }
+
+  const loading = derived(writableItemsStore, $state => $state.loading)
+  const items = derived(writableItemsStore, $state => $state.items)
+
+  return {
+    loading,
+    items,
+    actions
+  }
+}
+```
+
+### Using the store in components (Svelte 5)
+
+```svelte
+<script lang="ts">
+  import { useItemsStore } from '../../store/items/Items.store'
+  import ItemComponent from './children/Item.component.svelte'
+  import Loader from '../shared/Loader.component.svelte'
+
+  const { loading, items, actions } = useItemsStore()
+
+  // Load items on component mount using Svelte 5's $effect
+  $effect(() => {
+    actions.loadItems()
+  })
+
+  function handleSelectItem(event: { item: ItemInterface }) {
+    actions.toggleItemSelected(event.item)
+  }
+</script>
+
+<div>
+  <h3>Items List:</h3>
+  {#if $loading}
+    <Loader />
+  {:else}
+    <ul>
+      {#each $items as item, index}
+        <ItemComponent
+          {item}
+          isLast={index === $items.length - 1}
+          onselectitem={handleSelectItem}
+        />
+      {/each}
+    </ul>
+  {/if}
+</div>
+```
+
+### URL-based routing with stores
+
+For simple applications, you can implement client-side routing using Svelte stores.
+
+Create `src/store/root/Root.store.ts` for navigation state:
+
+```typescript
+import { writable } from 'svelte/store'
+import type { ItemInterface } from '../../models/items/Item.interface'
+
+// Router stores
+export const currentPage = writable<'home' | 'items' | 'primitives'>('home')
+export const selectedItem = writable<ItemInterface | null>(null)
+```
+
+Usage in your main App component:
+
+```svelte
+<script lang="ts">
+  import { currentPage } from './store/root/Root.store'
+  import HomeView from './views/Home.view.svelte'
+  import ItemsView from './views/Items.view.svelte'
+  import PrimitivesView from './views/Primitives.view.svelte'
+</script>
+
+<main>
+  {#if $currentPage === 'home'}
+    <HomeView />
+  {:else if $currentPage === 'items'}
+    <ItemsView />
+  {:else if $currentPage === 'primitives'}
+    <PrimitivesView />
+  {/if}
+</main>
+```
+
+Navigation with store updates:
+
+```svelte
+<script lang="ts">
+  import { currentPage } from '../store/root/Root.store'
+
+  function navigateToItems() {
+    currentPage.set('items')
+  }
+</script>
+
+<button onclick={navigateToItems}>
+  View Items
+</button>
+```
+
+For more complex routing needs, consider using libraries like:
+- `svelte-routing`
+- `svelte-spa-router`
+- `@roxi/routify`
+
 ## i18n
 
 look at `./src` example
 
 ## State management
 
-One of the most important part of an app that will grow large is to decided how to manage
+One of the most important parts of an app that will grow large is to decide how to manage
 its state.
-For many years in MV* frameworks like React²⁰ or Vue²¹ etc. that meant using a state
-manager that usually implemented the Flux²² State Management pattern.
 
-Flux offers an architectural pattern that is a slight modification of the observer-observable
-pattern and it is not a library or a framework.
-Single source of truth:
-The most important reason to implement a centralized state manager is to have a “single
-source of truth” for the application state/data. This simply means that our application state
+**Single source of truth:**
+The most important reason to implement a centralized state manager is to have a "single
+source of truth" for the application state/data. This simply means that our application state
 has only one global, centralized source. The responsibility of changing that state is only in
-the hand of our state manager. That means you can expect a consistent behavior in your app
-as the source of your data cannot be changed outside the state manager.
+the hands of our state manager. This ensures consistent behavior across your app.
 
-One thing I learned from my past experience using React, Angular, Vue.js, Svelte, and more,
-is that there are some advantages adopting a certain flow that is closer to Flux, but does not
-have to follow it to the letter. We definitely won’t need this in every component, as in some
-cases using just local state is the right thing to do. But we’ll need it for global state changes
-on which many components within the same app will depend on.
+### State Management Pattern
 
+Let's implement a state manager that follows this pattern:
+• We invoke an action on our state manager from a component
+• The state manager performs tasks within that action
+• The state manager commits changes to our state
+• The state manager is organized into modules (each module represents a domain/area
+  of the application: items, authors, companies, projects, products, categories, etc.)
 
-Let’s try to implement a state manager that follow more or less this pattern:
-• we will invoke an action on our state manager from a component
-• the state manager will perform some tasks within that action
-• the state manager will commit a change to our state
-• the state manager will be organized into modules (each module will represent a
-odmain/area of the application. I.e. items, authors, companies, projects, products,
-categories, etc)
+### Svelte Stores Implementation
 
-(to agent : look at the `src` dir next to this markdown for example)
+Svelte's built-in stores (`writable`, `derived`) work the same way in Svelte 5 as in Svelte 4.
+This is the recommended approach for most applications.
+
+`src/store/items/Items.store.ts`:
+
+```typescript
+import { writable, derived } from 'svelte/store'
+import type { ItemInterface } from '../../models/items/Item.interface'
+import type {
+  ItemsStateInterface,
+  ItemsStoreInterface,
+  ItemsStoreActionsInterface,
+  ItemsStoreGettersInterface
+} from './models'
+import { apiClient } from '../../api-client'
+
+// Create the private writable store
+const writableItemsStore = writable<ItemsStateInterface>({
+  loading: false,
+  items: []
+})
+
+// Hook to use the store in components
+export function useItemsStore(): ItemsStoreInterface {
+  // Actions implementation
+  const actions: ItemsStoreActionsInterface = {
+    loadItems: async () => {
+      // Set loading to true and clear current data
+      writableItemsStore.update((state) => {
+        state.loading = true
+        state.items = []
+        return state
+      })
+
+      // Fetch data from API (REST or GraphQL)
+      const data = await apiClient.items.fetchItems()
+
+      // Update state with fetched data
+      writableItemsStore.update((state) => {
+        state.items = data
+        state.loading = false
+        return state
+      })
+    },
+
+    toggleItemSelected: async (item: ItemInterface) => {
+      // Update state
+      writableItemsStore.update((state) => {
+        const itemIndex = state.items.findIndex((a) => a.id === item.id)
+        if (itemIndex < 0) {
+          console.warn('Item not found in state')
+          return state
+        }
+        // Toggle selected
+        state.items[itemIndex].selected = !state.items[itemIndex].selected
+        return state
+      })
+    }
+  }
+
+  // Getters implementation using derived stores
+  const loading = derived(writableItemsStore, ($state) => $state.loading)
+  const items = derived(writableItemsStore, ($state) => $state.items)
+
+  const getters: ItemsStoreGettersInterface = {
+    loading,
+    items
+  }
+
+  // Return store interface
+  return {
+    getters,
+    actions
+  }
+}
+```
+
+### Store interfaces and types
+
+`src/store/items/models/ItemsState.interface.ts`:
+
+```typescript
+import type { ItemInterface } from '../../../models/items/Item.interface'
+
+export interface ItemsStateInterface {
+  loading: boolean
+  items: ItemInterface[]
+}
+```
+
+`src/store/items/models/ItemsStore.interface.ts`:
+
+```typescript
+import type { Readable } from 'svelte/store'
+import type { ItemInterface } from '../../../models/items/Item.interface'
+
+export interface ItemsStoreActionsInterface {
+  loadItems: () => Promise<void>
+  toggleItemSelected: (item: ItemInterface) => Promise<void>
+}
+
+export interface ItemsStoreGettersInterface {
+  loading: Readable<boolean>
+  items: Readable<ItemInterface[]>
+}
+
+export interface ItemsStoreInterface {
+  getters: ItemsStoreGettersInterface
+  actions: ItemsStoreActionsInterface
+}
+```
+
+### Using stores in Svelte 5 components
+
+```svelte
+<script lang="ts">
+  import { useItemsStore } from '../../store/items/Items.store'
+  import ItemComponent from './children/Item.component.svelte'
+  import Loader from '../shared/Loader.component.svelte'
+  import type { ItemInterface } from '../../models/items/Item.interface'
+
+  const itemsStore = useItemsStore()
+
+  // Load items on component mount using Svelte 5's $effect
+  $effect(() => {
+    itemsStore.actions.loadItems()
+  })
+
+  function handleSelectItem(event: { item: ItemInterface }) {
+    itemsStore.actions.toggleItemSelected(event.item)
+  }
+</script>
+
+<div>
+  <h3>Items List:</h3>
+  {#if $itemsStore.getters.loading}
+    <Loader />
+  {:else}
+    <ul>
+      {#each $itemsStore.getters.items as item, index}
+        <ItemComponent
+          {item}
+          isLast={index === $itemsStore.getters.items.length - 1}
+          onselectitem={handleSelectItem}
+        />
+      {/each}
+    </ul>
+  {/if}
+</div>
+```
+
+### Component-local state with Svelte 5 Runes
+
+For component-local state (not shared between components), use Svelte 5 runes:
+
+```svelte
+<script lang="ts">
+  // $state rune for reactive state
+  let count = $state(0)
+
+  // $derived rune for computed values
+  let doubled = $derived(count * 2)
+
+  function increment() {
+    count++
+  }
+</script>
+
+<button onclick={increment}>
+  Count: {count} (doubled: {doubled})
+</button>
+```
+
+(See the `src/store` directory next to this markdown for complete examples)

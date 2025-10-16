@@ -1,28 +1,28 @@
 <script lang="ts">
-  // import createEventDispatcher from Svelte:
-  import { createEventDispatcher } from 'svelte'
-  // import a reference to our ItemInterace
+  // Svelte 5: import types
   import type { ItemInterface } from '@/models'
-  // add the following two lines:
   import ElText from '../../primitives/text/ElText.svelte'
   import ElToggle from '../../primitives/toggles/ElToggle.svelte'
 
-  // expose a property called testid
-  export let testid: string = 'not-set'
-  // expose a property called isLast
-  export let isLast: boolean = false
-  // expose a property called item
-  export let item: ItemInterface = {
-    id: -1,
-    name: '',
-    selected: false
-  }
+  // Svelte 5: use $props() rune for props
+  let {
+    testid = 'not-set',
+    isLast = false,
+    item = {
+      id: -1,
+      name: '',
+      selected: false
+    },
+    onselectitem
+  }: {
+    testid?: string
+    isLast?: boolean
+    item?: ItemInterface
+    onselectitem?: (event: { item: ItemInterface }) => void
+  } = $props()
 
-  // create an instance of Svelte event dispatcher
-  const dispatch = createEventDispatcher()
-
-  // a computed property to return a different css class based on the selected value
-  $: cssClass = (): string => {
+  // Svelte 5: use $derived rune for computed properties
+  const cssClass = $derived(() => {
     let css = 'item flex items-center justify-between cursor-pointer border border-l-4 list-none rounded-sm px-3 py-3'
     if (item.selected) {
       css += ' font-bold bg-pink-200 hover:bg-pink-100 selected'
@@ -33,18 +33,17 @@
       css += ' border-b-0'
     }
     return css.trim()
-  }
+  })
 
-  // item click handler
-  function handleClick(item: ItemInterface) {
-    // dispatch a 'selectItem' even through Svelte dispatch
-    dispatch('selectItem', {
-      item
-    })
+  // Svelte 5: regular function for event handling
+  function handleClick() {
+    if (onselectitem) {
+      onselectitem({ item })
+    }
   }
 </script>
 
-<li role="button" data-testid={testid} class={cssClass()} on:click={() => handleClick(item)}>
+<li role="button" data-testid={testid} class={cssClass()} onclick={handleClick}>
   <ElText testid={`${testid}-text`} tag="div" text={item.name} />
   <ElToggle testid={`${testid}-toggle`} checked={item.selected} />
 </li>

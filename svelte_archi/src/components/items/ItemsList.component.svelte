@@ -1,21 +1,20 @@
 <script lang="ts">
-  // import localization
   import { useLocalization } from '../../localization'
-  // import a reference to our ItemInterace
   import type { ItemInterface } from '../../models/items/Item.interface'
-  // import a reference to our Item component
   import ItemComponent from './children/Item.component.svelte'
-  // import a reference to our Loader component:
   import Loader from '../shared/Loader.component.svelte'
 
-  // expose loading property:
-  export let loading = false
-  // expose a property called items with a default value of a blank array
-  export let items: ItemInterface[] = []
-  // expose a property to pass our selectItem event to the parent component
-  export let selectItem: (event: CustomEvent<{ item: ItemInterface }>) => void
+  // Svelte 5: use $props() rune for props
+  let {
+    loading = false,
+    items = [],
+    onselectitem
+  }: {
+    loading?: boolean
+    items?: ItemInterface[]
+    onselectitem?: (event: { item: ItemInterface }) => void
+  } = $props()
 
-  // private
   const { t } = useLocalization()
 </script>
 
@@ -31,7 +30,7 @@
           testid={`items.list.item.${item.id}`}
           {item}
           isLast={index === items.length - 1}
-          on:selectItem={selectItem}
+          {onselectitem}
         />
       {/each}
     </ul>
