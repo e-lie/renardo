@@ -4,7 +4,6 @@
   import ItemComponent from './children/Item.component.svelte'
   import Loader from '../shared/Loader.component.svelte'
 
-  // Svelte 5: use $props() rune for props
   let {
     loading = false,
     items = [],
