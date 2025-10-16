@@ -1,0 +1,82 @@
+graph TB
+    subgraph "Application Layer"
+        App["🎯 App.svelte<br/><b>Root Component</b><br/>• Setup urql client<br/>• Route management"]
+    end
+
+    subgraph "Views Layer (Pages)"
+        PostsView["📄 Posts.view.svelte<br/><b>Posts Page</b><br/>• Load posts data<br/>• Handle navigation"]
+        AuthorsView["📄 Authors.view.svelte<br/><b>Authors Page</b><br/>• Load authors data<br/>• Display author list"]
+        PostDetailView["📄 PostDetail.view.svelte<br/><b>Post Detail Page</b><br/>• Display selected post<br/>• Navigate back"]
+    end
+
+    subgraph "Domain Components Layer"
+        subgraph "Posts Domain"
+            PostsList["🔷 PostsList.component<br/><b>Posts List Container</b><br/>• Iterate over posts<br/>• Handle loading state"]
+            PostCard["🔷 PostCard.component<br/><b>Individual Post Card</b><br/>• Display post info<br/>• Emit select event"]
+        end
+
+        subgraph "Authors Domain"
+            AuthorsList["🔷 AuthorsList.component<br/><b>Authors List Container</b><br/>• Iterate over authors<br/>• Handle loading state"]
+            AuthorCard["🔷 AuthorCard.component<br/><b>Individual Author Card</b><br/>• Display author info<br/>• Emit select event"]
+        end
+
+        subgraph "Shared Components"
+            Navbar["🔷 Navbar.component<br/><b>Navigation Bar</b><br/>• Switch between pages"]
+        end
+    end
+
+    subgraph "Primitives Layer (Atomic)"
+        ElButton["⚛️ ElButton<br/><b>Button Primitive</b><br/>• variant, disabled<br/>• onclick handler"]
+        ElCard["⚛️ ElCard<br/><b>Card Primitive</b><br/>• Container styling<br/>• Children support"]
+        ElText["⚛️ ElText<br/><b>Text Primitive</b><br/>• tag (h1, p, span)<br/>• Dynamic classes"]
+    end
+
+    subgraph "State Management Layer"
+        PostsStore["🗄️ Posts Store<br/><b>Posts State</b><br/>• loading<br/>• posts[]<br/>• selectedPost"]
+        AuthorsStore["🗄️ Authors Store<br/><b>Authors State</b><br/>• loading<br/>• authors[]"]
+    end
+
+    %% Connections: App to Views
+    App --> PostsView
+    App --> AuthorsView
+    App --> PostDetailView
+    App --> Navbar
+
+    %% Connections: Views to Domain Components
+    PostsView --> PostsList
+    AuthorsView --> AuthorsList
+    PostDetailView --> ElButton
+    PostDetailView --> ElCard
+
+    %% Connections: Domain Components to Primitives
+    PostsList --> PostCard
+    PostCard --> ElCard
+    PostCard --> ElText
+    PostCard --> ElButton
+
+    AuthorsList --> AuthorCard
+    AuthorCard --> ElCard
+    AuthorCard --> ElText
+
+    Navbar --> ElButton
+
+    %% Connections: Views to State
+    PostsView -.->|"usePostsStore()"| PostsStore
+    AuthorsView -.->|"useAuthorsStore()"| AuthorsStore
+    PostDetailView -.->|"usePostsStore()"| PostsStore
+
+    %% Styling
+    style App fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style PostsView fill:#2196F3,stroke:#1565C0,color:#fff
+    style AuthorsView fill:#2196F3,stroke:#1565C0,color:#fff
+    style PostDetailView fill:#2196F3,stroke:#1565C0,color:#fff
+    style PostsList fill:#03A9F4,stroke:#0277BD,color:#fff
+    style PostCard fill:#03A9F4,stroke:#0277BD,color:#fff
+    style AuthorsList fill:#03A9F4,stroke:#0277BD,color:#fff
+    style AuthorCard fill:#03A9F4,stroke:#0277BD,color:#fff
+    style Navbar fill:#03A9F4,stroke:#0277BD,color:#fff
+    style ElButton fill:#FF9800,stroke:#E65100,color:#fff
+    style ElCard fill:#FF9800,stroke:#E65100,color:#fff
+    style ElText fill:#FF9800,stroke:#E65100,color:#fff
+    style PostsStore fill:#9C27B0,stroke:#6A1B9A,color:#fff
+    style AuthorsStore fill:#9C27B0,stroke:#6A1B9A,color:#fff

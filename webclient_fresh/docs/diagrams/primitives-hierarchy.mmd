@@ -1,0 +1,74 @@
+graph TB
+    subgraph "Design System Hierarchy"
+        Title["🎨 Atomic Design Pattern"]
+    end
+
+    subgraph "Level 1: Primitives (Atoms)"
+        ElButton["⚛️ ElButton.svelte<br/><b>Button Primitive</b><br/><br/><i>Props:</i><br/>• variant: primary/secondary/ghost<br/>• disabled: boolean<br/>• onclick: () => void<br/>• children: Snippet<br/><br/><i>Features:</i><br/>• Dynamic CSS classes ($derived.by)<br/>• DaisyUI variants<br/>• Snippet children support<br/>• testid for testing"]
+
+        ElCard["⚛️ ElCard.svelte<br/><b>Card Container</b><br/><br/><i>Props:</i><br/>• testid: string<br/>• addCss: string<br/>• children: Snippet<br/><br/><i>Features:</i><br/>• Shadow styling<br/>• Flexbox container<br/>• Custom CSS support"]
+
+        ElText["⚛️ ElText.svelte<br/><b>Text Element</b><br/><br/><i>Props:</i><br/>• tag: h1/h2/p/span<br/>• text: string<br/>• addCss: string<br/>• testid: string<br/><br/><i>Features:</i><br/>• Dynamic HTML tag<br/>• TailwindCSS classes<br/>• @html rendering"]
+    end
+
+    subgraph "Level 2: Domain Components (Molecules)"
+        PostCard["🔷 PostCard.component.svelte<br/><b>Post Display Card</b><br/><br/><i>Props:</i><br/>• post: PostInterface<br/>• onselect: (post) => void<br/><br/><i>Composition:</i><br/>✓ Uses ElCard for container<br/>✓ Uses ElText for title/content<br/>✓ Uses ElButton for action<br/><br/><i>Business Logic:</i><br/>• Format post content<br/>• Handle selection event<br/>• Display author info"]
+
+        AuthorCard["🔷 AuthorCard.component.svelte<br/><b>Author Display Card</b><br/><br/><i>Props:</i><br/>• author: AuthorInterface<br/>• onselect: (author) => void<br/><br/><i>Composition:</i><br/>✓ Uses ElCard for container<br/>✓ Uses ElText for name/bio<br/>✓ Uses ElButton for action<br/><br/><i>Business Logic:</i><br/>• Format author info<br/>• Handle selection event"]
+
+        Navbar["🔷 Navbar.component.svelte<br/><b>Navigation Bar</b><br/><br/><i>Composition:</i><br/>✓ Uses ElButton for nav links<br/><br/><i>Business Logic:</i><br/>• Page navigation<br/>• Active state"]
+    end
+
+    subgraph "Level 3: List Components (Organisms)"
+        PostsList["📦 PostsList.component.svelte<br/><b>Posts List Container</b><br/><br/><i>Props:</i><br/>• posts: PostInterface[]<br/>• loading: boolean<br/>• onselectpost: (post) => void<br/><br/><i>Composition:</i><br/>✓ Iterates PostCard for each post<br/>✓ Handles loading state<br/>✓ Empty state handling<br/><br/><i>Business Logic:</i><br/>• List rendering<br/>• Event delegation"]
+
+        AuthorsList["📦 AuthorsList.component.svelte<br/><b>Authors List Container</b><br/><br/><i>Props:</i><br/>• authors: AuthorInterface[]<br/>• loading: boolean<br/>• onselectauthor: (author) => void<br/><br/><i>Composition:</i><br/>✓ Iterates AuthorCard for each author<br/>✓ Handles loading state<br/>✓ Grid layout<br/><br/><i>Business Logic:</i><br/>• Grid rendering<br/>• Event delegation"]
+    end
+
+    subgraph "Level 4: Views (Templates)"
+        PostsView["🎯 Posts.view.svelte<br/><b>Posts Page</b><br/><br/><i>Composition:</i><br/>✓ Uses PostsList<br/>✓ Uses Navbar<br/>✓ Page layout<br/><br/><i>Business Logic:</i><br/>• Data fetching (store actions)<br/>• Navigation handling<br/>• Page-level state"]
+
+        AuthorsView["🎯 Authors.view.svelte<br/><b>Authors Page</b><br/><br/><i>Composition:</i><br/>✓ Uses AuthorsList<br/>✓ Uses Navbar<br/>✓ Page layout<br/><br/><i>Business Logic:</i><br/>• Data fetching<br/>• Page-level state"]
+
+        PostDetailView["🎯 PostDetail.view.svelte<br/><b>Post Detail Page</b><br/><br/><i>Composition:</i><br/>✓ Uses ElCard<br/>✓ Uses ElText<br/>✓ Uses ElButton<br/>✓ Uses Navbar<br/><br/><i>Business Logic:</i><br/>• Display selected post<br/>• Back navigation"]
+    end
+
+    %% Connections Level 1 -> Level 2
+    ElButton -.->|"Used in"| PostCard
+    ElCard -.->|"Used in"| PostCard
+    ElText -.->|"Used in"| PostCard
+
+    ElButton -.->|"Used in"| AuthorCard
+    ElCard -.->|"Used in"| AuthorCard
+    ElText -.->|"Used in"| AuthorCard
+
+    ElButton -.->|"Used in"| Navbar
+
+    %% Connections Level 2 -> Level 3
+    PostCard -.->|"Used in"| PostsList
+    AuthorCard -.->|"Used in"| AuthorsList
+
+    %% Connections Level 3 -> Level 4
+    PostsList -.->|"Used in"| PostsView
+    AuthorsList -.->|"Used in"| AuthorsView
+    Navbar -.->|"Used in"| PostsView
+    Navbar -.->|"Used in"| AuthorsView
+    Navbar -.->|"Used in"| PostDetailView
+
+    ElButton -.->|"Used in"| PostDetailView
+    ElCard -.->|"Used in"| PostDetailView
+    ElText -.->|"Used in"| PostDetailView
+
+    %% Styling
+    style Title fill:#263238,stroke:#000,color:#fff
+    style ElButton fill:#FF9800,stroke:#E65100,color:#fff
+    style ElCard fill:#FF9800,stroke:#E65100,color:#fff
+    style ElText fill:#FF9800,stroke:#E65100,color:#fff
+    style PostCard fill:#03A9F4,stroke:#0277BD,color:#fff
+    style AuthorCard fill:#03A9F4,stroke:#0277BD,color:#fff
+    style Navbar fill:#03A9F4,stroke:#0277BD,color:#fff
+    style PostsList fill:#00BCD4,stroke:#006064,color:#fff
+    style AuthorsList fill:#00BCD4,stroke:#006064,color:#fff
+    style PostsView fill:#2196F3,stroke:#1565C0,color:#fff
+    style AuthorsView fill:#2196F3,stroke:#1565C0,color:#fff
+    style PostDetailView fill:#2196F3,stroke:#1565C0,color:#fff
