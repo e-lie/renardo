@@ -7,7 +7,6 @@ def fadep(self, param_name, fvalue=1, dur=8, ivalue=None):
     """ general fade to value method working with any param """
     if ivalue == None:
         ivalue = float(self.__getattr__(param_name))
-        print(ivalue)
     self.__setattr__(param_name, linvar([ivalue, fvalue], [dur, inf], start=Clock.mod(4)))
     @nextBar(dur+1)
     def static_final_value():

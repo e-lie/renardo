@@ -2,7 +2,7 @@
 import math
 from renardo_lib import Pvar, player_method, linvar, TimeVar, var, expvar, sinvar, Pattern, xvar, yvar, P, PTri
 
-default_num_channels = 4
+default_num_channels = 8
 
 def octo_panning_beta(value):
     value = value % 8
