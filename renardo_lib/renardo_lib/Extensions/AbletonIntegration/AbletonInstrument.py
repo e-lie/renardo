@@ -56,21 +56,24 @@ class AbletonInstrument(MidiOut):
     def _separate_parameters(self, params: Dict[str, Any]):
         """
         Separate Ableton device parameters from standard MIDI parameters
-        
+
         Args:
             params: All parameters passed to the instrument
         """
         # Standard MIDI/FoxDot parameters that shouldn't be sent to Ableton
         standard_params = {
-            'degree', 'oct', 'freq', 'dur', 'sus', 'amp', 'amplify', 
-            'pan', 'rate', 'buf', 'sample', 'env', 'verb', 'room', 
-            'mix', 'formant', 'shape', 'echo', 'delay', 'channel', 
+            'degree', 'oct', 'freq', 'dur', 'sus', 'amp', 'amplify',
+            'pan', 'rate', 'buf', 'sample', 'env', 'verb', 'room',
+            'mix', 'formant', 'shape', 'echo', 'delay', 'channel',
             'midi_map', 'scale', 'root', 'clock'
         }
-        
+
         for key, value in params.items():
+            # Special handling for 'clip' parameter - always treat as Ableton
+            if key == 'clip':
+                self._ableton_params[key] = value
             # Check if this parameter exists in Ableton parameter map
-            if self._ableton_project and self._ableton_project.get_parameter_info(key):
+            elif self._ableton_project and self._ableton_project.get_parameter_info(key):
                 self._ableton_params[key] = value
             elif key not in standard_params:
                 # Check if it might be a track-specific parameter
@@ -86,13 +89,24 @@ class AbletonInstrument(MidiOut):
         """Apply all Ableton parameters to the Live set"""
         if not self._ableton_project:
             return
-        
+
         for param_name, value in self._ableton_params.items():
-            # Handle Pattern objects
+            # Special handling for 'clip' parameter - trigger clip
+            if param_name == 'clip':
+                # Handle Pattern objects for clip
+                if isinstance(value, Pattern):
+                    value = value[0] if len(value) > 0 else None
+
+                # Trigger clip if value is valid
+                if value is not None:
+                    self._ableton_project.trigger_clip(self._track_name, value)
+                continue
+
+            # Handle Pattern objects for regular parameters
             if isinstance(value, Pattern):
                 # Use the first value for now (could be enhanced for parameter automation)
                 value = value[0] if len(value) > 0 else 0
-            
+
             # Try to set the parameter
             if not self._ableton_project.set_parameter(param_name, value):
                 # If the parameter doesn't exist as-is, try with track prefix

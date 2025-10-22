@@ -34,6 +34,7 @@ class AbletonProject:
         self._set = live.Set(scan=scan)
         self._track_map = {}
         self._parameter_map = {}
+        self._clip_map = {}  # Maps track_name -> clip inventory
         self._instruments = {}
 
         # TimeVar automation support
@@ -52,7 +53,45 @@ class AbletonProject:
     def set(self):
         """Access to underlying pylive Set object"""
         return self._set
-    
+
+    def _scan_clips(self, track, track_name: str):
+        """
+        Scan all clips on a track and build clip inventory
+
+        Args:
+            track: pylive Track object
+            track_name: Snake_case track name
+        """
+        self._clip_map[track_name] = {
+            'by_index': {},  # slot_idx -> clip info
+            'by_name': {},   # clip_name (snake_case) -> clip info
+            'by_original_name': {}  # original clip name -> clip info
+        }
+
+        # Check if track has clips attribute
+        if not hasattr(track, 'clips'):
+            return
+
+        # Scan clips - pylive provides clips as a list
+        try:
+            for clip_idx, clip in enumerate(track.clips):
+                if clip is not None:
+                    clip_name_snake = make_snake_name(clip.name)
+                    clip_info = {
+                        'slot_index': clip_idx,
+                        'clip': clip,
+                        'name': clip.name,
+                        'name_snake': clip_name_snake
+                    }
+
+                    # Store by index, snake_case name, and original name
+                    self._clip_map[track_name]['by_index'][clip_idx] = clip_info
+                    self._clip_map[track_name]['by_name'][clip_name_snake] = clip_info
+                    self._clip_map[track_name]['by_original_name'][clip.name] = clip_info
+        except Exception as e:
+            # Silently ignore if clips scanning fails
+            pass
+
     def scan_tracks(self, max_tracks: int = 16):
         """
         Scan the first N MIDI tracks and build parameter maps
@@ -62,6 +101,7 @@ class AbletonProject:
         """
         self._track_map.clear()
         self._parameter_map.clear()
+        self._clip_map.clear()
 
         # The set was already scanned in __init__, so tracks are available
 
@@ -70,24 +110,27 @@ class AbletonProject:
             # Only process MIDI tracks
             if not track.is_midi_track or track_count >= max_tracks:
                 continue
-            
+
             track_name = make_snake_name(track.name)
             self._track_map[track_name] = {
                 'index': track_idx,
                 'track': track,
                 'devices': {}
             }
-            
+
+            # Scan clips on this track
+            self._scan_clips(track, track_name)
+
             # Scan devices on this track
             for device_idx, device in enumerate(track.devices):
                 device_name = make_snake_name(device.name)
-                
+
                 self._track_map[track_name]['devices'][device_name] = {
                     'index': device_idx,
                     'device': device,
                     'parameters': {}
                 }
-                
+
                 # Scan parameters on this device
                 for param_idx, parameter in enumerate(device.parameters):
                     param_name = make_snake_name(parameter.name)
@@ -101,7 +144,7 @@ class AbletonProject:
                         'max': parameter.max,
                         'value': parameter._value  # Current value, no default_value in pylive
                     }
-                    
+
                     # Store flattened parameter map for quick lookup
                     self._parameter_map[param_key] = {
                         'track_idx': track_idx,
@@ -112,7 +155,7 @@ class AbletonProject:
                         'param_name': param_name,
                         'parameter': parameter
                     }
-            
+
             track_count += 1
     
     def get_parameter_info(self, param_fullname: str, track_name: str = None) -> Optional[Dict]:
@@ -246,10 +289,65 @@ class AbletonProject:
         """Get a track by name"""
         track_info = self._track_map.get(make_snake_name(track_name))
         return track_info['track'] if track_info else None
-    
+
     def get_midi_tracks(self) -> List[str]:
         """Get list of available MIDI track names"""
         return list(self._track_map.keys())
+
+    def trigger_clip(self, track_name: str, clip_identifier) -> bool:
+        """
+        Trigger a clip on a track by name (original or snake_case) or by index
+
+        Args:
+            track_name: Snake_case track name
+            clip_identifier: Can be:
+                - int: clip slot index (0-based)
+                - str: clip name (original or snake_case)
+
+        Returns:
+            True if clip was triggered, False if not found
+        """
+        track_snake = make_snake_name(track_name)
+        clip_inventory = self._clip_map.get(track_snake)
+
+        if not clip_inventory:
+            return False
+
+        clip_info = None
+
+        # Try lookup by type
+        if isinstance(clip_identifier, int):
+            # Lookup by index
+            clip_info = clip_inventory['by_index'].get(clip_identifier)
+        elif isinstance(clip_identifier, str):
+            # Try snake_case name first, then original name
+            clip_info = clip_inventory['by_name'].get(clip_identifier)
+            if not clip_info:
+                clip_info = clip_inventory['by_original_name'].get(clip_identifier)
+
+        if not clip_info:
+            return False
+
+        # Trigger the clip (fire method)
+        try:
+            clip_info['clip'].fire()
+            return True
+        except Exception as e:
+            print(f"Error triggering clip: {e}")
+            return False
+
+    def get_clips(self, track_name: str) -> Optional[Dict]:
+        """
+        Get clip inventory for a track
+
+        Args:
+            track_name: Track name (original or snake_case)
+
+        Returns:
+            Dictionary with clip inventory or None if track not found
+        """
+        track_snake = make_snake_name(track_name)
+        return self._clip_map.get(track_snake)
     
     def register_instrument(self, track_name: str, instrument):
         """Register an AbletonInstrument instance for a track"""
@@ -312,6 +410,15 @@ class AbletonProject:
         print("=== Ableton Parameter Map ===")
         for track_name, track_info in self._track_map.items():
             print(f"\nTrack: {track_name} (index: {track_info['index']})")
+
+            # Print clips
+            clip_inventory = self._clip_map.get(track_name)
+            if clip_inventory and clip_inventory['by_index']:
+                print(f"  Clips:")
+                for slot_idx, clip_info in sorted(clip_inventory['by_index'].items()):
+                    print(f"    [{slot_idx}] {clip_info['name']} (snake: {clip_info['name_snake']})")
+
+            # Print devices
             for device_name, device_info in track_info['devices'].items():
                 print(f"  Device: {device_name} (index: {device_info['index']})")
                 for param_name, param_info in device_info['parameters'].items():
