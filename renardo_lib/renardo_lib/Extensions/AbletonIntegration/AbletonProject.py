@@ -328,9 +328,9 @@ class AbletonProject:
         if not clip_info:
             return False
 
-        # Trigger the clip (fire method)
+        # Trigger the clip (play method)
         try:
-            clip_info['clip'].fire()
+            clip_info['clip'].play()
             return True
         except Exception as e:
             print(f"Error triggering clip: {e}")
