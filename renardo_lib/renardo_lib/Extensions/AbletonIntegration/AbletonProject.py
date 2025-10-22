@@ -93,12 +93,13 @@ class AbletonProject:
             # Silently ignore if clips scanning fails
             pass
 
-    def scan_tracks(self, max_tracks: int = 16):
+    def scan_tracks(self, max_midi_tracks: int = 16, scan_audio_tracks: bool = True):
         """
-        Scan the first N MIDI tracks and build parameter maps
+        Scan MIDI tracks and optionally audio tracks, building parameter maps
 
         Args:
-            max_tracks: Maximum number of tracks to scan (default 16)
+            max_midi_tracks: Maximum number of MIDI tracks to scan (default 16)
+            scan_audio_tracks: Whether to scan audio tracks (default True)
         """
         self._track_map.clear()
         self._parameter_map.clear()
@@ -106,16 +107,26 @@ class AbletonProject:
 
         # The set was already scanned in __init__, so tracks are available
 
-        track_count = 0
+        midi_track_count = 0
         for track_idx, track in enumerate(self._set.tracks):
-            # Only process MIDI tracks
-            if not track.is_midi_track or track_count >= max_tracks:
+            # Determine if we should process this track
+            is_midi = track.is_midi_track
+            should_process = False
+
+            if is_midi and midi_track_count < max_midi_tracks:
+                should_process = True
+                midi_track_count += 1
+            elif not is_midi and scan_audio_tracks:
+                should_process = True
+
+            if not should_process:
                 continue
 
             track_name = make_snake_name(track.name)
             self._track_map[track_name] = {
                 'index': track_idx,
                 'track': track,
+                'is_midi': is_midi,
                 'devices': {}
             }
 
@@ -156,8 +167,6 @@ class AbletonProject:
                         'param_name': param_name,
                         'parameter': parameter
                     }
-
-            track_count += 1
     
     def get_parameter_info(self, param_fullname: str, track_name: str = None) -> Optional[Dict]:
         """
@@ -438,7 +447,8 @@ class AbletonProject:
         """Print the parameter map for debugging"""
         print("=== Ableton Parameter Map ===")
         for track_name, track_info in self._track_map.items():
-            print(f"\nTrack: {track_name} (index: {track_info['index']})")
+            track_type = "MIDI" if track_info.get('is_midi', True) else "AUDIO"
+            print(f"\nTrack: {track_name} (index: {track_info['index']}, type: {track_type})")
 
             # Print clips
             clip_inventory = self._clip_map.get(track_name)

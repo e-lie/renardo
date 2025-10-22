@@ -13,27 +13,33 @@ class AbletonInstrument(MidiOut):
     SynthDef proxy to handle MIDI output with Ableton Live parameter control
     """
     
-    def __init__(self, ableton_project=None, track_name=None, channel=0, degree=0, **kwargs):
+    def __init__(self, ableton_project=None, track_name=None, channel=0, degree=0, midi_off=False, **kwargs):
         """
         Initialize AbletonInstrument
-        
+
         Args:
             ableton_project: AbletonProject instance
             track_name: Name of the Ableton track this instrument controls
             channel: MIDI channel (0-15)
             degree: Note degree pattern
+            midi_off: If True, disables MIDI output (for audio tracks/effects)
             **kwargs: Additional parameters including Ableton device parameters
         """
         # Handle string degrees with midi_map
         if isinstance(degree, str) and "midi_map" not in kwargs:
             raise Exception("No midi map defined to translate playstring")
-        
+
         # Store Ableton-specific attributes
         self._ableton_project = ableton_project
         self._track_name = track_name
         self._ableton_params = {}
         self._non_ableton_params = {}
-        
+
+        # If midi_off is True, disable MIDI output by setting amp to 0
+        if midi_off:
+            kwargs["amp"] = 0
+            kwargs["amplify"] = 0
+
         # Separate Ableton parameters from MIDI parameters
         if ableton_project and track_name:
             self._separate_parameters(kwargs)
@@ -48,7 +54,7 @@ class AbletonInstrument(MidiOut):
 
         # Initialize parent with MIDI-only parameters
         super().__init__(degree, **self._non_ableton_params)
-        
+
         # Apply Ableton parameters
         if self._ableton_params:
             self._apply_ableton_parameters()
