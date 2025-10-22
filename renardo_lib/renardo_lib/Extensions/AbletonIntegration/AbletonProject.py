@@ -35,6 +35,7 @@ class AbletonProject:
         self._track_map = {}
         self._parameter_map = {}
         self._clip_map = {}  # Maps track_name -> clip inventory
+        self._active_clips = {}  # Maps track_name -> currently playing clip
         self._instruments = {}
 
         # TimeVar automation support
@@ -331,9 +332,37 @@ class AbletonProject:
         # Trigger the clip (play method)
         try:
             clip_info['clip'].play()
+            # Store the active clip for this track
+            self._active_clips[track_snake] = clip_info['clip']
             return True
         except Exception as e:
             print(f"Error triggering clip: {e}")
+            return False
+
+    def stop_clip(self, track_name: str) -> bool:
+        """
+        Stop the currently playing clip on a track
+
+        Args:
+            track_name: Snake_case track name
+
+        Returns:
+            True if clip was stopped, False if no active clip
+        """
+        track_snake = make_snake_name(track_name)
+        active_clip = self._active_clips.get(track_snake)
+
+        if not active_clip:
+            return False
+
+        # Stop the clip
+        try:
+            active_clip.stop()
+            # Remove from active clips
+            self._active_clips.pop(track_snake, None)
+            return True
+        except Exception as e:
+            print(f"Error stopping clip: {e}")
             return False
 
     def get_clips(self, track_name: str) -> Optional[Dict]:
