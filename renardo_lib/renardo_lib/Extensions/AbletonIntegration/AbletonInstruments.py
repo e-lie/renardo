@@ -39,17 +39,19 @@ class AbletonInstrumentFacade:
         track_name: str,
         midi_channel: int = 1,
         midi_map: Optional[str] = None,
-        sus: Optional[Pattern] = None
+        sus: Optional[Pattern] = None,
+        midi_off: bool = False
     ):
         """
         Initialize the facade for a specific Ableton track
-        
+
         Args:
             ableton_project: AbletonProject instance
             track_name: Name of the track in Ableton
             midi_channel: MIDI channel number (1-16, will be converted to 0-15)
             midi_map: Optional MIDI map name for string patterns
             sus: Optional sustain pattern
+            midi_off: If True, disables MIDI output (for audio tracks/effects)
         """
         self._ableton_project = ableton_project
         self.track_name = track_name
@@ -57,12 +59,13 @@ class AbletonInstrumentFacade:
         self._midi_channel = midi_channel
         self._midi_map = midi_map
         self._default_sus = sus
-        
+        self._midi_off = midi_off
+
         # Get track from Ableton
         self._track = ableton_project.get_track(track_name)
         if not self._track:
             raise ValueError(f"Track '{track_name}' not found in Ableton Live set")
-        
+
         # Register this instrument facade
         ableton_project.register_instrument(track_name, self)
     
@@ -120,6 +123,7 @@ class AbletonInstrumentFacade:
             track_name=self._snake_name,
             channel=self._midi_channel - 1,  # Convert to 0-based
             degree=degree,
+            midi_off=self._midi_off,
             sus=sus,
             ableton_track=self._track,  # Pass track for __getattr__ support in Player
             ableton_project_ref=self._ableton_project,  # Pass project for parameter queries
@@ -130,38 +134,54 @@ class AbletonInstrumentFacade:
         return f"AbletonInstrumentFacade(track='{self.track_name}', channel={self._midi_channel})"
 
 
-def create_ableton_instruments(max_tracks: int = 16) -> Dict[str, AbletonInstrumentFacade]:
+def create_ableton_instruments(max_midi_tracks: int = 16, scan_audio_tracks: bool = True) -> Dict[str, AbletonInstrumentFacade]:
     """
-    Scan Ableton Live and create instrument facades for all MIDI tracks
-    
+    Scan Ableton Live and create instrument facades for MIDI and audio tracks
+
     Args:
-        max_tracks: Maximum number of tracks to create instruments for
-        
+        max_midi_tracks: Maximum number of MIDI tracks to create instruments for
+        scan_audio_tracks: Whether to scan and create instruments for audio tracks
+
     Returns:
         Dictionary mapping track names to AbletonInstrumentFacade instances
     """
     # Create and scan Ableton project
     ableton_project = AbletonProject(scan=True)
-    
-    # Get available MIDI tracks
-    track_names = ableton_project.get_midi_tracks()
-    
-    # Create instrument facades
+
+    # Get all scanned tracks from the track_map
     instruments = {}
-    for idx, track_name in enumerate(track_names[:max_tracks]):
-        # Use 1-based MIDI channels
-        midi_channel = idx + 1
-        
+    midi_channel_counter = 0
+
+    for track_name, track_info in ableton_project._track_map.items():
+        is_midi = track_info.get('is_midi', True)
+
+        # Determine if we should create an instrument for this track
+        if is_midi and midi_channel_counter >= max_midi_tracks:
+            continue
+        if not is_midi and not scan_audio_tracks:
+            continue
+
+        # Assign MIDI channel (only for MIDI tracks)
+        if is_midi:
+            midi_channel_counter += 1
+            midi_channel = midi_channel_counter
+            midi_off = False
+        else:
+            # Audio tracks don't need real MIDI channels, but we need a value
+            midi_channel = 1
+            midi_off = True
+
         # Create facade
         facade = AbletonInstrumentFacade(
             ableton_project=ableton_project,
             track_name=track_name,
-            midi_channel=midi_channel
+            midi_channel=midi_channel,
+            midi_off=midi_off
         )
-        
+
         instruments[track_name] = facade
-    
+
     # Also store the project for direct access
     instruments['_project'] = ableton_project
-    
+
     return instruments
