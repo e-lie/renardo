@@ -1597,7 +1597,7 @@ class Player(Repeatable):
         self.isplaying = False
         self.stopping = True
 
-        # Freeze Ableton TimeVars before reset
+        # Freeze Ableton TimeVars and stop clips before reset
         if "ableton_track" in self.attr.keys() and "ableton_project_ref" in self.attr.keys():
             ableton_track = self.attr["ableton_track"][0]
             ableton_project = self.attr["ableton_project_ref"][0]
@@ -1605,6 +1605,9 @@ class Player(Repeatable):
                 from renardo_lib.Extensions.AbletonIntegration.AbletonProject import make_snake_name
                 track_name = make_snake_name(ableton_track.name)
                 ableton_project.freeze_timevars_for_track(track_name)
+                # Stop any playing clip on this track
+                if hasattr(ableton_project, 'stop_clip'):
+                    ableton_project.stop_clip(track_name)
 
         self.reset()
 
