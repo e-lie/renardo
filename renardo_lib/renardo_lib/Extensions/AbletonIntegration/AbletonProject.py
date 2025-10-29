@@ -377,22 +377,30 @@ class AbletonProject:
 
     def stop_all_clips(self) -> int:
         """
-        Stop all currently playing clips on all tracks
+        Stop all currently playing clips on all tracks (including clips launched manually from Ableton)
 
         Returns:
             Number of clips stopped
         """
         clips_stopped = 0
-        # Make a copy of the dict items to avoid modification during iteration
-        active_clips_copy = list(self._active_clips.items())
 
-        for track_name, clip in active_clips_copy:
+        # Iterate through all tracks and stop all their clips
+        for track_name, track_info in self._track_map.items():
+            track = track_info['track']
             try:
-                clip.stop()
-                self._active_clips.pop(track_name, None)
-                clips_stopped += 1
+                # Stop all clips on this track
+                for clip in track.clips:
+                    if clip is not None:
+                        try:
+                            clip.stop()
+                            clips_stopped += 1
+                        except:
+                            pass  # Clip might not be playing or already stopped
             except Exception as e:
-                print(f"Error stopping clip on track {track_name}: {e}")
+                print(f"Error stopping clips on track {track_name}: {e}")
+
+        # Clear the active clips tracking
+        self._active_clips.clear()
 
         return clips_stopped
 
