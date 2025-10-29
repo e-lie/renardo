@@ -634,6 +634,20 @@ class TempoClock(object):
         self.queue.clear()
         self.solo.reset()
 
+        # Stop all Ableton clips before killing players
+        try:
+            from renardo_lib.Extensions.AbletonIntegration.AbletonProject import AbletonProject
+            # Try to find an active AbletonProject instance
+            # Look for it in Players that have ableton_project_ref
+            for player in list(self.playing):
+                if hasattr(player, 'attr') and 'ableton_project_ref' in player.attr.keys():
+                    ableton_project = player.attr['ableton_project_ref'][0]
+                    if hasattr(ableton_project, 'stop_all_clips'):
+                        ableton_project.stop_all_clips()
+                        break  # Only need to call it once
+        except:
+            pass  # Silently ignore if Ableton integration is not available
+
         for player in list(self.playing):
 
             player.kill()
@@ -643,6 +657,7 @@ class TempoClock(object):
         #     if hasattr(item, 'stop'):
 
         #         item.stop()
-        
+
         self.playing = []
+
         return

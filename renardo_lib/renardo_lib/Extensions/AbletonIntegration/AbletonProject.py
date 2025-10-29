@@ -374,6 +374,27 @@ class AbletonProject:
             print(f"Error stopping clip: {e}")
             return False
 
+    def stop_all_clips(self) -> int:
+        """
+        Stop all currently playing clips on all tracks
+
+        Returns:
+            Number of clips stopped
+        """
+        clips_stopped = 0
+        # Make a copy of the dict items to avoid modification during iteration
+        active_clips_copy = list(self._active_clips.items())
+
+        for track_name, clip in active_clips_copy:
+            try:
+                clip.stop()
+                self._active_clips.pop(track_name, None)
+                clips_stopped += 1
+            except Exception as e:
+                print(f"Error stopping clip on track {track_name}: {e}")
+
+        return clips_stopped
+
     def get_clips(self, track_name: str) -> Optional[Dict]:
         """
         Get clip inventory for a track
