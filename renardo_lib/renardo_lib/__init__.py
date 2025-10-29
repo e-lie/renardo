@@ -224,6 +224,9 @@ Attributes = Player.get_attributes()
 PatternMethods = Pattern.get_methods()
 PatternTypes = functions(Patterns.Sequences)
 
+# Initialize global Ableton project instance (None until user calls create_ableton_instruments)
+ableton_project = None
+
 # Start
 
 Clock.start()
