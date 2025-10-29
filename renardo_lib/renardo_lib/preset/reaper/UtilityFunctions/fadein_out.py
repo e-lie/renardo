@@ -82,3 +82,143 @@ def sfadein(self, dur=16, fvol=1, ivol=None, autostop=True):
     return self
 
 
+# Stereo fade methods (aliases for fadep with stereo parameters)
+
+@player_method
+def fadeo(self, dur=8, fvol=0.5, ivol=None):
+    """Fade the 'stereo' parameter (0-0.5 range)"""
+    return self.fadep("stereo", fvalue=fvol, dur=dur, ivalue=ivol)
+
+@player_method
+def fadeoo(self, dur=8, fvol=0.5, ivol=None):
+    """Fade the 'stereoo' parameter (0-0.5 range)"""
+    return self.fadep("stereoo", fvalue=fvol, dur=dur, ivalue=ivol)
+
+@player_method
+def fadeooo(self, dur=8, fvol=0.5, ivol=None):
+    """Fade the 'stereooo' parameter (0-0.5 range)"""
+    return self.fadep("stereooo", fvalue=fvol, dur=dur, ivalue=ivol)
+
+@player_method
+def fadeoooo(self, dur=8, fvol=0.5, ivol=None):
+    """Fade the 'stereoooo' parameter (0-0.5 range)"""
+    return self.fadep("stereoooo", fvalue=fvol, dur=dur, ivalue=ivol)
+
+
+# Stereo fade-in methods (start from 0)
+
+@player_method
+def fadeino(self, dur=8, fvol=0.5):
+    """Fade in the 'stereo' parameter from 0 to fvol (0-0.5 range)"""
+    return self.fadep("stereo", fvalue=fvol, dur=dur, ivalue=0)
+
+@player_method
+def fadeinoo(self, dur=8, fvol=0.5):
+    """Fade in the 'stereoo' parameter from 0 to fvol (0-0.5 range)"""
+    return self.fadep("stereoo", fvalue=fvol, dur=dur, ivalue=0)
+
+@player_method
+def fadeinooo(self, dur=8, fvol=0.5):
+    """Fade in the 'stereooo' parameter from 0 to fvol (0-0.5 range)"""
+    return self.fadep("stereooo", fvalue=fvol, dur=dur, ivalue=0)
+
+@player_method
+def fadeinoooo(self, dur=8, fvol=0.5):
+    """Fade in the 'stereoooo' parameter from 0 to fvol (0-0.5 range)"""
+    return self.fadep("stereoooo", fvalue=fvol, dur=dur, ivalue=0)
+
+
+# Stereo fade-out methods (to 0)
+
+@player_method
+def fadeouto(self, dur=8):
+    """Fade out the 'stereo' parameter to 0"""
+    return self.fadep("stereo", fvalue=0, dur=dur, ivalue=None)
+
+@player_method
+def fadeoutoo(self, dur=8):
+    """Fade out the 'stereoo' parameter to 0"""
+    return self.fadep("stereoo", fvalue=0, dur=dur, ivalue=None)
+
+@player_method
+def fadeoutooo(self, dur=8):
+    """Fade out the 'stereooo' parameter to 0"""
+    return self.fadep("stereooo", fvalue=0, dur=dur, ivalue=None)
+
+@player_method
+def fadeoutoooo(self, dur=8):
+    """Fade out the 'stereoooo' parameter to 0"""
+    return self.fadep("stereoooo", fvalue=0, dur=dur, ivalue=None)
+
+
+# Cross fade methods (for cross, crosss, tutti parameters)
+
+@player_method
+def fadess(self, dur=8, fvol=0.5, ivol=None):
+    """Fade the 'cross' parameter"""
+    return self.fadep("cross", fvalue=fvol, dur=dur, ivalue=ivol)
+
+@player_method
+def fadesss(self, dur=8, fvol=0.5, ivol=None):
+    """Fade the 'crosss' parameter"""
+    return self.fadep("crosss", fvalue=fvol, dur=dur, ivalue=ivol)
+
+@player_method
+def fadet(self, dur=8, fvol=0.5, ivol=None):
+    """Fade the 'tutti' parameter"""
+    return self.fadep("tutti", fvalue=fvol, dur=dur, ivalue=ivol)
+
+
+# Cross fade-in methods (start from 0)
+
+@player_method
+def fadeinss(self, dur=8, fvol=0.5):
+    """Fade in the 'cross' parameter from 0 to fvol"""
+    return self.fadep("cross", fvalue=fvol, dur=dur, ivalue=0)
+
+@player_method
+def fadeinsss(self, dur=8, fvol=0.5):
+    """Fade in the 'crosss' parameter from 0 to fvol"""
+    return self.fadep("crosss", fvalue=fvol, dur=dur, ivalue=0)
+
+@player_method
+def fadeint(self, dur=8, fvol=0.5):
+    """Fade in the 'tutti' parameter from 0 to fvol"""
+    return self.fadep("tutti", fvalue=fvol, dur=dur, ivalue=0)
+
+
+# Cross fade-out methods (to 0)
+
+@player_method
+def fadeoutss(self, dur=8):
+    """Fade out the 'cross' parameter to 0"""
+    return self.fadep("cross", fvalue=0, dur=dur, ivalue=None)
+
+@player_method
+def fadeoutsss(self, dur=8):
+    """Fade out the 'crosss' parameter to 0"""
+    return self.fadep("crosss", fvalue=0, dur=dur, ivalue=None)
+
+@player_method
+def fadeoutt(self, dur=8):
+    """Fade out the 'tutti' parameter to 0"""
+    return self.fadep("tutti", fvalue=0, dur=dur, ivalue=None)
+
+
+# Fade out all stereo and cross parameters
+
+@player_method
+def fadeoutall(self, dur=8):
+    """Fade out all stereo, cross, and tutti parameters to 0"""
+    # Fade out all stereo parameters
+    self.fadep("stereo", fvalue=0, dur=dur, ivalue=None)
+    self.fadep("stereoo", fvalue=0, dur=dur, ivalue=None)
+    self.fadep("stereooo", fvalue=0, dur=dur, ivalue=None)
+    self.fadep("stereoooo", fvalue=0, dur=dur, ivalue=None)
+    # Fade out all cross/tutti parameters
+    self.fadep("cross", fvalue=0, dur=dur, ivalue=None)
+    self.fadep("crosss", fvalue=0, dur=dur, ivalue=None)
+    self.fadep("tutti", fvalue=0, dur=dur, ivalue=None)
+    return self
+
+
