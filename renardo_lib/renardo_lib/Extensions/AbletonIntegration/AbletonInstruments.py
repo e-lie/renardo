@@ -148,6 +148,10 @@ def create_ableton_instruments(max_midi_tracks: int = 16, scan_audio_tracks: boo
     # Create and scan Ableton project
     ableton_project = AbletonProject(scan=True)
 
+    # Set global ableton_project instance
+    import renardo_lib
+    renardo_lib.ableton_project = ableton_project
+
     # Get all scanned tracks from the track_map
     instruments = {}
     midi_channel_counter = 0

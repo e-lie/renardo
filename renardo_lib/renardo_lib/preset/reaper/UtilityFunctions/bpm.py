@@ -14,7 +14,15 @@ from renardo_lib.Extensions.ReaperIntegrationLib.ReaParam import ReaParamState
 def change_bpm(bpm):
     Clock.bpm = bpm
 
-    # Handle TimeVar BPM changes with continuous updates
+    # Sync with Ableton if available
+    try:
+        import renardo_lib
+        if renardo_lib.ableton_project is not None:
+            renardo_lib.ableton_project.change_ableton_bpm(bpm)
+    except:
+        pass  # Silently ignore if Ableton integration is not available
+
+    # Handle TimeVar BPM changes with continuous updates for Reaper
     if isinstance(bpm, TimeVar):
         # Switch between VAR1 and VAR2 states to stop old loops
         if reaproject.bpm_state != ReaParamState.VAR1:
