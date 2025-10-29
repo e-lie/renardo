@@ -40,6 +40,7 @@ class AbletonProject:
 
         # TimeVar automation support
         self._timevar_params = {}  # Maps param_name -> TimeVar instance
+        self._timevar_bpm = None  # TimeVar for BPM automation
         self._timevar_lock = threading.Lock()
         self._timevar_thread = None
         self._timevar_running = False
@@ -407,6 +408,35 @@ class AbletonProject:
         """
         track_snake = make_snake_name(track_name)
         return self._clip_map.get(track_snake)
+
+    def change_ableton_bpm(self, bpm):
+        """
+        Change Ableton Live's tempo (BPM)
+
+        Args:
+            bpm: Target BPM value (numeric) or TimeVar for continuous automation
+
+        Examples:
+            # Set static BPM
+            project.change_ableton_bpm(120)
+
+            # Animate BPM with TimeVar
+            from renardo_lib import linvar
+            project.change_ableton_bpm(linvar([100, 140], 16))
+        """
+        # Check if bpm is a TimeVar
+        if isinstance(bpm, TimeVar):
+            # Register TimeVar for continuous BPM updates
+            with self._timevar_lock:
+                self._timevar_bpm = bpm
+            # Set initial BPM
+            current_bpm = float(bpm.now())
+            self._set.tempo = current_bpm
+        else:
+            # Static BPM change
+            with self._timevar_lock:
+                self._timevar_bpm = None  # Clear any existing BPM automation
+            self._set.tempo = float(bpm)
     
     def register_instrument(self, track_name: str, instrument):
         """Register an AbletonInstrument instance for a track"""
@@ -433,11 +463,25 @@ class AbletonProject:
             self._timevar_thread = None
 
     def _timevar_update_loop(self):
-        """Update loop that runs at 100Hz to update TimeVar parameters"""
+        """Update loop that runs at 300Hz to update TimeVar parameters and BPM"""
         update_interval = 0.003333  # 300Hz = 3.333ms interval
 
         while self._timevar_running:
             start_time = time.time()
+
+            # Update BPM if TimeVar is active
+            with self._timevar_lock:
+                bpm_timevar = self._timevar_bpm
+
+            if bpm_timevar is not None:
+                try:
+                    current_bpm = float(bpm_timevar.now())
+                    # Clamp BPM to reasonable range (20-999)
+                    current_bpm = max(20.0, min(999.0, current_bpm))
+                    self._set.tempo = current_bpm
+                except Exception as e:
+                    # Silently ignore errors
+                    pass
 
             # Update all registered TimeVar parameters
             with self._timevar_lock:
@@ -458,7 +502,7 @@ class AbletonProject:
                     # Silently ignore errors to avoid breaking the update loop
                     pass
 
-            # Sleep for the remaining time to maintain 100Hz
+            # Sleep for the remaining time to maintain 300Hz
             elapsed = time.time() - start_time
             sleep_time = max(0, update_interval - elapsed)
             if sleep_time > 0:
