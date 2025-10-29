@@ -227,6 +227,26 @@ PatternTypes = functions(Patterns.Sequences)
 # Initialize global Ableton project instance (None until user calls create_ableton_instruments)
 ableton_project = None
 
+def print_ableton_clips():
+    """
+    Pretty print all clips from all tracks in Ableton project
+    Displays clips as {clip_index: {track_name: clip_snake_name}}
+    """
+    if ableton_project is None:
+        print("No Ableton project initialized. Call create_ableton_instruments() first.")
+        return
+
+    from pprint import pprint
+
+    clips_dict = {}
+    for track_name, clip_inventory in ableton_project._clip_map.items():
+        for clip_index, clip_info in clip_inventory['by_index'].items():
+            if clip_index not in clips_dict:
+                clips_dict[clip_index] = {}
+            clips_dict[clip_index][track_name] = clip_info['name_snake']
+
+    pprint(clips_dict)
+
 # Start
 
 Clock.start()
