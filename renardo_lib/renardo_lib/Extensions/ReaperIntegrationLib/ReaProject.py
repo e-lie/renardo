@@ -20,6 +20,7 @@ class ReaProject(object):
         self.instrument_tracks = []
         self.bus_tracks = []
         self.task_queue = TaskQueue(clock, reapylib)
+        self.bpm_state = ReaParamState.NORMAL  # Track BPM TimeVar state
         self.init_reaproject()
 
     def __repr__(self):
