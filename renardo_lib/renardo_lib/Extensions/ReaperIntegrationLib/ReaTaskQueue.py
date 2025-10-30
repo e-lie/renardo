@@ -71,9 +71,3 @@ class TaskQueue(object):
         if rea_object.reaparams[name].state == state and self.is_active:
             self.add_task(ReaTask("set", rea_object, name, value))
             self.clock.future(update_freq, self.timevar_update_loop, args=[rea_object, name, value, state, update_freq])
-
-    def bpm_timevar_update_loop(self, rea_project, value, state, update_freq):
-        """TimeVar update loop specifically for BPM changes"""
-        if rea_project.bpm_state == state and self.is_active:
-            self.add_task(ReaTask("set_bpm", rea_project, "bpm", value))
-            self.clock.future(update_freq, self.bpm_timevar_update_loop, args=[rea_project, value, state, update_freq])
