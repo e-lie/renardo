@@ -52,10 +52,15 @@ def change_bpm2(bpm, midi_nudge=True, nudge_base=0.35):
             Clock.midi_nudge = 120 / bpm - nudge_base
 
 def bpm_to(bpm, dur=8):
-    Clock.bpm = linvar([Clock.bpm, bpm], [dur,inf], start=Clock.mod(4))
+    # Create a linvar that transitions from current BPM to target BPM
+    bpm_transition = linvar([Clock.bpm, bpm], [dur, inf], start=Clock.mod(4))
+    # Use change_bpm to sync Renardo, Reaper, and Ableton
+    change_bpm(bpm_transition)
+
+    # After the transition duration, set to the final static BPM
     @nextBar(dur)
-    def adjust_reaper_bpm():
-        reaproject.bpm = bpm
+    def set_final_bpm():
+        change_bpm(bpm)
         
 
 
