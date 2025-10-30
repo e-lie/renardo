@@ -1,7 +1,6 @@
 from renardo_lib import Clock, nextBar, inf, linvar
 from renardo_lib.TimeVar import TimeVar
 from ..Presets import reaproject, ReaTask
-from renardo_lib.Extensions.ReaperIntegrationLib.ReaParam import ReaParamState
 
 # def change_bpm(bpm, midi_nudge=False, nudge_base=0.72):
 #     Clock.bpm = bpm
@@ -14,7 +13,7 @@ from renardo_lib.Extensions.ReaperIntegrationLib.ReaParam import ReaParamState
 def change_bpm(bpm):
     Clock.bpm = bpm
 
-    # Sync with Ableton if available
+    # Sync with Ableton if available (supports TimeVar)
     try:
         import renardo_lib
         if renardo_lib.ableton_project is not None:
@@ -22,24 +21,10 @@ def change_bpm(bpm):
     except:
         pass  # Silently ignore if Ableton integration is not available
 
-    # Handle TimeVar BPM changes with continuous updates for Reaper
-    if isinstance(bpm, TimeVar):
-        # Switch between VAR1 and VAR2 states to stop old loops
-        if reaproject.bpm_state != ReaParamState.VAR1:
-            new_state = ReaParamState.VAR1
-        else:
-            new_state = ReaParamState.VAR2
-
-        @nextBar()
-        def initiate_bpm_timevar_update_loop():
-            reaproject.bpm_state = new_state
-            update_freq = 0.1  # 10Hz update rate (same as parameter updates)
-            reaproject.task_queue.bpm_timevar_update_loop(reaproject, bpm, new_state, update_freq)
-    else:
-        # Normal (non-TimeVar) BPM change
+    # For Reaper: only update with static BPM values (no TimeVar support to avoid queue saturation)
+    if not isinstance(bpm, TimeVar):
         @nextBar()
         def change_bpm_reaper():
-            reaproject.bpm_state = ReaParamState.NORMAL  # Stop any TimeVar loops
             reaproject.task_queue.add_task(ReaTask("set_bpm", reaproject, "bpm", float(bpm)))
 
 def change_bpm2(bpm, midi_nudge=True, nudge_base=0.35):
