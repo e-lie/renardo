@@ -132,6 +132,9 @@ src/renardo/reaper_backend/reaside/rust_extension/Cargo.lock
 webclient/python
 dist-electron
 
+# Vite
+.vite
+
 # Fichier d'analyze refacto en markdown à ne pas versionner
 analyzes_md
 
