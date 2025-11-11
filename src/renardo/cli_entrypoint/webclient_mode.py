@@ -48,7 +48,7 @@ def run_webclient_mode(config: Dict[str, Any]) -> int:
         return 1
 
     webclient_dir = project_root / "webclient_fresh"
-    flok_dir = project_root / "flok_renardo"
+    flok_dir = project_root / "flok"
 
     if not webclient_dir.exists():
         logger.error(f"Webclient directory not found: {webclient_dir}")
