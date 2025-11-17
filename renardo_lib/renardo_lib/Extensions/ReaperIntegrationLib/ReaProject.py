@@ -58,6 +58,17 @@ class ReaProject(object):
             self.reatracks = new_reatrack_dict
         self.task_queue.set_active()
 
+    def panic_params(self):
+        """
+        Emergency function to clear the task queue
+        Use this if the queue gets saturated and parameters stop working
+        """
+        # Clear the task queue
+        self.task_queue.queue.clear()
+        # Reset the task counter dictionary
+        self.task_queue.task_counter_dict.clear()
+        print(f"ReaProject '{self.name}' task queue cleared successfully")
+
 
 def get_reaper_object_and_param_name(track: ReaTrack, param_fullname: str, quiet: bool = True)\
         -> Tuple[Optional[Union[ReaTrack, ReaFX]], Optional[str]]:
