@@ -247,6 +247,19 @@ def print_ableton_clips():
 
     pprint(clips_dict)
 
+def rescan_clips(print_clips: bool = True):
+    """
+    Rescan all clips on all tracks in Ableton project and optionally display them
+
+    Args:
+        print_clips: If True, display the clips after rescanning (default: True)
+    """
+    if ableton_project is None:
+        print("No Ableton project initialized. Call create_ableton_instruments() first.")
+        return
+
+    ableton_project.rescan_clips(print_clips=print_clips)
+
 # Start
 
 Clock.start()

@@ -422,6 +422,33 @@ class AbletonProject:
         track_snake = make_snake_name(track_name)
         return self._clip_map.get(track_snake)
 
+    def rescan_clips(self, print_clips: bool = True):
+        """
+        Rescan all clips on all tracks and optionally display them
+
+        Args:
+            print_clips: If True, display the clips after rescanning (default: True)
+        """
+        # Clear existing clip map
+        self._clip_map.clear()
+
+        # Rescan all tracks
+        for track_name, track_info in self._track_map.items():
+            track = track_info['track']
+            self._scan_clips(track, track_name)
+
+        print(f"Rescanned clips on {len(self._track_map)} tracks")
+
+        # Print clips if requested
+        if print_clips:
+            # Use the global print_ableton_clips function if available
+            try:
+                import renardo_lib
+                if hasattr(renardo_lib, 'print_ableton_clips'):
+                    renardo_lib.print_ableton_clips()
+            except:
+                pass
+
     def change_ableton_bpm(self, bpm):
         """
         Change Ableton Live's tempo (BPM)
