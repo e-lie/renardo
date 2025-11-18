@@ -28,6 +28,8 @@ renardo_samples
 *.ogg
 
 
+ignored_files
+
 pylive
 
 
