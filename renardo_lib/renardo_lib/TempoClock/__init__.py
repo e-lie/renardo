@@ -65,6 +65,13 @@ from renardo_lib.Utils import modi
 from renardo_lib.ServerManager import TempoClient, ServerManager, RequestTimeout
 from renardo_lib.Settings import CPU_USAGE
 
+# Ableton Link support (optional dependency)
+try:
+    import link as ableton_link
+    LINK_AVAILABLE = True
+except ImportError:
+    LINK_AVAILABLE = False
+
 class TempoClock(object):
 
     tempo_server = None
@@ -127,6 +134,11 @@ class TempoClock(object):
         self.solo = SoloPlayer()
         self.thread = threading.Thread(target=self.run)
 
+        # Ableton Link integration
+        self.link = None
+        self.link_enabled = False
+        self.link_sync_interval = 1  # Sync every 1 beat by default
+
 
     @classmethod
     def set_server(cls, server):
@@ -171,6 +183,158 @@ class TempoClock(object):
         if self.tempo_client is not None:
             self.tempo_client.kill()
         return
+
+    # ===== Ableton Link Integration =====
+
+    def sync_to_link(self, enabled=True, sync_interval=1):
+        """Enable synchronization with Ableton Link.
+
+        Args:
+            enabled (bool): Enable/disable Link session
+            sync_interval (float): How often to sync (in beats). Default is 1 beat.
+
+        Example:
+            Clock.sync_to_link()  # Enable Link sync at current BPM
+            Clock.sync_to_link(sync_interval=0.25)  # Sync every quarter beat
+        """
+        if not LINK_AVAILABLE:
+            print("Error: LinkPython not installed. Install with: pip install LinkPython-extern")
+            return False
+
+        try:
+            # Create Link instance if not exists
+            if self.link is None:
+                self.link = ableton_link.Link(self.get_bpm())
+
+                # Set up callbacks
+                def on_tempo_change(bpm):
+                    """Callback when Link tempo changes"""
+                    if abs(bpm - self.get_bpm()) > 0.01:
+                        if self.debugging:
+                            print(f"Link tempo changed to {bpm:.2f} BPM")
+                        # Schedule tempo change at next bar
+                        self.bpm = bpm
+
+                def on_num_peers_change(num_peers):
+                    """Callback when Link peers connect/disconnect"""
+                    if self.debugging:
+                        print(f"Link peers: {num_peers}")
+
+                def on_start_stop_change(is_playing):
+                    """Callback when Link play state changes"""
+                    if self.debugging:
+                        print(f"Link playback: {'playing' if is_playing else 'stopped'}")
+
+                self.link.setTempoCallback(on_tempo_change)
+                self.link.setNumPeersCallback(on_num_peers_change)
+                self.link.setStartStopCallback(on_start_stop_change)
+
+            # Enable Link session
+            self.link.enabled = enabled
+            self.link.startStopSyncEnabled = True
+            self.link_enabled = enabled
+            self.link_sync_interval = sync_interval
+
+            # Sync initial tempo to Link
+            session = self.link.captureSessionState()
+            link_time = self.link.clock().micros()
+            session.setTempo(self.get_bpm(), link_time)
+            self.link.commitSessionState(session)
+
+            # Start periodic sync
+            if enabled:
+                self.schedule(self._link_sync_update, self.next_bar())
+                print(f"Ableton Link enabled at {self.get_bpm():.2f} BPM (peers: {self.link.numPeers()})")
+
+            return True
+
+        except Exception as e:
+            print(f"Error enabling Link: {e}")
+            return False
+
+    def disable_link(self):
+        """Disable Ableton Link synchronization."""
+        if self.link is not None:
+            self.link.enabled = False
+            self.link_enabled = False
+            print("Ableton Link disabled")
+        return
+
+    def _link_sync_update(self):
+        """Periodic synchronization with Ableton Link.
+        This method is called regularly to keep TempoClock in sync with Link.
+        """
+        if not self.link_enabled or self.link is None:
+            return
+
+        try:
+            # Capture Link session state
+            session = self.link.captureSessionState()
+            link_time = self.link.clock().micros()
+
+            # Get Link's current tempo
+            link_tempo = session.tempo()
+            current_tempo = self.get_bpm()
+
+            # Sync tempo if different (threshold: 0.01 BPM)
+            if abs(link_tempo - current_tempo) > 0.01:
+                # Link has different tempo - update ours
+                if self.debugging:
+                    print(f"Syncing tempo from Link: {link_tempo:.2f} BPM")
+                self.bpm = link_tempo
+
+            # Optionally sync beat position (for tight sync)
+            # This is more aggressive and will align beats exactly
+            # Uncomment if you want beat-level sync:
+            # link_beat = session.beatAtTime(link_time, 1)
+            # clock_beat = self.now()
+            # drift = abs(link_beat - clock_beat)
+            # if drift > 0.1:  # Threshold: 0.1 beat
+            #     # Adjust our beat position
+            #     self.beat = link_beat
+
+            # Re-schedule next sync
+            self.schedule(self._link_sync_update, self.now() + self.link_sync_interval)
+
+        except Exception as e:
+            if self.debugging:
+                print(f"Link sync error: {e}")
+            # Try again next interval
+            self.schedule(self._link_sync_update, self.now() + self.link_sync_interval)
+
+    def link_status(self):
+        """Display current Ableton Link status."""
+        if not LINK_AVAILABLE:
+            print("LinkPython not installed")
+            return
+
+        if self.link is None or not self.link_enabled:
+            print("Ableton Link is disabled")
+            return
+
+        try:
+            session = self.link.captureSessionState()
+            link_time = self.link.clock().micros()
+
+            tempo = session.tempo()
+            beat = session.beatAtTime(link_time, 4)
+            phase = session.phaseAtTime(link_time, 4)
+            is_playing = session.isPlaying()
+            num_peers = self.link.numPeers()
+
+            print(f"=== Ableton Link Status ===")
+            print(f"Enabled: {self.link.enabled}")
+            print(f"Tempo: {tempo:.2f} BPM")
+            print(f"Beat: {beat:.2f}")
+            print(f"Phase: {phase:.2f} / 4")
+            print(f"Playing: {is_playing}")
+            print(f"Peers: {num_peers}")
+            print(f"Sync Interval: every {self.link_sync_interval} beat(s)")
+
+        except Exception as e:
+            print(f"Error getting Link status: {e}")
+
+    # ===== End Ableton Link Integration =====
 
     def __str__(self):
         return str(self.queue)
