@@ -276,29 +276,63 @@ class TempoClock(object):
             link_tempo = session.tempo()
             current_tempo = self.get_bpm()
 
-            # Sync tempo if different (threshold: 0.01 BPM)
-            if abs(link_tempo - current_tempo) > 0.01:
+            # === TEMPO SYNC ===
+            tempo_diff = abs(link_tempo - current_tempo)
+            if tempo_diff > 0.01:
                 # Link has different tempo - update ours
                 if self.debugging:
-                    print(f"Syncing tempo from Link: {link_tempo:.2f} BPM")
+                    print(f"[Link Tempo Sync] {current_tempo:.2f} → {link_tempo:.2f} BPM (diff: {tempo_diff:.3f})")
                 self.bpm = link_tempo
 
-            # Optionally sync beat position (for tight sync)
-            # This is more aggressive and will align beats exactly
-            # Uncomment if you want beat-level sync:
-            # link_beat = session.beatAtTime(link_time, 1)
-            # clock_beat = self.now()
-            # drift = abs(link_beat - clock_beat)
-            # if drift > 0.1:  # Threshold: 0.1 beat
-            #     # Adjust our beat position
-            #     self.beat = link_beat
+            # === BEAT/PHASE SYNC ===
+            # Get beat positions with quantum=4 for phase alignment
+            link_beat = session.beatAtTime(link_time, 4)
+            link_phase = session.phaseAtTime(link_time, 4)
+            clock_beat = self.now()
+            clock_phase = clock_beat % 4
+
+            # Calculate drift
+            beat_drift = link_beat - clock_beat
+            phase_drift = link_phase - clock_phase
+
+            if self.debugging:
+                print(f"[Link Beat Debug] Link beat: {link_beat:.3f} | Clock beat: {clock_beat:.3f} | Drift: {beat_drift:.3f}")
+                print(f"[Link Phase Debug] Link phase: {link_phase:.3f} | Clock phase: {clock_phase:.3f} | Phase drift: {phase_drift:.3f}")
+
+            # Only sync if drift is significant AND we're at a safe point (near a bar boundary)
+            # This prevents breaking scheduled events mid-pattern
+            is_near_bar = (clock_phase < 0.1) or (clock_phase > 3.9)  # Near bar start/end
+            drift_threshold = 0.5  # Half a beat tolerance
+
+            if abs(beat_drift) > drift_threshold:
+                if is_near_bar:
+                    # Safe to adjust - we're at a bar boundary
+                    if self.debugging:
+                        print(f"[Link Beat Sync] Adjusting beat: {clock_beat:.3f} → {link_beat:.3f} (at bar boundary)")
+
+                    # Adjust using bpm_start_beat and bpm_start_time for smooth sync
+                    # This is safer than directly modifying self.beat
+                    import time
+                    self.bpm_start_beat = link_beat
+                    self.bpm_start_time = time.time()
+
+                else:
+                    # Too risky to adjust now - wait for bar boundary
+                    if self.debugging:
+                        print(f"[Link Beat Sync] Drift detected ({beat_drift:.3f}) but waiting for bar boundary (phase: {clock_phase:.3f})")
+
+            elif abs(phase_drift) > 0.1 and self.debugging:
+                # Small phase drift - just log it
+                print(f"[Link Phase] Small phase drift: {phase_drift:.3f} beats")
 
             # Re-schedule next sync
             self.schedule(self._link_sync_update, self.now() + self.link_sync_interval)
 
         except Exception as e:
             if self.debugging:
-                print(f"Link sync error: {e}")
+                print(f"[Link Sync Error] {e}")
+                import traceback
+                traceback.print_exc()
             # Try again next interval
             self.schedule(self._link_sync_update, self.now() + self.link_sync_interval)
 
