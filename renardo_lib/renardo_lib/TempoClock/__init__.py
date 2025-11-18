@@ -62,7 +62,7 @@ from renardo_lib.Patterns import asStream
 from renardo_lib.TimeVar import TimeVar
 from renardo_lib.Midi import MidiIn, MIDIDeviceNotFound
 from renardo_lib.Utils import modi
-from renardo_lib.ServerManager import TempoClient, ServerManager, RequestTimeout
+from renardo_lib.ServerManager import ServerManager
 from renardo_lib.Settings import CPU_USAGE
 
 # Ableton Link support (optional dependency)
@@ -73,10 +73,6 @@ except ImportError:
     LINK_AVAILABLE = False
 
 class TempoClock(object):
-
-    tempo_server = None
-    tempo_client = None
-    waiting_for_sync = False
 
     def __init__(self, bpm=120.0, meter=(4,4)):
 
@@ -139,6 +135,9 @@ class TempoClock(object):
         self.link_enabled = False
         self.link_sync_interval = 1  # Sync every 1 beat by default
 
+        # Deprecated network sync attributes (kept for backward compatibility)
+        self.waiting_for_sync = False  # Legacy: was used for network sync
+
 
     @classmethod
     def set_server(cls, server):
@@ -151,38 +150,8 @@ class TempoClock(object):
 
     @classmethod
     def add_method(cls, func):
+        """Add a custom method to the TempoClock class dynamically"""
         setattr(cls, func.__name__, func)
-
-    def start_tempo_server(self, serv, **kwargs):
-        """ Starts listening for FoxDot clients connecting over a network. This uses
-            a TempoClient instance from ServerManager.py """
-        self.tempo_server = serv(self, **kwargs)
-        self.tempo_server.start()
-        return
-
-    def kill_tempo_server(self):
-        """ Kills the tempo server """
-        if self.tempo_server is not None:
-            self.tempo_server.kill()
-        return
-
-    def flag_wait_for_sync(self, value):
-        self.waiting_for_sync = bool(value)
-
-    def connect(self, ip_address, port=57999):
-        try:
-            self.tempo_client = TempoClient(self)
-            self.tempo_client.connect(ip_address, port)
-            self.tempo_client.send(["request"])
-            self.flag_wait_for_sync(True)
-        except ConnectionRefusedError as e:
-            print(e)
-        pass
-
-    def kill_tempo_client(self):
-        if self.tempo_client is not None:
-            self.tempo_client.kill()
-        return
 
     # ===== Ableton Link Integration =====
 
@@ -260,9 +229,12 @@ class TempoClock(object):
             print("Ableton Link disabled")
         return
 
-    def _link_sync_update(self):
-        """Periodic synchronization with Ableton Link.
-        This method is called regularly to keep TempoClock in sync with Link.
+    def _link_sync_at_beat(self, beat):
+        """Synchronization with Ableton Link called at each beat from main loop.
+        This replaces the periodic sync for better responsiveness.
+
+        Args:
+            beat: Current beat from the clock
         """
         if not self.link_enabled or self.link is None:
             return
@@ -281,59 +253,68 @@ class TempoClock(object):
             if tempo_diff > 0.01:
                 # Link has different tempo - update ours
                 if self.debugging:
-                    print(f"[Link Tempo Sync] {current_tempo:.2f} → {link_tempo:.2f} BPM (diff: {tempo_diff:.3f})")
+                    print(f"[Link Tempo Sync @beat {int(beat)}] {current_tempo:.2f} → {link_tempo:.2f} BPM (diff: {tempo_diff:.3f})")
                 self.bpm = link_tempo
 
             # === BEAT/PHASE SYNC ===
-            # Get beat positions with quantum=4 for phase alignment
-            link_beat = session.beatAtTime(link_time, 4)
-            link_phase = session.phaseAtTime(link_time, 4)
-            clock_beat = self.now()
-            clock_phase = clock_beat % 4
+            # Use quantum=1 for beat-by-beat sync
+            link_beat = session.beatAtTime(link_time, 1)
+            clock_beat = beat
 
             # Calculate drift
             beat_drift = link_beat - clock_beat
-            phase_drift = link_phase - clock_phase
 
             if self.debugging:
-                print(f"[Link Beat Debug] Link beat: {link_beat:.3f} | Clock beat: {clock_beat:.3f} | Drift: {beat_drift:.3f}")
-                print(f"[Link Phase Debug] Link phase: {link_phase:.3f} | Clock phase: {clock_phase:.3f} | Phase drift: {phase_drift:.3f}")
+                link_phase_4 = session.phaseAtTime(link_time, 4)
+                clock_phase_4 = clock_beat % 4
+                print(f"[Link Sync @beat {int(beat)}] Link: {link_beat:.3f} | Clock: {clock_beat:.3f} | "
+                      f"Drift: {beat_drift:+.3f} | Phase: {clock_phase_4:.2f}")
 
-            # Only sync if drift is significant AND we're at a safe point (near a bar boundary)
-            # This prevents breaking scheduled events mid-pattern
-            is_near_bar = (clock_phase < 0.1) or (clock_phase > 3.9)  # Near bar start/end
-            drift_threshold = 0.5  # Half a beat tolerance
+            # Check if we're at a bar boundary (safer for sync)
+            clock_phase = clock_beat % 4
+            is_at_bar_start = (clock_phase < 0.05)  # Very close to bar start
+
+            # Sync strategy: adjust gradually using nudge
+            drift_threshold = 0.02  # Very tight tolerance (20ms at 120 BPM)
 
             if abs(beat_drift) > drift_threshold:
-                if is_near_bar:
-                    # Safe to adjust - we're at a bar boundary
+                if is_at_bar_start:
+                    # At bar start - safe to do bigger adjustment
                     if self.debugging:
-                        print(f"[Link Beat Sync] Adjusting beat: {clock_beat:.3f} → {link_beat:.3f} (at bar boundary)")
+                        print(f"[Link Beat Adjust] Adjusting beat position: {clock_beat:.3f} → {link_beat:.3f} (BAR START)")
 
-                    # Adjust using bpm_start_beat and bpm_start_time for smooth sync
-                    # This is safer than directly modifying self.beat
-                    import time
+                    # Adjust using bpm_start_beat for smooth sync
                     self.bpm_start_beat = link_beat
                     self.bpm_start_time = time.time()
 
                 else:
-                    # Too risky to adjust now - wait for bar boundary
-                    if self.debugging:
-                        print(f"[Link Beat Sync] Drift detected ({beat_drift:.3f}) but waiting for bar boundary (phase: {clock_phase:.3f})")
+                    # Mid-bar - use nudge for gradual correction
+                    # Calculate small nudge to gradually drift towards Link
+                    nudge_correction = beat_drift * 0.001  # Very small correction per beat
 
-            elif abs(phase_drift) > 0.1 and self.debugging:
-                # Small phase drift - just log it
-                print(f"[Link Phase] Small phase drift: {phase_drift:.3f} beats")
+                    if abs(nudge_correction) > 0.0001:  # Only if significant
+                        self.nudge += nudge_correction
 
-            # Re-schedule next sync
-            self.schedule(self._link_sync_update, self.now() + self.link_sync_interval)
+                        if self.debugging:
+                            print(f"[Link Nudge] Small correction: {nudge_correction:+.6f}s (total nudge: {self.nudge:+.6f}s)")
 
         except Exception as e:
             if self.debugging:
-                print(f"[Link Sync Error] {e}")
+                print(f"[Link Sync Error @beat {int(beat)}] {e}")
                 import traceback
                 traceback.print_exc()
-            # Try again next interval
+
+    def _link_sync_update(self):
+        """DEPRECATED: Old periodic synchronization method.
+        Now using _link_sync_at_beat() called from main loop.
+        Kept for backward compatibility.
+        """
+        if not self.link_enabled or self.link is None:
+            return
+
+        # This method is no longer used with the new per-beat sync
+        # Re-schedule if still needed for some reason
+        if hasattr(self, 'link_sync_interval'):
             self.schedule(self._link_sync_update, self.now() + self.link_sync_interval)
 
     def link_status(self):
@@ -384,79 +365,46 @@ class TempoClock(object):
         return item in self.items
 
     def update_tempo_now(self, bpm):
-        """ emergency override for updating tempo"""
+        """Emergency override for updating tempo immediately (not at next bar)"""
         self.last_now_call = self.bpm_start_time = time.time()
         self.bpm_start_beat = self.now()
-        object.__setattr__(self, "bpm", self._convert_json_bpm(bpm))
-        # self.update_network_tempo(bpm, start_beat, start_time) -- updates at the bar...
+        object.__setattr__(self, "bpm", bpm)
         return
 
     def set_tempo(self, bpm, override=False):
-        """ Short-hand for update_tempo and update_tempo_now """
+        """Short-hand for update_tempo and update_tempo_now
+
+        Args:
+            bpm: New tempo in beats per minute
+            override: If True, change immediately; if False, change at next bar
+        """
         return self.update_tempo_now(bpm) if override else self.update_tempo(bpm)
 
     def update_tempo(self, bpm):
-        """ Schedules the bpm change at the next bar, returns the beat and start time of the next change """
+        """Schedules the BPM change at the next bar
 
+        Returns the beat and start time of the next change.
+        This ensures tempo changes happen at musically sensible moments.
+        """
         try:
-
             assert bpm > 0, "Tempo must be a positive number"
-
         except AssertionError as err:
-
-            raise(ValueError(err))
+            raise ValueError(err)
 
         next_bar = self.next_bar()
-
         bpm_start_time = self.get_time_at_beat(next_bar)
         bpm_start_beat = next_bar
 
         def func():
-            object.__setattr__(self, "bpm", self._convert_json_bpm(bpm))
+            """Inner function to update tempo at scheduled time"""
+            object.__setattr__(self, "bpm", bpm)
             self.last_now_call = self.bpm_start_time = bpm_start_time
             self.bpm_start_beat = bpm_start_beat
-        # Give next bar value to bpm_start_beat
+
+        # Schedule tempo change for next bar
         self.schedule(func, next_bar, is_priority=True)
 
         return bpm_start_beat, bpm_start_time
-
-    def update_tempo_from_connection(self, bpm, bpm_start_beat, bpm_start_time, schedule_now=False):
-        """ Sets the bpm externally from another connected instance of FoxDot """
-
-        def func():
-            self.last_now_call = self.bpm_start_time = self.get_time_at_beat(bpm_start_beat)
-            self.bpm_start_beat = bpm_start_beat
-            object.__setattr__(self, "bpm", self._convert_json_bpm(bpm))
-        
-        # Might be changing immediately
-        if schedule_now:
-        
-            func()
-        
-        else:
-        
-            self.schedule(func, is_priority=True)
-        
-        return 
-
-    def update_network_tempo(self, bpm, start_beat, start_time):
-        """ Updates connected FoxDot instances (client or servers) tempi """
-
-        json_value = self._convert_bpm_json(bpm)
-
-        # If this is a client, send info to server
-
-        if self.tempo_client is not None:
-        
-            self.tempo_client.update_tempo(json_value, start_beat, start_time)
-
-        # If this is a server, send info to clients
-        
-        if self.tempo_server is not None:
-        
-            self.tempo_server.update_tempo(None, json_value, start_beat, start_time)
-
-        return
 
 
     def swing(self, amount=0.1):
@@ -577,36 +525,7 @@ class TempoClock(object):
             player(count=True)
         return
 
-    def calculate_nudge(self, time1, time2, latency):
-        """ Approximates the nudge value of this TempoClock based on the machine time.time()
-            value from another machine and the latency between them """
-        # self.hard_nudge = time2 - (time1 + latency)
-        self.hard_nudge = time1 - time2 - latency
-        return
-
-    def _convert_bpm_json(self, bpm):
-        if isinstance(bpm, (int, float)):
-            return float(bpm)
-        elif isinstance(bpm, TimeVar):
-            return bpm.json_value()
-
-    def json_bpm(self):
-        """ Returns the bpm in a data type that can be sent over json"""
-        return self._convert_bpm_json(self.bpm)
-
-    def get_sync_info(self):
-        """ Returns information for synchronisation across multiple FoxDot instances. To be 
-            stored as a JSON object with a "sync" header """
-
-        data = {
-            "sync" : {
-                "bpm_start_time" : float(self.bpm_start_time),
-                "bpm_start_beat" : float(self.bpm_start_beat),
-                "bpm"            : self.json_bpm(),
-            }
-        }
-
-        return data
+    # ===== Core Clock Methods =====
 
     def _now(self):
         """ If the bpm is an int or float, use time since the last bpm change to calculate what the current beat is. 
@@ -677,65 +596,80 @@ class TempoClock(object):
 
         block.time = self.osc_message_time() - self.beat_dur(float(beat) - block.beat)
 
+        # Log OSC timing for Link sync debug
+        if self.debugging and self.link_enabled:
+            scheduled_time = block.time
+            actual_time = time.time()
+            latency_diff = scheduled_time - actual_time
+            beat_diff = beat - block.beat
+
+            if self.link:
+                session = self.link.captureSessionState()
+                link_time_micros = self.link.clock().micros()
+
+                # Beat actuel de Link
+                link_beat_now = session.beatAtTime(link_time_micros, 1)
+
+                # Beat théorique de Link au moment où l'OSC sera envoyé (block.time)
+                # Convertir scheduled_time (secondes) en microsecondes Link
+                scheduled_time_micros = int(scheduled_time * 1_000_000)
+                link_beat_theoretical = session.beatAtTime(scheduled_time_micros, 1)
+
+                link_drift_now = link_beat_now - beat
+                link_drift_theoretical = link_beat_theoretical - block.beat
+
+                print(f"[OSC Send] Target beat:{block.beat:.3f} | Actual beat:{beat:.3f} | "
+                      f"Diff:{beat_diff:+.3f} | Latency:{latency_diff:.3f}s")
+                print(f"           Link NOW: {link_beat_now:.3f} (drift:{link_drift_now:+.3f}) | "
+                      f"Link THEORETICAL @OSC: {link_beat_theoretical:.3f} (drift:{link_drift_theoretical:+.3f})")
+
         for item in block:
-
             # The item might get called by another item in the queue block
-
             output = None
-
             if item.called is False:
-
                 try:
-
                     output = item.__call__()
-
                 except SystemExit:
-
                     sys.exit()
-
                 except:
-
                     print(error_stack())
-
                 # TODO: Get OSC message from the call, and add to list?
-
         # Send all the message to supercollider together
-
         block.send_osc_messages()
-
         # Store the osc messages -- future idea
-
         # self.history.add(block.beat, block.osc_messages)
 
         return
 
     def run(self):
         """ Main loop """
-        
-        self.ticking = True
 
+        self.ticking = True
         self.polled = False
 
+        # Track last beat for Link sync
+        last_beat_sync = -1
         while self.ticking:
-
             beat = self._now() # get current time
+            # === ABLETON LINK SYNC AT EACH BEAT ===
+            # Sync with Link at every integer beat (not periodically)
+            if self.link_enabled and self.link is not None:
+                current_beat_int = int(beat)
 
+                # Only sync once per beat (when we cross to a new integer beat)
+                if current_beat_int > last_beat_sync:
+                    last_beat_sync = current_beat_int
+                    self._link_sync_at_beat(beat)
             if self.queue.after_next_event(beat):
-
                 self.current_block = self.queue.pop()
-
                 # Do the work in a thread
-
                 if len(self.current_block):
-
                     threading.Thread(
                         target=self.__run_block,
                         args=(self.current_block, beat)
                     ).start()
             if self.sleep_time > 0:
-
                 time.sleep(self.sleep_time)
-
         return
 
     def schedule(self, obj, beat=None, args=(), kwargs={}, is_priority=False):
