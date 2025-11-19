@@ -146,6 +146,12 @@ class TempoClock(object):
         self._current_beat = 0.0  # Shared beat state (protected by _beat_lock)
         self._last_update_time = time.time()  # Last time we updated beat
 
+        # Link clock caching to reduce sampling errors
+        # Only query Link's clock at beat boundaries, interpolate between
+        self._link_beat_reference = 0.0  # Last beat queried from Link
+        self._link_time_reference = 0.0  # time.time() when we got _link_beat_reference
+        self._link_query_interval = 0.5  # Only query Link every 0.5 seconds (every ~60 beats @ 120 BPM)
+
         # BPM state management (protected by _bpm_lock)
         self._bpm_lock = threading.RLock()
 
@@ -314,6 +320,9 @@ class TempoClock(object):
                     with self._beat_lock:
                         self._current_beat = link_beat
                         self.beat = link_beat
+                        # Reset Link cache reference point when we resync
+                        self._link_beat_reference = link_beat
+                        self._link_time_reference = time.time()
 
                     # Also reset the beat tracking reference
                     self.bpm_start_beat = link_beat
@@ -342,12 +351,16 @@ class TempoClock(object):
                     print(f"[Link Sync PERIODIC] Full resync at beat {beat_int}")
 
                 link_beat_periodic = session.beatAtTime(link_time, 1)
+                current_time = time.time()
                 with self._beat_lock:
                     self._current_beat = link_beat_periodic
                     self.beat = link_beat_periodic
+                    # Reset Link cache reference point
+                    self._link_beat_reference = link_beat_periodic
+                    self._link_time_reference = current_time
 
                 self.bpm_start_beat = link_beat_periodic
-                self.bpm_start_time = time.time()
+                self.bpm_start_time = current_time
 
         except Exception as e:
             if self.debugging:
@@ -603,6 +616,7 @@ class TempoClock(object):
         Handles both fixed BPM and TimeVar (dynamic) BPM modes.
 
         CRITICAL: When Link is enabled, use Link as the source of truth to prevent drift.
+        Uses periodic Link queries + interpolation to avoid sampling jitter.
 
         Args:
             now: Current time from time.time()
@@ -617,10 +631,29 @@ class TempoClock(object):
             # This is crucial to prevent slow drift over time
             if self.link_enabled and self.link is not None:
                 try:
-                    session = self.link.captureSessionState()
-                    link_time = self.link.clock().micros()
-                    # Get beat directly from Link - this is the authoritative source
-                    self._current_beat = session.beatAtTime(link_time, 1)
+                    # Only query Link periodically to avoid sampling jitter
+                    # Between queries, interpolate using known BPM
+                    time_since_link_query = now - self._link_time_reference
+
+                    if time_since_link_query > self._link_query_interval or self._link_time_reference == 0.0:
+                        # Time to query Link again
+                        session = self.link.captureSessionState()
+                        link_time = self.link.clock().micros()
+
+                        # Get beat directly from Link - this is the authoritative source
+                        link_beat = session.beatAtTime(link_time, 1)
+
+                        # Cache this reference point
+                        self._link_beat_reference = link_beat
+                        self._link_time_reference = now
+                        self._current_beat = link_beat
+
+                        if self.debugging:
+                            print(f"[Link Query] Beat: {link_beat:.4f} @ {now:.6f}")
+                    else:
+                        # Interpolate between Link queries using BPM
+                        interpolated_beat = self._link_beat_reference + (time_since_link_query * bpm / 60.0)
+                        self._current_beat = interpolated_beat
                 except:
                     # If Link fails, fall back to local calculation
                     pass
