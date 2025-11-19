@@ -125,6 +125,7 @@
 from __future__ import absolute_import, division, print_function
 
 import itertools
+import time
 
 from .Settings import SamplePlayer, LoopPlayer
 from .SCLang.SynthDef import SynthDefProxy, SynthDefs
@@ -1363,7 +1364,16 @@ class Player(Repeatable):
 
     def _send_osc_messages_to_server(self, timestamp=None, verbose=True, **kwargs):
         """ Goes through the current event and compiles osc messages and sends them to server via the tempo clock """
-        timestamp = timestamp if timestamp is not None else self.queue_block.time
+        # Use the timestamp passed in, or recalculate based on current time + latency
+        # (Don't use queue_block.time directly as it gets stale during message creation)
+        if timestamp is None:
+            timestamp = time.time() + self.metro.latency
+
+        # Debug logging for timing
+        if self.metro.debugging:
+            print(f"[Player.send] {self.id} | Block beat:{self.queue_block.beat:.3f} | "
+                  f"BlockTime:{self.queue_block.time:.6f} | Now:{time.time():.6f} | "
+                  f"ScheduledTime:{timestamp:.6f} | Offset:{timestamp - time.time():.6f}s")
 
         # self.do_bang = False
         for i in range(self._get_event_length(**kwargs)):
