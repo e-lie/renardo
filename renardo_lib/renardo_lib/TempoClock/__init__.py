@@ -111,6 +111,8 @@ class TempoClock(object):
         # Can be configured
         self.latency_values = [0.25, 0.5, 0.75]
         self.latency    = 0.25 # Time between starting processing osc messages and sending to server
+        self.latency_beats = 0.5  # Latency expressed in beats (for dynamic adjustment when BPM changes)
+        self.reference_bpm = bpm  # Reference BPM used to calculate latency in seconds from beats
         self.nudge      = 0.0  # If you want to synchronise with something external, adjust the nudge
         self.hard_nudge = 0.0
 
@@ -275,6 +277,8 @@ class TempoClock(object):
                 # Reset the BPM start time to now to avoid accumulation
                 self.bpm_start_time = time.time()
                 self.bpm_start_beat = beat
+                # Adjust latency to maintain constant beat-based latency with new BPM
+                self.update_latency_for_bpm(link_tempo)
 
             # === BEAT/PHASE SYNC (IMPROVED) ===
             # Use quantum=1 for beat-by-beat sync
@@ -416,6 +420,8 @@ class TempoClock(object):
         self.last_now_call = self.bpm_start_time = time.time()
         self.bpm_start_beat = self.now()
         object.__setattr__(self, "bpm", bpm)
+        # Adjust latency to maintain constant beat-based latency
+        self.update_latency_for_bpm(bpm)
         return
 
     def set_tempo(self, bpm, override=False):
@@ -521,6 +527,18 @@ class TempoClock(object):
     def get_latency(self):
         """ Returns self.latency (which is in seconds) as a fraction of a beat """
         return self.seconds_to_beats(self.latency)
+
+    def update_latency_for_bpm(self, bpm=None):
+        """ Adjust latency in seconds to maintain constant latency in beats when BPM changes """
+        # Use provided BPM or get current BPM
+        if bpm is None:
+            bpm = self.get_bpm()
+        # Convert latency from beats to seconds based on current BPM
+        # latency_seconds = (latency_beats / BPM) * 60
+        self.latency = (self.latency_beats / bpm) * 60.0
+        if self.debugging:
+            print(f"[Latency Adjust] BPM: {bpm:.1f} | Latency: {self.latency:.4f}s ({self.latency_beats:.2f} beats)")
+        return
 
     def get_elapsed_beats_from_last_bpm_change(self):
         """ Returns the number of beats that *should* have elapsed since the last tempo change """
