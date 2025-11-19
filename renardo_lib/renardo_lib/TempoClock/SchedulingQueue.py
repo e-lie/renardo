@@ -167,8 +167,20 @@ class QueueBlock(object):
 
     def append_osc_message(self, message):
         """ Adds an OSC bundle if the timetag is not in the past """
-        if message.timetag > self.metro.get_time():
+        current_time = self.metro.get_time()
+        if message.timetag > current_time:
             self.osc_messages.append(message)
+            # Debug logging for OSC message timing
+            if self.metro.debugging:
+                time_diff = message.timetag - current_time
+                print(f"[OSC Message] Timetag:{message.timetag:.6f} | Now:{current_time:.6f} | "
+                      f"Offset:{time_diff:.6f}s | Added to queue")
+        else:
+            # Log messages that were rejected because they're in the past
+            if self.metro.debugging:
+                time_diff = message.timetag - current_time
+                print(f"[OSC Message] REJECTED - Timetag:{message.timetag:.6f} | Now:{current_time:.6f} | "
+                      f"Offset:{time_diff:.6f}s (in past!)")
         return
 
     def send_osc_messages(self):

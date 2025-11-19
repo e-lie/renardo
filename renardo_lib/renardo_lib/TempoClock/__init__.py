@@ -84,7 +84,7 @@ class TempoClock(object):
         self.largest_sleep_time = 0
         self.last_block_dur = 0.0
 
-        self.beat = float(0)  # Beats elapsed
+        self.beat = float(0)  # Beats elapsed (kept for legacy compatibility)
         self.last_now_call = float(0)
         self.ticking = True
 
@@ -137,6 +137,21 @@ class TempoClock(object):
 
         # Deprecated network sync attributes (kept for backward compatibility)
         self.waiting_for_sync = False  # Legacy: was used for network sync
+
+        # === 2-THREAD ARCHITECTURE STATE ===
+        # Thread-safe beat tracking for 2-thread model
+        self._beat_lock = threading.RLock()
+        self._current_beat = 0.0  # Shared beat state (protected by _beat_lock)
+        self._last_update_time = time.time()  # Last time we updated beat
+
+        # BPM state management (protected by _bpm_lock)
+        self._bpm_lock = threading.RLock()
+
+        # Thread references
+        self._timing_thread = None
+        self._scheduling_thread = None
+        self._timing_thread_active = False
+        self._scheduling_thread_active = False
 
 
     @classmethod
@@ -233,6 +248,8 @@ class TempoClock(object):
         """Synchronization with Ableton Link called at each beat from main loop.
         This replaces the periodic sync for better responsiveness.
 
+        IMPROVED: Better drift correction to prevent slow desynchronization.
+
         Args:
             beat: Current beat from the clock
         """
@@ -255,48 +272,78 @@ class TempoClock(object):
                 if self.debugging:
                     print(f"[Link Tempo Sync @beat {int(beat)}] {current_tempo:.2f} → {link_tempo:.2f} BPM (diff: {tempo_diff:.3f})")
                 self.bpm = link_tempo
+                # Reset the BPM start time to now to avoid accumulation
+                self.bpm_start_time = time.time()
+                self.bpm_start_beat = beat
 
-            # === BEAT/PHASE SYNC ===
+            # === BEAT/PHASE SYNC (IMPROVED) ===
             # Use quantum=1 for beat-by-beat sync
             link_beat = session.beatAtTime(link_time, 1)
             clock_beat = beat
 
-            # Calculate drift
+            # Calculate drift (difference between Link and our clock)
             beat_drift = link_beat - clock_beat
 
             if self.debugging:
                 link_phase_4 = session.phaseAtTime(link_time, 4)
                 clock_phase_4 = clock_beat % 4
                 print(f"[Link Sync @beat {int(beat)}] Link: {link_beat:.3f} | Clock: {clock_beat:.3f} | "
-                      f"Drift: {beat_drift:+.3f} | Phase: {clock_phase_4:.2f}")
+                      f"Drift: {beat_drift:+.4f} beats ({beat_drift*500:.2f}ms @ 120BPM)")
 
-            # Check if we're at a bar boundary (safer for sync)
-            clock_phase = clock_beat % 4
-            is_at_bar_start = (clock_phase < 0.05)  # Very close to bar start
-
-            # Sync strategy: adjust gradually using nudge
-            drift_threshold = 0.02  # Very tight tolerance (20ms at 120 BPM)
+            # === IMPROVED DRIFT CORRECTION ===
+            # This is the key fix: more aggressive correction to prevent slow drift
+            drift_threshold = 0.005  # Tighter threshold (5ms at 120 BPM)
 
             if abs(beat_drift) > drift_threshold:
-                if is_at_bar_start:
-                    # At bar start - safe to do bigger adjustment
-                    if self.debugging:
-                        print(f"[Link Beat Adjust] Adjusting beat position: {clock_beat:.3f} → {link_beat:.3f} (BAR START)")
+                # Always correct drift, not just at bar boundaries
+                # Use proportional-integral style correction
 
-                    # Adjust using bpm_start_beat for smooth sync
+                clock_phase = clock_beat % 4
+                is_at_bar_start = (clock_phase < 0.1)  # Close to bar start
+
+                if is_at_bar_start or abs(beat_drift) > 0.05:
+                    # At bar start OR significant drift: strong correction
+                    if self.debugging:
+                        print(f"[Link Sync STRONG] Resync beat: {clock_beat:.4f} → {link_beat:.4f} (drift: {beat_drift:+.4f})")
+
+                    # Reset beat position to match Link exactly
+                    with self._beat_lock:
+                        self._current_beat = link_beat
+                        self.beat = link_beat
+
+                    # Also reset the beat tracking reference
                     self.bpm_start_beat = link_beat
                     self.bpm_start_time = time.time()
 
                 else:
-                    # Mid-bar - use nudge for gradual correction
-                    # Calculate small nudge to gradually drift towards Link
-                    nudge_correction = beat_drift * 0.001  # Very small correction per beat
+                    # Mid-bar but noticeable drift: use nudge correction
+                    # MORE AGGRESSIVE: correct 10% of drift per beat instead of 0.1%
+                    # At 120 BPM, beats come every 0.5s, so we correct quickly
+                    correction_factor = 0.1  # Correct 10% of drift per beat
+                    nudge_correction = beat_drift * correction_factor / 60.0  # Convert beats to seconds
 
-                    if abs(nudge_correction) > 0.0001:  # Only if significant
+                    if abs(nudge_correction) > 0.0001:
                         self.nudge += nudge_correction
 
                         if self.debugging:
-                            print(f"[Link Nudge] Small correction: {nudge_correction:+.6f}s (total nudge: {self.nudge:+.6f}s)")
+                            print(f"[Link Sync NUDGE] Correction: {nudge_correction:+.6f}s (total nudge: {self.nudge:+.6f}s) | "
+                                  f"Drift remaining: {(beat_drift * (1-correction_factor)):+.4f}")
+
+            # === PERIODIC FULL RESYNC (Safety net) ===
+            # Every 32 beats, do a full resync even if drift is small
+            # This prevents accumulation of tiny errors
+            beat_int = int(beat)
+            if beat_int > 0 and beat_int % 32 == 0:
+                if self.debugging:
+                    print(f"[Link Sync PERIODIC] Full resync at beat {beat_int}")
+
+                link_beat_periodic = session.beatAtTime(link_time, 1)
+                with self._beat_lock:
+                    self._current_beat = link_beat_periodic
+                    self.beat = link_beat_periodic
+
+                self.bpm_start_beat = link_beat_periodic
+                self.bpm_start_time = time.time()
 
         except Exception as e:
             if self.debugging:
@@ -525,24 +572,171 @@ class TempoClock(object):
             player(count=True)
         return
 
+    # ===== 2-THREAD ARCHITECTURE METHODS =====
+
+    def get_beat(self):
+        """Thread-safe getter for current beat. Called by SchedulingThread and external code."""
+        with self._beat_lock:
+            return self._current_beat
+
+    def _update_beat(self, now):
+        """
+        Update current beat based on elapsed time. Called only by TimingThread.
+        Handles both fixed BPM and TimeVar (dynamic) BPM modes.
+
+        CRITICAL: When Link is enabled, use Link as the source of truth to prevent drift.
+
+        Args:
+            now: Current time from time.time()
+
+        Returns:
+            Updated beat value
+        """
+        with self._beat_lock:
+            bpm = self.get_bpm()
+
+            # === IF LINK IS ENABLED: USE LINK AS SOURCE OF TRUTH ===
+            # This is crucial to prevent slow drift over time
+            if self.link_enabled and self.link is not None:
+                try:
+                    session = self.link.captureSessionState()
+                    link_time = self.link.clock().micros()
+                    # Get beat directly from Link - this is the authoritative source
+                    self._current_beat = session.beatAtTime(link_time, 1)
+                except:
+                    # If Link fails, fall back to local calculation
+                    pass
+            else:
+                # === NO LINK: Use local beat calculation ===
+                if isinstance(bpm, TimeVar):
+                    # TimeVar mode: incremental update
+                    delta = now - self._last_update_time
+                    self._current_beat += delta * (bpm / 60.0)
+                    self._last_update_time = now
+                else:
+                    # Fixed BPM mode: absolute calculation from reference point
+                    elapsed = now - self.bpm_start_time
+                    self._current_beat = self.bpm_start_beat + (elapsed * bpm / 60.0)
+
+            # Keep legacy self.beat in sync for backward compatibility
+            self.beat = self._current_beat
+            self._last_update_time = now
+
+            return self._current_beat
+
+    def _timing_thread_loop(self):
+        """
+        High-frequency thread for beat counting and Link synchronization.
+        Runs at ~10kHz for maximum timing precision.
+
+        Responsibilities:
+        - Calculate elapsed time and update beat counter
+        - Synchronize with Ableton Link at each integer beat
+        - Handle BPM changes
+
+        This thread is completely independent from event scheduling.
+        """
+        last_beat_sync = -1
+        self._timing_thread_active = True
+
+        try:
+            while self.ticking:
+                now = time.time()
+
+                # Update current beat (thread-safe)
+                beat = self._update_beat(now)
+
+                # === ABLETON LINK SYNC AT EACH BEAT ===
+                # Sync with Link at every integer beat (not periodically)
+                if self.link_enabled and self.link is not None:
+                    current_beat_int = int(beat)
+
+                    # Only sync once per beat (when we cross to a new integer beat)
+                    if current_beat_int > last_beat_sync:
+                        last_beat_sync = current_beat_int
+                        self._link_sync_at_beat(beat)
+
+                # High frequency for precision (0.00001 = 10kHz, not too high to avoid CPU saturation)
+                # Using a very small sleep keeps CPU usage minimal while maintaining timing precision
+                time.sleep(0.0001)  # 0.1ms = 10kHz
+
+        finally:
+            self._timing_thread_active = False
+
+    def _scheduling_thread_loop(self):
+        """
+        Normal-frequency thread for event scheduling and execution.
+        Polls the timing thread for current beat and checks queue.
+
+        Responsibilities:
+        - Poll current beat from TimingThread
+        - Check if events should trigger
+        - Spawn worker threads for event blocks
+
+        This thread is completely independent from beat counting.
+        """
+        self._scheduling_thread_active = True
+
+        try:
+            while self.ticking:
+                # Get current beat from shared state (thread-safe read)
+                beat = self.get_beat()
+
+                # Check if event should trigger
+                if self.queue.after_next_event(beat):
+                    self.current_block = self.queue.pop()
+
+                    # Spawn worker thread for block execution
+                    if len(self.current_block):
+                        threading.Thread(
+                            target=self.__run_block,
+                            args=(self.current_block, beat)
+                        ).start()
+
+                # Normal polling frequency (configurable via CPU_USAGE)
+                if self.sleep_time > 0:
+                    time.sleep(self.sleep_time)
+
+        finally:
+            self._scheduling_thread_active = False
+
     # ===== Core Clock Methods =====
 
     def _now(self):
-        """ If the bpm is an int or float, use time since the last bpm change to calculate what the current beat is. 
-            If the bpm is a TimeVar, increase the beat counter by time since last call to _now()"""
-        if isinstance(self.bpm, (int, float)):
-            self.beat = self.bpm_start_beat + self.get_elapsed_beats_from_last_bpm_change()
+        """
+        LEGACY METHOD - Kept for backward compatibility.
+
+        In the 2-thread architecture, beat counting is handled by TimingThread.
+        This method now redirects to get_beat() which reads from the shared _current_beat.
+
+        If the clock is not ticking, it falls back to calculating the beat manually.
+        """
+        if self.ticking:
+            # Clock is running - get beat from TimingThread
+            return self.get_beat()
         else:
-            now = self.get_time()
-            self.beat += (now - self.last_now_call) * (self.get_bpm() / 60)
-            self.last_now_call = now
-        return self.beat
+            # Clock is stopped - calculate manually (for offline use)
+            if isinstance(self.bpm, (int, float)):
+                self.beat = self.bpm_start_beat + self.get_elapsed_beats_from_last_bpm_change()
+            else:
+                now = self.get_time()
+                self.beat += (now - self.last_now_call) * (self.get_bpm() / 60)
+                self.last_now_call = now
+            return self.beat
 
     def now(self):
-        """ Returns the total elapsed time (in beats as opposed to seconds) """
-        if self.ticking is False: # Get the time w/o latency if not ticking
-            self.beat = self._now()
-        return float(self.beat)
+        """
+        Returns the total elapsed time in beats.
+
+        In the 2-thread architecture, this retrieves the beat from TimingThread's shared state.
+        When the clock is not ticking, it falls back to manual calculation.
+        """
+        if self.ticking:
+            # Clock is running - get beat from thread-safe getter
+            return float(self.get_beat())
+        else:
+            # Clock is stopped - calculate manually
+            return float(self._now())
 
     def mod(self, beat, t=0):
         """ Returns the next time at which `Clock.now() % beat` will equal `t` """
@@ -554,9 +748,49 @@ class TempoClock(object):
         return time.time() + self.latency
         
     def start(self):
-        """ Starts the clock thread """ 
-        self.thread.daemon = True
-        self.thread.start()
+        """
+        Starts the 2-thread architecture: TimingThread and SchedulingThread.
+
+        TimingThread (high-frequency ~10kHz):
+        - Counts beats with maximum precision
+        - Synchronizes with Ableton Link at each beat
+        - Completely independent from event scheduling
+
+        SchedulingThread (normal-frequency ~1kHz):
+        - Polls current beat from TimingThread
+        - Checks queue for events to trigger
+        - Spawns worker threads for event blocks
+
+        This replaces the old single-thread run() loop.
+        """
+        if self._timing_thread is not None:
+            # Threads already started
+            return
+
+        self.ticking = True
+        self._last_update_time = time.time()
+
+        # Start timing thread (high priority for precision)
+        self._timing_thread = threading.Thread(
+            target=self._timing_thread_loop,
+            name="TempoClock-Timing",
+            daemon=True
+        )
+        self._timing_thread.start()
+
+        # Start scheduling thread
+        self._scheduling_thread = threading.Thread(
+            target=self._scheduling_thread_loop,
+            name="TempoClock-Scheduling",
+            daemon=True
+        )
+        self._scheduling_thread.start()
+
+        if self.debugging:
+            print(f"TempoClock started with 2-thread architecture")
+            print(f"  - TimingThread: {self._timing_thread.name}")
+            print(f"  - SchedulingThread: {self._scheduling_thread.name}")
+
         return
 
     def _adjust_hard_nudge(self):
@@ -589,17 +823,22 @@ class TempoClock(object):
             This means the clock can still 'tick' while a large number of
             events are activated  """
 
-        # Set the time to "activate" messages on - adjust in case the block is activated late
+        # Set the time to "activate" messages on with consistent latency
+        # Using absolute time + latency prevents accumulation of timing errors
+        # that occur when trying to compensate for late block triggering
 
-        # `beat` is the actual beat this is happening, `block.beat` is the desired time. Adjust
-        # the osc_message_time accordingly if this is being called late
+        now_real_time = time.time()
+        block.time = now_real_time + self.latency
 
-        block.time = self.osc_message_time() - self.beat_dur(float(beat) - block.beat)
+        # Log block execution timing
+        if self.debugging:
+            print(f"[Block] Beat:{block.beat:.3f} | Now:{beat:.3f} | "
+                  f"BlockTime:{block.time:.6f} (now={now_real_time:.6f} + latency={self.latency:.3f}s)")
 
         # Log OSC timing for Link sync debug
         if self.debugging and self.link_enabled:
             scheduled_time = block.time
-            actual_time = time.time()
+            actual_time = now_real_time
             latency_diff = scheduled_time - actual_time
             beat_diff = beat - block.beat
 
@@ -642,34 +881,27 @@ class TempoClock(object):
         return
 
     def run(self):
-        """ Main loop """
+        """
+        DEPRECATED: This method is kept for backward compatibility.
+        The clock now uses a 2-thread architecture (TimingThread + SchedulingThread).
 
-        self.ticking = True
-        self.polled = False
+        The threads are automatically started via the self.thread from __init__().
+        This method is only called if the old threading mechanism is used.
 
-        # Track last beat for Link sync
-        last_beat_sync = -1
+        For manual clock control, use:
+        - start()  : Start both threads
+        - stop()   : Stop both threads
+        """
+        # The 2-thread loops are now run by separate threads started in start()
+        # This method is called by the daemon thread created in __init__(),
+        # so we just call start() which will set up both threads
+        self.start()
+
+        # Keep this loop for any legacy code that might expect run() to block
+        # It will exit when ticking becomes False
         while self.ticking:
-            beat = self._now() # get current time
-            # === ABLETON LINK SYNC AT EACH BEAT ===
-            # Sync with Link at every integer beat (not periodically)
-            if self.link_enabled and self.link is not None:
-                current_beat_int = int(beat)
+            time.sleep(0.1)
 
-                # Only sync once per beat (when we cross to a new integer beat)
-                if current_beat_int > last_beat_sync:
-                    last_beat_sync = current_beat_int
-                    self._link_sync_at_beat(beat)
-            if self.queue.after_next_event(beat):
-                self.current_block = self.queue.pop()
-                # Do the work in a thread
-                if len(self.current_block):
-                    threading.Thread(
-                        target=self.__run_block,
-                        args=(self.current_block, beat)
-                    ).start()
-            if self.sleep_time > 0:
-                time.sleep(self.sleep_time)
         return
 
     def schedule(self, obj, beat=None, args=(), kwargs={}, is_priority=False):
@@ -748,10 +980,34 @@ class TempoClock(object):
         return
 
     def stop(self):
+        """
+        Stops both TimingThread and SchedulingThread gracefully.
+
+        This method:
+        1. Sets ticking=False to signal threads to stop
+        2. Waits for both threads to finish (with timeout)
+        3. Clears the queue and stops all players
+        """
         self.ticking = False
+
+        # Wait for timing thread to stop
+        if self._timing_thread is not None and self._timing_thread.is_alive():
+            self._timing_thread.join(timeout=1.0)
+            self._timing_thread = None
+
+        # Wait for scheduling thread to stop
+        if self._scheduling_thread is not None and self._scheduling_thread.is_alive():
+            self._scheduling_thread.join(timeout=1.0)
+            self._scheduling_thread = None
+
+        # Clean up
         self.kill_tempo_server()
         self.kill_tempo_client()
         self.clear()
+
+        if self.debugging:
+            print("TempoClock stopped (both threads terminated)")
+
         return
 
     def shift(self, n):
