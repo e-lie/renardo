@@ -1,13 +1,11 @@
 <script lang="ts">
   import { setContextClient, createClient, fetchExchange } from '@urql/svelte'
   import { currentPage } from './store/root/Root.store'
-  import { useEditorStore } from './store/editor'
   import Navbar from './components/shared/Navbar.component.svelte'
   import PostsView from './views/Posts.view.svelte'
   import AuthorsView from './views/Authors.view.svelte'
   import PostDetailView from './views/PostDetail.view.svelte'
   import LogsView from './views/Logs.view.svelte'
-  import FlokEditor from './components/editor/FlokEditor.component.svelte'
 
   const client = createClient({
     url: 'http://localhost:8000/graphql',
@@ -15,17 +13,12 @@
   })
 
   setContextClient(client)
-
-  const editorStore = useEditorStore()
-  const { currentSession } = editorStore.getters
 </script>
 
 <div class="min-h-screen bg-base-100">
   <Navbar />
 
-  {#if $currentPage === 'editor'}
-    <FlokEditor sessionName={$currentSession} height="calc(100vh - 64px)" />
-  {:else if $currentPage === 'posts'}
+  {#if $currentPage === 'posts'}
     <PostsView />
   {:else if $currentPage === 'authors'}
     <AuthorsView />

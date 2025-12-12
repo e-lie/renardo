@@ -1,5 +1,5 @@
 """
-Webclient mode for Renardo CLI - launches the modern web application.
+Webclient mode for Renardo CLI - launches modern web application.
 """
 
 import os
@@ -9,7 +9,7 @@ import signal
 import subprocess
 import threading
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from ..logger import get_main_logger
 from ..shared_store import initialize_shared_store
@@ -17,7 +17,7 @@ from ..shared_store import initialize_shared_store
 
 def run_webclient_mode(config: Dict[str, Any]) -> int:
     """
-    Run the webclient mode - starts both frontend and backend servers.
+    Run webclient mode - starts both frontend and backend servers.
 
     Args:
         config: CLI configuration dictionary
@@ -48,24 +48,18 @@ def run_webclient_mode(config: Dict[str, Any]) -> int:
         return 1
 
     webclient_dir = project_root / "webclient_fresh"
-    flok_dir = project_root / "flok"
 
     if not webclient_dir.exists():
         logger.error(f"Webclient directory not found: {webclient_dir}")
         logger.error(f"Project root detected as: {project_root}")
         return 1
 
-    if not flok_dir.exists():
-        logger.error(f"Flok directory not found: {flok_dir}")
-        return 1
-
     logger.info(f"Starting webclient from: {webclient_dir}")
-    logger.info(f"Starting flok from: {flok_dir}")
 
     processes = []
 
     try:
-        # Start the backend GraphQL server
+        # Start backend GraphQL server
         logger.info("Starting FastAPI + Strawberry GraphQL backend...")
         backend_process = start_backend_server(config)
         if backend_process:
@@ -77,20 +71,6 @@ def run_webclient_mode(config: Dict[str, Any]) -> int:
 
         # Wait a moment for backend to start
         time.sleep(2)
-
-        # Start the flok server
-        logger.info("Starting Flok collaborative editor...")
-        flok_process = start_flok_server(flok_dir, config)
-        if flok_process:
-            processes.append(flok_process)
-            logger.info("Flok server started successfully")
-        else:
-            logger.error("Failed to start flok server")
-            cleanup_processes(processes)
-            return 1
-
-        # Wait a moment for flok to start
-        time.sleep(3)
 
         # Start the frontend development server
         logger.info("Starting Vite development server...")
@@ -106,7 +86,6 @@ def run_webclient_mode(config: Dict[str, Any]) -> int:
         logger.info("Webclient application is running!")
         logger.info("Frontend: http://localhost:3001")
         logger.info("Backend GraphQL: http://localhost:8000/graphql")
-        logger.info("Flok Editor: http://localhost:3002")
         logger.info("Press Ctrl+C to stop all servers")
 
         # Wait for processes to complete or user interruption
@@ -125,7 +104,7 @@ def run_webclient_mode(config: Dict[str, Any]) -> int:
         cleanup_processes(processes)
 
 
-def start_backend_server(config: Dict[str, Any]) -> subprocess.Popen:
+def start_backend_server(config: Dict[str, Any]) -> Optional[subprocess.Popen]:
     """Start the FastAPI backend server."""
     logger = get_main_logger()
 
@@ -168,78 +147,7 @@ def start_backend_server(config: Dict[str, Any]) -> subprocess.Popen:
         return None
 
 
-def start_flok_server(flok_dir: Path, config: Dict[str, Any]) -> subprocess.Popen:
-    """Start the Flok collaborative editor server."""
-    logger = get_main_logger()
-
-    try:
-        # Check if flok dependencies are installed
-        flok_web_dir = flok_dir / "packages" / "web"
-        if not flok_web_dir.exists():
-            logger.error(f"Flok web package not found: {flok_web_dir}")
-            return None
-
-        # First, install dependencies if node_modules doesn't exist
-        if not (flok_dir / "node_modules").exists():
-            logger.info("Installing flok dependencies...")
-            install_cmd = ["npm", "install"]
-            install_process = subprocess.run(
-                install_cmd,
-                cwd=flok_dir,
-                capture_output=True,
-                text=True
-            )
-
-            if install_process.returncode != 0:
-                logger.error(f"Failed to install flok dependencies: {install_process.stderr}")
-                return None
-
-            logger.info("Flok dependencies installed successfully")
-
-        # Build flok if needed
-        if not (flok_web_dir / "dist").exists():
-            logger.info("Building flok...")
-            build_cmd = ["npm", "run", "build"]
-            build_process = subprocess.run(
-                build_cmd,
-                cwd=flok_dir,
-                capture_output=True,
-                text=True
-            )
-
-            if build_process.returncode != 0:
-                logger.warning(f"Flok build had issues: {build_process.stderr}")
-                # Continue anyway as dev mode might work
-
-        # Start the flok web server
-        cmd = ["npm", "run", "dev", "--", "--port", "3002", "--host", "0.0.0.0"]
-
-        logger.debug(f"Flok command: {' '.join(cmd)}")
-
-        process = subprocess.Popen(
-            cmd,
-            cwd=flok_web_dir,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            universal_newlines=True,
-            bufsize=1
-        )
-
-        # Start a thread to handle flok output
-        threading.Thread(
-            target=log_process_output,
-            args=(process, "FLOK"),
-            daemon=True
-        ).start()
-
-        return process
-
-    except Exception as e:
-        logger.error(f"Failed to start flok server: {e}")
-        return None
-
-
-def start_frontend_server(webclient_dir: Path, config: Dict[str, Any]) -> subprocess.Popen:
+def start_frontend_server(webclient_dir: Path, config: Dict[str, Any]) -> Optional[subprocess.Popen]:
     """Start the Vite frontend development server."""
     logger = get_main_logger()
 
