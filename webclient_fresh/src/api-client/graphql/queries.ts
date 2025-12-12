@@ -58,3 +58,13 @@ export const SUBSCRIBE_TO_LOGS = gql`
     }
   }
 `
+
+export const EXECUTE_CODE = gql`
+  mutation ExecuteCode($code: String!) {
+    executeCode(code: $code) {
+      success
+      message
+      output
+    }
+  }
+`
