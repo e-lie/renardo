@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { ElButton } from '../primitives'
-  import { currentPage } from '../../store/root/Root.store'
+  import { ElButton } from '../primitives';
+  import { currentPage } from '../../store/root/Root.store';
 
-  function navigateTo(page: 'posts' | 'authors' | 'editor' | 'logs') {
-    currentPage.set(page)
+  function navigateTo(page: 'posts' | 'authors' | 'logs') {
+    currentPage.set(page);
   }
 </script>
 
@@ -14,24 +14,13 @@
   <div class="flex-none">
     <ul class="menu menu-horizontal px-1">
       <li>
-        <ElButton variant="ghost" onclick={() => navigateTo('posts')}>
-          Posts
-        </ElButton>
+        <ElButton variant="ghost" onclick={() => navigateTo('posts')}>Posts</ElButton>
       </li>
       <li>
-        <ElButton variant="ghost" onclick={() => navigateTo('authors')}>
-          Authors
-        </ElButton>
+        <ElButton variant="ghost" onclick={() => navigateTo('authors')}>Authors</ElButton>
       </li>
       <li>
-        <ElButton variant="ghost" onclick={() => navigateTo('editor')}>
-          Editor
-        </ElButton>
-      </li>
-      <li>
-        <ElButton variant="ghost" onclick={() => navigateTo('logs')}>
-          Logs
-        </ElButton>
+        <ElButton variant="ghost" onclick={() => navigateTo('logs')}>Logs</ElButton>
       </li>
     </ul>
   </div>
