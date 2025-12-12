@@ -4,7 +4,7 @@ import { usePostsStore } from '../posts'
 import { useAuthorsStore } from '../authors'
 
 // Router store for navigation
-export const currentPage = writable<'posts' | 'authors' | 'post-detail' | 'logs'>('posts')
+export const currentPage = writable<'posts' | 'authors' | 'post-detail' | 'logs' | 'editor'>('posts')
 
 // Hook that returns our root store instance
 export function useAppStore(): RootStoreInterface {
