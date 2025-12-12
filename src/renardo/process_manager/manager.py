@@ -260,12 +260,15 @@ class ProcessManager:
         """Create output callback for a process."""
         def output_callback(output: str, stream_type: str):
             try:
+                # Import loggers directly (simplified version)
+                from ..logger import get_main_logger, get_to_webclient_logger
+                
                 # Log to main logger (goes to file)
-                main_logger = self.logger_manager.get_main_logger()
+                main_logger = get_main_logger()
                 main_logger.info(f"[{process_id}:{stream_type}] {output}")
                 
                 # Log to webclient logger (goes to web interface)
-                webclient_logger = self.logger_manager.get_to_webclient_logger()
+                webclient_logger = get_to_webclient_logger()
                 webclient_logger.info(f"[{process_type.value}] {output}")
                 
             except Exception as e:
@@ -277,15 +280,17 @@ class ProcessManager:
         """Create status callback for a process."""
         def status_callback(status: ProcessStatus):
             try:
+                # Import loggers directly (simplified version)
+                from ..logger import get_main_logger, get_to_webclient_logger
+                
                 # Log status changes
-                if self.logger_manager:
-                    main_logger = self.logger_manager.get_main_logger()
-                    main_logger.info(f"Process {process_id} ({process_type.value}) status: {status.value}")
-                    
-                    # Also notify webclient for important status changes
-                    if status in [ProcessStatus.RUNNING, ProcessStatus.STOPPED, ProcessStatus.ERROR, ProcessStatus.CRASHED]:
-                        webclient_logger = self.logger_manager.get_to_webclient_logger()
-                        webclient_logger.info(f"{process_type.value.title()} process {status.value}")
+                main_logger = get_main_logger()
+                main_logger.info(f"Process {process_id} ({process_type.value}) status: {status.value}")
+                
+                # Also notify webclient for important status changes
+                if status in [ProcessStatus.RUNNING, ProcessStatus.STOPPED, ProcessStatus.ERROR, ProcessStatus.CRASHED]:
+                    webclient_logger = get_to_webclient_logger()
+                    webclient_logger.info(f"{process_type.value.title()} process {status.value}")
                 
             except Exception as e:
                 self.logger.error(f"Error in status callback for {process_id}: {e}")

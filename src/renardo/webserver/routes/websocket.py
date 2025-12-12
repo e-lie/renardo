@@ -14,7 +14,7 @@ from renardo.gatherer.reaper_resource_management.default_reaper_pack import is_d
 from renardo.sc_backend import write_sc_renardo_files_in_user_config, is_renardo_sc_classes_initialized
 
 # Import logging
-from renardo.logger import get_to_webclient_logger, add_websocket_connection, remove_websocket_connection
+from renardo.logger import get_to_webclient_logger
 
 # Import REAPER routes
 from renardo.webserver.routes.reaper_routes import start_reaper_initialization_task, confirm_reaper_action_task, reinit_reaper_with_backup_task, open_reaper_user_dir_task, launch_reaper_pythonhome_task, test_reaper_integration_task
@@ -33,8 +33,8 @@ def register_websocket_routes(sock):
         # Add this connection to active connections
         websocket_utils.add_connection(ws)
         
-        # Register WebSocket for logging
-        add_websocket_connection(ws)
+        # WebSocket logging is disabled in simplified version
+        pass
         
         try:
             # Send initial state to client
@@ -336,8 +336,8 @@ def register_websocket_routes(sock):
             # Remove this connection from active connections
             websocket_utils.remove_connection(ws)
             
-            # Remove WebSocket from logging
-            remove_websocket_connection(ws)
+            # WebSocket logging is disabled in simplified version
+            pass
 
 def update_renardo_status():
     """Update the current status of Renardo components"""

@@ -2,7 +2,7 @@
 Integration utilities for process manager with Renardo logging system.
 """
 
-from ..logger import get_main_logger, RenardoLoggerManager
+from ..logger import get_main_logger
 from .manager import initialize_process_manager
 
 
@@ -16,11 +16,8 @@ def setup_process_manager_with_logging():
     logger = get_main_logger()
     logger.info("Setting up process manager with logging integration")
     
-    # Get the logger manager instance
-    from ..logger import _manager as logger_manager
-    
-    # Initialize the process manager with logger manager
-    initialize_process_manager(logger_manager)
+    # Initialize the process manager without logger manager (simplified)
+    initialize_process_manager(None)
     
     logger.info("Process manager setup completed")
 
