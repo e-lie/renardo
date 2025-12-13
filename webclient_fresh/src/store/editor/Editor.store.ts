@@ -53,7 +53,7 @@ export function useEditorStore(): EditorStoreInterface {
                 id: bufferId,
                 name: options.name,
                 content: options.content || '',
-                language: options.language || 'python',
+                language: 'python', // Force Python for all buffers
                 isStartupFile: options.isStartupFile || false,
                 isDirty: false,
                 filePath: options.filePath,
