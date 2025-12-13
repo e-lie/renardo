@@ -11,6 +11,7 @@
 # Projet
 
 - le projet utilise `uv` pour gérer la partie python et `npm` pour gérer la partie web
+- pour `webclient_fresh` toujours suivre les directives de `webclient_fresh/ARCHITECTURE_GUIDE.md`
 
 ## Architecture
 
