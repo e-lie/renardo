@@ -1,14 +1,8 @@
-/**
- * Available theme definition
- */
 export interface EditorThemeInterface {
   name: string
   value: string
 }
 
-/**
- * List of available themes
- */
 export const AVAILABLE_THEMES: EditorThemeInterface[] = [
   { name: 'Monokai', value: 'monokai' },
   { name: 'Dracula', value: 'dracula' },
@@ -19,16 +13,3 @@ export const AVAILABLE_THEMES: EditorThemeInterface[] = [
   { name: 'Darcula', value: 'darcula' },
   { name: 'Eclipse', value: 'eclipse' },
 ]
-
-/**
- * Editor settings interface
- */
-export interface EditorSettingsInterface {
-    theme: 'monokai' | 'dracula' | 'material' | 'nord' | 'solarized-dark' | 'solarized-light' | 'darcula' | 'eclipse'
-    fontSize: number
-    fontFamily: string
-    tabSize: number
-    showLineNumbers: boolean
-    lineWrapping: boolean
-    vimMode: boolean
-}
