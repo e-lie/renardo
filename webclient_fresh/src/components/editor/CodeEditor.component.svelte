@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { BufferInterface } from '../../models/editor';
   import { ElCodeEditor } from '../primitives';
+  import { logger } from '../../services/logger.service';
 
   let {
     buffer,
@@ -13,12 +14,14 @@
   } = $props();
 
   function handleChange(content: string) {
+    logger.debug('CodeEditor', 'Content changed', { contentLength: content.length });
     if (buffer) {
       onchange?.(content);
     }
   }
 
   function handleExecute(code: string) {
+    logger.debug('CodeEditor', 'Execute called', { codeLength: code.length });
     onexecute?.(code);
   }
 </script>
