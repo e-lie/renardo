@@ -74,10 +74,11 @@ class workspace:
             self.root = tb.Window(themename=self.theme)
         except Exception as e:
             print(f"Warning: Failed to create themed window: {e}")
-            print("Falling back to basic Tkinter window")
-            import tkinter as tk
-
-            self.root = tk.Tk()
+            print(
+                "Tcl/Tk environment issue detected. Please check your Tcl/Tk installation."
+            )
+            print("Cannot start FoxDot editor due to Tcl/Tk configuration problems.")
+            raise SystemExit("Tcl/Tk not properly configured")
         self.root.title("FoxDot >> Renardo")
         self.root.minsize(800, 600)
         self.width = 1024
