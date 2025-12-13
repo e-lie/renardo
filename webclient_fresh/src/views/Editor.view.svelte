@@ -2,17 +2,20 @@
   import EditorTabs from '../components/editor/EditorTabs.component.svelte';
   import CodeEditor from '../components/editor/CodeEditor.component.svelte';
   import { useEditorStore } from '../store/editor';
+  import { logger } from '../services/logger.service';
 
   const { actions, getters } = useEditorStore();
   const { activeTab, activeBuffer, tabs, buffers } = getters;
 
   // Initialize with startup buffer on mount
   $effect(() => {
+    logger.debug('Editor', 'Editor view effect triggered');
     // Check if we already have a startup buffer
     const currentBuffers = $buffers;
     const hasStartup = currentBuffers.some((b) => b.isStartupFile);
 
     if (!hasStartup) {
+      logger.info('Editor', 'Creating startup buffer');
       // Create startup buffer
       const bufferId = actions.createBuffer({
         name: 'startup.py',
@@ -23,18 +26,23 @@
 
       // Create tab for startup buffer
       actions.createTab(bufferId, 'startup.py');
+    } else {
+      logger.debug('Editor', 'Startup buffer already exists');
     }
   });
 
   function handleSwitchTab(tabId: string) {
+    logger.debug('Editor', 'Switching tab', { tabId });
     actions.switchToTab(tabId);
   }
 
   function handleCloseTab(tabId: string) {
+    logger.debug('Editor', 'Closing tab', { tabId });
     actions.closeTab(tabId);
   }
 
   function handleCreateTab() {
+    logger.debug('Editor', 'Creating new tab');
     // Create new buffer
     const bufferId = actions.createBuffer({
       name: `Untitled-${Date.now()}`,
@@ -48,17 +56,22 @@
 
   function handleContentChange(content: string) {
     if ($activeBuffer) {
+      logger.debug('Editor', 'Content changed', {
+        bufferId: $activeBuffer.id,
+        contentLength: content.length,
+      });
       actions.updateBufferContent($activeBuffer.id, content);
     }
   }
 
   async function handleExecuteCode(code: string) {
+    logger.info('Editor', 'Executing code', { codeLength: code.length });
     const result = await actions.executeCode(code);
 
     if (result.success) {
-      console.log('Code executed successfully:', result.message);
+      logger.info('Editor', 'Code executed successfully', { message: result.message });
     } else {
-      console.error('Code execution failed:', result.message);
+      logger.error('Editor', 'Code execution failed', { message: result.message });
     }
   }
 </script>

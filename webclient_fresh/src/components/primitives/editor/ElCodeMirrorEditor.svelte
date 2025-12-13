@@ -6,6 +6,7 @@
   import { python } from '@codemirror/lang-python';
   import { javascript } from '@codemirror/lang-javascript';
   import { oneDark } from '@codemirror/theme-one-dark';
+  import { logger } from '../../../services/logger.service';
 
   let {
     content = '',
@@ -72,7 +73,16 @@
   ]);
 
   onMount(() => {
-    if (!containerElement) return;
+    logger.debug('ElCodeMirrorEditor', 'Component mounting...');
+    if (!containerElement) {
+      logger.error('ElCodeMirrorEditor', 'Container element not found');
+      return;
+    }
+
+    logger.debug('ElCodeMirrorEditor', 'Creating CodeMirror instance', {
+      contentLength: content.length,
+      language,
+    });
 
     // Create editor state
     const startState = EditorState.create({
@@ -133,22 +143,29 @@
       state: startState,
       parent: containerElement,
     });
+
+    logger.info('ElCodeMirrorEditor', 'CodeMirror instance created successfully');
   });
 
   onDestroy(() => {
+    logger.debug('ElCodeMirrorEditor', 'Component destroying...');
     if (editorView) {
       editorView.destroy();
+      logger.debug('ElCodeMirrorEditor', 'CodeMirror instance destroyed');
     }
   });
 
   // Expose focus method
   export function focus() {
+    logger.debug('ElCodeMirrorEditor', 'Focus called');
     editorView?.focus();
   }
 
   // Expose get content method
   export function getContent(): string {
-    return editorView?.state.doc.toString() || '';
+    const content = editorView?.state.doc.toString() || '';
+    logger.debug('ElCodeMirrorEditor', 'getContent called', { contentLength: content.length });
+    return content;
   }
 </script>
 
