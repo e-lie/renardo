@@ -84,7 +84,7 @@
     }
   }
 
-  // Custom keymap for Ctrl+Enter execution
+  // Custom keymap for Ctrl+Enter execution and Ctrl+. for stop
   const executeKeymap = keymap.of([
     {
       key: 'Ctrl-Enter',
@@ -92,6 +92,15 @@
       run: (view) => {
         const code = view.state.doc.toString();
         onexecute?.(code);
+        return true;
+      },
+    },
+    {
+      key: 'Ctrl-.',
+      mac: 'Cmd-.',
+      run: () => {
+        logger.info('ElCodeMirrorEditor', 'Executing Clock.clear() via Ctrl+.');
+        onexecute?.('Clock.clear()');
         return true;
       },
     },
