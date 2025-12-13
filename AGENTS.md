@@ -11,10 +11,9 @@
 # Projet
 
 - le projet utilise `uv` pour gérer la partie python et `npm` pour gérer la partie web
-- pour `webclient_fresh` toujours suivre les directives de `webclient_fresh/ARCHITECTURE_GUIDE.md`
+- pour l'implémentation de nouvelles fonctionnalités dans `webclient_fresh` toujours suivre les directives dans `webclient_fresh/ARCHITECTURE_GUIDE.md`
 
 ## Architecture
-
 
 - le coeur de ce projet est une app/bibliothèque python appelée renardo qui permet de faire du livecoding musical ie executer un paragraphe de code qui exprime et joue en temps réel de la musique. l'état de la musique est patché au fur et a mesure à chaque execution de paragraphe de code.
 - le coeur de renardo est la `runtime` (module src/renardo/runtime) et la `lib` (module src/renardo/runtime) qui permettent d'exprimer de la musique c'est à dire des évènement musicaux
