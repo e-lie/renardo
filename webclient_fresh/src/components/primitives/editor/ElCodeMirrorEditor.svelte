@@ -52,12 +52,17 @@
     }
   });
 
-  // Update theme when prop changes
+  // Update theme when prop changes (using untrack to avoid infinite loop)
   $effect(() => {
-    if (editorView && theme) {
-      logger.debug('ElCodeMirrorEditor', 'Updating theme', { theme });
+    // This will run whenever `theme` changes
+    const currentTheme = theme;
+
+    if (editorView) {
+      logger.info('ElCodeMirrorEditor', 'Theme prop changed, updating editor', { theme: currentTheme });
+
+      // Dispatch the theme update
       editorView.dispatch({
-        effects: themeCompartment.reconfigure(getTheme(theme))
+        effects: themeCompartment.reconfigure(getTheme(currentTheme))
       });
     }
   });
