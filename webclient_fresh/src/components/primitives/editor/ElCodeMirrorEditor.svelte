@@ -4,8 +4,7 @@
   import { EditorState } from '@codemirror/state';
   import { defaultKeymap, indentWithTab, standardKeymap, insertTab } from '@codemirror/commands';
   import { python } from '@codemirror/lang-python';
-  import { javascript } from '@codemirror/lang-javascript';
-  import { oneDark } from '@codemirror/theme-one-dark';
+  import { highlightSelectionMatches } from '@codemirror/search';
   import { logger } from '../../../services/logger.service';
 
   let {
@@ -18,7 +17,7 @@
     onexecute,
   }: {
     content?: string;
-    language?: 'python' | 'javascript' | 'text' | 'sclang';
+    language?: 'python';
     readonly?: boolean;
     placeholder?: string;
     testid?: string;
@@ -47,14 +46,24 @@
     }
   });
 
-  // Language support
+  // Language support with enhanced syntax highlighting
   function getLanguageSupport(lang: string) {
+    logger.debug('ElCodeMirrorEditor', 'Loading language support', { language: lang });
+
     switch (lang) {
       case 'python':
-        return python();
-      case 'javascript':
-        return javascript();
+        return python({
+          // Python-specific configuration
+          indentUnit: 4,
+          tabSize: 4,
+          languageData: {
+            commentTokens: { line: '#' },
+            indentOnInput:
+              /^\s*(((def|class|if|elif|else|for|while|try|except|finally|with|async)\b.*:|elif\s+.*:|else\s*:|except\s+.*:|finally\s*:|with\s+.*:|async\s+.*:))$/,
+          },
+        });
       default:
+        // Plain text mode
         return [];
     }
   }
@@ -88,20 +97,21 @@
     const startState = EditorState.create({
       doc: content,
       extensions: [
-        // Basic setup
+        // Basic setup with enhanced syntax highlighting
         EditorView.theme({
           '&': {
             height: '100%',
             fontSize: '14px',
-            fontFamily: 'Fira Code, monospace',
+            fontFamily: 'Fira Code, "JetBrains Mono", "Consolas", monospace',
           },
           '.cm-scroller': {
             overflow: 'auto',
-            fontFamily: 'Fira Code, monospace',
+            fontFamily: 'Fira Code, "JetBrains Mono", "Consolas", monospace',
           },
           '.cm-content': {
             padding: '16px',
             minHeight: '100%',
+            lineHeight: '1.5',
           },
           '.cm-focused': {
             outline: 'none',
@@ -109,10 +119,59 @@
           '.cm-editor': {
             height: '100%',
           },
+          '.cm-line': {
+            padding: '0 0',
+          },
+          '.cm-selectionBackground, ::selection': {
+            backgroundColor: 'rgba(var(--p), 0.2)',
+          },
+          '.cm-gutters': {
+            backgroundColor: 'transparent',
+            border: 'none',
+          },
+          '.cm-activeLineGutter': {
+            backgroundColor: 'transparent',
+          },
+          '.cm-lineNumbers .cm-gutterElement': {
+            color: 'rgba(var(--bc), 0.5)',
+            padding: '0 8px 0 16px',
+            minWidth: '40px',
+            textAlign: 'right',
+            fontSize: '12px',
+          },
+          // Python syntax highlighting
+          '.cm-keyword': { color: '#ff79c6', fontWeight: 'bold' },
+          '.cm-def': { color: '#8be9fd' },
+          '.cm-variable': { color: '#f8f8f2' },
+          '.cm-variable-2': { color: '#50fa7b' },
+          '.cm-variable-3': { color: '#ffb86c' },
+          '.cm-type': { color: '#8be9fd' },
+          '.cm-property': { color: '#66d9ef' },
+          '.cm-string': { color: '#f1fa8c' },
+          '.cm-string-2': { color: '#f1fa8c' },
+          '.cm-comment': { color: '#6272a4', fontStyle: 'italic' },
+          '.cm-number': { color: '#bd93f9' },
+          '.cm-atom': { color: '#bd93f9' },
+          '.cm-builtin': { color: '#ff79c6' },
+          '.cm-operator': { color: '#ff79c6' },
+          '.cm-punctuation': { color: '#f8f8f2' },
+          '.cm-bracket': { color: '#f8f8f2' },
+          '.cm-tag': { color: '#ff79c6' },
+          '.cm-attribute': { color: '#50fa7b' },
+          '.cm-hr': { color: '#6272a4' },
+          '.cm-link': { color: '#8be9fd', textDecoration: 'underline' },
+          '.cm-error': { color: '#ff5555', borderBottom: '1px solid #ff5555' },
+          '.cm-positive': { color: '#50fa7b' },
+          '.cm-negative': { color: '#ff5555' },
+          '.cm-meta': { color: '#f8f8f2' },
+          '.cmqualifier': { color: '#50fa7b' },
         }),
 
         // Language support
         getLanguageSupport(language),
+
+        // Enhanced syntax highlighting
+        highlightSelectionMatches(),
 
         // Keymaps
         keymap.of([...defaultKeymap, ...standardKeymap, indentWithTab, insertTab]),
