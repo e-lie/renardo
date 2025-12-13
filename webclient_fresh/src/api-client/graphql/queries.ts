@@ -68,3 +68,12 @@ export const EXECUTE_CODE = gql`
     }
   }
 `
+
+export const SEND_FRONTEND_LOG = gql`
+  mutation SendFrontendLog($timestamp: String!, $level: String!, $component: String!, $message: String!, $data: String) {
+    sendFrontendLog(timestamp: $timestamp, level: $level, component: $component, message: $message, data: $data) {
+      success
+      message
+    }
+  }
+`
