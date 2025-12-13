@@ -5,7 +5,7 @@ export interface BufferInterface {
     id: string
     name: string
     content: string
-    language: 'python' | 'javascript' | 'text' | 'sclang'
+    language: 'python'
     isStartupFile: boolean
     isDirty: boolean
     filePath?: string
@@ -18,7 +18,7 @@ export interface BufferInterface {
  */
 export interface CreateBufferOptions {
     name: string
-    language?: 'python' | 'javascript' | 'text' | 'sclang'
+    language?: 'python'
     isStartupFile?: boolean
     filePath?: string
     content?: string
