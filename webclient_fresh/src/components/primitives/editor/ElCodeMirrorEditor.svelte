@@ -149,9 +149,9 @@
         // Enhanced syntax highlighting
         highlightSelectionMatches(),
 
-        // Keymaps
-        keymap.of([...defaultKeymap, ...standardKeymap, indentWithTab, insertTab]),
+        // Keymaps (executeKeymap first for priority)
         executeKeymap,
+        keymap.of([...defaultKeymap, ...standardKeymap, indentWithTab, insertTab]),
 
         // Event handlers
         EditorView.updateListener.of((update) => {
