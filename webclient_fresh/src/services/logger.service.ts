@@ -9,26 +9,6 @@ interface LogEntry {
 class LoggerService {
     private logs: LogEntry[] = [];
     private maxLogs = 100;
-    private urqlClient: any = null;
-
-    constructor() {
-        // Try to get URQL client from context
-        this.initializeClient();
-    }
-
-    private initializeClient() {
-        // Import getClient dynamically to avoid SSR issues
-        import('@urql/svelte').then(({ getContextClient }) => {
-            try {
-                this.urqlClient = getContextClient();
-            } catch (error) {
-                // Client not available, will use console only
-                console.warn('[LoggerService] URQL client not available, using console only');
-            }
-        }).catch(() => {
-            // Module not available, will use console only
-        });
-    }
 
     private createLogEntry(level: LogEntry['level'], component: string, message: string, data?: any): LogEntry {
         return {
@@ -55,39 +35,6 @@ class LoggerService {
                 entry.level === 'INFO' ? 'info' : 'debug';
 
         console[consoleMethod](`[${entry.component}] ${entry.message}`, entry.data || '');
-
-        // Send to backend if available
-        this.sendToBackend(entry);
-    }
-
-    private async sendToBackend(entry: LogEntry) {
-        if (!this.urqlClient) return;
-
-        try {
-            // Import the mutation dynamically
-            import('../api-client/graphql/queries').then(({ SEND_FRONTEND_LOG }) => {
-                const variables = {
-                    timestamp: entry.timestamp,
-                    level: entry.level,
-                    component: entry.component,
-                    message: entry.message,
-                    data: entry.data ? JSON.stringify(entry.data) : null
-                };
-
-                this.urqlClient.mutation(SEND_FRONTEND_LOG, variables).toPromise().then((result: any) => {
-                    if (result.error) {
-                        console.warn('[LoggerService] Failed to send log to backend:', result.error);
-                    }
-                }).catch((error: any) => {
-                    console.warn('[LoggerService] Failed to send log to backend:', error);
-                });
-            }).catch((error: any) => {
-                console.warn('[LoggerService] Failed to import queries:', error);
-            });
-        } catch (error) {
-            // Silently fail to avoid infinite loops
-            console.warn('[LoggerService] Failed to send log to backend:', error);
-        }
     }
 
     debug(component: string, message: string, data?: any) {
