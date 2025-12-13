@@ -20,13 +20,18 @@ function generateId(): string {
     return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
 
-// Initial state
-const initialState: EditorStateInterface = {
-    buffers: new Map(),
-    tabs: new Map(),
-    activeTabId: null,
-    settings: {
-        theme: 'dark',
+// Load settings from localStorage
+function loadSettingsFromLocalStorage(): EditorSettingsInterface {
+    const savedSettings = localStorage.getItem('editor-settings')
+    if (savedSettings) {
+        try {
+            return JSON.parse(savedSettings)
+        } catch (e) {
+            console.error('Failed to parse editor settings from localStorage:', e)
+        }
+    }
+    return {
+        theme: 'dracula',
         fontSize: 14,
         fontFamily: 'Fira Code',
         tabSize: 4,
@@ -34,6 +39,14 @@ const initialState: EditorStateInterface = {
         lineWrapping: true,
         vimMode: false
     }
+}
+
+// Initial state
+const initialState: EditorStateInterface = {
+    buffers: new Map(),
+    tabs: new Map(),
+    activeTabId: null,
+    settings: loadSettingsFromLocalStorage()
 }
 
 // Private writable store
@@ -228,10 +241,15 @@ export function useEditorStore(): EditorStoreInterface {
         },
 
         updateSettings: (settings: Partial<EditorSettingsInterface>): void => {
-            writableEditorStore.update(state => ({
-                ...state,
-                settings: { ...state.settings, ...settings }
-            }))
+            writableEditorStore.update(state => {
+                const newSettings = { ...state.settings, ...settings }
+                // Save to localStorage
+                localStorage.setItem('editor-settings', JSON.stringify(newSettings))
+                return {
+                    ...state,
+                    settings: newSettings
+                }
+            })
         },
 
         executeCode: async (code: string): Promise<{ success: boolean; message: string }> => {

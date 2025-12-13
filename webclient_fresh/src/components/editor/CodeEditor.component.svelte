@@ -2,6 +2,7 @@
   import type { BufferInterface } from '../../models/editor';
   import { ElCodeEditor } from '../primitives';
   import { logger } from '../../services/logger.service';
+  import { useEditorStore } from '../../store/editor/Editor.store';
 
   let {
     buffer,
@@ -12,6 +13,9 @@
     onchange?: (content: string) => void;
     onexecute?: (code: string) => void;
   } = $props();
+
+  const { getters } = useEditorStore();
+  const { settings } = getters;
 
   function handleChange(content: string) {
     logger.debug('CodeEditor', 'Content changed', { contentLength: content.length });
@@ -33,6 +37,7 @@
       language={buffer.language}
       readonly={false}
       placeholder="Write your Renardo code here... (Ctrl+Enter to execute)"
+      theme={$settings.theme}
       testid="code-editor"
       onchange={handleChange}
       onexecute={handleExecute}
