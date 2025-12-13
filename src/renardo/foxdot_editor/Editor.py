@@ -70,15 +70,40 @@ class workspace:
         # Used for docstring prompt
         self.namespace = CodeClass.namespace
         # Set up master widget
+        # Import and run Tcl/Tk wrapper before creating window
+        import sys
+        import os
+
+        # Add the project root to path to import our wrapper
+        project_root = os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        )
+        wrapper_path = os.path.join(project_root, "tcl_wrapper.py")
+
+        if os.path.exists(wrapper_path):
+            try:
+                # Execute the wrapper to set up environment
+                exec(open(wrapper_path).read(), globals())
+                fix_tcl_version()
+            except Exception as e:
+                print(f"Warning: Tcl wrapper failed: {e}")
+
+        # Try creating themed window with fallback
         try:
             self.root = tb.Window(themename=self.theme)
         except Exception as e:
             print(f"Warning: Failed to create themed window: {e}")
-            print(
-                "Tcl/Tk environment issue detected. Please check your Tcl/Tk installation."
-            )
-            print("Cannot start FoxDot editor due to Tcl/Tk configuration problems.")
-            raise SystemExit("Tcl/Tk not properly configured")
+            try:
+                print("Attempting to create basic Tkinter window...")
+                import tkinter as tk
+
+                self.root = tk.Tk()
+                # Apply basic styling
+                self.root.configure(bg="#1a1a1a")
+            except Exception as e2:
+                print(f"Failed to create Tkinter window: {e2}")
+                print("Tcl/Tk environment issue detected. Cannot start FoxDot editor.")
+                raise SystemExit("Tcl/Tk not properly configured")
         self.root.title("FoxDot >> Renardo")
         self.root.minsize(800, 600)
         self.width = 1024

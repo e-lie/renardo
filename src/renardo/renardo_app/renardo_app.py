@@ -141,34 +141,12 @@ class RenardoApp:
             # Just take commands from the CLI
             handle_stdin()
         elif self.args.foxdot_editor:
-            print(
-                "FoxDot desktop editor is not available due to Tcl/Tk compatibility issues."
-            )
-            print("Launching webclient instead...")
-            print(
-                "The webclient provides the same livecoding functionality in your browser."
-            )
-            # Launch webclient directly - recreate webapp launch logic
-            webapp = self.create_webapp_instance()
+            from renardo.runtime import FoxDotCode
 
-            def open_browser_after_delay():
-                import time
-                import webbrowser
+            # Open the GUI
+            from renardo.foxdot_editor.Editor import workspace
 
-                time.sleep(1.5)
-                url = f"http://localhost:8000"
-                print(f"Opening browser at {url}")
-                webbrowser.open(url)
-
-            if not self.args.no_browser:
-                import threading
-
-                browser_thread = threading.Thread(target=open_browser_after_delay)
-                browser_thread.daemon = True
-                browser_thread.start()
-
-            webapp.run(host="0.0.0.0", port=8000, debug=False)
-            return
+            FoxDot = workspace(FoxDotCode).run()
         elif self.args.no_tui:
             print(
                 "You need to choose a launching mode: TUI, --pipe or --foxdot-editor..."
