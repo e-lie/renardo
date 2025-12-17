@@ -14,27 +14,17 @@
     isSettingsOpen = !isSettingsOpen;
   }
 
-  // Initialize with startup buffer on mount
+  // Initialize with at least one tab
   $effect(() => {
-    logger.debug('Editor', 'Editor view effect triggered');
-    // Check if we already have a startup buffer
-    const currentBuffers = $buffers;
-    const hasStartup = currentBuffers.some((b) => b.isStartupFile);
-
-    if (!hasStartup) {
-      logger.info('Editor', 'Creating startup buffer');
-      // Create startup buffer
+    const currentTabs = $tabs;
+    if (currentTabs.length === 0) {
+      logger.info('Editor', 'Creating initial tab');
       const bufferId = actions.createBuffer({
-        name: 'startup.py',
-        content: '# Renardo startup file\n# This code runs when Renardo starts\n\n',
-        isStartupFile: true,
+        name: 'Untitled',
+        content: '',
         language: 'python',
       });
-
-      // Create tab for startup buffer
-      actions.createTab(bufferId, 'startup.py');
-    } else {
-      logger.debug('Editor', 'Startup buffer already exists');
+      actions.createTab(bufferId);
     }
   });
 

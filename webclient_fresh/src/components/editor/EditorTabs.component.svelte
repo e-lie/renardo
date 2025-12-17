@@ -22,11 +22,6 @@
   function handleCreateTab() {
     oncreate?.();
   }
-
-  function isStartupFile(tab: TabInterface): boolean {
-    const buffer = buffers.find((b) => b.id === tab.bufferId);
-    return buffer?.isStartupFile || false;
-  }
 </script>
 
 <div class="bg-base-200 px-2 py-1">
@@ -34,7 +29,7 @@
     <!-- Tabs -->
     <div class="flex items-center gap-1 overflow-x-auto flex-1">
       {#each tabs as tab (tab.id)}
-        <TabItem {tab} isStartupFile={isStartupFile(tab)} {onswitch} {onclose} />
+        <TabItem {tab} {onswitch} {onclose} />
       {/each}
     </div>
 
