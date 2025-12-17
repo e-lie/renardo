@@ -5,6 +5,7 @@
   import TabbedPane from './TabbedPane.component.svelte';
   import EditorTabs from '../editor/EditorTabs.component.svelte';
   import CodeEditor from '../editor/CodeEditor.component.svelte';
+  import { useEditorStore } from '../../store/editor';
 
   let {
     layoutManager,
@@ -26,6 +27,9 @@
     activeBuffer: BufferInterface | null;
   } = $props();
 
+  // Import EditorStore for buffer management
+  const { actions } = useEditorStore();
+
   let panes = $state<Pane[]>([]);
 
   $effect(() => {
@@ -35,6 +39,38 @@
 
   function getPaneByPosition(pos: string): Pane | null {
     return panes.find(p => p.getState().position === pos) || null;
+  }
+
+  function togglePaneVisibility(pos: string) {
+    // Toggle all panes in a column/row
+    const leftPanes = ['left-top', 'left-bottom'];
+    const rightPanes = ['right-top', 'right-bottom'];
+    const bottomPanes = ['bottom-left', 'bottom-right'];
+    
+    let panesToToggle: string[] = [];
+    
+    if (pos === 'left-top' || pos === 'left') {
+      panesToToggle = leftPanes;
+    } else if (pos === 'right-top' || pos === 'right') {
+      panesToToggle = rightPanes;
+    } else if (pos === 'bottom-left' || pos === 'bottom') {
+      panesToToggle = bottomPanes;
+    } else {
+      panesToToggle = [pos];
+    }
+    
+    const anyVisible = panesToToggle.some(p => getPaneByPosition(p)?.getState().isVisible);
+    
+    panesToToggle.forEach(panePos => {
+      const pane = getPaneByPosition(panePos);
+      if (pane) {
+        pane.setVisible(!anyVisible);
+      }
+    });
+  }
+
+  function isAnyPaneVisible(positions: string[]): boolean {
+    return positions.some(pos => getPaneByPosition(pos)?.getState().isVisible);
   }
 </script>
 
@@ -120,6 +156,80 @@
     {/if}
   {/each}
 
+  <!-- Floating Toggle Buttons -->
+    <!-- Floating Toggle Buttons -->
+  {#if isAnyPaneVisible(['left-top', 'left-bottom'])}
+    <button 
+      class="fixed left-4 top-1/2 btn btn-circle btn-primary btn-sm shadow-lg z-40"
+      style="transform: translateY(-50%);"
+      onclick={() => togglePaneVisibility('left')}
+      title="Toggle Left Panes"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+      </svg>
+    </button>
+  {:else}
+    <button 
+      class="fixed left-4 top-1/2 btn btn-circle btn-primary btn-sm shadow-lg z-40"
+      style="transform: translateY(-50%);"
+      onclick={() => togglePaneVisibility('left')}
+      title="Show Left Panes"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+      </svg>
+    </button>
+  {/if}
+
+  {#if isAnyPaneVisible(['right-top', 'right-bottom'])}
+    <button 
+      class="fixed right-4 top-1/2 btn btn-circle btn-primary btn-sm shadow-lg z-40"
+      style="transform: translateY(-50%);"
+      onclick={() => togglePaneVisibility('right')}
+      title="Toggle Right Panes"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+      </svg>
+    </button>
+  {:else}
+    <button 
+      class="fixed right-4 top-1/2 btn btn-circle btn-primary btn-sm shadow-lg z-40"
+      style="transform: translateY(-50%);"
+      onclick={() => togglePaneVisibility('right')}
+      title="Show Right Panes"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+      </svg>
+    </button>
+  {/if}
+
+  {#if isAnyPaneVisible(['bottom-left', 'bottom-right'])}
+    <button 
+      class="fixed bottom-4 left-1/2 btn btn-circle btn-primary btn-sm shadow-lg z-40"
+      style="transform: translateX(-50%);"
+      onclick={() => togglePaneVisibility('bottom')}
+      title="Toggle Bottom Panes"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+      </svg>
+    </button>
+  {:else}
+    <button 
+      class="fixed bottom-4 left-1/2 btn btn-circle btn-primary btn-sm shadow-lg z-40"
+      style="transform: translateX(-50%);"
+      onclick={() => togglePaneVisibility('bottom')}
+      title="Show Bottom Panes"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+      </svg>
+    </button>
+  {/if}
+
   <!-- Center Pane (always visible) - Contains original editor -->
   {#each panes as pane (pane.getState().id)}
     {#if pane.getState().position === 'center' && pane.getState().isVisible}
@@ -142,15 +252,25 @@
         <!-- Original Code Editor -->
         <div class="flex-1 overflow-hidden">
           {#if activeBuffer}
-            <CodeEditor 
-              buffer={activeBuffer}
-              onchange={(content) => {
-                // TODO: Update buffer content
-              }}
-              onexecute={(code) => {
-                // TODO: Execute code
-              }}
-            />
+            {#if activeBuffer}
+              <CodeEditor 
+                buffer={activeBuffer}
+                onchange={(content) => {
+                  console.log('Central editor content changed:', content);
+                  if (activeBuffer) {
+                    actions.updateBufferContent(activeBuffer.id, content);
+                  }
+                }}
+                onexecute={(code) => {
+                  console.log('Central editor execute:', code);
+                  actions.executeCode(code);
+                }}
+              />
+            {:else}
+              <div class="flex items-center justify-center h-full">
+                <p class="text-base-content/50">No active buffer in central editor</p>
+              </div>
+            {/if}
           {:else}
             <div class="p-4 text-center text-base-content/50">
               No active buffer
