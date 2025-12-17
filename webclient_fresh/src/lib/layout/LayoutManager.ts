@@ -84,42 +84,84 @@ export class LayoutManager {
         position: 'left-top',
         title: 'Left Top',
         dimensions: { width: 300, minWidth: 200, height: 300, minHeight: 200 },
-        isVisible: false
+        isVisible: true,
+        defaultTabs: [
+          {
+            title: 'Notes',
+            componentType: 'TextArea',
+            isCloseable: true
+          }
+        ]
       },
       {
         id: 'left-bottom',
         position: 'left-bottom',
         title: 'Left Bottom',
         dimensions: { width: 300, minWidth: 200, height: 200, minHeight: 150 },
-        isVisible: false
+        isVisible: true,
+        defaultTabs: [
+          {
+            title: 'Scratch',
+            componentType: 'TextArea',
+            isCloseable: true
+          }
+        ]
       },
       {
         id: 'right-top',
         position: 'right-top',
         title: 'Right Top',
         dimensions: { width: 300, minWidth: 200, height: 300, minHeight: 200 },
-        isVisible: false
+        isVisible: true,
+        defaultTabs: [
+          {
+            title: 'Workspace',
+            componentType: 'TextArea',
+            isCloseable: true
+          }
+        ]
       },
       {
         id: 'right-bottom',
         position: 'right-bottom',
         title: 'Right Bottom',
         dimensions: { width: 300, minWidth: 200, height: 200, minHeight: 150 },
-        isVisible: false
+        isVisible: true,
+        defaultTabs: [
+          {
+            title: 'Debug',
+            componentType: 'TextArea',
+            isCloseable: true
+          }
+        ]
       },
       {
         id: 'bottom-left',
         position: 'bottom-left',
         title: 'Bottom Left',
         dimensions: { width: 400, minWidth: 300, height: 200, minHeight: 150 },
-        isVisible: false
+        isVisible: true,
+        defaultTabs: [
+          {
+            title: 'Output',
+            componentType: 'TextArea',
+            isCloseable: true
+          }
+        ]
       },
       {
         id: 'bottom-right',
         position: 'bottom-right',
         title: 'Bottom Right',
         dimensions: { width: 400, minWidth: 300, height: 200, minHeight: 150 },
-        isVisible: false
+        isVisible: true,
+        defaultTabs: [
+          {
+            title: 'Console',
+            componentType: 'TextArea',
+            isCloseable: true
+          }
+        ]
       },
       {
         id: 'center',

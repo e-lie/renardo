@@ -31,5 +31,5 @@
     value={content}
     oninput={handleInput}
     placeholder="Notes..."
-  />
+  ></textarea>
 </div>

@@ -65,7 +65,12 @@
       >
         {tab.getState().title}
         {#if tab.getState().isCloseable}
-          <span onclick={(e) => { e.stopPropagation(); handleCloseTab(tab.getState().id); }}>×</span>
+          <span 
+            role="button"
+            tabindex="0"
+            onclick={(e) => { e.stopPropagation(); handleCloseTab(tab.getState().id); }}
+            onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); handleCloseTab(tab.getState().id); } }}
+          >×</span>
         {/if}
       </button>
     {/each}
