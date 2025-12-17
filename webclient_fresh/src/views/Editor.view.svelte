@@ -59,6 +59,37 @@
     actions.createTab(bufferId);
   }
 
+  // Keyboard shortcuts
+  $effect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      // Ctrl+. or Cmd+. to stop music
+      if ((e.ctrlKey || e.metaKey) && e.key === '.') {
+        e.preventDefault();
+        stopMusic();
+        return;
+      }
+      
+      // Ctrl+Enter or Cmd+Enter to execute paragraph/selection
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key === 'Enter') {
+        e.preventDefault();
+        executeCode();
+        return;
+      }
+      
+      // Alt+Enter to execute current line
+      if (e.altKey && e.key === 'Enter' && !(e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        executeCurrentLine();
+        return;
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  });
+
   // Initialize with at least one tab in EditorStore
   $effect(() => {
     const currentTabs = $tabs;

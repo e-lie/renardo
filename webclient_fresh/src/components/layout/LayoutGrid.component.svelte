@@ -33,7 +33,9 @@
   let panes = $state<Pane[]>([]);
 
   $effect(() => {
-    const unsub = layoutManager.panes.subscribe(p => panes = p);
+    const unsub = layoutManager.panes.subscribe(p => {
+      panes = p;
+    });
     return unsub;
   });
 
@@ -72,6 +74,104 @@
   function isAnyPaneVisible(positions: string[]): boolean {
     return positions.some(pos => getPaneByPosition(pos)?.getState().isVisible);
   }
+
+  function getPaneWidth(positions: string[]): string {
+    const visiblePane = positions
+      .map(pos => getPaneByPosition(pos))
+      .find(pane => pane?.getState().isVisible);
+    
+    if (visiblePane) {
+      const dims = visiblePane.getState().dimensions;
+      return `${dims.width || 300}px`;
+    }
+    return '0px';
+  }
+
+  function getPaneHeight(positions: string[]): string {
+    const visiblePane = positions
+      .map(pos => getPaneByPosition(pos))
+      .find(pane => pane?.getState().isVisible);
+    
+    if (visiblePane) {
+      const dims = visiblePane.getState().dimensions;
+      return `${dims.height || 200}px`;
+    }
+    return '0px';
+  }
+
+  // Resize state
+  let isResizing = $state(false);
+  let resizeDirection = $state<'horizontal' | 'vertical' | null>(null);
+  let startPos = $state({ x: 0, y: 0 });
+  let startSizes = $state<Record<string, number>>({});
+
+  function startResize(e: MouseEvent, direction: 'horizontal' | 'vertical') {
+    e.preventDefault();
+    isResizing = true;
+    resizeDirection = direction;
+    startPos = { x: e.clientX, y: e.clientY };
+    
+    // Store current sizes
+    startSizes = {};
+    panes.forEach(pane => {
+      const state = pane.getState();
+      startSizes[pane.getState().id] = state.dimensions.width || state.dimensions.height || 300;
+    });
+
+    document.addEventListener('mousemove', handleResize);
+    document.addEventListener('mouseup', endResize);
+  }
+
+  function handleResize(e: MouseEvent) {
+    if (!isResizing || !resizeDirection) return;
+
+    const deltaX = e.clientX - startPos.x;
+    const deltaY = e.clientY - startPos.y;
+
+    // Update pane dimensions based on resize direction
+    if (resizeDirection === 'horizontal') {
+      // Resize left panes
+      ['left-top', 'left-bottom'].forEach(paneId => {
+        const pane = getPaneByPosition(paneId);
+        if (pane) {
+          const newWidth = Math.max(200, (startSizes[paneId] || 300) + deltaX);
+          pane.setDimensions({ width: newWidth });
+        }
+      });
+      // Resize right panes (inverted)
+      ['right-top', 'right-bottom'].forEach(paneId => {
+        const pane = getPaneByPosition(paneId);
+        if (pane) {
+          const newWidth = Math.max(200, (startSizes[paneId] || 300) - deltaX);
+          pane.setDimensions({ width: newWidth });
+        }
+      });
+    } else if (resizeDirection === 'vertical') {
+      // Resize top panes
+      ['left-top', 'right-top'].forEach(paneId => {
+        const pane = getPaneByPosition(paneId);
+        if (pane) {
+          const newHeight = Math.max(150, (startSizes[paneId] || 300) + deltaY);
+          pane.setDimensions({ height: newHeight });
+        }
+      });
+      // Resize bottom panes (inverted)
+      ['left-bottom', 'right-bottom', 'bottom-left', 'bottom-right'].forEach(paneId => {
+        const pane = getPaneByPosition(paneId);
+        if (pane) {
+          const newHeight = Math.max(150, (startSizes[paneId] || 200) - deltaY);
+          pane.setDimensions({ height: newHeight });
+        }
+      });
+    }
+  }
+
+  function endResize() {
+    isResizing = false;
+    resizeDirection = null;
+    document.removeEventListener('mousemove', handleResize);
+    document.removeEventListener('mouseup', endResize);
+  }
 </script>
 
 <div class="layout-grid h-full grid" style="
@@ -79,8 +179,8 @@
     'left-top center right-top'
     'left-bottom center right-bottom'
     'bottom-left bottom-left bottom-right';
-  grid-template-columns: 300px 1fr 300px;
-  grid-template-rows: 300px 1fr 200px;
+  grid-template-columns: {getPaneWidth(['left-top', 'left-bottom'])} 1fr {getPaneWidth(['right-top', 'right-bottom'])};
+  grid-template-rows: {getPaneHeight(['left-top', 'right-top'])} 1fr {getPaneHeight(['bottom-left', 'bottom-right'])};
   gap: 4px;
   padding: 4px;
 ">
@@ -96,6 +196,18 @@
     {/if}
   {/each}
 
+  <!-- Vertical Resize Handle between left and center -->
+  {#if isAnyPaneVisible(['left-top', 'left-bottom'])}
+    <div 
+      role="separator"
+      aria-orientation="vertical"
+      tabindex="-1"
+      class="w-1 bg-base-300 cursor-col-resize hover:bg-primary/30 transition-colors z-30"
+      style="grid-column: 2; grid-row: 1 / 3;"
+      onmousedown={(e) => startResize(e, 'horizontal')}
+    ></div>
+  {/if}
+
   <!-- Right Top Pane -->
   {#each panes as pane (pane.getState().id)}
     {#if pane.getState().position === 'right-top' && pane.getState().isVisible}
@@ -108,6 +220,18 @@
     {/if}
   {/each}
 
+  <!-- Vertical Resize Handle between center and right -->
+  {#if isAnyPaneVisible(['right-top', 'right-bottom'])}
+    <div 
+      role="separator"
+      aria-orientation="vertical"
+      tabindex="-1"
+      class="w-1 bg-base-300 cursor-col-resize hover:bg-primary/30 transition-colors z-30"
+      style="grid-column: 4; grid-row: 1 / 3;"
+      onmousedown={(e) => startResize(e, 'horizontal')}
+    ></div>
+  {/if}
+
   <!-- Left Bottom Pane -->
   {#each panes as pane (pane.getState().id)}
     {#if pane.getState().position === 'left-bottom' && pane.getState().isVisible}
@@ -119,6 +243,18 @@
       </div>
     {/if}
   {/each}
+
+  <!-- Horizontal Resize Handle between top and bottom -->
+  {#if isAnyPaneVisible(['left-top', 'right-top']) && isAnyPaneVisible(['left-bottom', 'right-bottom'])}
+    <div 
+      role="separator"
+      aria-orientation="horizontal"
+      tabindex="-1"
+      class="h-1 bg-base-300 cursor-row-resize hover:bg-primary/30 transition-colors z-30"
+      style="grid-column: 1 / 4; grid-row: 2;"
+      onmousedown={(e) => startResize(e, 'vertical')}
+    ></div>
+  {/if}
 
   <!-- Right Bottom Pane -->
   {#each panes as pane (pane.getState().id)}

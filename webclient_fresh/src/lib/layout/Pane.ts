@@ -1,5 +1,6 @@
 import { writable, derived, get, type Writable, type Readable } from 'svelte/store';
 import { PaneTab, type PaneTabState } from './PaneTab';
+import { PaneComponent } from './PaneComponent';
 import type { PanePosition } from '../../models/layout/PanePosition.type';
 import type { PaneDimensions } from '../../models/layout/PaneDimensions.interface';
 
@@ -104,6 +105,16 @@ export class Pane {
       state.tabs.size,
       isCloseable
     );
+
+    // Create PaneComponent instance for this tab
+    const paneComponent = new PaneComponent({
+      type: componentType,
+      id: tabId,
+      data: componentProps || {}
+    });
+
+    // Set the paneComponent on the tab
+    tab.paneComponent = paneComponent;
 
     this._state.update(s => {
       const newTabs = new Map(s.tabs);
