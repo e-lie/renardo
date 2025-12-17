@@ -4,12 +4,10 @@
 
   let {
     tab,
-    isStartupFile = false,
     onswitch,
     onclose,
   }: {
     tab: TabInterface;
-    isStartupFile?: boolean;
     onswitch?: (tabId: string) => void;
     onclose?: (tabId: string) => void;
   } = $props();
@@ -26,8 +24,7 @@
 <ElTab
   isActive={tab.isActive}
   isPinned={tab.isPinned}
-  {isStartupFile}
-  closeable={!isStartupFile}
+  closeable={true}
   testid={`tab-${tab.id}`}
   onclick={handleClick}
   onclose={handleClose}
