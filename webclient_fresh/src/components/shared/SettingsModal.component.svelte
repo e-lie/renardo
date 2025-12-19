@@ -1,6 +1,7 @@
 <script lang="ts">
   import ThemeSelector from '../editor/children/ThemeSelector.component.svelte';
   import SkeletonThemeSelector from '../editor/children/SkeletonThemeSelector.component.svelte';
+  import LayoutConfigTab from './LayoutConfigTab.component.svelte';
 
   let {
     isOpen = false,
@@ -9,6 +10,8 @@
     isOpen?: boolean;
     onclose?: () => void;
   } = $props();
+
+  let activeTab = $state<'editor' | 'layout'>('editor')
 
   function handleClose() {
     onclose?.();
@@ -28,7 +31,7 @@
     role="dialog"
     aria-modal="true"
   >
-    <div class="card variant-glass-surface w-full max-w-md p-6 space-y-6">
+    <div class="card variant-glass-surface w-full max-w-4xl p-6 space-y-6">
       <!-- Header -->
       <div class="flex justify-between items-center">
         <h2 class="h2">Settings</h2>
@@ -41,10 +44,30 @@
         </button>
       </div>
 
+      <!-- Tabs -->
+      <div class="flex gap-2 border-b border-surface-300 dark:border-surface-700">
+        <button
+          class="px-4 py-2 text-sm transition-colors {activeTab === 'editor' ? 'border-b-2 border-primary-500 text-primary-500' : 'text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-50'}"
+          onclick={() => activeTab = 'editor'}
+        >
+          Editor
+        </button>
+        <button
+          class="px-4 py-2 text-sm transition-colors {activeTab === 'layout' ? 'border-b-2 border-primary-500 text-primary-500' : 'text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-50'}"
+          onclick={() => activeTab = 'layout'}
+        >
+          Layout
+        </button>
+      </div>
+
       <!-- Content -->
-      <div class="space-y-6">
-        <ThemeSelector />
-        <SkeletonThemeSelector />
+      <div class="space-y-6 max-h-[60vh] overflow-y-auto">
+        {#if activeTab === 'editor'}
+          <ThemeSelector />
+          <SkeletonThemeSelector />
+        {:else if activeTab === 'layout'}
+          <LayoutConfigTab />
+        {/if}
       </div>
 
       <!-- Footer -->
