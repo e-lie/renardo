@@ -12,7 +12,7 @@ const initialState: LayoutStateInterface = {
   panes: new Map(),
   paneTabConfigs: new Map([
     ['top-menu', [
-      { id: 'tab-top-menu-1', title: 'Menu', componentType: 'TextArea', componentId: 'menu-1', closable: false, active: true }
+      { id: 'tab-top-menu-1', title: 'Menu', componentType: 'TopMenu', componentId: 'menu-1', closable: false, active: true }
     ]],
     ['center', [
       { id: 'tab-center-1', title: 'Code Editor', componentType: 'CodeEditor', componentId: 'editor-main', closable: false, active: true }

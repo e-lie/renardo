@@ -19,7 +19,19 @@
   } = $props()
 
   const { getters, actions } = useEditorStore()
-  const { activeBuffer } = getters
+  const { activeBuffer, tabs } = getters
+
+  // Initialize with at least one tab for center position
+  $effect(() => {
+    if (position === 'center' && $tabs.length === 0) {
+      const bufferId = actions.createBuffer({
+        name: 'Untitled',
+        content: '',
+        language: 'python',
+      })
+      actions.createTab(bufferId)
+    }
+  })
 
   const style = $derived.by(() => {
     let s = ''

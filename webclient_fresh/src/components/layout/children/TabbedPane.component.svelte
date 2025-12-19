@@ -4,6 +4,7 @@
   import ColorPicker from './ColorPicker.component.svelte'
   import TextArea from './TextArea.component.svelte'
   import CodeEditorWrapper from './CodeEditorWrapper.component.svelte'
+  import TopMenu from './TopMenu.component.svelte'
 
   let { position }: { position: PanePosition } = $props()
 
@@ -14,7 +15,8 @@
   const componentMap = {
     'ColorPicker': ColorPicker,
     'TextArea': TextArea,
-    'CodeEditor': CodeEditorWrapper
+    'CodeEditor': CodeEditorWrapper,
+    'TopMenu': TopMenu
   }
 
   function handleSwitchTab(tabId: string) {
