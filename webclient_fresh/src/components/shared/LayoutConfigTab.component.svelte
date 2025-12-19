@@ -3,20 +3,7 @@
   import type { PanePosition } from '../../models/layout'
 
   const { getters, actions } = useLayoutStore()
-  const { paneSetVisibility } = getters
-
-  // Pane visibility for individual panes (local state for UI)
-  let localPaneVisibility = $state<Record<string, boolean>>({
-    'top-menu': true,
-    'left-top': true,
-    'left-middle': true,
-    'left-bottom': true,
-    'right-top': true,
-    'right-middle': true,
-    'right-bottom': true,
-    'bottom-left': true,
-    'bottom-right': true
-  })
+  const { paneSetVisibility, paneVisibility } = getters
 
   function getPaneColor(position: string): string {
     const colors: Record<string, string> = {
@@ -31,10 +18,6 @@
       'bottom-right': 'bg-error-500/10 dark:bg-error-500/20'
     }
     return colors[position] || 'bg-surface-100 dark:bg-surface-900'
-  }
-
-  function togglePane(paneId: string) {
-    localPaneVisibility[paneId] = !localPaneVisibility[paneId]
   }
 </script>
 
@@ -76,8 +59,8 @@
           <input
             type="checkbox"
             class="checkbox checkbox-sm"
-            checked={localPaneVisibility['top-menu']}
-            onchange={() => togglePane('top-menu')}
+            checked={$paneVisibility.get('top-menu')}
+            onchange={() => actions.togglePaneVisibility('top-menu')}
           />
         </div>
       </div>
@@ -94,8 +77,8 @@
             <input
               type="checkbox"
               class="checkbox checkbox-sm"
-              checked={localPaneVisibility['left-top']}
-              onchange={() => togglePane('left-top')}
+              checked={$paneVisibility.get('left-top')}
+              onchange={() => actions.togglePaneVisibility('left-top')}
             />
           </div>
         </div>
@@ -106,8 +89,8 @@
             <input
               type="checkbox"
               class="checkbox checkbox-sm"
-              checked={localPaneVisibility['left-middle']}
-              onchange={() => togglePane('left-middle')}
+              checked={$paneVisibility.get('left-middle')}
+              onchange={() => actions.togglePaneVisibility('left-middle')}
             />
           </div>
         </div>
@@ -118,8 +101,8 @@
             <input
               type="checkbox"
               class="checkbox checkbox-sm"
-              checked={localPaneVisibility['left-bottom']}
-              onchange={() => togglePane('left-bottom')}
+              checked={$paneVisibility.get('left-bottom')}
+              onchange={() => actions.togglePaneVisibility('left-bottom')}
             />
           </div>
         </div>
@@ -139,8 +122,8 @@
             <input
               type="checkbox"
               class="checkbox checkbox-sm"
-              checked={localPaneVisibility['right-top']}
-              onchange={() => togglePane('right-top')}
+              checked={$paneVisibility.get('right-top')}
+              onchange={() => actions.togglePaneVisibility('right-top')}
             />
           </div>
         </div>
@@ -151,8 +134,8 @@
             <input
               type="checkbox"
               class="checkbox checkbox-sm"
-              checked={localPaneVisibility['right-middle']}
-              onchange={() => togglePane('right-middle')}
+              checked={$paneVisibility.get('right-middle')}
+              onchange={() => actions.togglePaneVisibility('right-middle')}
             />
           </div>
         </div>
@@ -163,8 +146,8 @@
             <input
               type="checkbox"
               class="checkbox checkbox-sm"
-              checked={localPaneVisibility['right-bottom']}
-              onchange={() => togglePane('right-bottom')}
+              checked={$paneVisibility.get('right-bottom')}
+              onchange={() => actions.togglePaneVisibility('right-bottom')}
             />
           </div>
         </div>
@@ -180,8 +163,8 @@
           <input
             type="checkbox"
             class="checkbox checkbox-sm"
-            checked={localPaneVisibility['bottom-left']}
-            onchange={() => togglePane('bottom-left')}
+            checked={$paneVisibility.get('bottom-left')}
+            onchange={() => actions.togglePaneVisibility('bottom-left')}
           />
         </div>
       </div>
@@ -192,8 +175,8 @@
           <input
             type="checkbox"
             class="checkbox checkbox-sm"
-            checked={localPaneVisibility['bottom-right']}
-            onchange={() => togglePane('bottom-right')}
+            checked={$paneVisibility.get('bottom-right')}
+            onchange={() => actions.togglePaneVisibility('bottom-right')}
           />
         </div>
       </div>

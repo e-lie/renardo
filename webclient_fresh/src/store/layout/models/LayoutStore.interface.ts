@@ -30,6 +30,7 @@ export interface LayoutStoreActionsInterface {
 export interface LayoutStoreGettersInterface {
   panes: Readable<PaneInterface[]>
   visiblePanes: Readable<PaneInterface[]>
+  paneVisibility: Readable<Map<string, boolean>>
   paneSetVisibility: Readable<PaneSetVisibility>
   hoverStates: Readable<HoverStates>
   paneSizes: Readable<PaneSizes>

@@ -3,6 +3,7 @@
   import TabbedPane from './children/TabbedPane.component.svelte'
   import CodeEditor from '../editor/CodeEditor.component.svelte'
   import { useEditorStore } from '../../store/editor'
+  import { useLayoutStore } from '../../store/layout'
 
   let {
     position,
@@ -20,6 +21,11 @@
 
   const { getters, actions } = useEditorStore()
   const { activeBuffer, tabs } = getters
+
+  const { getters: layoutGetters } = useLayoutStore()
+  const { paneVisibility } = layoutGetters
+
+  const isVisible = $derived($paneVisibility.get(position) ?? true)
 
   // Initialize with at least one tab for center position
   $effect(() => {
@@ -73,10 +79,12 @@
   }
 </script>
 
-<div class={cssClass} {style}>
-  {#if position === 'center'}
-    <CodeEditor buffer={$activeBuffer} onchange={handleChange} onexecute={handleExecute} />
-  {:else}
-    <TabbedPane {position} />
-  {/if}
-</div>
+{#if isVisible}
+  <div class={cssClass} {style}>
+    {#if position === 'center'}
+      <CodeEditor buffer={$activeBuffer} onchange={handleChange} onexecute={handleExecute} />
+    {:else}
+      <TabbedPane {position} />
+    {/if}
+  </div>
+{/if}

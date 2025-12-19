@@ -230,9 +230,12 @@ export function useLayoutStore(): LayoutStoreInterface {
     Array.from($state.panes.values()).filter(pane => pane.isVisible)
   )
 
+  const paneVisibility = derived(writableLayoutStore, $state => $state.paneVisibility)
+
   const getters: LayoutStoreGettersInterface = {
     panes,
     visiblePanes,
+    paneVisibility,
     paneSetVisibility: derived(writableLayoutStore, $state => $state.paneSetVisibility),
     hoverStates: derived(writableLayoutStore, $state => $state.hoverStates),
     paneSizes: derived(writableLayoutStore, $state => $state.paneSizes),
