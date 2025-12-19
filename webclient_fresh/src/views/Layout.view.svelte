@@ -10,6 +10,7 @@
   const { getters, actions } = useLayoutStore()
   const {
     paneSetVisibility,
+    paneVisibility,
     hoverStates,
     paneSizes,
     containerSizes,
@@ -115,24 +116,46 @@
   <div class="flex flex-1 overflow-hidden">
     <!-- Left column -->
     {#if $paneSetVisibility.left}
-      <div class="flex flex-col" style="width: {$containerSizes['left-column']}px; min-width: 200px;">
-        <PaneContainer position="left-top" height={$paneSizes['left-top']} minHeight={100} />
+      <div class="flex flex-col h-full" style="width: {$containerSizes['left-column']}px; min-width: 200px;">
+        {#if $paneVisibility.get('left-top')}
+          {#if $paneVisibility.get('left-bottom')}
+            <PaneContainer position="left-top" height={$paneSizes['left-top']} minHeight={100} />
+          {:else if $paneVisibility.get('left-middle')}
+            <PaneContainer position="left-top" height={$paneSizes['left-top']} minHeight={100} />
+          {:else}
+            <div class="flex-1 min-h-[100px]">
+              <PaneContainer position="left-top" />
+            </div>
+          {/if}
+          {#if $paneVisibility.get('left-middle') || $paneVisibility.get('left-bottom')}
+            <ElResizeHandle
+              direction="vertical"
+              onresizestart={(e) => startResize(e, 'left-top', 'vertical')}
+            />
+          {/if}
+        {/if}
 
-        <ElResizeHandle
-          direction="vertical"
-          onresizestart={(e) => startResize(e, 'left-top', 'vertical')}
-        />
+        {#if $paneVisibility.get('left-middle')}
+          {#if $paneVisibility.get('left-bottom')}
+            <PaneContainer position="left-middle" height={$paneSizes['left-middle']} minHeight={100} />
+          {:else}
+            <div class="flex-1 min-h-[100px]">
+              <PaneContainer position="left-middle" />
+            </div>
+          {/if}
+          {#if $paneVisibility.get('left-bottom')}
+            <ElResizeHandle
+              direction="vertical"
+              onresizestart={(e) => startResize(e, 'left-middle', 'vertical')}
+            />
+          {/if}
+        {/if}
 
-        <PaneContainer position="left-middle" height={$paneSizes['left-middle']} minHeight={100} />
-
-        <ElResizeHandle
-          direction="vertical"
-          onresizestart={(e) => startResize(e, 'left-middle', 'vertical')}
-        />
-
-        <div class="flex-1 min-h-[100px]">
-          <PaneContainer position="left-bottom" />
-        </div>
+        {#if $paneVisibility.get('left-bottom')}
+          <div class="flex-1 min-h-[100px]">
+            <PaneContainer position="left-bottom" />
+          </div>
+        {/if}
       </div>
 
       <ElResizeHandle
@@ -154,19 +177,24 @@
           onresizestart={(e) => startContainerResize(e, 'bottom-area', 'vertical')}
         />
 
-        <div class="flex" style="height: {$containerSizes['bottom-area']}px; min-height: 150px;">
-          <div style="width: {$paneSizes['bottom-left']}px; min-width: 200px;">
-            <PaneContainer position="bottom-left" />
-          </div>
+        <div class="flex h-full" style="height: {$containerSizes['bottom-area']}px; min-height: 150px;">
+          {#if $paneVisibility.get('bottom-left')}
+            <div style="width: {$paneSizes['bottom-left']}px; min-width: 200px;">
+              <PaneContainer position="bottom-left" />
+            </div>
+            {#if $paneVisibility.get('bottom-right')}
+              <ElResizeHandle
+                direction="horizontal"
+                onresizestart={(e) => startResize(e, 'bottom-left', 'horizontal')}
+              />
+            {/if}
+          {/if}
 
-          <ElResizeHandle
-            direction="horizontal"
-            onresizestart={(e) => startResize(e, 'bottom-left', 'horizontal')}
-          />
-
-          <div class="flex-1">
-            <PaneContainer position="bottom-right" />
-          </div>
+          {#if $paneVisibility.get('bottom-right')}
+            <div class="flex-1">
+              <PaneContainer position="bottom-right" />
+            </div>
+          {/if}
         </div>
       {/if}
     </div>
@@ -178,24 +206,46 @@
         onresizestart={(e) => startContainerResize(e, 'right-column', 'horizontal')}
       />
 
-      <div class="flex flex-col" style="width: {$containerSizes['right-column']}px; min-width: 200px;">
-        <PaneContainer position="right-top" height={$paneSizes['right-top']} minHeight={100} />
+      <div class="flex flex-col h-full" style="width: {$containerSizes['right-column']}px; min-width: 200px;">
+        {#if $paneVisibility.get('right-top')}
+          {#if $paneVisibility.get('right-bottom')}
+            <PaneContainer position="right-top" height={$paneSizes['right-top']} minHeight={100} />
+          {:else if $paneVisibility.get('right-middle')}
+            <PaneContainer position="right-top" height={$paneSizes['right-top']} minHeight={100} />
+          {:else}
+            <div class="flex-1 min-h-[100px]">
+              <PaneContainer position="right-top" />
+            </div>
+          {/if}
+          {#if $paneVisibility.get('right-middle') || $paneVisibility.get('right-bottom')}
+            <ElResizeHandle
+              direction="vertical"
+              onresizestart={(e) => startResize(e, 'right-top', 'vertical')}
+            />
+          {/if}
+        {/if}
 
-        <ElResizeHandle
-          direction="vertical"
-          onresizestart={(e) => startResize(e, 'right-top', 'vertical')}
-        />
+        {#if $paneVisibility.get('right-middle')}
+          {#if $paneVisibility.get('right-bottom')}
+            <PaneContainer position="right-middle" height={$paneSizes['right-middle']} minHeight={100} />
+          {:else}
+            <div class="flex-1 min-h-[100px]">
+              <PaneContainer position="right-middle" />
+            </div>
+          {/if}
+          {#if $paneVisibility.get('right-bottom')}
+            <ElResizeHandle
+              direction="vertical"
+              onresizestart={(e) => startResize(e, 'right-middle', 'vertical')}
+            />
+          {/if}
+        {/if}
 
-        <PaneContainer position="right-middle" height={$paneSizes['right-middle']} minHeight={100} />
-
-        <ElResizeHandle
-          direction="vertical"
-          onresizestart={(e) => startResize(e, 'right-middle', 'vertical')}
-        />
-
-        <div class="flex-1 min-h-[100px]">
-          <PaneContainer position="right-bottom" />
-        </div>
+        {#if $paneVisibility.get('right-bottom')}
+          <div class="flex-1 min-h-[100px]">
+            <PaneContainer position="right-bottom" />
+          </div>
+        {/if}
       </div>
     {/if}
   </div>
