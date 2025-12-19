@@ -20,18 +20,14 @@
   } = $props()
 
   const cssClass = $derived.by(() => {
-    const baseClasses = ['btn transition-colors']
+    const baseClasses = ['btn']
 
     if (variant === 'primary') {
-      baseClasses.push('btn-primary')
+      baseClasses.push('variant-filled-primary')
     } else if (variant === 'secondary') {
-      baseClasses.push('btn-secondary')
+      baseClasses.push('variant-outline-secondary')
     } else if (variant === 'ghost') {
-      baseClasses.push('btn-ghost')
-    }
-
-    if (disabled) {
-      baseClasses.push('opacity-50 cursor-not-allowed')
+      baseClasses.push('variant-ghost')
     }
 
     if (addCss) {

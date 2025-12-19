@@ -1,5 +1,6 @@
 <script lang="ts">
   import ThemeSelector from '../editor/children/ThemeSelector.component.svelte';
+  import SkeletonThemeSelector from '../editor/children/SkeletonThemeSelector.component.svelte';
 
   let {
     isOpen = false,
@@ -22,17 +23,17 @@
 
 {#if isOpen}
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
     onclick={handleBackdropClick}
     role="dialog"
     aria-modal="true"
   >
-    <div class="bg-base-100 rounded-lg shadow-xl w-full max-w-md p-6">
+    <div class="card variant-glass-surface w-full max-w-md p-6 space-y-6">
       <!-- Header -->
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold">Settings</h2>
+      <div class="flex justify-between items-center">
+        <h2 class="h2">Settings</h2>
         <button
-          class="btn btn-sm btn-circle btn-ghost"
+          class="btn variant-ghost w-8 h-8 p-0 rounded-full"
           onclick={handleClose}
           aria-label="Close"
         >
@@ -41,13 +42,14 @@
       </div>
 
       <!-- Content -->
-      <div class="space-y-4">
+      <div class="space-y-6">
         <ThemeSelector />
+        <SkeletonThemeSelector />
       </div>
 
       <!-- Footer -->
-      <div class="mt-6 flex justify-end">
-        <button class="btn btn-primary" onclick={handleClose}>
+      <div class="flex justify-end">
+        <button class="btn variant-filled-primary" onclick={handleClose}>
           Done
         </button>
       </div>
