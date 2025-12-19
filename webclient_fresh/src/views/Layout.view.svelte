@@ -179,14 +179,18 @@
 
         <div class="flex h-full" style="height: {$containerSizes['bottom-area']}px; min-height: 150px;">
           {#if $paneVisibility.get('bottom-left')}
-            <div style="width: {$paneSizes['bottom-left']}px; min-width: 200px;">
-              <PaneContainer position="bottom-left" />
-            </div>
             {#if $paneVisibility.get('bottom-right')}
+              <div style="width: {$paneSizes['bottom-left']}px; min-width: 200px;">
+                <PaneContainer position="bottom-left" />
+              </div>
               <ElResizeHandle
                 direction="horizontal"
                 onresizestart={(e) => startResize(e, 'bottom-left', 'horizontal')}
               />
+            {:else}
+              <div class="flex-1">
+                <PaneContainer position="bottom-left" />
+              </div>
             {/if}
           {/if}
 
