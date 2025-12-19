@@ -14,6 +14,9 @@ const initialState: LayoutStateInterface = {
     ['top-menu', [
       { id: 'tab-top-menu-1', title: 'Menu', componentType: 'TextArea', componentId: 'menu-1', closable: false, active: true }
     ]],
+    ['center', [
+      { id: 'tab-center-1', title: 'Code Editor', componentType: 'CodeEditor', componentId: 'editor-main', closable: false, active: true }
+    ]],
     ['left-top', [
       { id: 'tab-left-top-1', title: 'Colors', componentType: 'ColorPicker', componentId: 'color-1', closable: false, active: true }
     ]],

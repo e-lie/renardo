@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { PanePosition } from '../../models/layout'
   import TabbedPane from './children/TabbedPane.component.svelte'
+  import CodeEditor from '../editor/CodeEditor.component.svelte'
+  import { useEditorStore } from '../../store/editor'
 
   let {
     position,
@@ -15,6 +17,9 @@
     minWidth?: number
     minHeight?: number
   } = $props()
+
+  const { getters, actions } = useEditorStore()
+  const { activeBuffer } = getters
 
   const style = $derived.by(() => {
     let s = ''
@@ -42,10 +47,24 @@
   })
 
   const cssClass = $derived(
-    `${bgColor} border border-surface-300 dark:border-surface-700 overflow-hidden`
+    `h-full ${bgColor} border border-surface-300 dark:border-surface-700 overflow-hidden`
   )
+
+  function handleChange(content: string) {
+    if ($activeBuffer) {
+      actions.updateBufferContent($activeBuffer.id, content)
+    }
+  }
+
+  function handleExecute(code: string) {
+    actions.executeCode(code)
+  }
 </script>
 
 <div class={cssClass} {style}>
-  <TabbedPane {position} />
+  {#if position === 'center'}
+    <CodeEditor buffer={$activeBuffer} onchange={handleChange} onexecute={handleExecute} />
+  {:else}
+    <TabbedPane {position} />
+  {/if}
 </div>
