@@ -1,7 +1,5 @@
 <script lang="ts">
-  import { useEditorStore } from '../../../store/editor'
   import { useLayoutStore } from '../../../store/layout'
-  import SettingsModal from '../../shared/SettingsModal.component.svelte'
 
   let {
     componentId,
@@ -11,17 +9,8 @@
     title?: string
   } = $props()
 
-  const { getters: editorGetters, actions: editorActions } = useEditorStore()
-  const { settings } = editorGetters
-
   const { getters: layoutGetters, actions: layoutActions } = useLayoutStore()
   const { paneSetVisibility } = layoutGetters
-
-  let showSettings = $state(false)
-
-  function toggleSettings() {
-    showSettings = !showSettings
-  }
 </script>
 
 <div class="h-full flex items-center justify-between px-4 bg-surface-200 dark:bg-surface-800">
@@ -62,13 +51,4 @@
       </button>
     </div>
   </div>
-
-  <button
-    class="btn variant-filled-primary"
-    onclick={toggleSettings}
-  >
-    Settings
-  </button>
 </div>
-
-<SettingsModal isOpen={showSettings} onclose={() => showSettings = false} />
