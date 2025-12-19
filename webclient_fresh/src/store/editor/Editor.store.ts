@@ -1,5 +1,4 @@
 import { writable, derived } from 'svelte/store'
-import { getContextClient } from '@urql/svelte'
 import type {
     BufferInterface,
     TabInterface,
@@ -13,7 +12,7 @@ import type {
     EditorStoreActionsInterface,
     EditorStoreGettersInterface
 } from './models'
-import { EXECUTE_CODE } from '../../api-client/graphql/queries'
+import { executeCode as executeCodeApi } from '../../api-client/rest/api'
 
 // Helper function to generate unique IDs
 function generateId(): string {
@@ -54,8 +53,6 @@ const writableEditorStore = writable<EditorStateInterface>(initialState)
 
 // Public hook
 export function useEditorStore(): EditorStoreInterface {
-    const client = getContextClient()
-
     // Actions: modify state
     const actions: EditorStoreActionsInterface = {
         createBuffer: (options: CreateBufferOptions): string => {
@@ -254,18 +251,11 @@ export function useEditorStore(): EditorStoreInterface {
 
         executeCode: async (code: string): Promise<{ success: boolean; message: string }> => {
             try {
-                const result = await client.mutation(EXECUTE_CODE, { code })
-
-                if (result.error) {
-                    return {
-                        success: false,
-                        message: result.error.message
-                    }
-                }
+                const result = await executeCodeApi(code)
 
                 return {
-                    success: result.data?.executeCode?.success || false,
-                    message: result.data?.executeCode?.message || 'Unknown error'
+                    success: result.success,
+                    message: result.message
                 }
             } catch (error) {
                 return {
