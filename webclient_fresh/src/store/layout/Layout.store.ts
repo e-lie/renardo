@@ -55,9 +55,9 @@ const initialState: LayoutStateInterface = {
     ['center', true]
   ]),
   paneSetVisibility: {
-    left: true,
+    left: false,
     right: true,
-    bottom: true
+    bottom: false
   },
   hoverStates: {
     left: false,
