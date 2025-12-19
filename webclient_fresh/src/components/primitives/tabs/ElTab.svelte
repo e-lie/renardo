@@ -21,14 +21,11 @@
     children?: Snippet;
   } = $props();
 
-  // Computed CSS classes using Svelte 5 $derived
   const cssClass = $derived.by(() => {
-    const baseClasses = ['tab', 'tab-lifted', 'flex-shrink-0', 'px-3', 'py-2', 'text-sm'];
+    const baseClasses = ['flex items-center gap-2 px-4 py-2 text-sm whitespace-nowrap'];
 
-    if (isActive) baseClasses.push('tab-active');
-    if (isStartupFile)
-      baseClasses.push('bg-primary/20', 'border-b-2', 'border-primary', 'font-bold');
-    if (isPinned) baseClasses.push('opacity-100');
+    if (isActive) baseClasses.push('border-b-2 border-primary-500 bg-surface-200 dark:bg-surface-700');
+    if (isStartupFile) baseClasses.push('font-bold text-primary-500');
 
     return baseClasses.join(' ');
   });
@@ -43,7 +40,7 @@
   {#if isStartupFile}
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      class="h-4 w-4 mr-1 inline-block"
+      class="h-4 w-4"
       viewBox="0 0 20 20"
       fill="currentColor"
     >
@@ -61,7 +58,7 @@
 
   {#if closeable && !isStartupFile}
     <button
-      class="ml-2 w-4 h-4 rounded-full hover:bg-base-300 flex items-center justify-center text-xs"
+      class="ml-2 w-4 h-4 rounded-full hover:bg-surface-300 dark:hover:bg-surface-600 flex items-center justify-center text-xs"
       onclick={handleClose}
       type="button"
     >
@@ -69,15 +66,3 @@
     </button>
   {/if}
 </button>
-
-<style>
-  .tab-lifted {
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-  }
-
-  .tab-active {
-    background-color: oklch(var(--b1));
-  }
-</style>
