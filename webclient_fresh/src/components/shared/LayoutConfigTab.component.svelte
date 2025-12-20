@@ -33,6 +33,14 @@
   function removeTabFromPane(position: string, tabId: string) {
     actions.removeTab(position, tabId)
   }
+
+  function moveTabUp(position: string, tabId: string) {
+    actions.moveTab(position, tabId, 'up')
+  }
+
+  function moveTabDown(position: string, tabId: string) {
+    actions.moveTab(position, tabId, 'down')
+  }
 </script>
 
 <div class="space-y-4">
@@ -217,8 +225,20 @@
             <span class="badge badge-xs badge-primary">{$paneTabConfigs.get('top-menu')?.length || 0} tabs</span>
           </div>
           <div class="flex-1 overflow-y-auto min-h-0 space-y-1">
-            {#each ($paneTabConfigs.get('top-menu') || []) as tab}
+            {#each ($paneTabConfigs.get('top-menu') || []) as tab, index}
               <div class="flex items-center gap-1 p-1 text-xs rounded {tab.active ? 'bg-primary-500/20' : 'bg-surface-200 dark:bg-surface-800'}">
+                <div class="flex flex-col">
+                  <button
+                    class="text-surface-600 dark:text-surface-400 hover:text-primary-500 disabled:opacity-30"
+                    onclick={() => moveTabUp('top-menu', tab.id)}
+                    disabled={index === 0}
+                  >▲</button>
+                  <button
+                    class="text-surface-600 dark:text-surface-400 hover:text-primary-500 disabled:opacity-30"
+                    onclick={() => moveTabDown('top-menu', tab.id)}
+                    disabled={index === ($paneTabConfigs.get('top-menu')?.length || 0) - 1}
+                  >▼</button>
+                </div>
                 <span>{tab.componentType === 'ColorPicker' ? '🎨' : '📝'}</span>
                 <span class="flex-1 truncate text-surface-900 dark:text-surface-50">{tab.title}</span>
                 {#if tab.closable}
@@ -251,8 +271,20 @@
                 <span class="badge badge-xs badge-primary">{$paneTabConfigs.get(position)?.length || 0}</span>
               </div>
               <div class="flex-1 overflow-y-auto min-h-0 space-y-1">
-                {#each ($paneTabConfigs.get(position) || []) as tab}
+                {#each ($paneTabConfigs.get(position) || []) as tab, index}
                   <div class="flex items-center gap-1 p-1 text-xs rounded {tab.active ? 'bg-primary-500/20' : 'bg-surface-200 dark:bg-surface-800'}">
+                    <div class="flex flex-col">
+                      <button
+                        class="text-surface-600 dark:text-surface-400 hover:text-primary-500 disabled:opacity-30"
+                        onclick={() => moveTabUp(position, tab.id)}
+                        disabled={index === 0}
+                      >▲</button>
+                      <button
+                        class="text-surface-600 dark:text-surface-400 hover:text-primary-500 disabled:opacity-30"
+                        onclick={() => moveTabDown(position, tab.id)}
+                        disabled={index === ($paneTabConfigs.get(position)?.length || 0) - 1}
+                      >▼</button>
+                    </div>
                     <span>{tab.componentType === 'ColorPicker' ? '🎨' : '📝'}</span>
                     <span class="flex-1 truncate text-surface-900 dark:text-surface-50">{tab.title}</span>
                     {#if tab.closable}
@@ -293,8 +325,20 @@
                 <span class="badge badge-xs badge-primary">{$paneTabConfigs.get(position)?.length || 0}</span>
               </div>
               <div class="flex-1 overflow-y-auto min-h-0 space-y-1">
-                {#each ($paneTabConfigs.get(position) || []) as tab}
+                {#each ($paneTabConfigs.get(position) || []) as tab, index}
                   <div class="flex items-center gap-1 p-1 text-xs rounded {tab.active ? 'bg-primary-500/20' : 'bg-surface-200 dark:bg-surface-800'}">
+                    <div class="flex flex-col">
+                      <button
+                        class="text-surface-600 dark:text-surface-400 hover:text-primary-500 disabled:opacity-30"
+                        onclick={() => moveTabUp(position, tab.id)}
+                        disabled={index === 0}
+                      >▲</button>
+                      <button
+                        class="text-surface-600 dark:text-surface-400 hover:text-primary-500 disabled:opacity-30"
+                        onclick={() => moveTabDown(position, tab.id)}
+                        disabled={index === ($paneTabConfigs.get(position)?.length || 0) - 1}
+                      >▼</button>
+                    </div>
                     <span>{tab.componentType === 'ColorPicker' ? '🎨' : '📝'}</span>
                     <span class="flex-1 truncate text-surface-900 dark:text-surface-50">{tab.title}</span>
                     {#if tab.closable}
@@ -327,8 +371,20 @@
               <span class="badge badge-xs badge-primary">{$paneTabConfigs.get(position)?.length || 0}</span>
             </div>
             <div class="flex-1 overflow-y-auto space-y-1">
-              {#each ($paneTabConfigs.get(position) || []) as tab}
+              {#each ($paneTabConfigs.get(position) || []) as tab, index}
                 <div class="flex items-center gap-1 p-1 text-xs rounded {tab.active ? 'bg-primary-500/20' : 'bg-surface-200 dark:bg-surface-800'}">
+                  <div class="flex flex-col">
+                    <button
+                      class="text-surface-600 dark:text-surface-400 hover:text-primary-500 disabled:opacity-30"
+                      onclick={() => moveTabUp(position, tab.id)}
+                      disabled={index === 0}
+                    >▲</button>
+                    <button
+                      class="text-surface-600 dark:text-surface-400 hover:text-primary-500 disabled:opacity-30"
+                      onclick={() => moveTabDown(position, tab.id)}
+                      disabled={index === ($paneTabConfigs.get(position)?.length || 0) - 1}
+                    >▼</button>
+                  </div>
                   <span>{tab.componentType === 'ColorPicker' ? '🎨' : '📝'}</span>
                   <span class="flex-1 truncate text-surface-900 dark:text-surface-50">{tab.title}</span>
                   {#if tab.closable}

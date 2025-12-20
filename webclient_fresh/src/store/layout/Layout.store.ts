@@ -166,6 +166,27 @@ export function useLayoutStore(): LayoutStoreInterface {
       })
     },
 
+    moveTab: (paneId: string, tabId: string, direction: 'up' | 'down') => {
+      writableLayoutStore.update(state => {
+        const tabs = state.paneTabConfigs.get(paneId) || []
+        const index = tabs.findIndex(t => t.id === tabId)
+
+        if (index === -1) return state
+
+        const newIndex = direction === 'up' ? index - 1 : index + 1
+        if (newIndex < 0 || newIndex >= tabs.length) return state
+
+        const newTabs = [...tabs]
+        const [removed] = newTabs.splice(index, 1)
+        newTabs.splice(newIndex, 0, removed)
+
+        const newTabConfigs = new Map(state.paneTabConfigs)
+        newTabConfigs.set(paneId, newTabs)
+
+        return { ...state, paneTabConfigs: newTabConfigs }
+      })
+    },
+
     startResize: () => {
       writableLayoutStore.update(state => ({ ...state, isResizing: true }))
     },
