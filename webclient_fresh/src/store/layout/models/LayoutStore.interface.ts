@@ -12,6 +12,7 @@ export interface LayoutStoreActionsInterface {
   addTab: (paneId: string, tab: Omit<PaneTabInterface, 'id'>) => void
   removeTab: (paneId: string, tabId: string) => void
   switchToTab: (paneId: string, tabId: string) => void
+  moveTab: (paneId: string, tabId: string, direction: 'up' | 'down') => void
 
   // Resize
   startResize: () => void
