@@ -3,7 +3,7 @@
   import type { PanePosition } from '../../models/layout'
 
   const { getters, actions } = useLayoutStore()
-  const { paneSetVisibility, paneVisibility } = getters
+  const { paneSetVisibility, paneVisibility, paneTabConfigs } = getters
 
   function getPaneColor(position: string): string {
     const colors: Record<string, string> = {
@@ -18,6 +18,20 @@
       'bottom-right': 'bg-error-500/10 dark:bg-error-500/20'
     }
     return colors[position] || 'bg-surface-100 dark:bg-surface-900'
+  }
+
+  function addTabToPane(position: string, componentType: 'ColorPicker' | 'TextArea') {
+    actions.addTab(position, {
+      title: componentType === 'ColorPicker' ? 'Color Picker' : 'Text Area',
+      componentType,
+      componentId: `${componentType.toLowerCase()}-${position}-${Date.now()}`,
+      closable: true,
+      active: false
+    })
+  }
+
+  function removeTabFromPane(position: string, tabId: string) {
+    actions.removeTab(position, tabId)
   }
 </script>
 
@@ -180,6 +194,160 @@
           />
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Tab Management Section -->
+  <div class="divider">Pane Tab Management</div>
+  <div class="alert alert-info mb-4">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>
+    <span class="text-sm">Each pane can contain multiple components in tabs. Add ColorPicker or TextArea components to any pane.</span>
+  </div>
+
+  <!-- Tab management grid -->
+  <div class="flex flex-col gap-2 p-4 bg-surface-100 dark:bg-surface-900 rounded-lg" style="min-height: 400px;">
+    <!-- Top Row - Top Menu -->
+    <div class="flex" style="height: 100px;">
+      <div class="flex-1 flex flex-col border-2 border-surface-300 dark:border-surface-700 rounded-lg {getPaneColor('top-menu')} p-2">
+        {#if $paneVisibility.get('top-menu')}
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-semibold text-surface-900 dark:text-surface-50">Top Menu</span>
+            <span class="badge badge-xs badge-primary">{$paneTabConfigs.get('top-menu')?.length || 0} tabs</span>
+          </div>
+          <div class="flex-1 overflow-y-auto min-h-0 space-y-1">
+            {#each ($paneTabConfigs.get('top-menu') || []) as tab}
+              <div class="flex items-center gap-1 p-1 text-xs rounded {tab.active ? 'bg-primary-500/20' : 'bg-surface-200 dark:bg-surface-800'}">
+                <span>{tab.componentType === 'ColorPicker' ? '🎨' : '📝'}</span>
+                <span class="flex-1 truncate text-surface-900 dark:text-surface-50">{tab.title}</span>
+                {#if tab.closable}
+                  <button class="text-error-500 hover:bg-error-500/20 rounded px-1" onclick={() => removeTabFromPane('top-menu', tab.id)}>×</button>
+                {/if}
+              </div>
+            {/each}
+          </div>
+          <div class="flex gap-1 mt-1">
+            <button class="btn btn-xs variant-ghost flex-1" onclick={() => addTabToPane('top-menu', 'ColorPicker')}>+🎨</button>
+            <button class="btn btn-xs variant-ghost flex-1" onclick={() => addTabToPane('top-menu', 'TextArea')}>+📝</button>
+          </div>
+        {:else}
+          <div class="flex-1 flex items-center justify-center opacity-50">
+            <span class="text-xs text-surface-600 dark:text-surface-400">Pane Hidden</span>
+          </div>
+        {/if}
+      </div>
+    </div>
+
+    <!-- Middle Row -->
+    <div class="flex flex-1 gap-2">
+      <!-- Left Column -->
+      <div class="flex flex-col gap-2 w-[25%]">
+        {#each ['left-top', 'left-middle', 'left-bottom'] as position}
+          <div class="flex-1 flex flex-col border-2 border-surface-300 dark:border-surface-700 rounded-lg {getPaneColor(position)} p-2 min-h-0">
+            {#if $paneVisibility.get(position)}
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-semibold text-surface-900 dark:text-surface-50">{position.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</span>
+                <span class="badge badge-xs badge-primary">{$paneTabConfigs.get(position)?.length || 0}</span>
+              </div>
+              <div class="flex-1 overflow-y-auto min-h-0 space-y-1">
+                {#each ($paneTabConfigs.get(position) || []) as tab}
+                  <div class="flex items-center gap-1 p-1 text-xs rounded {tab.active ? 'bg-primary-500/20' : 'bg-surface-200 dark:bg-surface-800'}">
+                    <span>{tab.componentType === 'ColorPicker' ? '🎨' : '📝'}</span>
+                    <span class="flex-1 truncate text-surface-900 dark:text-surface-50">{tab.title}</span>
+                    {#if tab.closable}
+                      <button class="text-error-500 hover:bg-error-500/20 rounded px-1" onclick={() => removeTabFromPane(position, tab.id)}>×</button>
+                    {/if}
+                  </div>
+                {/each}
+              </div>
+              <div class="flex gap-1 mt-1">
+                <button class="btn btn-xs variant-ghost flex-1" onclick={() => addTabToPane(position, 'ColorPicker')}>+🎨</button>
+                <button class="btn btn-xs variant-ghost flex-1" onclick={() => addTabToPane(position, 'TextArea')}>+📝</button>
+              </div>
+            {:else}
+              <div class="flex-1 flex items-center justify-center opacity-50">
+                <span class="text-xs text-surface-600 dark:text-surface-400">Hidden</span>
+              </div>
+            {/if}
+          </div>
+        {/each}
+      </div>
+
+      <!-- Center -->
+      <div class="flex-1 flex items-center justify-center border-2 border-primary-500 rounded-lg bg-surface-100 dark:bg-surface-900">
+        <div class="text-center">
+          <span class="text-2xl mb-2">📝</span>
+          <div class="text-sm font-bold text-surface-900 dark:text-surface-50">Code Editor</div>
+          <div class="badge badge-xs badge-primary mt-1">Always Visible</div>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="flex flex-col gap-2 w-[25%]">
+        {#each ['right-top', 'right-middle', 'right-bottom'] as position}
+          <div class="flex-1 flex flex-col border-2 border-surface-300 dark:border-surface-700 rounded-lg {getPaneColor(position)} p-2 min-h-0">
+            {#if $paneVisibility.get(position)}
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-semibold text-surface-900 dark:text-surface-50">{position.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</span>
+                <span class="badge badge-xs badge-primary">{$paneTabConfigs.get(position)?.length || 0}</span>
+              </div>
+              <div class="flex-1 overflow-y-auto min-h-0 space-y-1">
+                {#each ($paneTabConfigs.get(position) || []) as tab}
+                  <div class="flex items-center gap-1 p-1 text-xs rounded {tab.active ? 'bg-primary-500/20' : 'bg-surface-200 dark:bg-surface-800'}">
+                    <span>{tab.componentType === 'ColorPicker' ? '🎨' : '📝'}</span>
+                    <span class="flex-1 truncate text-surface-900 dark:text-surface-50">{tab.title}</span>
+                    {#if tab.closable}
+                      <button class="text-error-500 hover:bg-error-500/20 rounded px-1" onclick={() => removeTabFromPane(position, tab.id)}>×</button>
+                    {/if}
+                  </div>
+                {/each}
+              </div>
+              <div class="flex gap-1 mt-1">
+                <button class="btn btn-xs variant-ghost flex-1" onclick={() => addTabToPane(position, 'ColorPicker')}>+🎨</button>
+                <button class="btn btn-xs variant-ghost flex-1" onclick={() => addTabToPane(position, 'TextArea')}>+📝</button>
+              </div>
+            {:else}
+              <div class="flex-1 flex items-center justify-center opacity-50">
+                <span class="text-xs text-surface-600 dark:text-surface-400">Hidden</span>
+              </div>
+            {/if}
+          </div>
+        {/each}
+      </div>
+    </div>
+
+    <!-- Bottom Row -->
+    <div class="flex gap-2" style="height: 100px;">
+      {#each ['bottom-left', 'bottom-right'] as position}
+        <div class="flex-1 flex flex-col border-2 border-surface-300 dark:border-surface-700 rounded-lg {getPaneColor(position)} p-2">
+          {#if $paneVisibility.get(position)}
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-semibold text-surface-900 dark:text-surface-50">{position.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</span>
+              <span class="badge badge-xs badge-primary">{$paneTabConfigs.get(position)?.length || 0}</span>
+            </div>
+            <div class="flex-1 overflow-y-auto space-y-1">
+              {#each ($paneTabConfigs.get(position) || []) as tab}
+                <div class="flex items-center gap-1 p-1 text-xs rounded {tab.active ? 'bg-primary-500/20' : 'bg-surface-200 dark:bg-surface-800'}">
+                  <span>{tab.componentType === 'ColorPicker' ? '🎨' : '📝'}</span>
+                  <span class="flex-1 truncate text-surface-900 dark:text-surface-50">{tab.title}</span>
+                  {#if tab.closable}
+                    <button class="text-error-500 hover:bg-error-500/20 rounded px-1" onclick={() => removeTabFromPane(position, tab.id)}>×</button>
+                  {/if}
+                </div>
+              {/each}
+            </div>
+            <div class="flex gap-1 mt-1">
+              <button class="btn btn-xs variant-ghost flex-1" onclick={() => addTabToPane(position, 'ColorPicker')}>+🎨</button>
+              <button class="btn btn-xs variant-ghost flex-1" onclick={() => addTabToPane(position, 'TextArea')}>+📝</button>
+            </div>
+          {:else}
+            <div class="flex-1 flex items-center justify-center opacity-50">
+              <span class="text-xs text-surface-600 dark:text-surface-400">Hidden</span>
+            </div>
+          {/if}
+        </div>
+      {/each}
     </div>
   </div>
 </div>

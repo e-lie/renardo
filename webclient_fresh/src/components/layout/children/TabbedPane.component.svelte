@@ -9,7 +9,8 @@
   let { position }: { position: PanePosition } = $props()
 
   const { getters, actions } = useLayoutStore()
-  const tabs = $derived(getters.getPaneTabConfigs(position))
+  const { paneTabConfigs } = getters
+  const tabs = $derived($paneTabConfigs.get(position) || [])
   const activeTab = $derived(tabs.find(t => t.active))
 
   const componentMap = {
