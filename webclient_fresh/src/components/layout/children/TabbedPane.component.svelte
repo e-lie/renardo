@@ -43,12 +43,6 @@
             onclick={() => handleSwitchTab(tab.id)}
           >
             <span class="text-surface-900 dark:text-surface-50">{tab.title}</span>
-            {#if tab.closable}
-              <span
-                class="ml-2 text-surface-600 dark:text-surface-400 hover:text-error-500 cursor-pointer"
-                onclick={(e) => { e.stopPropagation(); handleCloseTab(tab.id) }}
-              >×</span>
-            {/if}
           </button>
         {/each}
       </div>

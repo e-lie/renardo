@@ -41,6 +41,12 @@
   function moveTabDown(position: string, tabId: string) {
     actions.moveTab(position, tabId, 'down')
   }
+
+  let openMenuPosition = $state<string | null>(null)
+
+  function toggleMenu(position: string) {
+    openMenuPosition = openMenuPosition === position ? null : position
+  }
 </script>
 
 <div class="space-y-4">
@@ -247,9 +253,18 @@
               </div>
             {/each}
           </div>
-          <div class="flex gap-1 mt-1">
-            <button class="btn btn-xs variant-ghost flex-1" onclick={() => addTabToPane('top-menu', 'ColorPicker')}>+🎨</button>
-            <button class="btn btn-xs variant-ghost flex-1" onclick={() => addTabToPane('top-menu', 'TextArea')}>+📝</button>
+          <div class="relative mt-1">
+            <button class="btn btn-xs variant-ghost w-full" onclick={() => toggleMenu('top-menu')}>+ Add Component</button>
+            {#if openMenuPosition === 'top-menu'}
+              <div class="absolute bottom-full left-0 mb-1 w-full bg-surface-50 dark:bg-surface-800 border border-surface-300 dark:border-surface-700 rounded-lg shadow-lg z-10">
+                <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-t-lg" onclick={() => { addTabToPane('top-menu', 'ColorPicker'); openMenuPosition = null }}>
+                  🎨 Color Picker
+                </button>
+                <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-b-lg" onclick={() => { addTabToPane('top-menu', 'TextArea'); openMenuPosition = null }}>
+                  📝 Text Area
+                </button>
+              </div>
+            {/if}
           </div>
         {:else}
           <div class="flex-1 flex items-center justify-center opacity-50">
@@ -293,9 +308,18 @@
                   </div>
                 {/each}
               </div>
-              <div class="flex gap-1 mt-1">
-                <button class="btn btn-xs variant-ghost flex-1" onclick={() => addTabToPane(position, 'ColorPicker')}>+🎨</button>
-                <button class="btn btn-xs variant-ghost flex-1" onclick={() => addTabToPane(position, 'TextArea')}>+📝</button>
+              <div class="relative mt-1">
+                <button class="btn btn-xs variant-ghost w-full" onclick={() => toggleMenu(position)}>+ Add Component</button>
+                {#if openMenuPosition === position}
+                  <div class="absolute bottom-full left-0 mb-1 w-full bg-surface-50 dark:bg-surface-800 border border-surface-300 dark:border-surface-700 rounded-lg shadow-lg z-10">
+                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-t-lg" onclick={() => { addTabToPane(position, 'ColorPicker'); openMenuPosition = null }}>
+                      🎨 Color Picker
+                    </button>
+                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-b-lg" onclick={() => { addTabToPane(position, 'TextArea'); openMenuPosition = null }}>
+                      📝 Text Area
+                    </button>
+                  </div>
+                {/if}
               </div>
             {:else}
               <div class="flex-1 flex items-center justify-center opacity-50">
@@ -347,9 +371,18 @@
                   </div>
                 {/each}
               </div>
-              <div class="flex gap-1 mt-1">
-                <button class="btn btn-xs variant-ghost flex-1" onclick={() => addTabToPane(position, 'ColorPicker')}>+🎨</button>
-                <button class="btn btn-xs variant-ghost flex-1" onclick={() => addTabToPane(position, 'TextArea')}>+📝</button>
+              <div class="relative mt-1">
+                <button class="btn btn-xs variant-ghost w-full" onclick={() => toggleMenu(position)}>+ Add Component</button>
+                {#if openMenuPosition === position}
+                  <div class="absolute bottom-full left-0 mb-1 w-full bg-surface-50 dark:bg-surface-800 border border-surface-300 dark:border-surface-700 rounded-lg shadow-lg z-10">
+                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-t-lg" onclick={() => { addTabToPane(position, 'ColorPicker'); openMenuPosition = null }}>
+                      🎨 Color Picker
+                    </button>
+                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-b-lg" onclick={() => { addTabToPane(position, 'TextArea'); openMenuPosition = null }}>
+                      📝 Text Area
+                    </button>
+                  </div>
+                {/if}
               </div>
             {:else}
               <div class="flex-1 flex items-center justify-center opacity-50">
@@ -393,9 +426,18 @@
                 </div>
               {/each}
             </div>
-            <div class="flex gap-1 mt-1">
-              <button class="btn btn-xs variant-ghost flex-1" onclick={() => addTabToPane(position, 'ColorPicker')}>+🎨</button>
-              <button class="btn btn-xs variant-ghost flex-1" onclick={() => addTabToPane(position, 'TextArea')}>+📝</button>
+            <div class="relative mt-1">
+              <button class="btn btn-xs variant-ghost w-full" onclick={() => toggleMenu(position)}>+ Add Component</button>
+              {#if openMenuPosition === position}
+                <div class="absolute bottom-full left-0 mb-1 w-full bg-surface-50 dark:bg-surface-800 border border-surface-300 dark:border-surface-700 rounded-lg shadow-lg z-10">
+                  <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-t-lg" onclick={() => { addTabToPane(position, 'ColorPicker'); openMenuPosition = null }}>
+                    🎨 Color Picker
+                  </button>
+                  <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-b-lg" onclick={() => { addTabToPane(position, 'TextArea'); openMenuPosition = null }}>
+                    📝 Text Area
+                  </button>
+                </div>
+              {/if}
             </div>
           {:else}
             <div class="flex-1 flex items-center justify-center opacity-50">
