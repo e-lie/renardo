@@ -12,34 +12,34 @@ const initialState: LayoutStateInterface = {
   panes: new Map(),
   paneTabConfigs: new Map([
     ['top-menu', [
-      { id: 'tab-top-menu-1', title: 'Menu', componentType: 'TopMenu', componentId: 'menu-1', closable: false, active: true }
+      { id: 'tab-top-menu-1', title: 'Menu', componentType: 'TopMenu', componentId: 'menu-1', closable: true, active: true }
     ]],
     ['center', [
-      { id: 'tab-center-1', title: 'Code Editor', componentType: 'CodeEditor', componentId: 'editor-main', closable: false, active: true }
+      { id: 'tab-center-1', title: 'Code Editor', componentType: 'CodeEditor', componentId: 'editor-main', closable: true, active: true }
     ]],
     ['left-top', [
-      { id: 'tab-left-top-1', title: 'Colors', componentType: 'ColorPicker', componentId: 'color-1', closable: false, active: true }
+      { id: 'tab-left-top-1', title: 'Colors', componentType: 'ColorPicker', componentId: 'color-1', closable: true, active: true }
     ]],
     ['left-middle', [
-      { id: 'tab-left-middle-1', title: 'Notes', componentType: 'TextArea', componentId: 'text-1', closable: false, active: true }
+      { id: 'tab-left-middle-1', title: 'Notes', componentType: 'TextArea', componentId: 'text-1', closable: true, active: true }
     ]],
     ['left-bottom', [
-      { id: 'tab-left-bottom-1', title: 'Scratch', componentType: 'TextArea', componentId: 'text-scratch', closable: false, active: true }
+      { id: 'tab-left-bottom-1', title: 'Scratch', componentType: 'TextArea', componentId: 'text-scratch', closable: true, active: true }
     ]],
     ['right-top', [
-      { id: 'tab-right-top-1', title: 'Workspace', componentType: 'TextArea', componentId: 'text-2', closable: false, active: true }
+      { id: 'tab-right-top-1', title: 'Workspace', componentType: 'TextArea', componentId: 'text-2', closable: true, active: true }
     ]],
     ['right-middle', [
-      { id: 'tab-right-middle-1', title: 'Shared Colors', componentType: 'ColorPicker', componentId: 'color-3', closable: false, active: true }
+      { id: 'tab-right-middle-1', title: 'Shared Colors', componentType: 'ColorPicker', componentId: 'color-3', closable: true, active: true }
     ]],
     ['right-bottom', [
-      { id: 'tab-right-bottom-1', title: 'Shared Notes', componentType: 'TextArea', componentId: 'text-3', closable: false, active: true }
+      { id: 'tab-right-bottom-1', title: 'Shared Notes', componentType: 'TextArea', componentId: 'text-3', closable: true, active: true }
     ]],
     ['bottom-left', [
-      { id: 'tab-bottom-left-1', title: 'Draft', componentType: 'TextArea', componentId: 'text-4', closable: false, active: true }
+      { id: 'tab-bottom-left-1', title: 'Draft', componentType: 'TextArea', componentId: 'text-4', closable: true, active: true }
     ]],
     ['bottom-right', [
-      { id: 'tab-bottom-right-1', title: 'Palette', componentType: 'ColorPicker', componentId: 'color-4', closable: false, active: true }
+      { id: 'tab-bottom-right-1', title: 'Palette', componentType: 'ColorPicker', componentId: 'color-4', closable: true, active: true }
     ]]
   ]),
   paneVisibility: new Map([
