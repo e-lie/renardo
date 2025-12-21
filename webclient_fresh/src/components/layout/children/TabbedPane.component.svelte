@@ -5,6 +5,7 @@
   import TextArea from './TextArea.component.svelte'
   import CodeEditorWrapper from './CodeEditorWrapper.component.svelte'
   import TopMenu from './TopMenu.component.svelte'
+  import { TutorialTab } from '../../tutorial'
 
   let { position }: { position: PanePosition } = $props()
 
@@ -13,12 +14,13 @@
   const tabs = $derived($paneTabConfigs.get(position) || [])
   const activeTab = $derived(tabs.find(t => t.active))
 
-  const componentMap = {
+  const componentMap: Record<string, any> = {
     'ColorPicker': ColorPicker,
     'TextArea': TextArea,
     'CodeEditor': CodeEditorWrapper,
     'TopMenu': TopMenu,
-    'CodeEditorWrapper': CodeEditorWrapper
+    'CodeEditorWrapper': CodeEditorWrapper,
+    'TutorialTab': TutorialTab
   }
 
   function handleSwitchTab(tabId: string) {
@@ -52,8 +54,8 @@
     <!-- Active tab content -->
     <div class="flex-1 overflow-hidden">
       {#if activeTab && componentMap[activeTab.componentType]}
-        <svelte:component
-          this={componentMap[activeTab.componentType]}
+        {@const Component = componentMap[activeTab.componentType]}
+        <Component
           componentId={activeTab.componentId}
           title={activeTab.title}
         />
