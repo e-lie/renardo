@@ -1,14 +1,6 @@
 <script lang="ts">
   import { useLayoutStore } from '../../../store/layout'
 
-  let {
-    componentId,
-    title = 'Top Menu'
-  }: {
-    componentId: string
-    title?: string
-  } = $props()
-
   const { getters: layoutGetters, actions: layoutActions } = useLayoutStore()
   const { paneSetVisibility } = layoutGetters
 </script>

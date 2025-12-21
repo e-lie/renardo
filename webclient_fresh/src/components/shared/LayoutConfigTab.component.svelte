@@ -222,57 +222,6 @@
 
   <!-- Tab management grid -->
   <div class="flex flex-col gap-2 p-4 bg-surface-100 dark:bg-surface-900 rounded-lg" style="min-height: 400px;">
-    <!-- Top Row - Top Menu -->
-    <div class="flex" style="height: 120px;">
-      <div class="flex-1 flex flex-col border-2 border-surface-300 dark:border-surface-700 rounded-lg {getPaneColor('top-menu')} p-2">
-        {#if $paneVisibility.get('top-menu')}
-          <div class="flex items-center justify-between mb-1">
-            <span class="text-xs font-semibold text-surface-900 dark:text-surface-50">Top Menu</span>
-            <span class="badge badge-xs badge-primary">{$paneTabConfigs.get('top-menu')?.length || 0} tabs</span>
-          </div>
-          <div class="flex-1 overflow-y-auto min-h-0 space-y-1">
-            {#each ($paneTabConfigs.get('top-menu') || []) as tab, index}
-              <div class="flex items-center gap-1 p-1 text-xs rounded {tab.active ? 'bg-primary-500/20' : 'bg-surface-200 dark:bg-surface-800'}">
-                <div class="flex flex-col">
-                  <button
-                    class="text-surface-600 dark:text-surface-400 hover:text-primary-500 disabled:opacity-30"
-                    onclick={() => moveTabUp('top-menu', tab.id)}
-                    disabled={index === 0}
-                  >▲</button>
-                  <button
-                    class="text-surface-600 dark:text-surface-400 hover:text-primary-500 disabled:opacity-30"
-                    onclick={() => moveTabDown('top-menu', tab.id)}
-                    disabled={index === ($paneTabConfigs.get('top-menu')?.length || 0) - 1}
-                  >▼</button>
-                </div>
-                <span>{tab.componentType === 'ColorPicker' ? '🎨' : '📝'}</span>
-                <span class="flex-1 truncate text-surface-900 dark:text-surface-50">{tab.title}</span>
-                {#if tab.closable}
-                  <button class="text-error-500 hover:bg-error-500/20 rounded px-1" onclick={() => removeTabFromPane('top-menu', tab.id)}>×</button>
-                {/if}
-              </div>
-            {/each}
-          </div>
-          <div class="relative mt-1">
-            <button class="btn btn-xs variant-ghost w-full" onclick={() => toggleMenu('top-menu')}>+ Add Component</button>
-            {#if openMenuPosition === 'top-menu'}
-              <div class="absolute bottom-full left-0 mb-1 w-full bg-surface-50 dark:bg-surface-800 border border-surface-300 dark:border-surface-700 rounded-lg shadow-lg z-10">
-                <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-t-lg" onclick={() => { addTabToPane('top-menu', 'ColorPicker'); openMenuPosition = null }}>
-                  🎨 Color Picker
-                </button>
-                <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-b-lg" onclick={() => { addTabToPane('top-menu', 'TextArea'); openMenuPosition = null }}>
-                  📝 Text Area
-                </button>
-              </div>
-            {/if}
-          </div>
-        {:else}
-          <div class="flex-1 flex items-center justify-center opacity-50">
-            <span class="text-xs text-surface-600 dark:text-surface-400">Pane Hidden</span>
-          </div>
-        {/if}
-      </div>
-    </div>
 
     <!-- Middle Row -->
     <div class="flex flex-1 gap-2">
