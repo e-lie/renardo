@@ -75,6 +75,7 @@
 <FileExplorerModal
   isOpen={showFileExplorer}
   mode="select-folder"
+  initialPath={$currentProject?.root_path || null}
   onclose={() => showFileExplorer = false}
   onselect={handleProjectSelect}
 />
