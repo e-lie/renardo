@@ -2,6 +2,7 @@
   import type { PanePosition } from '../../models/layout'
   import TabbedPane from './children/TabbedPane.component.svelte'
   import CodeEditor from '../editor/CodeEditor.component.svelte'
+  import TopMenu from './children/TopMenu.component.svelte'
   import { useEditorStore } from '../../store/editor'
 
   let {
@@ -76,6 +77,8 @@
 <div class={cssClass} {style}>
   {#if position === 'center'}
     <CodeEditor buffer={$activeBuffer} onchange={handleChange} onexecute={handleExecute} />
+  {:else if position === 'top-menu'}
+    <TopMenu />
   {:else}
     <TabbedPane {position} />
   {/if}

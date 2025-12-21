@@ -108,9 +108,11 @@
 
 <div class="h-screen flex flex-col overflow-hidden bg-surface-100 dark:bg-surface-900">
   <!-- Top menu -->
-  <div class="h-16 flex-shrink-0">
-    <PaneContainer position="top-menu" height={64} />
-  </div>
+  {#if $paneVisibility.get('top-menu')}
+    <div class="h-16 flex-shrink-0">
+      <PaneContainer position="top-menu" height={64} />
+    </div>
+  {/if}
 
   <!-- Main area -->
   <div class="flex flex-1 overflow-hidden">
