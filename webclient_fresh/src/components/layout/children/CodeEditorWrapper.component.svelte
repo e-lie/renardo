@@ -1,6 +1,8 @@
 <script lang="ts">
   import CodeEditor from '../../editor/CodeEditor.component.svelte';
+  import SaveFileModal from '../../shared/SaveFileModal.component.svelte';
   import { useEditorStore } from '../../../store/editor';
+  import { onMount, onDestroy } from 'svelte';
 
   let {
     componentId,
@@ -77,6 +79,36 @@
       actions.switchToTab(localTabIds[0]);
     }
   }
+
+  let showSaveModal = $state(false)
+
+  function handleKeyDown(event: KeyboardEvent) {
+    if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+      event.preventDefault()
+      handleSave()
+    }
+  }
+
+  function handleSave() {
+    if (!activeBuffer) return
+    showSaveModal = true
+  }
+
+  async function handleFileSave(filePath: string) {
+    if (!activeBuffer) return
+    const result = await actions.saveBuffer(activeBuffer.id, filePath)
+    if (!result.success) {
+      alert(result.message)
+    }
+  }
+
+  onMount(() => {
+    window.addEventListener('keydown', handleKeyDown)
+  })
+
+  onDestroy(() => {
+    window.removeEventListener('keydown', handleKeyDown)
+  })
 </script>
 
 <div class="h-full flex flex-col">
@@ -125,3 +157,9 @@
     {/if}
   </div>
 </div>
+
+<SaveFileModal
+  isOpen={showSaveModal}
+  onclose={() => showSaveModal = false}
+  onsave={handleFileSave}
+/>

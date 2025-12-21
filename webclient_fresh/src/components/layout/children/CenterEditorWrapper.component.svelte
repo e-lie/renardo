@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte'
   import CodeEditor from '../../editor/CodeEditor.component.svelte'
+  import SaveFileModal from '../../shared/SaveFileModal.component.svelte'
   import { useEditorStore } from '../../../store/editor'
 
   const { actions, getters } = useEditorStore()
@@ -51,16 +52,17 @@
     document.removeEventListener('keydown', handleKeyDown)
   })
 
-  async function handleSave() {
+  let showSaveModal = $state(false)
+
+  function handleSave() {
     if (!activeBuffer) return
+    showSaveModal = true
+  }
 
-    const fileName = prompt('Enter file name:', activeBuffer.filePath || activeBuffer.name + '.py')
-    if (!fileName) return
-
-    const result = await actions.saveBuffer(activeBuffer.id, fileName)
-    if (result.success) {
-      console.log(result.message)
-    } else {
+  async function handleFileSave(filePath: string) {
+    if (!activeBuffer) return
+    const result = await actions.saveBuffer(activeBuffer.id, filePath)
+    if (!result.success) {
       alert(result.message)
     }
   }
@@ -139,3 +141,9 @@
     {/if}
   </div>
 </div>
+
+<SaveFileModal
+  isOpen={showSaveModal}
+  onclose={() => showSaveModal = false}
+  onsave={handleFileSave}
+/>
