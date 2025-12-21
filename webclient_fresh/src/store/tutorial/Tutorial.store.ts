@@ -34,12 +34,15 @@ export function useTutorialStore(): TutorialStoreInterface {
           const languages = response.languages
           const availableLanguages = Object.keys(languages)
           console.log('Available languages:', availableLanguages)
-          
+
+          // Default to 'en' if available and no language specified
+          const defaultLang = language || (availableLanguages.includes('en') ? 'en' : availableLanguages[0])
+
           writableTutorialStore.update(state => ({
             ...state,
             languages,
-            tutorialFiles: language && languages[language] ? languages[language] : [],
-            selectedLanguage: language && availableLanguages.includes(language) ? language : null,
+            tutorialFiles: defaultLang && languages[defaultLang] ? languages[defaultLang] : [],
+            selectedLanguage: defaultLang || null,
             loading: false
           }))
         } else {
