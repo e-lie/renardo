@@ -223,7 +223,7 @@
   <!-- Tab management grid -->
   <div class="flex flex-col gap-2 p-4 bg-surface-100 dark:bg-surface-900 rounded-lg" style="min-height: 400px;">
     <!-- Top Row - Top Menu -->
-    <div class="flex" style="height: 100px;">
+    <div class="flex" style="height: 120px;">
       <div class="flex-1 flex flex-col border-2 border-surface-300 dark:border-surface-700 rounded-lg {getPaneColor('top-menu')} p-2">
         {#if $paneVisibility.get('top-menu')}
           <div class="flex items-center justify-between mb-1">
@@ -395,7 +395,7 @@
     </div>
 
     <!-- Bottom Row -->
-    <div class="flex gap-2" style="height: 100px;">
+    <div class="flex gap-2" style="height: 150px;">
       {#each ['bottom-left', 'bottom-right'] as position}
         <div class="flex-1 flex flex-col border-2 border-surface-300 dark:border-surface-700 rounded-lg {getPaneColor(position)} p-2">
           {#if $paneVisibility.get(position)}
