@@ -40,6 +40,21 @@
     }
   })
 
+  // Sync new tabs created globally to local tab list
+  $effect(() => {
+    const allTabIds = $tabs.map(t => t.id)
+    const newTabs = allTabIds.filter(id => !localTabIds.includes(id))
+
+    if (newTabs.length > 0) {
+      localTabIds = [...localTabIds, ...newTabs]
+      // Switch to the newest tab
+      const newestTab = $tabs.find(t => t.isActive)
+      if (newestTab) {
+        activeLocalTabId = newestTab.id
+      }
+    }
+  })
+
   // Handle Ctrl+S to save
   function handleKeyDown(event: KeyboardEvent) {
     if ((event.ctrlKey || event.metaKey) && event.key === 's') {
