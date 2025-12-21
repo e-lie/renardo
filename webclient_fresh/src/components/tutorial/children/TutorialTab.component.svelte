@@ -1,45 +1,46 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
-  import { useAppStore } from '../../../store/root'
-  import { useEditorStore } from '../../../store/editor'
-  import ElText from '../../primitives/text/ElText.svelte'
-  import ElButton from '../../primitives/buttons/ElButton.svelte'
-  import ElLanguageSelector from '../../primitives/selects/ElLanguageSelector.svelte'
-  import ElTutorialList from '../../primitives/lists/ElTutorialList.svelte'
-  import type { TutorialFileInterface } from '../../../models/tutorial'
+  import { onMount } from 'svelte';
+  import { useAppStore } from '../../../store/root';
+  import { useEditorStore } from '../../../store/editor';
+  import ElText from '../../primitives/text/ElText.svelte';
+  import ElButton from '../../primitives/buttons/ElButton.svelte';
+  import ElLanguageSelector from '../../primitives/selects/ElLanguageSelector.svelte';
+  import ElTutorialList from '../../primitives/lists/ElTutorialList.svelte';
+  import type { TutorialFileInterface } from '../../../models/tutorial';
 
   let {
     componentId,
-    title = 'Tutorials'
+    title = 'Tutorials',
   }: {
-    componentId: string
-    title?: string
-  } = $props()
+    componentId: string;
+    title?: string;
+  } = $props();
 
-  const { tutorialStore } = useAppStore()
-  const { loading, selectedLanguage, tutorialFiles, error, availableLanguages } = tutorialStore.getters
-  const { loadTutorialFiles, selectLanguage, selectTutorialFile } = tutorialStore.actions
+  const { tutorialStore } = useAppStore();
+  const { loading, selectedLanguage, tutorialFiles, error, availableLanguages } =
+    tutorialStore.getters;
+  const { loadTutorialFiles, selectLanguage, selectTutorialFile } = tutorialStore.actions;
 
-  const editorStore = useEditorStore()
+  const editorStore = useEditorStore();
 
   onMount(async () => {
-    await loadTutorialFiles()
-  })
+    await loadTutorialFiles();
+  });
 
   function handleLanguageChange(language: string) {
-    selectLanguage(language)
+    selectLanguage(language);
   }
 
   async function handleLoadFile(filename: string) {
-    const file = $tutorialFiles.find((f: TutorialFileInterface) => f.name === filename)
+    const file = $tutorialFiles.find((f: TutorialFileInterface) => f.name === filename);
     if (file) {
-      await selectTutorialFile(file, editorStore)
+      await selectTutorialFile(file, editorStore);
     }
   }
 </script>
 
 <div class="p-4 h-full overflow-auto">
-  <ElText tag="h2" text={title || "Tutorials"} addCss="text-xl font-bold mb-4" />
+  <ElText tag="h2" text={title || 'Tutorials'} addCss="text-xl font-bold mb-4" />
 
   {#if $error}
     <div class="alert alert-error mb-4">
@@ -62,16 +63,23 @@
 
     {#if $tutorialFiles.length > 0}
       <div class="mt-4">
-        <ElText tag="h3" text="Available Tutorials" addCss="text-lg font-semibold mb-2" />
         <ElTutorialList
           files={$tutorialFiles.map((f: TutorialFileInterface) => f.name)}
           onloadfile={handleLoadFile}
         />
       </div>
     {:else if !$selectedLanguage}
-      <ElText tag="p" text="No tutorials available. Please select a language." addCss="text-gray-500" />
+      <ElText
+        tag="p"
+        text="No tutorials available. Please select a language."
+        addCss="text-gray-500"
+      />
     {:else}
-      <ElText tag="p" text={`No tutorials available for ${$selectedLanguage}.`} addCss="text-gray-500" />
+      <ElText
+        tag="p"
+        text={`No tutorials available for ${$selectedLanguage}.`}
+        addCss="text-gray-500"
+      />
     {/if}
   {/if}
 </div>
