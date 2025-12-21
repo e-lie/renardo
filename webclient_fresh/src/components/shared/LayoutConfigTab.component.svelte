@@ -393,8 +393,11 @@
                   <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-t-lg" onclick={() => { addTabToPane(position, 'ColorPicker'); openMenuPosition = null }}>
                     🎨 Color Picker
                   </button>
-                  <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-b-lg" onclick={() => { addTabToPane(position, 'TextArea'); openMenuPosition = null }}>
+                  <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700" onclick={() => { addTabToPane(position, 'TextArea'); openMenuPosition = null }}>
                     📝 Text Area
+                  </button>
+                  <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-b-lg" onclick={() => { addTabToPane(position, 'CodeEditor'); openMenuPosition = null }}>
+                    💻 Code Editor
                   </button>
                 </div>
               {/if}
