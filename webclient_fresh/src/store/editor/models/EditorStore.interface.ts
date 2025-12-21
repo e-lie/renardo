@@ -7,6 +7,7 @@ import type { BufferInterface, TabInterface, EditorSettingsInterface, CreateBuff
 export interface EditorStoreActionsInterface {
     createBuffer: (options: CreateBufferOptions) => string
     createTab: (bufferId: string, title?: string) => string
+    loadContentInNewTab: (content: string, title: string) => string
     switchToTab: (tabId: string) => void
     closeTab: (tabId: string) => void
     updateBufferContent: (bufferId: string, content: string) => void

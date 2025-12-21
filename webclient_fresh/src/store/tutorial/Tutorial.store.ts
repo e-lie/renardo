@@ -67,14 +67,18 @@ export function useTutorialStore(): TutorialStoreInterface {
       })
     },
 
-    selectTutorialFile: async (file: TutorialFileInterface) => {
+    selectTutorialFile: async (file: TutorialFileInterface, editorStore: any) => {
       try {
-        const response = await apiClient.get(file.url)
-        
-        if (response.data) {
-          // Here you would integrate with the editor store to load the content
-          // For now, we'll just log the content
-          console.log('Tutorial content loaded:', response.data)
+        const response = await fetch(`http://localhost:8000${file.url}`)
+
+        if (response.ok) {
+          const content = await response.text()
+          // Load content in editor
+          if (editorStore?.actions?.loadContentInNewTab) {
+            editorStore.actions.loadContentInNewTab(content, file.name.replace('.py', ''))
+          }
+        } else {
+          throw new Error('Failed to load tutorial file')
         }
       } catch (error) {
         writableTutorialStore.update(state => ({

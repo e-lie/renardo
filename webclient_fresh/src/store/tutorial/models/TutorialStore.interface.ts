@@ -4,7 +4,7 @@ import type { TutorialFileInterface, TutorialLanguageInterface } from '@/models/
 export interface TutorialStoreActionsInterface {
   loadTutorialFiles: (language?: string) => Promise<void>
   selectLanguage: (language: string) => void
-  selectTutorialFile: (file: TutorialFileInterface) => Promise<void>
+  selectTutorialFile: (file: TutorialFileInterface, editorStore: any) => Promise<void>
   setError: (error: string | null) => void
 }
 
