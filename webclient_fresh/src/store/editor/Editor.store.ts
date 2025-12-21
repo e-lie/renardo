@@ -113,6 +113,57 @@ export function useEditorStore(): EditorStoreInterface {
             return tabId
         },
 
+        loadContentInNewTab: (content: string, title: string): string => {
+            let bufferId = ''
+            let tabId = ''
+
+            writableEditorStore.update(state => {
+                // Create buffer with content
+                bufferId = generateId()
+                const buffer: BufferInterface = {
+                    id: bufferId,
+                    name: title,
+                    content,
+                    language: 'python',
+                    isDirty: false,
+                    isStartupFile: false,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                }
+
+                // Create tab
+                tabId = generateId()
+                const tab: TabInterface = {
+                    id: tabId,
+                    bufferId,
+                    title,
+                    isActive: true,
+                    isEditing: false,
+                    isPinned: false,
+                    order: state.tabs.size
+                }
+
+                const newBuffers = new Map(state.buffers)
+                newBuffers.set(bufferId, buffer)
+
+                const newTabs = new Map(state.tabs)
+                // Deactivate all other tabs
+                newTabs.forEach((t, id) => {
+                    newTabs.set(id, { ...t, isActive: false })
+                })
+                newTabs.set(tabId, tab)
+
+                return {
+                    ...state,
+                    buffers: newBuffers,
+                    tabs: newTabs,
+                    activeTabId: tabId
+                }
+            })
+
+            return tabId
+        },
+
         switchToTab: (tabId: string): void => {
             writableEditorStore.update(state => {
                 if (!state.tabs.has(tabId)) {

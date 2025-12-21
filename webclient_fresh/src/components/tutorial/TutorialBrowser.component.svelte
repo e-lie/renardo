@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { useAppStore } from '../../store/root'
+  import { useEditorStore } from '../../store/editor'
   import ElText from '../primitives/text/ElText.svelte'
   import ElButton from '../primitives/buttons/ElButton.svelte'
   import ElLanguageSelector from '../primitives/selects/ElLanguageSelector.svelte'
@@ -11,6 +12,8 @@
   const { tutorialStore } = useAppStore()
   const { loading, selectedLanguage, tutorialFiles, error, availableLanguages } = tutorialStore.getters
   const { loadTutorialFiles, selectLanguage, selectTutorialFile } = tutorialStore.actions
+
+  const editorStore = useEditorStore()
 
   onMount(() => {
     loadTutorialFiles()
@@ -23,7 +26,7 @@
   async function handleLoadFile(filename: string) {
     const file = $tutorialFiles.find((f: TutorialFileInterface) => f.name === filename)
     if (file) {
-      await selectTutorialFile(file)
+      await selectTutorialFile(file, editorStore)
     }
   }
 </script>
