@@ -8,10 +8,12 @@
     buffer,
     onchange,
     onexecute,
+    oncreatetab,
   }: {
     buffer: BufferInterface | null;
     onchange?: (content: string) => void;
     onexecute?: (code: string) => void;
+    oncreatetab?: () => void;
   } = $props();
 
   const { getters } = useEditorStore();
@@ -30,7 +32,7 @@
   }
 </script>
 
-<div class="h-full w-full">
+<div class="h-full w-full relative">
   {#if buffer}
     <ElCodeEditor
       content={buffer.content}
@@ -42,6 +44,17 @@
       onchange={handleChange}
       onexecute={handleExecute}
     />
+    {#if oncreatetab}
+      <button
+        class="absolute top-2 right-2 btn btn-sm btn-circle variant-filled-primary shadow-lg z-10"
+        onclick={oncreatetab}
+        title="Create new tab"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+      </button>
+    {/if}
   {:else}
     <div class="flex items-center justify-center h-full text-base-content/50">
       <p>No buffer selected</p>

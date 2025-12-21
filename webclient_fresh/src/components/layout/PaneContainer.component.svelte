@@ -72,11 +72,21 @@
   function handleExecute(code: string) {
     actions.executeCode(code)
   }
+
+  function handleCreateTab() {
+    const newBufferId = actions.createBuffer({
+      name: 'Untitled',
+      content: '',
+      language: 'python',
+    })
+    const newTabId = actions.createTab(newBufferId)
+    actions.switchToTab(newTabId)
+  }
 </script>
 
 <div class={cssClass} {style}>
   {#if position === 'center'}
-    <CodeEditor buffer={$activeBuffer} onchange={handleChange} onexecute={handleExecute} />
+    <CodeEditor buffer={$activeBuffer} onchange={handleChange} onexecute={handleExecute} oncreatetab={handleCreateTab} />
   {:else if position === 'top-menu'}
     <TopMenu />
   {:else}
