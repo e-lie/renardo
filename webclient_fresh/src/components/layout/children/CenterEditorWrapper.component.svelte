@@ -3,9 +3,13 @@
   import CodeEditor from '../../editor/CodeEditor.component.svelte'
   import SaveFileModal from '../../shared/SaveFileModal.component.svelte'
   import { useEditorStore } from '../../../store/editor'
+  import { useProjectStore } from '../../../store/project'
 
   const { actions, getters } = useEditorStore()
   const { tabs, buffers } = getters
+
+  const { getters: projectGetters } = useProjectStore()
+  const { currentProject } = projectGetters
 
   // Track local tab IDs for this editor instance
   let localTabIds = $state<string[]>([])
@@ -144,6 +148,7 @@
 
 <SaveFileModal
   isOpen={showSaveModal}
+  initialPath={$currentProject?.root_path || null}
   onclose={() => showSaveModal = false}
   onsave={handleFileSave}
 />

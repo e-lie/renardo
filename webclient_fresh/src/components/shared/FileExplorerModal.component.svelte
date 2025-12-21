@@ -4,11 +4,13 @@
   let {
     isOpen = false,
     mode = 'select-folder',
+    initialPath = null,
     onclose,
     onselect
   }: {
     isOpen?: boolean
     mode?: 'select-folder' | 'save-file'
+    initialPath?: string | null
     onclose: () => void
     onselect: (path: string) => void
   } = $props()
@@ -39,10 +41,17 @@
     }
   }
 
-  // Initialize with home directory
+  // Initialize with initial path, project folder, or home directory
   $effect(() => {
     if (isOpen) {
-      async function initializeHomeDirectory() {
+      async function initializeDirectory() {
+        // Use initialPath if provided
+        if (initialPath) {
+          loadDirectory(initialPath)
+          return
+        }
+
+        // Otherwise use home directory
         try {
           const response = await fetch('http://localhost:8000/api/file-explorer/home')
           if (response.ok) {
@@ -55,7 +64,7 @@
           loadDirectory('/')
         }
       }
-      initializeHomeDirectory()
+      initializeDirectory()
     }
   })
 
