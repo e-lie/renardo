@@ -250,24 +250,49 @@ export function useEditorStore(): EditorStoreInterface {
                         return state
                     }
 
-                    // TODO: Call API to save file to project
-                    // For now, just mark buffer as not dirty and update filePath
-                    const updatedBuffer = {
-                        ...buffer,
-                        filePath,
-                        isDirty: false,
-                        updatedAt: new Date()
-                    }
-
-                    const newBuffers = new Map(state.buffers)
-                    newBuffers.set(bufferId, updatedBuffer)
-
-                    resolve({
-                        success: true,
-                        message: `File saved: ${filePath}`
+                    // Call API to save file to project
+                    fetch('http://localhost:8000/api/project/save-file', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ file_path: filePath, content: buffer.content })
                     })
+                        .then(async response => {
+                            if (!response.ok) {
+                                const errorData = await response.json()
+                                throw new Error(errorData.detail || 'Failed to save file')
+                            }
+                            return response.json()
+                        })
+                        .then(() => {
+                            writableEditorStore.update(state => {
+                                const updatedBuffer = {
+                                    ...buffer,
+                                    filePath,
+                                    isDirty: false,
+                                    updatedAt: new Date()
+                                }
 
-                    return { ...state, buffers: newBuffers }
+                                const newBuffers = new Map(state.buffers)
+                                newBuffers.set(bufferId, updatedBuffer)
+
+                                return { ...state, buffers: newBuffers }
+                            })
+
+                            resolve({
+                                success: true,
+                                message: `File saved: ${filePath}`
+                            })
+                        })
+                        .catch(error => {
+                            resolve({
+                                success: false,
+                                message: error instanceof Error ? error.message : 'Failed to save file'
+                            })
+                        })
+
+                    return state
                 })
             })
         },

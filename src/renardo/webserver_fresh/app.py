@@ -3,7 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from pathlib import Path
+from typing import List
 import os
+
+from .file_explorer import DirectoryEntry, FileExplorerService
+from .project import Project, ProjectService
 
 app = FastAPI(title="Renardo WebServer Fresh", version="1.0.0")
 
@@ -145,3 +149,97 @@ async def get_tutorial_file(lang: str, filename: str):
         raise HTTPException(
             status_code=500, detail=f"Error reading tutorial file: {str(e)}"
         )
+
+
+# File Explorer endpoints
+@app.get("/api/file-explorer/list", response_model=List[DirectoryEntry])
+async def list_directory(path: str = "/"):
+    """List contents of a directory"""
+    try:
+        file_explorer = FileExplorerService()
+        entries = file_explorer.list_directory(path)
+        return entries
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error listing directory: {str(e)}")
+
+
+@app.get("/api/file-explorer/home")
+async def get_home_directory():
+    """Get user's home directory path"""
+    try:
+        file_explorer = FileExplorerService()
+        home_path = file_explorer.get_home_directory()
+        return {"path": home_path}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting home directory: {str(e)}")
+
+
+@app.get("/api/file-explorer/parent")
+async def get_parent_directory(path: str):
+    """Get parent directory of a path"""
+    try:
+        file_explorer = FileExplorerService()
+        parent_path = file_explorer.get_parent_directory(path)
+        return {"path": parent_path}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting parent directory: {str(e)}")
+
+
+# Project endpoints
+class OpenProjectRequest(BaseModel):
+    root_path: str
+
+
+class SaveFileRequest(BaseModel):
+    file_path: str
+    content: str
+
+
+@app.post("/api/project/open")
+async def open_project(request: OpenProjectRequest):
+    """Open a project directory"""
+    try:
+        project_service = ProjectService()
+        project = project_service.open_project(request.root_path)
+        return {
+            "success": True,
+            "project": {"root_path": str(project.root_path)}
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error opening project: {str(e)}")
+
+
+@app.get("/api/project/current")
+async def get_current_project():
+    """Get current project information"""
+    try:
+        project_service = ProjectService()
+        if project_service.current_project:
+            return {
+                "success": True,
+                "project": {"root_path": str(project_service.current_project.root_path)}
+            }
+        else:
+            return {"success": False, "project": None}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting current project: {str(e)}")
+
+
+@app.post("/api/project/save-file")
+async def save_file(request: SaveFileRequest):
+    """Save a file to the current project"""
+    try:
+        project_service = ProjectService()
+        if not project_service.current_project:
+            raise HTTPException(status_code=400, detail="No project is open")
+
+        project_service.write_file(request.file_path, request.content)
+        return {"success": True, "message": f"File saved: {request.file_path}"}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error saving file: {str(e)}")

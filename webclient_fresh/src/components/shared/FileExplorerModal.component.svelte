@@ -25,9 +25,12 @@
     loading = true
     error = null
     try {
-      // TODO: Call API to list directory
-      // For now, mock data
-      entries = []
+      const response = await fetch(`http://localhost:8000/api/file-explorer/list?path=${encodeURIComponent(path)}`)
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || 'Failed to load directory')
+      }
+      entries = await response.json()
       currentPath = path
     } catch (e) {
       error = e instanceof Error ? e.message : 'Failed to load directory'
@@ -39,8 +42,20 @@
   // Initialize with home directory
   $effect(() => {
     if (isOpen) {
-      // TODO: Get home directory from API
-      loadDirectory('/')
+      async function initializeHomeDirectory() {
+        try {
+          const response = await fetch('http://localhost:8000/api/file-explorer/home')
+          if (response.ok) {
+            const data = await response.json()
+            loadDirectory(data.path)
+          } else {
+            loadDirectory('/')
+          }
+        } catch (e) {
+          loadDirectory('/')
+        }
+      }
+      initializeHomeDirectory()
     }
   })
 
@@ -54,13 +69,21 @@
     }
   }
 
-  function handleGoUp() {
-    // TODO: Get parent directory
-    const parts = currentPath.split('/').filter(p => p)
-    if (parts.length > 0) {
-      parts.pop()
-      const parent = '/' + parts.join('/')
-      loadDirectory(parent || '/')
+  async function handleGoUp() {
+    try {
+      const response = await fetch(`http://localhost:8000/api/file-explorer/parent?path=${encodeURIComponent(currentPath)}`)
+      if (response.ok) {
+        const data = await response.json()
+        loadDirectory(data.path)
+      }
+    } catch (e) {
+      // Fallback to manual parent calculation
+      const parts = currentPath.split('/').filter(p => p)
+      if (parts.length > 0) {
+        parts.pop()
+        const parent = '/' + parts.join('/')
+        loadDirectory(parent || '/')
+      }
     }
   }
 
