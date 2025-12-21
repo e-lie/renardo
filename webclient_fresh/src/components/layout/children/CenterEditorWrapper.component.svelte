@@ -2,14 +2,6 @@
   import CodeEditor from '../../editor/CodeEditor.component.svelte'
   import { useEditorStore } from '../../../store/editor'
 
-  let {
-    componentId,
-    title = 'Code Editor'
-  }: {
-    componentId: string
-    title?: string
-  } = $props()
-
   const { actions, getters } = useEditorStore()
   const { tabs, buffers } = getters
 
@@ -28,11 +20,11 @@
   // Get local tabs
   let localTabs = $derived($tabs.filter(t => localTabIds.includes(t.id)))
 
-  // Create initial buffer for this code editor instance
+  // Create initial buffer for center editor
   $effect(() => {
     if (localTabIds.length === 0) {
       const newBufferId = actions.createBuffer({
-        name: title || 'Code Editor',
+        name: 'Untitled',
         content: '',
         language: 'python',
       })
