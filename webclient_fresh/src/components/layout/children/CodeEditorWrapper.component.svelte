@@ -31,18 +31,28 @@
 
   function handleChange(value: string) {
     if (bufferId) {
-      actions.updateBuffer(bufferId, { content: value })
+      actions.updateBufferContent(bufferId, value)
     }
   }
 
   function handleExecute(code: string) {
     actions.executeCode(code)
   }
+
+  function handleCreateTab() {
+    const newBufferId = actions.createBuffer({
+      name: 'Untitled',
+      content: '',
+      language: 'python',
+    })
+    const newTabId = actions.createTab(newBufferId)
+    actions.switchToTab(newTabId)
+  }
 </script>
 
 <div class="h-full">
   {#if buffer}
-    <CodeEditor {buffer} onchange={handleChange} onexecute={handleExecute} />
+    <CodeEditor {buffer} onchange={handleChange} onexecute={handleExecute} oncreatetab={handleCreateTab} />
   {:else}
     <div class="h-full flex items-center justify-center text-surface-500">
       <p>Loading editor...</p>
