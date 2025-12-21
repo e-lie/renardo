@@ -237,6 +237,41 @@ export function useEditorStore(): EditorStoreInterface {
             })
         },
 
+        saveBuffer: async (bufferId: string, filePath: string): Promise<{ success: boolean; message: string }> => {
+            return new Promise((resolve) => {
+                writableEditorStore.update(state => {
+                    const buffer = state.buffers.get(bufferId)
+
+                    if (!buffer) {
+                        resolve({
+                            success: false,
+                            message: 'Buffer not found'
+                        })
+                        return state
+                    }
+
+                    // TODO: Call API to save file to project
+                    // For now, just mark buffer as not dirty and update filePath
+                    const updatedBuffer = {
+                        ...buffer,
+                        filePath,
+                        isDirty: false,
+                        updatedAt: new Date()
+                    }
+
+                    const newBuffers = new Map(state.buffers)
+                    newBuffers.set(bufferId, updatedBuffer)
+
+                    resolve({
+                        success: true,
+                        message: `File saved: ${filePath}`
+                    })
+
+                    return { ...state, buffers: newBuffers }
+                })
+            })
+        },
+
         updateSettings: (settings: Partial<EditorSettingsInterface>): void => {
             writableEditorStore.update(state => {
                 const newSettings = { ...state.settings, ...settings }

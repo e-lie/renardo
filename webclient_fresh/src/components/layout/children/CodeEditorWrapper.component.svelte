@@ -1,32 +1,32 @@
 <script lang="ts">
-  import CodeEditor from '../../editor/CodeEditor.component.svelte'
-  import { useEditorStore } from '../../../store/editor'
+  import CodeEditor from '../../editor/CodeEditor.component.svelte';
+  import { useEditorStore } from '../../../store/editor';
 
   let {
     componentId,
-    title = 'Code Editor'
+    title = 'Code Editor',
   }: {
-    componentId: string
-    title?: string
-  } = $props()
+    componentId: string;
+    title?: string;
+  } = $props();
 
-  const { actions, getters } = useEditorStore()
-  const { tabs, buffers } = getters
+  const { actions, getters } = useEditorStore();
+  const { tabs, buffers } = getters;
 
   // Track local tab IDs for this editor instance
-  let localTabIds = $state<string[]>([])
-  let activeLocalTabId = $state<string | null>(null)
+  let localTabIds = $state<string[]>([]);
+  let activeLocalTabId = $state<string | null>(null);
 
   // Get active buffer from active local tab
   let activeBuffer = $derived.by(() => {
-    if (!activeLocalTabId) return null
-    const tab = $tabs.find(t => t.id === activeLocalTabId)
-    if (!tab) return null
-    return $buffers.find(b => b.id === tab.bufferId) || null
-  })
+    if (!activeLocalTabId) return null;
+    const tab = $tabs.find((t) => t.id === activeLocalTabId);
+    if (!tab) return null;
+    return $buffers.find((b) => b.id === tab.bufferId) || null;
+  });
 
   // Get local tabs
-  let localTabs = $derived($tabs.filter(t => localTabIds.includes(t.id)))
+  let localTabs = $derived($tabs.filter((t) => localTabIds.includes(t.id)));
 
   // Create initial buffer for this code editor instance
   $effect(() => {
@@ -35,21 +35,21 @@
         name: title || 'Code Editor',
         content: '',
         language: 'python',
-      })
-      const newTabId = actions.createTab(newBufferId)
-      localTabIds = [newTabId]
-      activeLocalTabId = newTabId
+      });
+      const newTabId = actions.createTab(newBufferId);
+      localTabIds = [newTabId];
+      activeLocalTabId = newTabId;
     }
-  })
+  });
 
   function handleChange(value: string) {
     if (activeBuffer) {
-      actions.updateBufferContent(activeBuffer.id, value)
+      actions.updateBufferContent(activeBuffer.id, value);
     }
   }
 
   function handleExecute(code: string) {
-    actions.executeCode(code)
+    actions.executeCode(code);
   }
 
   function handleCreateTab() {
@@ -57,24 +57,24 @@
       name: 'Untitled',
       content: '',
       language: 'python',
-    })
-    const newTabId = actions.createTab(newBufferId)
-    localTabIds = [...localTabIds, newTabId]
-    activeLocalTabId = newTabId
-    actions.switchToTab(newTabId)
+    });
+    const newTabId = actions.createTab(newBufferId);
+    localTabIds = [...localTabIds, newTabId];
+    activeLocalTabId = newTabId;
+    actions.switchToTab(newTabId);
   }
 
   function handleSwitchTab(tabId: string) {
-    activeLocalTabId = tabId
-    actions.switchToTab(tabId)
+    activeLocalTabId = tabId;
+    actions.switchToTab(tabId);
   }
 
   function handleCloseTab(tabId: string) {
-    actions.closeTab(tabId)
-    localTabIds = localTabIds.filter(id => id !== tabId)
+    actions.closeTab(tabId);
+    localTabIds = localTabIds.filter((id) => id !== tabId);
     if (activeLocalTabId === tabId && localTabIds.length > 0) {
-      activeLocalTabId = localTabIds[0]
-      actions.switchToTab(localTabIds[0])
+      activeLocalTabId = localTabIds[0];
+      actions.switchToTab(localTabIds[0]);
     }
   }
 </script>
@@ -82,11 +82,15 @@
 <div class="h-full flex flex-col">
   {#if localTabs.length > 1}
     <!-- Tab bar -->
-    <div class="flex items-center bg-surface-200 dark:bg-surface-800 border-b border-surface-300 dark:border-surface-700">
+    <div
+      class="flex items-center bg-surface-200 dark:bg-surface-800 border-b border-surface-300 dark:border-surface-700"
+    >
       {#each localTabs as tab}
         <div class="flex items-center group">
           <button
-            class="px-3 py-2 text-sm transition-colors {tab.id === activeLocalTabId ? 'bg-surface-100 dark:bg-surface-900 border-b-2 border-primary-500' : 'hover:bg-surface-300 dark:hover:bg-surface-700'}"
+            class="px-3 py-2 text-sm transition-colors {tab.id === activeLocalTabId
+              ? 'bg-surface-100 dark:bg-surface-900 border-b-2 border-primary-500'
+              : 'hover:bg-surface-300 dark:hover:bg-surface-700'}"
             onclick={() => handleSwitchTab(tab.id)}
           >
             <span class="text-surface-900 dark:text-surface-50">{tab.title}</span>
@@ -108,7 +112,12 @@
   <!-- Editor content -->
   <div class="flex-1 overflow-hidden">
     {#if activeBuffer}
-      <CodeEditor buffer={activeBuffer} onchange={handleChange} onexecute={handleExecute} oncreatetab={handleCreateTab} />
+      <CodeEditor
+        buffer={activeBuffer}
+        onchange={handleChange}
+        onexecute={handleExecute}
+        oncreatetab={handleCreateTab}
+      />
     {:else}
       <div class="h-full flex items-center justify-center text-surface-500">
         <p>Loading editor...</p>

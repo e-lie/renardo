@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount, onDestroy } from 'svelte'
   import CodeEditor from '../../editor/CodeEditor.component.svelte'
   import { useEditorStore } from '../../../store/editor'
 
@@ -33,6 +34,36 @@
       activeLocalTabId = newTabId
     }
   })
+
+  // Handle Ctrl+S to save
+  function handleKeyDown(event: KeyboardEvent) {
+    if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+      event.preventDefault()
+      handleSave()
+    }
+  }
+
+  onMount(() => {
+    document.addEventListener('keydown', handleKeyDown)
+  })
+
+  onDestroy(() => {
+    document.removeEventListener('keydown', handleKeyDown)
+  })
+
+  async function handleSave() {
+    if (!activeBuffer) return
+
+    const fileName = prompt('Enter file name:', activeBuffer.filePath || activeBuffer.name + '.py')
+    if (!fileName) return
+
+    const result = await actions.saveBuffer(activeBuffer.id, fileName)
+    if (result.success) {
+      console.log(result.message)
+    } else {
+      alert(result.message)
+    }
+  }
 
   function handleChange(value: string) {
     if (activeBuffer) {

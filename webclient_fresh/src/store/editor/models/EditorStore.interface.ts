@@ -10,6 +10,7 @@ export interface EditorStoreActionsInterface {
     switchToTab: (tabId: string) => void
     closeTab: (tabId: string) => void
     updateBufferContent: (bufferId: string, content: string) => void
+    saveBuffer: (bufferId: string, filePath: string) => Promise<{ success: boolean; message: string }>
     renameBuffer: (bufferId: string, newName: string) => void
     updateSettings: (settings: Partial<EditorSettingsInterface>) => void
     executeCode: (code: string) => Promise<{ success: boolean; message: string }>
