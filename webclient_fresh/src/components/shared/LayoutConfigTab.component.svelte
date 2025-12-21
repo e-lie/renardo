@@ -20,9 +20,14 @@
     return colors[position] || 'bg-surface-100 dark:bg-surface-900'
   }
 
-  function addTabToPane(position: string, componentType: 'ColorPicker' | 'TextArea') {
+  function addTabToPane(position: string, componentType: 'ColorPicker' | 'TextArea' | 'CodeEditor') {
+    const titles = {
+      'ColorPicker': 'Color Picker',
+      'TextArea': 'Text Area',
+      'CodeEditor': 'Code Editor'
+    }
     actions.addTab(position, {
-      title: componentType === 'ColorPicker' ? 'Color Picker' : 'Text Area',
+      title: titles[componentType],
       componentType,
       componentId: `${componentType.toLowerCase()}-${position}-${Date.now()}`,
       closable: true,
@@ -249,7 +254,7 @@
                         disabled={index === ($paneTabConfigs.get(position)?.length || 0) - 1}
                       >▼</button>
                     </div>
-                    <span>{tab.componentType === 'ColorPicker' ? '🎨' : '📝'}</span>
+                    <span>{tab.componentType === 'ColorPicker' ? '🎨' : tab.componentType === 'TextArea' ? '📝' : '💻'}</span>
                     <span class="flex-1 truncate text-surface-900 dark:text-surface-50">{tab.title}</span>
                     {#if tab.closable}
                       <button class="text-error-500 hover:bg-error-500/20 rounded px-1" onclick={() => removeTabFromPane(position, tab.id)}>×</button>
@@ -264,8 +269,11 @@
                     <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-t-lg" onclick={() => { addTabToPane(position, 'ColorPicker'); openMenuPosition = null }}>
                       🎨 Color Picker
                     </button>
-                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-b-lg" onclick={() => { addTabToPane(position, 'TextArea'); openMenuPosition = null }}>
+                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700" onclick={() => { addTabToPane(position, 'TextArea'); openMenuPosition = null }}>
                       📝 Text Area
+                    </button>
+                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-b-lg" onclick={() => { addTabToPane(position, 'CodeEditor'); openMenuPosition = null }}>
+                      💻 Code Editor
                     </button>
                   </div>
                 {/if}
@@ -312,7 +320,7 @@
                         disabled={index === ($paneTabConfigs.get(position)?.length || 0) - 1}
                       >▼</button>
                     </div>
-                    <span>{tab.componentType === 'ColorPicker' ? '🎨' : '📝'}</span>
+                    <span>{tab.componentType === 'ColorPicker' ? '🎨' : tab.componentType === 'TextArea' ? '📝' : '💻'}</span>
                     <span class="flex-1 truncate text-surface-900 dark:text-surface-50">{tab.title}</span>
                     {#if tab.closable}
                       <button class="text-error-500 hover:bg-error-500/20 rounded px-1" onclick={() => removeTabFromPane(position, tab.id)}>×</button>
@@ -327,8 +335,11 @@
                     <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-t-lg" onclick={() => { addTabToPane(position, 'ColorPicker'); openMenuPosition = null }}>
                       🎨 Color Picker
                     </button>
-                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-b-lg" onclick={() => { addTabToPane(position, 'TextArea'); openMenuPosition = null }}>
+                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700" onclick={() => { addTabToPane(position, 'TextArea'); openMenuPosition = null }}>
                       📝 Text Area
+                    </button>
+                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-b-lg" onclick={() => { addTabToPane(position, 'CodeEditor'); openMenuPosition = null }}>
+                      💻 Code Editor
                     </button>
                   </div>
                 {/if}

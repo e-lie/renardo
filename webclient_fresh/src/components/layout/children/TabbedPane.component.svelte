@@ -17,7 +17,8 @@
     'ColorPicker': ColorPicker,
     'TextArea': TextArea,
     'CodeEditor': CodeEditorWrapper,
-    'TopMenu': TopMenu
+    'TopMenu': TopMenu,
+    'CodeEditorWrapper': CodeEditorWrapper
   }
 
   function handleSwitchTab(tabId: string) {
