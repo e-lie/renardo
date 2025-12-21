@@ -43,7 +43,9 @@ class ApiClient {
       return { data: await response.text() }
     }
 
-    return await response.json()
+    const data = await response.json()
+    console.log('API raw response:', data)
+    return data
   }
 
   async post(url: string, data: any): Promise<any> {

@@ -1,6 +1,6 @@
 import { writable, derived } from 'svelte/store'
 import { apiClient } from '../../api-client/rest/api'
-import type { TutorialFileInterface, TutorialLanguageInterface } from '@/models/tutorial'
+import type { TutorialFileInterface, TutorialLanguageInterface } from '../../models/tutorial'
 import type {
   TutorialStateInterface,
   TutorialStoreInterface,
@@ -26,11 +26,14 @@ export function useTutorialStore(): TutorialStoreInterface {
       
       try {
         const url = language ? `/api/tutorial/files?lang=${language}` : '/api/tutorial/files'
+        console.log('Loading tutorials from:', url)
         const response = await apiClient.get(url)
+        console.log('API response:', response)
         
-        if (response.data?.success) {
-          const languages = response.data.languages
+        if (response?.success) {
+          const languages = response.languages
           const availableLanguages = Object.keys(languages)
+          console.log('Available languages:', availableLanguages)
           
           writableTutorialStore.update(state => ({
             ...state,
@@ -43,6 +46,7 @@ export function useTutorialStore(): TutorialStoreInterface {
           throw new Error('Failed to load tutorial files')
         }
       } catch (error) {
+        console.error('Error loading tutorial files:', error)
         writableTutorialStore.update(state => ({
           ...state,
           error: error instanceof Error ? error.message : 'Unknown error',
