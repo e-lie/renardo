@@ -7,7 +7,7 @@ from typing import List
 import os
 
 from .file_explorer import DirectoryEntry, FileExplorerService
-from .project import Project, ProjectService
+from .project import Project, project_service
 
 app = FastAPI(title="Renardo WebServer Fresh", version="1.0.0")
 
@@ -201,7 +201,6 @@ class SaveFileRequest(BaseModel):
 async def open_project(request: OpenProjectRequest):
     """Open a project directory"""
     try:
-        project_service = ProjectService()
         project = project_service.open_project(request.root_path)
         return {
             "success": True,
@@ -217,7 +216,6 @@ async def open_project(request: OpenProjectRequest):
 async def get_current_project():
     """Get current project information"""
     try:
-        project_service = ProjectService()
         if project_service.current_project:
             return {
                 "success": True,
@@ -233,7 +231,6 @@ async def get_current_project():
 async def save_file(request: SaveFileRequest):
     """Save a file to the current project"""
     try:
-        project_service = ProjectService()
         if not project_service.current_project:
             raise HTTPException(status_code=400, detail="No project is open")
 
