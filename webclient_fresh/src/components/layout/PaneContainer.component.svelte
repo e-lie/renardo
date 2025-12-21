@@ -82,11 +82,49 @@
     const newTabId = actions.createTab(newBufferId)
     actions.switchToTab(newTabId)
   }
+
+  function handleSwitchTab(tabId: string) {
+    actions.switchToTab(tabId)
+  }
+
+  function handleCloseTab(tabId: string) {
+    actions.closeTab(tabId)
+  }
 </script>
 
 <div class={cssClass} {style}>
   {#if position === 'center'}
-    <CodeEditor buffer={$activeBuffer} onchange={handleChange} onexecute={handleExecute} oncreatetab={handleCreateTab} />
+    <div class="h-full flex flex-col">
+      {#if $tabs.length > 1}
+        <!-- Tab bar -->
+        <div class="flex items-center bg-surface-200 dark:bg-surface-800 border-b border-surface-300 dark:border-surface-700">
+          {#each $tabs as tab}
+            <div class="flex items-center group">
+              <button
+                class="px-3 py-2 text-sm transition-colors {tab.isActive ? 'bg-surface-100 dark:bg-surface-900 border-b-2 border-primary-500' : 'hover:bg-surface-300 dark:hover:bg-surface-700'}"
+                onclick={() => handleSwitchTab(tab.id)}
+              >
+                <span class="text-surface-900 dark:text-surface-50">{tab.title}</span>
+              </button>
+              {#if !tab.isPinned}
+                <button
+                  class="px-1 opacity-0 group-hover:opacity-100 transition-opacity text-surface-500 hover:text-surface-900 dark:hover:text-surface-50"
+                  onclick={() => handleCloseTab(tab.id)}
+                  title="Close tab"
+                >
+                  ×
+                </button>
+              {/if}
+            </div>
+          {/each}
+        </div>
+      {/if}
+
+      <!-- Editor content -->
+      <div class="flex-1 overflow-hidden">
+        <CodeEditor buffer={$activeBuffer} onchange={handleChange} onexecute={handleExecute} oncreatetab={handleCreateTab} />
+      </div>
+    </div>
   {:else if position === 'top-menu'}
     <TopMenu />
   {:else}
