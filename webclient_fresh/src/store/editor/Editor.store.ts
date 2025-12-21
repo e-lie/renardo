@@ -267,8 +267,12 @@ export function useEditorStore(): EditorStoreInterface {
                         })
                         .then(() => {
                             writableEditorStore.update(state => {
+                                // Extract filename from path
+                                const fileName = filePath.split('/').pop() || filePath
+
                                 const updatedBuffer = {
                                     ...buffer,
+                                    name: fileName.replace('.py', ''),
                                     filePath,
                                     isDirty: false,
                                     updatedAt: new Date()
@@ -277,7 +281,15 @@ export function useEditorStore(): EditorStoreInterface {
                                 const newBuffers = new Map(state.buffers)
                                 newBuffers.set(bufferId, updatedBuffer)
 
-                                return { ...state, buffers: newBuffers }
+                                // Update all tabs displaying this buffer
+                                const newTabs = new Map(state.tabs)
+                                newTabs.forEach((tab, id) => {
+                                    if (tab.bufferId === bufferId) {
+                                        newTabs.set(id, { ...tab, title: fileName.replace('.py', '') })
+                                    }
+                                })
+
+                                return { ...state, buffers: newBuffers, tabs: newTabs }
                             })
 
                             resolve({
@@ -294,6 +306,18 @@ export function useEditorStore(): EditorStoreInterface {
 
                     return state
                 })
+            })
+        },
+
+        updateTabTitle: (tabId: string, newTitle: string): void => {
+            writableEditorStore.update(state => {
+                const tab = state.tabs.get(tabId)
+                if (!tab) return state
+
+                const newTabs = new Map(state.tabs)
+                newTabs.set(tabId, { ...tab, title: newTitle })
+
+                return { ...state, tabs: newTabs }
             })
         },
 
