@@ -6,23 +6,14 @@
   const { paneSetVisibility, paneVisibility, paneTabConfigs } = getters
 
   function getPaneColor(position: string): string {
-    const colors: Record<string, string> = {
-      'top-menu': 'bg-surface-200 dark:bg-surface-800',
-      'left-top': 'bg-primary-500/10 dark:bg-primary-500/20',
-      'left-middle': 'bg-primary-500/20 dark:bg-primary-500/30',
-      'left-bottom': 'bg-secondary-500/10 dark:bg-secondary-500/20',
-      'right-top': 'bg-tertiary-500/10 dark:bg-tertiary-500/20',
-      'right-middle': 'bg-tertiary-500/20 dark:bg-tertiary-500/30',
-      'right-bottom': 'bg-success-500/10 dark:bg-success-500/20',
-      'bottom-left': 'bg-warning-500/10 dark:bg-warning-500/20',
-      'bottom-right': 'bg-error-500/10 dark:bg-error-500/20'
+    if (position === 'top-menu') {
+      return 'bg-surface-200 dark:bg-surface-800'
     }
-    return colors[position] || 'bg-surface-100 dark:bg-surface-900'
+    return 'bg-surface-100 dark:bg-surface-900'
   }
 
-  function addTabToPane(position: string, componentType: 'ColorPicker' | 'TextArea' | 'CodeEditor' | 'ConsoleOutput' | 'TutorialTab') {
+  function addTabToPane(position: string, componentType: 'TextArea' | 'CodeEditor' | 'ConsoleOutput' | 'TutorialTab') {
     const titles = {
-      'ColorPicker': 'Color Picker',
       'TextArea': 'Text Area',
       'CodeEditor': 'Code Editor',
       'ConsoleOutput': 'ฅ^•ﻌ•^ฅ >> output',
@@ -256,7 +247,7 @@
                         disabled={index === ($paneTabConfigs.get(position)?.length || 0) - 1}
                       >▼</button>
                     </div>
-                    <span>{tab.componentType === 'ColorPicker' ? '🎨' : tab.componentType === 'TextArea' ? '📝' : tab.componentType === 'ConsoleOutput' ? 'ฅ^•ﻌ•^ฅ' : tab.componentType === 'TutorialTab' ? '📚' : '💻'}</span>
+                    <span>{tab.componentType === 'TextArea' ? '📝' : tab.componentType === 'ConsoleOutput' ? 'ฅ^•ﻌ•^ฅ' : tab.componentType === 'TutorialTab' ? '📚' : '💻'}</span>
                     <span class="flex-1 truncate text-surface-900 dark:text-surface-50">{tab.title}</span>
                     {#if tab.closable}
                       <button class="text-error-500 hover:bg-error-500/20 rounded px-1" onclick={() => removeTabFromPane(position, tab.id)}>×</button>
@@ -268,10 +259,7 @@
                 <button class="btn btn-xs variant-ghost w-full" onclick={() => toggleMenu(position)}>+ Add Component</button>
                 {#if openMenuPosition === position}
                   <div class="absolute bottom-full left-0 mb-1 w-full bg-surface-50 dark:bg-surface-800 border border-surface-300 dark:border-surface-700 rounded-lg shadow-lg z-10">
-                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-t-lg" onclick={() => { addTabToPane(position, 'ColorPicker'); openMenuPosition = null }}>
-                      🎨 Color Picker
-                    </button>
-                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700" onclick={() => { addTabToPane(position, 'TextArea'); openMenuPosition = null }}>
+                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-t-lg" onclick={() => { addTabToPane(position, 'TextArea'); openMenuPosition = null }}>
                       📝 Text Area
                     </button>
                     <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700" onclick={() => { addTabToPane(position, 'CodeEditor'); openMenuPosition = null }}>
@@ -328,7 +316,7 @@
                         disabled={index === ($paneTabConfigs.get(position)?.length || 0) - 1}
                       >▼</button>
                     </div>
-                    <span>{tab.componentType === 'ColorPicker' ? '🎨' : tab.componentType === 'TextArea' ? '📝' : tab.componentType === 'ConsoleOutput' ? 'ฅ^•ﻌ•^ฅ' : tab.componentType === 'TutorialTab' ? '📚' : '💻'}</span>
+                    <span>{tab.componentType === 'TextArea' ? '📝' : tab.componentType === 'ConsoleOutput' ? 'ฅ^•ﻌ•^ฅ' : tab.componentType === 'TutorialTab' ? '📚' : '💻'}</span>
                     <span class="flex-1 truncate text-surface-900 dark:text-surface-50">{tab.title}</span>
                     {#if tab.closable}
                       <button class="text-error-500 hover:bg-error-500/20 rounded px-1" onclick={() => removeTabFromPane(position, tab.id)}>×</button>
@@ -340,10 +328,7 @@
                 <button class="btn btn-xs variant-ghost w-full" onclick={() => toggleMenu(position)}>+ Add Component</button>
                 {#if openMenuPosition === position}
                   <div class="absolute bottom-full left-0 mb-1 w-full bg-surface-50 dark:bg-surface-800 border border-surface-300 dark:border-surface-700 rounded-lg shadow-lg z-10">
-                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-t-lg" onclick={() => { addTabToPane(position, 'ColorPicker'); openMenuPosition = null }}>
-                      🎨 Color Picker
-                    </button>
-                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700" onclick={() => { addTabToPane(position, 'TextArea'); openMenuPosition = null }}>
+                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-t-lg" onclick={() => { addTabToPane(position, 'TextArea'); openMenuPosition = null }}>
                       📝 Text Area
                     </button>
                     <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700" onclick={() => { addTabToPane(position, 'CodeEditor'); openMenuPosition = null }}>
