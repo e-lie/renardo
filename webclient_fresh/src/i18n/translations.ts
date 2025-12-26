@@ -33,6 +33,7 @@ export const translations = {
     // Common
     close: 'Close',
     clear: 'Clear',
+    selectCodeFolder: 'Select code folder',
 
     // Panes
     menu: 'Menu',
@@ -73,6 +74,7 @@ export const translations = {
     // Common
     close: 'Fermer',
     clear: 'Effacer',
+    selectCodeFolder: 'Sélectionner un dossier de code',
 
     // Panes
     menu: 'Menu',
@@ -113,6 +115,7 @@ export const translations = {
     // Common
     close: 'Cerrar',
     clear: 'Limpiar',
+    selectCodeFolder: 'Seleccionar carpeta de código',
 
     // Panes
     menu: 'Menú',
@@ -153,6 +156,7 @@ export const translations = {
     // Common
     close: 'Schließen',
     clear: 'Löschen',
+    selectCodeFolder: 'Code-Ordner auswählen',
 
     // Panes
     menu: 'Menü',
