@@ -46,6 +46,28 @@
     }
   }
 
+  function formatMessage(message: string): string {
+    // Remove runtime prefixes from WebSocket messages
+    if (message.startsWith('[runtime] ')) {
+      const content = message.substring(10) // Remove '[runtime] '
+      
+      // Remove execution and result prefixes
+      if (content.startsWith('Executing code: ')) {
+        return '' // Hide execution messages entirely
+      }
+      if (content.startsWith('Execution result: ')) {
+        return content.substring(18) // Show only the result
+      }
+      if (content.startsWith('Execution error: ')) {
+        return content.substring(17) // Show only the error message
+      }
+      
+      return content
+    }
+    
+    return message
+  }
+
   const displayedMessages = $derived($isMinimized ? $messages.slice(-2) : $messages)
 </script>
 
@@ -90,9 +112,11 @@
         </div>
       {:else}
         {#each displayedMessages as output}
-          <div class="mb-1 border-b border-surface-700 border-opacity-20 pb-1">
-            <span class="{getMessageClass(output.level)} whitespace-pre-wrap">{output.message}</span>
-          </div>
+          {#if formatMessage(output.message) !== ''}
+            <div class="mb-1 border-b border-surface-700 border-opacity-20 pb-1">
+              <span class="{getMessageClass(output.level)} whitespace-pre-wrap">{formatMessage(output.message)}</span>
+            </div>
+          {/if}
         {/each}
       {/if}
     </div>
