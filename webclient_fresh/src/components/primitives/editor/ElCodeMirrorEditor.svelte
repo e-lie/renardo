@@ -52,17 +52,13 @@
     }
   });
 
-  // Update theme when prop changes (using untrack to avoid infinite loop)
+  // Update theme when prop changes
   $effect(() => {
-    // This will run whenever `theme` changes
-    const currentTheme = theme;
-
     if (editorView) {
-      logger.info('ElCodeMirrorEditor', 'Theme prop changed, updating editor', { theme: currentTheme });
+      logger.info('ElCodeMirrorEditor', 'Theme prop changed, updating editor', { theme });
 
-      // Dispatch the theme update
       editorView.dispatch({
-        effects: themeCompartment.reconfigure(getTheme(currentTheme))
+        effects: themeCompartment.reconfigure(getTheme(theme))
       });
     }
   });
@@ -73,43 +69,124 @@
 
     switch (lang) {
       case 'python':
-        return python({
-          // Python-specific configuration
-          indentUnit: 4,
-          tabSize: 4,
-          languageData: {
-            commentTokens: { line: '#' },
-            indentOnInput:
-              /^\s*(((def|class|if|elif|else|for|while|try|except|finally|with|async)\b.*:|elif\s+.*:|else\s*:|except\s+.*:|finally\s*:|with\s+.*:|async\s+.*:))$/,
-          },
-        });
+        return python();
       default:
-        // Plain text mode
         return [];
     }
   }
 
-  // Custom keymap for Ctrl+Enter execution and Ctrl+. for stop
-  const executeKeymap = keymap.of([
-    {
-      key: 'Ctrl-Enter',
-      mac: 'Cmd-Enter',
-      run: (view) => {
-        const code = view.state.doc.toString();
-        onexecute?.(code);
-        return true;
-      },
-    },
-    {
-      key: 'Ctrl-.',
-      mac: 'Cmd-.',
-      run: () => {
-        logger.info('ElCodeMirrorEditor', 'Executing Clock.clear() via Ctrl+.');
-        onexecute?.('Clock.clear()');
-        return true;
-      },
-    },
-  ]);
+  // Get current paragraph/block of code
+  function getCurrentBlock(view: EditorView): { text: string; from: number; to: number } {
+    const doc = view.state.doc;
+    const cursor = view.state.selection.main.head;
+    const lineInfo = doc.lineAt(cursor);
+    
+    // Find start of block (go up until empty line or start of document)
+    let startLine = lineInfo.number - 1;
+    while (startLine > 0) {
+      const prevLine = doc.line(startLine);
+      if (prevLine.text.trim() === '') {
+        break;
+      }
+      startLine--;
+    }
+    
+    // Find end of block (go down until empty line or end of document)
+    let endLine = lineInfo.number;
+    while (endLine < doc.lines) {
+      const currentLine = doc.line(endLine + 1);
+      if (currentLine.text.trim() === '') {
+        break;
+      }
+      endLine++;
+    }
+    
+    const startLineObj = doc.line(Math.max(0, startLine + 1));
+    const endLineObj = doc.line(endLine);
+    
+    return {
+      text: doc.sliceString(startLineObj.from, endLineObj.to),
+      from: startLineObj.from,
+      to: endLineObj.to
+    };
+  }
+
+  // Simple execution highlight using CSS
+  function createExecutionHighlight(view: EditorView, from: number, to: number) {
+    // Create temporary selection for highlight
+    view.dispatch({
+      selection: { anchor: from, head: to }
+    });
+    
+    // Add highlight style
+    const highlightStyle = document.createElement('style');
+    highlightStyle.id = 'execution-highlight';
+    highlightStyle.textContent = `
+      .cm-editor .cm-selectionLayer .cm-selectionBackground,
+      .cm-editor .cm-selectionBackground {
+        background-color: rgba(34, 197, 94, 0.3) !important;
+        border-radius: 2px;
+        animation: executionPulse 0.8s ease-in-out;
+      }
+      @keyframes executionPulse {
+        0% { background-color: rgba(34, 197, 94, 0.8); }
+        50% { background-color: rgba(34, 197, 94, 0.4); }
+        100% { background-color: rgba(34, 197, 94, 0.2); }
+      }
+    `;
+    document.head.appendChild(highlightStyle);
+    
+    // Clear highlight after animation
+    setTimeout(() => {
+      try {
+        const style = document.getElementById('execution-highlight');
+        if (style) {
+          document.head.removeChild(style);
+        }
+        // Clear selection to return to normal
+        view.dispatch({
+          selection: { anchor: from, head: from }
+        });
+      } catch (e) {
+        // Ignore cleanup errors
+      }
+    }, 800);
+  }
+
+  // Custom key handlers for Ctrl+Enter execution and Ctrl+. for stop
+  function handleKeyDown(event: KeyboardEvent) {
+    // Ctrl+Enter or Cmd+Enter for block execution
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      event.preventDefault();
+      event.stopPropagation();
+      
+      if (editorView) {
+        // Get current block of code
+        const block = getCurrentBlock(editorView);
+        
+        // Create execution highlight
+        createExecutionHighlight(editorView, block.from, block.to);
+        
+        // Execute block
+        logger.debug('ElCodeMirrorEditor', 'Executing code block', { 
+          codeLength: block.text.length,
+          from: block.from,
+          to: block.to
+        });
+        onexecute?.(block.text);
+      }
+      return;
+    }
+    
+    // Ctrl+. or Cmd+. for Clock.clear()
+    if ((event.ctrlKey || event.metaKey) && event.key === '.') {
+      event.preventDefault();
+      event.stopPropagation();
+      logger.info('ElCodeMirrorEditor', 'Executing Clock.clear() via Ctrl+.');
+      onexecute?.('Clock.clear()');
+      return;
+    }
+  }
 
   onMount(() => {
     logger.debug('ElCodeMirrorEditor', 'Component mounting...');
@@ -163,8 +240,7 @@
         // Enhanced syntax highlighting
         highlightSelectionMatches(),
 
-        // Keymaps (executeKeymap first for priority)
-        executeKeymap,
+        // Keymaps (standard keymaps only, custom handled via DOM events)
         keymap.of([...defaultKeymap, ...standardKeymap, indentWithTab, insertTab]),
 
         // Event handlers
@@ -180,7 +256,7 @@
         EditorState.readOnly.of(readonly),
 
         // Placeholder
-        placeholder ? cmPlaceholder(placeholder) : [],
+        placeholder ? cmPlaceholder(placeholder) : undefined,
       ],
     });
 
@@ -190,6 +266,9 @@
       parent: containerElement,
     });
 
+    // Add custom keyboard event listener with capture to intercept before CodeMirror
+    containerElement.addEventListener('keydown', handleKeyDown, { capture: true });
+
     logger.info('ElCodeMirrorEditor', 'CodeMirror instance created successfully');
   });
 
@@ -198,6 +277,9 @@
     if (editorView) {
       editorView.destroy();
       logger.debug('ElCodeMirrorEditor', 'CodeMirror instance destroyed');
+    }
+    if (containerElement) {
+      containerElement.removeEventListener('keydown', handleKeyDown, { capture: true });
     }
   });
 
