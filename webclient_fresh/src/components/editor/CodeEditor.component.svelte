@@ -38,7 +38,7 @@
       content={buffer.content}
       language={buffer.language}
       readonly={false}
-      placeholder="Write your Renardo code here... (Ctrl+Enter to execute)"
+      placeholder=""
       theme={$settings.theme}
       testid="code-editor"
       onchange={handleChange}
