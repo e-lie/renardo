@@ -221,6 +221,34 @@ async def get_parent_directory(path: str):
         )
 
 
+@app.get("/api/file-explorer/read")
+async def read_file(path: str):
+    """Read content of a file"""
+    try:
+        file_path = Path(path).resolve()
+
+        # Security: ensure file exists
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="File not found")
+
+        # Security: ensure it's a file, not a directory
+        if not file_path.is_file():
+            raise HTTPException(status_code=400, detail="Path is not a file")
+
+        # Read and return file content
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        return {"content": content, "path": str(file_path)}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error reading file: {str(e)}"
+        )
+
+
 # Project endpoints
 class OpenProjectRequest(BaseModel):
     root_path: str

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { useProjectStore } from '../../../store/project'
   import { useI18nStore } from '../../../store/i18n/I18n.store'
+  import { useEditorStore } from '../../../store/editor'
   import type { DirectoryEntry } from '../../../models/file-explorer'
 
   let {
@@ -16,6 +17,8 @@
 
   const { getters: i18nGetters } = useI18nStore()
   const { translate } = i18nGetters
+
+  const editorStore = useEditorStore()
 
   let currentPath = $state<string>('')
   let entries = $state<DirectoryEntry[]>([])
@@ -54,13 +57,36 @@
     }
   })
 
-  function handleEntryClick(entry: DirectoryEntry) {
+  async function handleEntryClick(entry: DirectoryEntry) {
     if (entry.is_directory) {
       pathHistory = [...pathHistory, entry.path]
       loadDirectory(entry.path)
     } else {
-      // TODO: Open file in editor
-      console.log('Open file:', entry.path)
+      // Load file in editor
+      await loadFileInEditor(entry.path, entry.name)
+    }
+  }
+
+  async function loadFileInEditor(filePath: string, fileName: string) {
+    try {
+      const response = await fetch(`http://localhost:8000/api/file-explorer/read?path=${encodeURIComponent(filePath)}`)
+
+      if (response.ok) {
+        const data = await response.json()
+        const content = data.content || ''
+
+        // Load content in new editor tab
+        if (editorStore?.actions?.loadContentInNewTab) {
+          // Remove file extension for tab title
+          const tabTitle = fileName.replace(/\.[^/.]+$/, '')
+          editorStore.actions.loadContentInNewTab(content, tabTitle)
+        }
+      } else {
+        const errorData = await response.json()
+        error = errorData.detail || 'Failed to load file'
+      }
+    } catch (e) {
+      error = e instanceof Error ? e.message : 'Failed to load file'
     }
   }
 
