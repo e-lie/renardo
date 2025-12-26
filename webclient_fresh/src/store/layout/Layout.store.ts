@@ -37,10 +37,10 @@ const initialState: LayoutStateInterface = {
       { id: 'tab-right-bottom-2', title: 'Shared Notes', componentType: 'TextArea', componentId: 'text-3', closable: true, active: false }
     ]],
     ['bottom-left', [
-      { id: 'tab-bottom-left-1', title: 'ฅ^•ﻌ•^ฅ >> output', componentType: 'ConsoleOutput', componentId: 'console-1', closable: true, active: true }
+      { id: 'tab-bottom-left-1', title: 'Draft', componentType: 'TextArea', componentId: 'text-4', closable: true, active: true }
     ]],
     ['bottom-right', [
-      { id: 'tab-bottom-right-1', title: 'Palette', componentType: 'ColorPicker', componentId: 'color-4', closable: true, active: true }
+      { id: 'tab-bottom-right-1', title: 'ฅ^•ﻌ•^ฅ >> output', componentType: 'ConsoleOutput', componentId: 'console-1', closable: true, active: true }
     ]]
   ]),
   paneVisibility: new Map([
