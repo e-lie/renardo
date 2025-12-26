@@ -35,6 +35,25 @@ class LoggerService {
                 entry.level === 'INFO' ? 'info' : 'debug';
 
         console[consoleMethod](`[${entry.component}] ${entry.message}`, entry.data || '');
+
+        // Send to backend
+        this.sendToBackend(entry);
+    }
+
+    private sendToBackend(entry: LogEntry) {
+        // Send log to backend without blocking or throwing errors
+        fetch('http://localhost:8000/api/frontend_logs', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                level: entry.level,
+                message: `[${entry.component}] ${entry.message}${entry.data ? ' ' + JSON.stringify(entry.data) : ''}`
+            })
+        }).catch(() => {
+            // Silently ignore errors (backend might not be ready)
+        });
     }
 
     debug(component: string, message: string, data?: any) {
