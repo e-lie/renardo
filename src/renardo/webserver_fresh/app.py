@@ -10,6 +10,7 @@ from .file_explorer import DirectoryEntry, FileExplorerService
 from .project import Project, project_service
 from .websocket.routes import router as websocket_router
 from .websocket.manager import websocket_manager
+from ..logger import get_main_logger
 
 app = FastAPI(title="Renardo WebServer Fresh", version="1.0.0")
 
@@ -303,3 +304,31 @@ async def save_file(request: SaveFileRequest):
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saving file: {str(e)}")
+
+
+# Frontend logging endpoint
+class FrontendLogRequest(BaseModel):
+    level: str
+    message: str
+
+
+@app.post("/api/frontend_logs")
+async def frontend_logs(request: FrontendLogRequest):
+    """Receive logs from frontend"""
+    logger = get_main_logger()
+
+    level = request.level.upper()
+    message = f"[FRONTEND] {request.message}"
+
+    if level == "DEBUG":
+        logger.debug(message)
+    elif level == "INFO":
+        logger.info(message)
+    elif level == "WARN":
+        logger.warning(message)
+    elif level == "ERROR":
+        logger.error(message)
+    else:
+        logger.info(message)
+
+    return {"success": True}
