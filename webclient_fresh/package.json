@@ -2,10 +2,17 @@
   "name": "renardo-webclient-fresh",
   "version": "1.0.0",
   "type": "module",
+  "main": "electron/main.js",
+  "description": "Renardo Fresh Web Client - Live coding with Python and SuperCollider",
+  "author": "Renardo Project <renardo@example.com>",
+  "homepage": "https://renardo.org",
   "private": true,
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 3001",
+    "dev:electron": "npm run build && electron .",
     "build": "vite build",
+    "build:electron": "vite build && electron-builder",
+    "dist": "vite build && electron-builder --publish=never",
     "preview": "vite preview --host 0.0.0.0 --port 3001",
     "start": "npm run dev",
     "check": "svelte-check --tsconfig ./tsconfig.json",
@@ -24,6 +31,9 @@
     "@typescript-eslint/eslint-plugin": "^6.19.1",
     "@typescript-eslint/parser": "^6.19.1",
     "autoprefixer": "^10.4.17",
+    "concurrently": "^8.0.0",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0",
     "eslint": "^8.56.0",
     "eslint-plugin-svelte": "^2.35.1",
     "postcss": "^8.4.33",
@@ -35,7 +45,8 @@
     "tslib": "^2.6.2",
     "typescript": "^5.3.3",
     "vite": "^5.0.12",
-    "vitest": "^1.2.2"
+    "vitest": "^1.2.2",
+    "wait-on": "^7.0.0"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.0",
@@ -57,5 +68,44 @@
     "graphql": "^16.8.1",
     "graphql-tag": "^2.12.6",
     "graphql-ws": "^5.14.2"
+  },
+  "build": {
+    "appId": "com.renardo.fresh",
+    "productName": "Renardo Fresh",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "!python/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "python",
+        "to": "python",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "../src/renardo",
+        "to": "renardo",
+        "filter": ["**/*.py", "**/*.json", "**/*.yaml", "**/*.conf", "**/*.txt", "**/*.md", "**/*.toml"]
+      },
+      {
+        "from": "dist",
+        "to": "renardo/webserver_fresh/static",
+        "filter": ["**/*"]
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.music"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Audio"
+    },
+    "win": {
+      "target": "nsis"
+    }
   }
 }
