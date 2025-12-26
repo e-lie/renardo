@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { PanePosition } from '../../../models/layout'
   import { useLayoutStore } from '../../../store/layout'
+  import { useI18nStore } from '../../../store/i18n/I18n.store'
   import TextArea from './TextArea.component.svelte'
   import CodeEditorWrapper from './CodeEditorWrapper.component.svelte'
   import TopMenu from './TopMenu.component.svelte'
@@ -14,6 +15,9 @@
   const { paneTabConfigs } = getters
   const tabs = $derived($paneTabConfigs.get(position) || [])
   const activeTab = $derived(tabs.find(t => t.active))
+
+  const { getters: i18nGetters } = useI18nStore()
+  const { translate } = i18nGetters
 
   const componentMap: Record<string, any> = {
     'TextArea': TextArea,
@@ -47,7 +51,7 @@
             class="px-3 py-2 text-sm transition-colors {tab.active ? 'bg-surface-100 dark:bg-surface-900 border-b-2 border-primary-500' : 'hover:bg-surface-300 dark:hover:bg-surface-700'}"
             onclick={() => handleSwitchTab(tab.id)}
           >
-            <span class="text-surface-900 dark:text-surface-50">{tab.title}</span>
+            <span class="text-surface-900 dark:text-surface-50">{$translate(tab.title)}</span>
           </button>
         {/each}
       </div>
