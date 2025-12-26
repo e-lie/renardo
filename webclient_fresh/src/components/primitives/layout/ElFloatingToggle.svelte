@@ -34,7 +34,7 @@
   })
 
   const cssClass = $derived(
-    `w-8 h-8 rounded-full bg-transparent border-2 border-primary-500 text-primary-500 shadow-xl z-50 flex items-center justify-center hover:bg-primary-500/10 transition-colors ${positionClasses}`
+    `btn btn-icon variant-filled-primary shadow-xl z-50 ${positionClasses}`
   )
 </script>
 
