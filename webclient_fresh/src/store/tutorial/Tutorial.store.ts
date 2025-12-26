@@ -72,13 +72,29 @@ export function useTutorialStore(): TutorialStoreInterface {
 
     selectTutorialFile: async (file: TutorialFileInterface, editorStore: any) => {
       try {
+        // Check if a buffer with this file path already exists
+        const { get } = await import('svelte/store')
+        const buffers = get(editorStore.getters.buffers)
+        const existingBuffer = buffers.find((b: any) => b.filePath === file.path)
+
+        if (existingBuffer) {
+          // Find tab with this buffer
+          const tabs = get(editorStore.getters.tabs)
+          const tab = tabs.find((t: any) => t.bufferId === existingBuffer.id)
+
+          if (tab) {
+            editorStore.actions.switchToTab(tab.id)
+            return
+          }
+        }
+
         const response = await fetch(`http://localhost:8000${file.url}`)
 
         if (response.ok) {
           const content = await response.text()
           // Load content in editor
           if (editorStore?.actions?.loadContentInNewTab) {
-            editorStore.actions.loadContentInNewTab(content, file.name.replace('.py', ''))
+            editorStore.actions.loadContentInNewTab(content, file.name.replace('.py', ''), file.path)
           }
         } else {
           throw new Error('Failed to load tutorial file')
