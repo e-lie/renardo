@@ -27,14 +27,13 @@ const initialState: LayoutStateInterface = {
       { id: 'tab-left-bottom-1', title: 'Scratch', componentType: 'TextArea', componentId: 'text-scratch', closable: true, active: true }
     ]],
     ['right-top', [
-      { id: 'tab-right-top-1', title: 'Workspace', componentType: 'TextArea', componentId: 'text-2', closable: true, active: true }
+      { id: 'tab-right-top-1', title: 'Tutorials', componentType: 'TutorialTab', componentId: 'tutorial-1', closable: true, active: true }
     ]],
     ['right-middle', [
       { id: 'tab-right-middle-1', title: 'Shared Colors', componentType: 'ColorPicker', componentId: 'color-3', closable: true, active: true }
     ]],
     ['right-bottom', [
-      { id: 'tab-right-bottom-1', title: 'Tutorials', componentType: 'TutorialTab', componentId: 'tutorial-1', closable: true, active: true },
-      { id: 'tab-right-bottom-2', title: 'Shared Notes', componentType: 'TextArea', componentId: 'text-3', closable: true, active: false }
+      { id: 'tab-right-bottom-1', title: 'Workspace', componentType: 'TextArea', componentId: 'text-2', closable: true, active: true }
     ]],
     ['bottom-left', [
       { id: 'tab-bottom-left-1', title: 'Draft', componentType: 'TextArea', componentId: 'text-4', closable: true, active: true }
