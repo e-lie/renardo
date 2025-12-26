@@ -1,4 +1,4 @@
-import { writable, derived } from 'svelte/store'
+import { writable, derived, get } from 'svelte/store'
 import type { ConsoleMessageInterface } from '../../models/console'
 import type {
   ConsoleStateInterface,
@@ -6,6 +6,7 @@ import type {
   ConsoleStoreActionsInterface,
   ConsoleStoreGettersInterface
 } from './models'
+import type { ConsoleMessageInterface as WebSocketConsoleMessageInterface } from '../../models/websocket'
 
 // Initial state
 const initialState: ConsoleStateInterface = {
@@ -49,6 +50,38 @@ export function useConsoleStore(): ConsoleStoreInterface {
     }
   }
 
+  // Sync with WebSocket messages
+  const syncWithWebSocket = (webSocketStore: any) => {
+    if (!webSocketStore) return
+
+    // Subscribe to WebSocket console messages
+    const unsubscribe = webSocketStore.getters.consoleMessages.subscribe((wsMessages: WebSocketConsoleMessageInterface[]) => {
+      wsMessages.forEach((wsMessage: WebSocketConsoleMessageInterface) => {
+        // Convert WebSocket message to Console message format
+        const consoleMessage: ConsoleMessageInterface = {
+          id: wsMessage.id,
+          timestamp: wsMessage.timestamp,
+          level: wsMessage.level as 'info' | 'warning' | 'error' | 'debug',
+          message: `[${wsMessage.source}] ${wsMessage.message}`,
+          metadata: wsMessage.metadata
+        }
+
+        // Add to console if not already present
+        writableConsoleStore.update(state => {
+          const messageExists = state.messages.some(msg => msg.id === consoleMessage.id)
+          if (messageExists) return state
+          
+          return {
+            ...state,
+            messages: [...state.messages, consoleMessage]
+          }
+        })
+      })
+    })
+
+    return unsubscribe
+  }
+
   // Getters
   const messages = derived(writableConsoleStore, $state => $state.messages)
   const isMinimized = derived(writableConsoleStore, $state => $state.isMinimized)
@@ -58,5 +91,5 @@ export function useConsoleStore(): ConsoleStoreInterface {
     isMinimized
   }
 
-  return { actions, getters }
+  return { actions, getters, syncWithWebSocket }
 }

@@ -16,4 +16,5 @@ export interface ConsoleStoreGettersInterface {
 export interface ConsoleStoreInterface {
   actions: ConsoleStoreActionsInterface
   getters: ConsoleStoreGettersInterface
+  syncWithWebSocket?: (webSocketStore: any) => (() => void) | undefined
 }
