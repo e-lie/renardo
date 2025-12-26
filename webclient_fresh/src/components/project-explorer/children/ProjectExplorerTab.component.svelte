@@ -4,6 +4,7 @@
   import { useEditorStore } from '../../../store/editor'
   import type { DirectoryEntry } from '../../../models/file-explorer'
   import FileExplorerModal from '../../shared/FileExplorerModal.component.svelte'
+  import { get } from 'svelte/store'
 
   let {
     componentId,
@@ -77,6 +78,21 @@
 
   async function loadFileInEditor(filePath: string, fileName: string) {
     try {
+      // Check if a buffer with this file path already exists
+      const buffers = get(editorStore.getters.buffers)
+      const existingBuffer = buffers.find(b => b.filePath === filePath)
+
+      if (existingBuffer) {
+        // Find tab with this buffer
+        const tabs = get(editorStore.getters.tabs)
+        const tab = tabs.find(t => t.bufferId === existingBuffer.id)
+
+        if (tab) {
+          editorStore.actions.switchToTab(tab.id)
+          return
+        }
+      }
+
       const response = await fetch(`http://localhost:8000/api/file-explorer/read?path=${encodeURIComponent(filePath)}`)
 
       if (response.ok) {
@@ -87,7 +103,7 @@
         if (editorStore?.actions?.loadContentInNewTab) {
           // Remove file extension for tab title
           const tabTitle = fileName.replace(/\.[^/.]+$/, '')
-          editorStore.actions.loadContentInNewTab(content, tabTitle)
+          editorStore.actions.loadContentInNewTab(content, tabTitle, filePath)
         }
       } else {
         const errorData = await response.json()

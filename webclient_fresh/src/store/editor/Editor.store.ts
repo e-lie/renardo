@@ -113,7 +113,7 @@ export function useEditorStore(): EditorStoreInterface {
             return tabId
         },
 
-        loadContentInNewTab: (content: string, title: string): string => {
+        loadContentInNewTab: (content: string, title: string, filePath?: string): string => {
             let bufferId = ''
             let tabId = ''
 
@@ -127,6 +127,7 @@ export function useEditorStore(): EditorStoreInterface {
                     language: 'python',
                     isDirty: false,
                     isStartupFile: false,
+                    filePath,
                     createdAt: new Date(),
                     updatedAt: new Date()
                 }
