@@ -8,13 +8,23 @@ import os
 
 from .file_explorer import DirectoryEntry, FileExplorerService
 from .project import Project, project_service
+from .websocket.routes import router as websocket_router
+from .websocket.manager import websocket_manager
 
 app = FastAPI(title="Renardo WebServer Fresh", version="1.0.0")
+
+# Include WebSocket routes
+app.include_router(websocket_router, prefix="/ws", tags=["websocket"])
 
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3001", "http://127.0.0.1:3001"],
+    allow_origins=[
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+        "ws://localhost:3001",
+        "ws://127.0.0.1:3001",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -37,7 +47,20 @@ async def execute_code(request: ExecuteCodeRequest):
     try:
         from ..runtime import execute
 
+        # Send execution start message
+        await websocket_manager.send_console_message(
+            "info",
+            "runtime",
+            f"Executing code: {request.code[:100]}{'...' if len(request.code) > 100 else ''}",
+        )
+
         result = execute(request.code, verbose=True)
+
+        # Send execution result
+        if result:
+            await websocket_manager.send_console_message(
+                "info", "runtime", f"Execution result: {str(result)}"
+            )
 
         return ExecuteCodeResponse(
             success=True,
@@ -45,6 +68,11 @@ async def execute_code(request: ExecuteCodeRequest):
             output=str(result) if result else None,
         )
     except Exception as e:
+        # Send error message
+        await websocket_manager.send_console_message(
+            "error", "runtime", f"Execution error: {str(e)}"
+        )
+
         return ExecuteCodeResponse(
             success=False,
             message=f"Error executing code: {str(e)}",
@@ -162,7 +190,9 @@ async def list_directory(path: str = "/"):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error listing directory: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error listing directory: {str(e)}"
+        )
 
 
 @app.get("/api/file-explorer/home")
@@ -173,7 +203,9 @@ async def get_home_directory():
         home_path = file_explorer.get_home_directory()
         return {"path": home_path}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error getting home directory: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error getting home directory: {str(e)}"
+        )
 
 
 @app.get("/api/file-explorer/parent")
@@ -184,7 +216,9 @@ async def get_parent_directory(path: str):
         parent_path = file_explorer.get_parent_directory(path)
         return {"path": parent_path}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error getting parent directory: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error getting parent directory: {str(e)}"
+        )
 
 
 # Project endpoints
@@ -202,10 +236,7 @@ async def open_project(request: OpenProjectRequest):
     """Open a project directory"""
     try:
         project = project_service.open_project(request.root_path)
-        return {
-            "success": True,
-            "project": {"root_path": str(project.root_path)}
-        }
+        return {"success": True, "project": {"root_path": str(project.root_path)}}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -219,12 +250,16 @@ async def get_current_project():
         if project_service.current_project:
             return {
                 "success": True,
-                "project": {"root_path": str(project_service.current_project.root_path)}
+                "project": {
+                    "root_path": str(project_service.current_project.root_path)
+                },
             }
         else:
             return {"success": False, "project": None}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error getting current project: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error getting current project: {str(e)}"
+        )
 
 
 @app.post("/api/project/save-file")
