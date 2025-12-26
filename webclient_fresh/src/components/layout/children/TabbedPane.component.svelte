@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { PanePosition } from '../../../models/layout'
   import { useLayoutStore } from '../../../store/layout'
-  import ColorPicker from './ColorPicker.component.svelte'
   import TextArea from './TextArea.component.svelte'
   import CodeEditorWrapper from './CodeEditorWrapper.component.svelte'
   import TopMenu from './TopMenu.component.svelte'
@@ -16,7 +15,6 @@
   const activeTab = $derived(tabs.find(t => t.active))
 
   const componentMap: Record<string, any> = {
-    'ColorPicker': ColorPicker,
     'TextArea': TextArea,
     'CodeEditor': CodeEditorWrapper,
     'TopMenu': TopMenu,
