@@ -27,7 +27,8 @@ const initialState: LayoutStateInterface = {
       { id: 'tab-left-bottom-1', title: 'Scratch', componentType: 'TextArea', componentId: 'text-scratch', closable: true, active: true }
     ]],
     ['right-top', [
-      { id: 'tab-right-top-1', title: 'Tutorials', componentType: 'TutorialTab', componentId: 'tutorial-1', closable: true, active: true }
+      { id: 'tab-right-top-2', title: 'Project Explorer', componentType: 'ProjectExplorerTab', componentId: 'project-explorer-1', closable: true, active: false },
+      { id: 'tab-right-top-1', title: 'Tutorials', componentType: 'TutorialTab', componentId: 'tutorial-1', closable: true, active: true },
     ]],
     ['right-middle', [
       { id: 'tab-right-middle-1', title: 'Notes', componentType: 'TextArea', componentId: 'text-3', closable: true, active: true }
@@ -270,15 +271,15 @@ export function useLayoutStore(): LayoutStoreInterface {
       const state = get(writableLayoutStore)
       if (setName === 'left') {
         return state.paneVisibility.get('left-top') ||
-               state.paneVisibility.get('left-middle') ||
-               state.paneVisibility.get('left-bottom') || false
+          state.paneVisibility.get('left-middle') ||
+          state.paneVisibility.get('left-bottom') || false
       } else if (setName === 'right') {
         return state.paneVisibility.get('right-top') ||
-               state.paneVisibility.get('right-middle') ||
-               state.paneVisibility.get('right-bottom') || false
+          state.paneVisibility.get('right-middle') ||
+          state.paneVisibility.get('right-bottom') || false
       } else if (setName === 'bottom') {
         return state.paneVisibility.get('bottom-left') ||
-               state.paneVisibility.get('bottom-right') || false
+          state.paneVisibility.get('bottom-right') || false
       }
       return false
     },
