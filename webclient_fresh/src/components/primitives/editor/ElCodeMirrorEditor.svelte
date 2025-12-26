@@ -54,11 +54,14 @@
 
   // Update theme when prop changes
   $effect(() => {
+    // Access theme to track it
+    const currentTheme = theme;
+
     if (editorView) {
-      logger.info('ElCodeMirrorEditor', 'Theme prop changed, updating editor', { theme });
+      logger.info('ElCodeMirrorEditor', 'Theme prop changed, updating editor', { theme: currentTheme });
 
       editorView.dispatch({
-        effects: themeCompartment.reconfigure(getTheme(theme))
+        effects: themeCompartment.reconfigure(getTheme(currentTheme))
       });
     }
   });
@@ -330,22 +333,5 @@
 
   :global(.cm-focused) {
     outline: none;
-  }
-
-  :global(.cm-gutter) {
-    background-color: transparent;
-    border-right: none;
-  }
-
-  :global(.cm-lineNumbers .cm-gutterElement) {
-    color: rgba(var(--bc), 0.5);
-  }
-
-  :global(.cm-activeLineGutter) {
-    background-color: transparent;
-  }
-
-  :global(.cm-selectionBackground) {
-    background-color: rgba(var(--p), 0.2);
   }
 </style>
