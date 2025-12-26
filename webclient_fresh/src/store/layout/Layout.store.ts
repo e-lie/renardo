@@ -48,9 +48,9 @@ const initialState: LayoutStateInterface = {
     ['left-middle', true],
     ['left-bottom', true],
     ['right-top', true],
-    ['right-middle', true],
-    ['right-bottom', true],
-    ['bottom-left', true],
+    ['right-middle', false],
+    ['right-bottom', false],
+    ['bottom-left', false],
     ['bottom-right', true],
     ['center', true]
   ]),
