@@ -1,5 +1,9 @@
 <script lang="ts">
   import type { DirectoryEntry } from '../../models/file-explorer'
+  import { useI18nStore } from '../../store/i18n/I18n.store'
+
+  const { getters: i18nGetters } = useI18nStore()
+  const { translate } = i18nGetters
 
   let {
     isOpen = false,
@@ -118,7 +122,7 @@
       <!-- Header -->
       <div class="flex items-center justify-between p-4 border-b border-surface-300 dark:border-surface-700">
         <h2 class="text-xl font-bold text-surface-900 dark:text-surface-50">
-          {mode === 'select-folder' ? 'Select Folder' : 'Save File'}
+          {mode === 'select-folder' ? $translate('selectFolder') : $translate('saveFile')}
         </h2>
         <button class="btn btn-sm variant-ghost" onclick={handleCancel}>
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
@@ -143,7 +147,7 @@
       <div class="flex-1 overflow-y-auto p-4">
         {#if loading}
           <div class="flex items-center justify-center h-full">
-            <p class="text-surface-500">Loading...</p>
+            <p class="text-surface-500">{$translate('loading')}</p>
           </div>
         {:else if error}
           <div class="flex items-center justify-center h-full">
@@ -151,7 +155,7 @@
           </div>
         {:else if entries.length === 0}
           <div class="flex items-center justify-center h-full">
-            <p class="text-surface-500">Empty directory</p>
+            <p class="text-surface-500">{$translate('emptyDirectory')}</p>
           </div>
         {:else}
           <div class="space-y-1">
@@ -182,12 +186,12 @@
       {#if mode === 'save-file'}
         <div class="px-4 py-3 border-t border-surface-300 dark:border-surface-700">
           <label class="block">
-            <span class="text-sm text-surface-700 dark:text-surface-300">File name:</span>
+            <span class="text-sm text-surface-700 dark:text-surface-300">{$translate('fileName')}</span>
             <input
               type="text"
               class="input mt-1"
               bind:value={fileName}
-              placeholder="Enter file name..."
+              placeholder={$translate('enterFileName')}
             />
           </label>
         </div>
@@ -196,14 +200,14 @@
       <!-- Footer -->
       <div class="flex items-center justify-end gap-2 p-4 border-t border-surface-300 dark:border-surface-700">
         <button class="btn variant-ghost" onclick={handleCancel}>
-          Cancel
+          {$translate('cancel')}
         </button>
         <button
           class="btn variant-filled-primary"
           onclick={handleSelect}
           disabled={mode === 'select-folder' ? !selectedPath : !fileName}
         >
-          {mode === 'select-folder' ? 'Select' : 'Save'}
+          {mode === 'select-folder' ? $translate('select') : $translate('save')}
         </button>
       </div>
     </div>
