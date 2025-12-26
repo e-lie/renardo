@@ -264,7 +264,7 @@
         EditorState.readOnly.of(readonly),
 
         // Placeholder
-        placeholder ? cmPlaceholder(placeholder) : undefined,
+        ...(placeholder ? [cmPlaceholder(placeholder)] : []),
       ],
     });
 
