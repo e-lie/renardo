@@ -34,6 +34,17 @@ export const translations = {
     close: 'Close',
     clear: 'Clear',
     selectCodeFolder: 'Select code folder',
+    cancel: 'Cancel',
+    select: 'Select',
+    save: 'Save',
+    loading: 'Loading...',
+    emptyDirectory: 'Empty directory',
+
+    // File Explorer Modal
+    selectFolder: 'Select Folder',
+    saveFile: 'Save File',
+    fileName: 'File name:',
+    enterFileName: 'Enter file name...',
 
     // Panes
     menu: 'Menu',
@@ -75,6 +86,17 @@ export const translations = {
     close: 'Fermer',
     clear: 'Effacer',
     selectCodeFolder: 'Sélectionner un dossier de code',
+    cancel: 'Annuler',
+    select: 'Sélectionner',
+    save: 'Enregistrer',
+    loading: 'Chargement...',
+    emptyDirectory: 'Dossier vide',
+
+    // File Explorer Modal
+    selectFolder: 'Sélectionner un dossier',
+    saveFile: 'Enregistrer le fichier',
+    fileName: 'Nom du fichier :',
+    enterFileName: 'Entrez le nom du fichier...',
 
     // Panes
     menu: 'Menu',
@@ -116,6 +138,17 @@ export const translations = {
     close: 'Cerrar',
     clear: 'Limpiar',
     selectCodeFolder: 'Seleccionar carpeta de código',
+    cancel: 'Cancelar',
+    select: 'Seleccionar',
+    save: 'Guardar',
+    loading: 'Cargando...',
+    emptyDirectory: 'Carpeta vacía',
+
+    // File Explorer Modal
+    selectFolder: 'Seleccionar carpeta',
+    saveFile: 'Guardar archivo',
+    fileName: 'Nombre del archivo:',
+    enterFileName: 'Ingrese el nombre del archivo...',
 
     // Panes
     menu: 'Menú',
@@ -157,6 +190,17 @@ export const translations = {
     close: 'Schließen',
     clear: 'Löschen',
     selectCodeFolder: 'Code-Ordner auswählen',
+    cancel: 'Abbrechen',
+    select: 'Auswählen',
+    save: 'Speichern',
+    loading: 'Laden...',
+    emptyDirectory: 'Leerer Ordner',
+
+    // File Explorer Modal
+    selectFolder: 'Ordner auswählen',
+    saveFile: 'Datei speichern',
+    fileName: 'Dateiname:',
+    enterFileName: 'Dateinamen eingeben...',
 
     // Panes
     menu: 'Menü',
