@@ -5,6 +5,7 @@
   import CodeEditorWrapper from './CodeEditorWrapper.component.svelte'
   import TopMenu from './TopMenu.component.svelte'
   import { TutorialTab } from '../../tutorial'
+  import { ProjectExplorerTab } from '../../project-explorer'
   import { ConsoleOutput } from '../../index'
 
   let { position }: { position: PanePosition } = $props()
@@ -20,6 +21,7 @@
     'TopMenu': TopMenu,
     'CodeEditorWrapper': CodeEditorWrapper,
     'TutorialTab': TutorialTab,
+    'ProjectExplorerTab': ProjectExplorerTab,
     'ConsoleOutput': ConsoleOutput
   }
 

@@ -27,6 +27,7 @@ export const translations = {
     codeEditor: 'Code Editor',
     consoleOutput: 'ฅ^•ﻌ•^ฅ >> output',
     tutorials: 'Tutorials',
+    projectExplorer: 'Project Explorer',
     addComponent: '+ Add Component',
     hidden: 'Hidden',
 
@@ -79,6 +80,7 @@ export const translations = {
     codeEditor: 'Éditeur de code',
     consoleOutput: 'ฅ^•ﻌ•^ฅ >> sortie',
     tutorials: 'Tutoriels',
+    projectExplorer: 'Explorateur de projet',
     addComponent: '+ Ajouter un composant',
     hidden: 'Masqué',
 
@@ -131,6 +133,7 @@ export const translations = {
     codeEditor: 'Editor de código',
     consoleOutput: 'ฅ^•ﻌ•^ฅ >> salida',
     tutorials: 'Tutoriales',
+    projectExplorer: 'Explorador de proyecto',
     addComponent: '+ Añadir componente',
     hidden: 'Oculto',
 
@@ -183,6 +186,7 @@ export const translations = {
     codeEditor: 'Code-Editor',
     consoleOutput: 'ฅ^•ﻌ•^ฅ >> Ausgabe',
     tutorials: 'Anleitungen',
+    projectExplorer: 'Projekt-Explorer',
     addComponent: '+ Komponente hinzufügen',
     hidden: 'Versteckt',
 
