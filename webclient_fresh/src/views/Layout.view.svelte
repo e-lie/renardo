@@ -84,22 +84,27 @@
   }
 
   function handleGlobalMouseMove(event: MouseEvent) {
-    const edge = edgeDetectionService.detectEdge(event.clientX, event.clientY)
+    const edge = edgeDetectionService.detectEdge(
+      event.clientX,
+      event.clientY,
+      $paneSetVisibility,
+      $containerSizes
+    )
 
-    if (edge && !$paneSetVisibility[edge] && getters.hasPanesVisible(edge)) {
+    if (edge && getters.hasPanesVisible(edge)) {
       actions.setPaneSetHover(edge, true)
     } else {
       // Clear hover states
       ;['left', 'right', 'bottom'].forEach(setName => {
-        if (!$paneSetVisibility[setName as 'left' | 'right' | 'bottom']) {
-          const nearButton = edgeDetectionService.isNearButtonArea(
-            setName as 'left' | 'right' | 'bottom',
-            event.clientX,
-            event.clientY
-          )
-          if (!nearButton) {
-            actions.setPaneSetHover(setName, false)
-          }
+        const nearButton = edgeDetectionService.isNearButtonArea(
+          setName as 'left' | 'right' | 'bottom',
+          event.clientX,
+          event.clientY,
+          $paneSetVisibility,
+          $containerSizes
+        )
+        if (!nearButton) {
+          actions.setPaneSetHover(setName, false)
         }
       })
     }
@@ -260,6 +265,7 @@
   {#if $hoverStates.left && getters.hasPanesVisible('left')}
     <ElFloatingToggle
       position="left"
+      offset={$paneSetVisibility.left ? $containerSizes['left-column'] : 0}
       onclick={() => actions.togglePaneSet('left')}
       onmouseenter={() => actions.setPaneSetHover('left', true)}
       onmouseleave={() => actions.setPaneSetHover('left', false)}
@@ -280,6 +286,7 @@
   {#if $hoverStates.right && getters.hasPanesVisible('right')}
     <ElFloatingToggle
       position="right"
+      offset={$paneSetVisibility.right ? $containerSizes['right-column'] : 0}
       onclick={() => actions.togglePaneSet('right')}
       onmouseenter={() => actions.setPaneSetHover('right', true)}
       onmouseleave={() => actions.setPaneSetHover('right', false)}
@@ -300,6 +307,7 @@
   {#if $hoverStates.bottom && getters.hasPanesVisible('bottom')}
     <ElFloatingToggle
       position="bottom"
+      offset={$paneSetVisibility.bottom ? $containerSizes['bottom-area'] : 0}
       onclick={() => actions.togglePaneSet('bottom')}
       onmouseenter={() => actions.setPaneSetHover('bottom', true)}
       onmouseleave={() => actions.setPaneSetHover('bottom', false)}
