@@ -1,10 +1,14 @@
 <script lang="ts">
   import { AVAILABLE_THEMES } from '../../../models/editor';
   import { useEditorStore } from '../../../store/editor/Editor.store';
+  import { useI18nStore } from '../../../store/i18n/I18n.store';
   import { logger } from '../../../services/logger.service';
 
   const { actions, getters } = useEditorStore();
   const { settings } = getters;
+
+  const i18n = useI18nStore();
+  const { translate } = i18n.getters;
 
   function handleThemeChange(event: Event) {
     const target = event.target as HTMLSelectElement;
@@ -17,7 +21,7 @@
 
 <div class="form-control">
   <div class="label">
-    <span class="label-text font-medium">Syntax Theme</span>
+    <span class="label-text font-medium">{$translate('syntaxTheme')}</span>
   </div>
   <select
     class="select select-bordered select-sm w-full"

@@ -35,6 +35,7 @@ Renardo Webclient Fresh est une application Svelte 5 qui suit une architecture s
 3. **Composabilité**: Les composants primitifs sont réutilisables et composables
 4. **Type Safety**: Utilisation systématique de TypeScript pour prévenir les erreurs
 5. **Convention over Configuration**: Des conventions claires pour réduire les décisions arbitraires
+6. **Internationalisation (i18n)**: Tout texte d'interface doit utiliser `$translate` du store i18n pour supporter les langues multiples (en, fr, es, de)
 
 ---
 

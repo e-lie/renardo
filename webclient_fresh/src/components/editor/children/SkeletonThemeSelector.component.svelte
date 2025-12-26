@@ -1,5 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { useI18nStore } from '../../../store/i18n/I18n.store';
+
+  const i18n = useI18nStore();
+  const { translate } = i18n.getters;
 
   const SKELETON_THEMES = [
     'cerberus',
@@ -49,7 +53,7 @@
 
 <div class="space-y-2">
   <label for="skeleton-theme-select" class="label">
-    <span class="font-semibold">Skeleton UI Theme</span>
+    <span class="font-semibold">{$translate('skeletonUITheme')}</span>
   </label>
   <select
     id="skeleton-theme-select"
