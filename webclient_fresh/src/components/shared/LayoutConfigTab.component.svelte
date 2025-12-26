@@ -1,9 +1,13 @@
 <script lang="ts">
   import { useLayoutStore } from '../../store/layout'
+  import { useI18nStore } from '../../store/i18n/I18n.store'
   import type { PanePosition } from '../../models/layout'
 
   const { getters, actions } = useLayoutStore()
   const { paneSetVisibility, paneVisibility, paneTabConfigs } = getters
+
+  const i18n = useI18nStore()
+  const { translate } = i18n.getters
 
   function getPaneColor(position: string): string {
     if (position === 'top-menu') {
@@ -48,7 +52,7 @@
 </script>
 
 <div class="space-y-4">
-  <h3 class="h3">Layout Configuration</h3>
+  <h3 class="h3">{$translate('layoutConfiguration')}</h3>
 
   <!-- Pane Set Toggles -->
   <div class="space-y-2">
@@ -58,19 +62,19 @@
         class="btn btn-sm {$paneSetVisibility.left ? 'variant-filled-primary' : 'variant-ghost'}"
         onclick={() => actions.togglePaneSet('left')}
       >
-        Left Panes
+        {$paneSetVisibility.left ? $translate('hide') : $translate('show')} {$translate('leftColumn')}
       </button>
       <button
         class="btn btn-sm {$paneSetVisibility.right ? 'variant-filled-primary' : 'variant-ghost'}"
         onclick={() => actions.togglePaneSet('right')}
       >
-        Right Panes
+        {$paneSetVisibility.right ? $translate('hide') : $translate('show')} {$translate('rightColumn')}
       </button>
       <button
         class="btn btn-sm {$paneSetVisibility.bottom ? 'variant-filled-primary' : 'variant-ghost'}"
         onclick={() => actions.togglePaneSet('bottom')}
       >
-        Bottom Panes
+        {$paneSetVisibility.bottom ? $translate('hide') : $translate('show')} {$translate('bottomArea')}
       </button>
     </div>
   </div>
@@ -210,7 +214,7 @@
   </div>
 
   <!-- Tab Management Section -->
-  <div class="divider">Pane Tab Management</div>
+  <div class="divider">{$translate('paneTabManagement')}</div>
   <div class="alert alert-info mb-4">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
