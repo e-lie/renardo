@@ -210,14 +210,19 @@
             height: '100%',
             fontSize: '14px',
             fontFamily: 'Fira Code, "JetBrains Mono", "Consolas", monospace',
+            position: 'relative',
           },
           '.cm-scroller': {
             overflow: 'auto',
             fontFamily: 'Fira Code, "JetBrains Mono", "Consolas", monospace',
+            position: 'absolute',
+            top: '0',
+            left: '0',
+            right: '0',
+            bottom: '0',
           },
           '.cm-content': {
             padding: '16px',
-            minHeight: '100%',
             lineHeight: '1.5',
           },
           '.cm-focused': {
@@ -300,22 +305,27 @@
 <div
   bind:this={containerElement}
   data-testid={testid}
-  class="w-full h-full bg-base-200 text-base-content"
+  class="w-full h-full overflow-hidden bg-base-200 text-base-content"
 ></div>
 
 <style>
   :global(.cm-editor) {
     height: 100%;
+    position: relative;
   }
 
   :global(.cm-scroller) {
     font-family: 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
     line-height: 1.5;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
   }
 
   :global(.cm-content) {
     padding: 16px;
-    min-height: 100%;
   }
 
   :global(.cm-focused) {

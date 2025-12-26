@@ -32,7 +32,7 @@
   }
 </script>
 
-<div class="h-full w-full relative">
+<div class="h-full w-full overflow-hidden relative">
   {#if buffer}
     <ElCodeEditor
       content={buffer.content}

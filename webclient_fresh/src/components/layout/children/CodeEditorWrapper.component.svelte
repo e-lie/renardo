@@ -115,7 +115,7 @@
   })
 </script>
 
-<div class="h-full flex flex-col">
+<div class="h-full flex flex-col overflow-hidden">
   {#if localTabs.length > 1}
     <!-- Tab bar -->
     <div
