@@ -6,6 +6,7 @@
   import CodeEditorWrapper from './CodeEditorWrapper.component.svelte'
   import TopMenu from './TopMenu.component.svelte'
   import { TutorialTab } from '../../tutorial'
+  import { ConsoleOutput } from '../../index'
 
   let { position }: { position: PanePosition } = $props()
 
@@ -20,7 +21,8 @@
     'CodeEditor': CodeEditorWrapper,
     'TopMenu': TopMenu,
     'CodeEditorWrapper': CodeEditorWrapper,
-    'TutorialTab': TutorialTab
+    'TutorialTab': TutorialTab,
+    'ConsoleOutput': ConsoleOutput
   }
 
   function handleSwitchTab(tabId: string) {
