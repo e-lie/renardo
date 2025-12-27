@@ -29,7 +29,8 @@
     <!-- Tabs -->
     <div class="flex items-center gap-1 overflow-x-auto flex-1">
       {#each tabs as tab (tab.id)}
-        <TabItem {tab} {onswitch} {onclose} />
+        {@const buffer = buffers.find(b => b.id === tab.bufferId)}
+        <TabItem {tab} {buffer} {onswitch} {onclose} />
       {/each}
     </div>
 

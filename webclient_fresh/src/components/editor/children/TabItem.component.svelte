@@ -1,13 +1,16 @@
 <script lang="ts">
-  import type { TabInterface } from '../../../models/editor';
+  import type { TabInterface, BufferInterface } from '../../../models/editor';
   import { ElTab } from '../../primitives';
+  import logger from '../../../services/logger.service';
 
   let {
     tab,
+    buffer,
     onswitch,
     onclose,
   }: {
     tab: TabInterface;
+    buffer?: BufferInterface;
     onswitch?: (tabId: string) => void;
     onclose?: (tabId: string) => void;
   } = $props();
@@ -17,7 +20,9 @@
   }
 
   function handleClose() {
+    logger.debug('TabItem', 'handleClose called for tab', { tabId: tab.id });
     onclose?.(tab.id);
+    logger.debug('TabItem', 'onclose callback executed');
   }
 </script>
 

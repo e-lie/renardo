@@ -2,6 +2,7 @@
   import EditorTabs from '../components/editor/EditorTabs.component.svelte';
   import CodeEditor from '../components/editor/CodeEditor.component.svelte';
   import SettingsModal from '../components/shared/SettingsModal.component.svelte';
+  import { ElConfirmModal } from '../components/primitives';
   import { useEditorStore } from '../store/editor';
   import { logger } from '../services/logger.service';
 
@@ -9,6 +10,8 @@
   const { activeTab, activeBuffer, tabs, buffers } = getters;
 
   let isSettingsOpen = $state(false);
+  let showConfirmClose = $state(false);
+  let pendingCloseTabId = $state<string | null>(null);
 
   function toggleSettings() {
     isSettingsOpen = !isSettingsOpen;
@@ -34,8 +37,43 @@
   }
 
   function handleCloseTab(tabId: string) {
-    logger.debug('Editor', 'Closing tab', { tabId });
-    actions.closeTab(tabId);
+    logger.debug('Editor.view', 'handleCloseTab called', { tabId });
+
+    // Find the tab and its buffer
+    const tab = $tabs.find(t => t.id === tabId);
+    logger.debug('Editor.view', 'Found tab', { tab });
+    if (!tab) {
+      logger.warn('Editor.view', 'Tab not found, returning');
+      return;
+    }
+
+    const buffer = $buffers.find(b => b.id === tab.bufferId);
+    logger.debug('Editor.view', 'Found buffer for closing tab', { bufferId: buffer?.id, isDirty: buffer?.isDirty });
+
+    if (buffer?.isDirty) {
+      logger.debug('Editor.view', 'Buffer is dirty, showing confirmation modal');
+      pendingCloseTabId = tabId;
+      showConfirmClose = true;
+      logger.debug('Editor.view', 'showConfirmClose set to', { showConfirmClose });
+    } else {
+      logger.debug('Editor.view', 'Buffer is clean, closing directly');
+      actions.closeTab(tabId);
+    }
+  }
+
+  function handleConfirmClose() {
+    if (pendingCloseTabId) {
+      logger.debug('Editor', 'Confirmed close', { tabId: pendingCloseTabId });
+      actions.closeTab(pendingCloseTabId);
+    }
+    showConfirmClose = false;
+    pendingCloseTabId = null;
+  }
+
+  function handleCancelClose() {
+    logger.debug('Editor', 'Cancelled close');
+    showConfirmClose = false;
+    pendingCloseTabId = null;
   }
 
   function handleCreateTab() {
@@ -78,6 +116,18 @@
 
   <!-- Settings Modal -->
   <SettingsModal isOpen={isSettingsOpen} onclose={toggleSettings} />
+
+  <!-- Confirm Close Modal -->
+  <ElConfirmModal
+    isOpen={showConfirmClose}
+    title="Unsaved Changes"
+    message="You have unsaved changes. Are you sure you want to close this tab?"
+    confirmText="Close"
+    cancelText="Cancel"
+    variant="warning"
+    onconfirm={handleConfirmClose}
+    oncancel={handleCancelClose}
+  />
 
   <!-- Tabs -->
   <EditorTabs
