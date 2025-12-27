@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import logger from '../../../services/logger.service';
 
   let {
     isActive = false,
@@ -31,30 +32,35 @@
   });
 
   function handleClose(e: MouseEvent) {
+    logger.debug('ElTab', 'handleClose called');
     e.stopPropagation();
+    logger.debug('ElTab', 'calling onclose callback');
     onclose?.();
+    logger.debug('ElTab', 'onclose callback executed');
   }
 </script>
 
-<button data-testid={testid} class={cssClass} {onclick} type="button">
-  {#if isStartupFile}
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      class="h-4 w-4"
-      viewBox="0 0 20 20"
-      fill="currentColor"
-    >
-      <path
-        fill-rule="evenodd"
-        d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
-        clip-rule="evenodd"
-      />
-    </svg>
-  {/if}
+<div data-testid={testid} class={cssClass}>
+  <button class="flex items-center gap-2 flex-1" {onclick} type="button">
+    {#if isStartupFile}
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-4 w-4"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
+          clip-rule="evenodd"
+        />
+      </svg>
+    {/if}
 
-  {#if children}
-    {@render children()}
-  {/if}
+    {#if children}
+      {@render children()}
+    {/if}
+  </button>
 
   {#if closeable && !isStartupFile}
     <button
@@ -65,4 +71,4 @@
       ×
     </button>
   {/if}
-</button>
+</div>
