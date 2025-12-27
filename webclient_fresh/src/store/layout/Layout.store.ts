@@ -31,7 +31,7 @@ const initialState: LayoutStateInterface = {
       { id: 'tab-right-top-1', title: 'tutorials', componentType: 'TutorialTab', componentId: 'tutorial-1', closable: true, active: true },
     ]],
     ['right-middle', [
-      { id: 'tab-right-middle-1', title: 'Notes', componentType: 'TextArea', componentId: 'text-3', closable: true, active: true }
+      { id: 'tab-right-middle-1', title: 'Clock', componentType: 'ClockDisplay', componentId: 'clock-1', closable: true, active: true }
     ]],
     ['right-bottom', [
       { id: 'tab-right-bottom-1', title: 'Workspace', componentType: 'TextArea', componentId: 'text-2', closable: true, active: true }
@@ -49,7 +49,7 @@ const initialState: LayoutStateInterface = {
     ['left-middle', true],
     ['left-bottom', true],
     ['right-top', true],
-    ['right-middle', false],
+    ['right-middle', true],
     ['right-bottom', false],
     ['bottom-left', false],
     ['bottom-right', true],

@@ -10,6 +10,7 @@ from .file_explorer import DirectoryEntry, FileExplorerService
 from .project import Project, project_service
 from .websocket.routes import router as websocket_router
 from .websocket.manager import websocket_manager
+from .websocket.clock_simulator import clock_state
 from ..logger import get_main_logger
 
 app = FastAPI(title="Renardo WebServer Fresh", version="1.0.0")
@@ -89,6 +90,46 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+
+# Clock endpoints
+@app.post("/api/clock/tick")
+async def clock_tick():
+    """Incrémente le beat de l'horloge"""
+    await clock_state.tick()
+    return {"success": True, "current_beat": clock_state.current_beat, "measure_size": clock_state.measure_size}
+
+
+@app.post("/api/clock/set-measure-size")
+async def clock_set_measure_size(size: int):
+    """Change la taille de la mesure"""
+    await clock_state.set_measure_size(size)
+    return {"success": True, "measure_size": clock_state.measure_size}
+
+
+@app.post("/api/clock/set-bpm")
+async def clock_set_bpm(bpm: float):
+    """Change le BPM"""
+    await clock_state.set_bpm(bpm)
+    return {"success": True, "bpm": clock_state.bpm}
+
+
+@app.post("/api/clock/reset")
+async def clock_reset():
+    """Reset l'horloge à 1"""
+    await clock_state.reset()
+    return {"success": True, "current_beat": clock_state.current_beat}
+
+
+@app.get("/api/clock/state")
+async def clock_get_state():
+    """Récupère l'état actuel de l'horloge"""
+    return {
+        "current_beat": clock_state.current_beat,
+        "measure_size": clock_state.measure_size,
+        "bpm": clock_state.bpm,
+        "ticking": clock_state.ticking
+    }
 
 
 # Tutorial endpoints

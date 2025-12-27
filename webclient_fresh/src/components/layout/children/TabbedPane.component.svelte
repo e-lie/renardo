@@ -8,6 +8,7 @@
   import { TutorialTab } from '../../tutorial'
   import { ProjectExplorerTab } from '../../project-explorer'
   import { ConsoleOutput } from '../../index'
+  import ClockDisplay from '../../clock/ClockDisplay.component.svelte'
 
   let { position }: { position: PanePosition } = $props()
 
@@ -26,7 +27,8 @@
     'CodeEditorWrapper': CodeEditorWrapper,
     'TutorialTab': TutorialTab,
     'ProjectExplorerTab': ProjectExplorerTab,
-    'ConsoleOutput': ConsoleOutput
+    'ConsoleOutput': ConsoleOutput,
+    'ClockDisplay': ClockDisplay
   }
 
   function handleSwitchTab(tabId: string) {

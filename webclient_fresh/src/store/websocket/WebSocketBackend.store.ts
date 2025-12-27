@@ -135,9 +135,15 @@ function handleWebSocketMessage(message: WebSocketMessageInterface) {
       // Handle command responses if needed
       break
     case 'error':
-      writableWebSocketStore.update(state => ({ 
-        ...state, 
+      writableWebSocketStore.update(state => ({
+        ...state,
         error: message.data.message || 'Unknown backend error'
+      }))
+      break
+    case 'clock_update':
+      // Dispatch clock update event for ClockDisplay component
+      window.dispatchEvent(new MessageEvent('message', {
+        data: JSON.stringify(message)
       }))
       break
     case 'pong':
