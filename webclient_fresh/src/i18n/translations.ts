@@ -40,6 +40,8 @@ export const translations = {
     save: 'Save',
     loading: 'Loading...',
     emptyDirectory: 'Empty directory',
+    unsavedChanges: 'Unsaved Changes',
+    unsavedChangesMessage: 'You have unsaved changes. Are you sure you want to close this tab?',
 
     // File Explorer Modal
     selectFolder: 'Select Folder',
@@ -93,6 +95,8 @@ export const translations = {
     save: 'Enregistrer',
     loading: 'Chargement...',
     emptyDirectory: 'Dossier vide',
+    unsavedChanges: 'Modifications non enregistrées',
+    unsavedChangesMessage: 'Vous avez des modifications non enregistrées. Êtes-vous sûr de vouloir fermer cet onglet ?',
 
     // File Explorer Modal
     selectFolder: 'Sélectionner un dossier',
@@ -146,6 +150,8 @@ export const translations = {
     save: 'Guardar',
     loading: 'Cargando...',
     emptyDirectory: 'Carpeta vacía',
+    unsavedChanges: 'Cambios sin guardar',
+    unsavedChangesMessage: '¿Tiene cambios sin guardar. Está seguro de que quiere cerrar esta pestaña?',
 
     // File Explorer Modal
     selectFolder: 'Seleccionar carpeta',
@@ -197,8 +203,10 @@ export const translations = {
     cancel: 'Abbrechen',
     select: 'Auswählen',
     save: 'Speichern',
-    loading: 'Laden...',
-    emptyDirectory: 'Leerer Ordner',
+    loading: 'Wird geladen...',
+    emptyDirectory: 'Leeres Verzeichnis',
+    unsavedChanges: 'Nicht gespeicherte Änderungen',
+    unsavedChangesMessage: 'Sie haben nicht gespeicherte Änderungen. Möchten Sie diesen Tab wirklich schließen?',
 
     // File Explorer Modal
     selectFolder: 'Ordner auswählen',

@@ -4,10 +4,14 @@
   import SettingsModal from '../components/shared/SettingsModal.component.svelte';
   import { ElConfirmModal } from '../components/primitives';
   import { useEditorStore } from '../store/editor';
+  import { useI18nStore } from '../store/i18n/I18n.store';
   import { logger } from '../services/logger.service';
 
   const { actions, getters } = useEditorStore();
   const { activeTab, activeBuffer, tabs, buffers } = getters;
+
+  const { getters: i18nGetters } = useI18nStore();
+  const { translate } = i18nGetters;
 
   let isSettingsOpen = $state(false);
   let showConfirmClose = $state(false);
@@ -120,10 +124,10 @@
   <!-- Confirm Close Modal -->
   <ElConfirmModal
     isOpen={showConfirmClose}
-    title="Unsaved Changes"
-    message="You have unsaved changes. Are you sure you want to close this tab?"
-    confirmText="Close"
-    cancelText="Cancel"
+    title={$translate('unsavedChanges')}
+    message={$translate('unsavedChangesMessage')}
+    confirmText={$translate('close')}
+    cancelText={$translate('cancel')}
     variant="warning"
     onconfirm={handleConfirmClose}
     oncancel={handleCancelClose}

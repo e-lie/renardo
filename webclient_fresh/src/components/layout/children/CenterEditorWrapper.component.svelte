@@ -2,8 +2,11 @@
   import { onMount, onDestroy } from 'svelte'
   import CodeEditor from '../../editor/CodeEditor.component.svelte'
   import SaveFileModal from '../../shared/SaveFileModal.component.svelte'
+  import { ElConfirmModal } from '../../primitives'
   import { useEditorStore } from '../../../store/editor'
   import { useProjectStore } from '../../../store/project'
+  import { useI18nStore } from '../../../store/i18n/I18n.store'
+  import logger from '../../../services/logger.service'
 
   const { actions, getters } = useEditorStore()
   const { tabs, buffers } = getters
@@ -11,9 +14,14 @@
   const { getters: projectGetters } = useProjectStore()
   const { currentProject } = projectGetters
 
+  const { getters: i18nGetters } = useI18nStore()
+  const { translate } = i18nGetters
+
   // Track local tab IDs for this editor instance
   let localTabIds = $state<string[]>([])
   let activeLocalTabId = $state<string | null>(null)
+  let showConfirmClose = $state(false)
+  let pendingCloseTabId = $state<string | null>(null)
 
   // Get active buffer from active local tab
   let activeBuffer = $derived.by(() => {
@@ -114,12 +122,50 @@
   }
 
   function handleCloseTab(tabId: string) {
+    logger.debug('CenterEditorWrapper', 'handleCloseTab called', { tabId })
+
+    // Find the tab and its buffer
+    const tab = $tabs.find(t => t.id === tabId)
+    if (!tab) {
+      logger.warn('CenterEditorWrapper', 'Tab not found, returning')
+      return
+    }
+
+    const buffer = $buffers.find(b => b.id === tab.bufferId)
+    logger.debug('CenterEditorWrapper', 'Found buffer for closing tab', { bufferId: buffer?.id, isDirty: buffer?.isDirty })
+
+    if (buffer?.isDirty) {
+      logger.debug('CenterEditorWrapper', 'Buffer is dirty, showing confirmation modal')
+      pendingCloseTabId = tabId
+      showConfirmClose = true
+    } else {
+      logger.debug('CenterEditorWrapper', 'Buffer is clean, closing directly')
+      closeTabDirectly(tabId)
+    }
+  }
+
+  function closeTabDirectly(tabId: string) {
     actions.closeTab(tabId)
     localTabIds = localTabIds.filter(id => id !== tabId)
     if (activeLocalTabId === tabId && localTabIds.length > 0) {
       activeLocalTabId = localTabIds[0]
       actions.switchToTab(localTabIds[0])
     }
+  }
+
+  function handleConfirmClose() {
+    if (pendingCloseTabId) {
+      logger.debug('CenterEditorWrapper', 'Confirmed close', { tabId: pendingCloseTabId })
+      closeTabDirectly(pendingCloseTabId)
+    }
+    showConfirmClose = false
+    pendingCloseTabId = null
+  }
+
+  function handleCancelClose() {
+    logger.debug('CenterEditorWrapper', 'Cancelled close')
+    showConfirmClose = false
+    pendingCloseTabId = null
   }
 </script>
 
@@ -166,4 +212,15 @@
   initialPath={$currentProject?.root_path || null}
   onclose={() => showSaveModal = false}
   onsave={handleFileSave}
+/>
+
+<ElConfirmModal
+  isOpen={showConfirmClose}
+  title={$translate('unsavedChanges')}
+  message={$translate('unsavedChangesMessage')}
+  confirmText={$translate('close')}
+  cancelText={$translate('cancel')}
+  variant="warning"
+  onconfirm={handleConfirmClose}
+  oncancel={handleCancelClose}
 />
