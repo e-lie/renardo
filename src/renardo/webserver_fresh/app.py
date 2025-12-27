@@ -112,6 +112,7 @@ async def get_tutorial_files(lang: str | None = None):
                             "url": f"/api/tutorial/files/{lang}/{file_path.name}",
                         }
                     )
+                files.sort(key=lambda x: x["name"])
 
             return {"success": True, "languages": {lang: files}}
         else:
@@ -132,6 +133,7 @@ async def get_tutorial_files(lang: str | None = None):
                                 "url": f"/api/tutorial/files/{language}/{file_path.name}",
                             }
                         )
+                    files.sort(key=lambda x: x["name"])
 
                 languages[language] = files
 
