@@ -1,15 +1,18 @@
 <script lang="ts">
   import CodeEditor from '../../editor/CodeEditor.component.svelte';
   import SaveFileModal from '../../shared/SaveFileModal.component.svelte';
+  import { ElConfirmModal } from '../../primitives';
   import { useEditorStore } from '../../../store/editor';
   import { useProjectStore } from '../../../store/project';
+  import { useI18nStore } from '../../../store/i18n/I18n.store';
+  import logger from '../../../services/logger.service';
   import { onMount, onDestroy } from 'svelte';
 
   let {
-    componentId,
+    componentId = 'code-editor',
     title = 'Code Editor',
   }: {
-    componentId: string;
+    componentId?: string;
     title?: string;
   } = $props();
 
@@ -19,9 +22,14 @@
   const { getters: projectGetters } = useProjectStore();
   const { currentProject } = projectGetters;
 
+  const { getters: i18nGetters } = useI18nStore();
+  const { translate } = i18nGetters;
+
   // Track local tab IDs for this editor instance
   let localTabIds = $state<string[]>([]);
   let activeLocalTabId = $state<string | null>(null);
+  let showConfirmClose = $state(false);
+  let pendingCloseTabId = $state<string | null>(null);
 
   // Get active buffer from active local tab
   let activeBuffer = $derived.by(() => {
@@ -45,6 +53,21 @@
       const newTabId = actions.createTab(newBufferId);
       localTabIds = [newTabId];
       activeLocalTabId = newTabId;
+    }
+  });
+
+  // Sync new tabs created globally to local tab list
+  $effect(() => {
+    const allTabIds = $tabs.map(t => t.id);
+    const newTabs = allTabIds.filter(id => !localTabIds.includes(id));
+
+    if (newTabs.length > 0) {
+      localTabIds = [...localTabIds, ...newTabs];
+      // Switch to the newest tab
+      const newestTab = $tabs.find(t => t.isActive);
+      if (newestTab) {
+        activeLocalTabId = newestTab.id;
+      }
     }
   });
 
@@ -76,12 +99,52 @@
   }
 
   function handleCloseTab(tabId: string) {
+    logger.debug('CodeEditorWrapper', 'handleCloseTab called', { tabId });
+
+    const tab = $tabs.find(t => t.id === tabId);
+    if (!tab) {
+      logger.warn('CodeEditorWrapper', 'Tab not found, returning');
+      return;
+    }
+
+    const buffer = $buffers.find(b => b.id === tab.bufferId);
+    logger.debug('CodeEditorWrapper', 'Found buffer for closing tab', {
+      bufferId: buffer?.id,
+      isDirty: buffer?.isDirty
+    });
+
+    if (buffer?.isDirty) {
+      logger.debug('CodeEditorWrapper', 'Buffer is dirty, showing confirmation modal');
+      pendingCloseTabId = tabId;
+      showConfirmClose = true;
+    } else {
+      logger.debug('CodeEditorWrapper', 'Buffer is clean, closing directly');
+      closeTabDirectly(tabId);
+    }
+  }
+
+  function closeTabDirectly(tabId: string) {
     actions.closeTab(tabId);
     localTabIds = localTabIds.filter((id) => id !== tabId);
     if (activeLocalTabId === tabId && localTabIds.length > 0) {
       activeLocalTabId = localTabIds[0];
       actions.switchToTab(localTabIds[0]);
     }
+  }
+
+  function handleConfirmClose() {
+    if (pendingCloseTabId) {
+      logger.debug('CodeEditorWrapper', 'Confirmed close', { tabId: pendingCloseTabId });
+      closeTabDirectly(pendingCloseTabId);
+    }
+    showConfirmClose = false;
+    pendingCloseTabId = null;
+  }
+
+  function handleCancelClose() {
+    logger.debug('CodeEditorWrapper', 'Cancelled close');
+    showConfirmClose = false;
+    pendingCloseTabId = null;
   }
 
   let showSaveModal = $state(false)
@@ -107,11 +170,11 @@
   }
 
   onMount(() => {
-    window.addEventListener('keydown', handleKeyDown)
+    document.addEventListener('keydown', handleKeyDown)
   })
 
   onDestroy(() => {
-    window.removeEventListener('keydown', handleKeyDown)
+    document.removeEventListener('keydown', handleKeyDown)
   })
 </script>
 
@@ -167,4 +230,15 @@
   initialPath={$currentProject?.root_path || null}
   onclose={() => showSaveModal = false}
   onsave={handleFileSave}
+/>
+
+<ElConfirmModal
+  isOpen={showConfirmClose}
+  title={$translate('unsavedChanges')}
+  message={$translate('unsavedChangesMessage')}
+  confirmText={$translate('close')}
+  cancelText={$translate('cancel')}
+  variant="warning"
+  onconfirm={handleConfirmClose}
+  oncancel={handleCancelClose}
 />

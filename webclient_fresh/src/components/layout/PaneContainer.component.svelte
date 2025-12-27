@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { PanePosition } from '../../models/layout'
   import TabbedPane from './children/TabbedPane.component.svelte'
-  import CenterEditorWrapper from './children/CenterEditorWrapper.component.svelte'
+  import CodeEditorWrapper from './children/CodeEditorWrapper.component.svelte'
   import TopMenu from './children/TopMenu.component.svelte'
 
   let {
@@ -41,7 +41,7 @@
 
 <div class={cssClass} {style}>
   {#if position === 'center'}
-    <CenterEditorWrapper />
+    <CodeEditorWrapper />
   {:else if position === 'top-menu'}
     <TopMenu />
   {:else}
