@@ -4,6 +4,7 @@
 export interface TabInterface {
     id: string
     bufferId: string
+    editorId: string  // ID of the editor this tab belongs to
     title: string
     isActive: boolean
     isEditing: boolean
