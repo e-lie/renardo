@@ -3,6 +3,7 @@ import type {
     BufferInterface,
     TabInterface,
     EditorSettingsInterface,
+    EditorInstance,
     CreateBufferOptions,
     CreateTabOptions
 } from '../../models/editor'
@@ -42,9 +43,9 @@ function loadSettingsFromLocalStorage(): EditorSettingsInterface {
 
 // Initial state
 const initialState: EditorStateInterface = {
+    editors: new Map(),
     buffers: new Map(),
     tabs: new Map(),
-    activeTabId: null,
     settings: loadSettingsFromLocalStorage()
 }
 
@@ -55,6 +56,77 @@ const writableEditorStore = writable<EditorStateInterface>(initialState)
 export function useEditorStore(): EditorStoreInterface {
     // Actions: modify state
     const actions: EditorStoreActionsInterface = {
+        registerEditor: (componentId: string): string => {
+            const editorId = generateId()
+
+            const editorInstance: EditorInstance = {
+                id: editorId,
+                componentId,
+                tabIds: [],
+                activeTabId: null,
+                createdAt: new Date()
+            }
+
+            writableEditorStore.update(state => {
+                const newEditors = new Map(state.editors)
+                newEditors.set(editorId, editorInstance)
+                return { ...state, editors: newEditors }
+            })
+
+            return editorId
+        },
+
+        unregisterEditor: (editorId: string): void => {
+            writableEditorStore.update(state => {
+                const editor = state.editors.get(editorId)
+                if (!editor) {
+                    console.error(`Editor ${editorId} not found`)
+                    return state
+                }
+
+                // Remove all tabs belonging to this editor
+                const newTabs = new Map(state.tabs)
+                editor.tabIds.forEach(tabId => {
+                    newTabs.delete(tabId)
+                })
+
+                // Collect buffers used by this editor's tabs
+                const buffersUsedByEditor = new Set<string>()
+                editor.tabIds.forEach(tabId => {
+                    const tab = state.tabs.get(tabId)
+                    if (tab) {
+                        buffersUsedByEditor.add(tab.bufferId)
+                    }
+                })
+
+                // Check if buffers are still used by other editors' tabs
+                const newBuffers = new Map(state.buffers)
+                buffersUsedByEditor.forEach(bufferId => {
+                    let bufferStillUsed = false
+                    for (const [tabId, tab] of newTabs) {
+                        if (tab.bufferId === bufferId) {
+                            bufferStillUsed = true
+                            break
+                        }
+                    }
+                    if (!bufferStillUsed) {
+                        newBuffers.delete(bufferId)
+                    }
+                })
+
+                // Remove editor
+                const newEditors = new Map(state.editors)
+                newEditors.delete(editorId)
+
+                return {
+                    ...state,
+                    editors: newEditors,
+                    tabs: newTabs,
+                    buffers: newBuffers
+                }
+            })
+        },
+
         createBuffer: (options: CreateBufferOptions): string => {
             const bufferId = generateId()
             const now = new Date()
@@ -80,10 +152,16 @@ export function useEditorStore(): EditorStoreInterface {
             return bufferId
         },
 
-        createTab: (bufferId: string, title?: string): string => {
+        createTab: (editorId: string, bufferId: string, title?: string): string => {
             const tabId = generateId()
 
             writableEditorStore.update(state => {
+                const editor = state.editors.get(editorId)
+                if (!editor) {
+                    console.error(`Editor ${editorId} not found`)
+                    return state
+                }
+
                 const buffer = state.buffers.get(bufferId)
                 if (!buffer) {
                     console.error(`Buffer ${bufferId} not found`)
@@ -93,6 +171,7 @@ export function useEditorStore(): EditorStoreInterface {
                 const tab: TabInterface = {
                     id: tabId,
                     bufferId,
+                    editorId,
                     title: title || buffer.name,
                     isActive: false,
                     isEditing: false,
@@ -103,21 +182,36 @@ export function useEditorStore(): EditorStoreInterface {
                 const newTabs = new Map(state.tabs)
                 newTabs.set(tabId, tab)
 
+                const updatedEditor: EditorInstance = {
+                    ...editor,
+                    tabIds: [...editor.tabIds, tabId],
+                    activeTabId: tabId
+                }
+
+                const newEditors = new Map(state.editors)
+                newEditors.set(editorId, updatedEditor)
+
                 return {
                     ...state,
-                    tabs: newTabs,
-                    activeTabId: tabId
+                    editors: newEditors,
+                    tabs: newTabs
                 }
             })
 
             return tabId
         },
 
-        loadContentInNewTab: (content: string, title: string, filePath?: string): string => {
+        loadContentInNewTab: (editorId: string, content: string, title: string, filePath?: string): string => {
             let bufferId = ''
             let tabId = ''
 
             writableEditorStore.update(state => {
+                const editor = state.editors.get(editorId)
+                if (!editor) {
+                    console.error(`Editor ${editorId} not found`)
+                    return state
+                }
+
                 // Create buffer with content
                 bufferId = generateId()
                 const buffer: BufferInterface = {
@@ -137,6 +231,7 @@ export function useEditorStore(): EditorStoreInterface {
                 const tab: TabInterface = {
                     id: tabId,
                     bufferId,
+                    editorId,
                     title,
                     isActive: true,
                     isEditing: false,
@@ -148,48 +243,96 @@ export function useEditorStore(): EditorStoreInterface {
                 newBuffers.set(bufferId, buffer)
 
                 const newTabs = new Map(state.tabs)
-                // Deactivate all other tabs
-                newTabs.forEach((t, id) => {
-                    newTabs.set(id, { ...t, isActive: false })
+                // Deactivate all other tabs OF THIS EDITOR ONLY
+                editor.tabIds.forEach(existingTabId => {
+                    const existingTab = state.tabs.get(existingTabId)
+                    if (existingTab) {
+                        newTabs.set(existingTabId, { ...existingTab, isActive: false })
+                    }
                 })
                 newTabs.set(tabId, tab)
 
+                const updatedEditor: EditorInstance = {
+                    ...editor,
+                    tabIds: [...editor.tabIds, tabId],
+                    activeTabId: tabId
+                }
+
+                const newEditors = new Map(state.editors)
+                newEditors.set(editorId, updatedEditor)
+
                 return {
                     ...state,
+                    editors: newEditors,
                     buffers: newBuffers,
-                    tabs: newTabs,
-                    activeTabId: tabId
+                    tabs: newTabs
                 }
             })
 
             return tabId
         },
 
-        switchToTab: (tabId: string): void => {
+        switchToTab: (editorId: string, tabId: string): void => {
             writableEditorStore.update(state => {
-                if (!state.tabs.has(tabId)) {
+                const editor = state.editors.get(editorId)
+                if (!editor) {
+                    console.error(`Editor ${editorId} not found`)
+                    return state
+                }
+
+                const tab = state.tabs.get(tabId)
+                if (!tab) {
                     console.error(`Tab ${tabId} not found`)
                     return state
                 }
 
-                // Update all tabs' isActive status
+                // Verify tab belongs to this editor
+                if (tab.editorId !== editorId) {
+                    console.error(`Tab ${tabId} does not belong to editor ${editorId}`)
+                    return state
+                }
+
+                // Update all tabs' isActive status FOR THIS EDITOR ONLY
                 const newTabs = new Map(state.tabs)
-                newTabs.forEach((tab, id) => {
-                    newTabs.set(id, { ...tab, isActive: id === tabId })
+                editor.tabIds.forEach(tid => {
+                    const t = state.tabs.get(tid)
+                    if (t) {
+                        newTabs.set(tid, { ...t, isActive: tid === tabId })
+                    }
                 })
+
+                const updatedEditor: EditorInstance = {
+                    ...editor,
+                    activeTabId: tabId
+                }
+
+                const newEditors = new Map(state.editors)
+                newEditors.set(editorId, updatedEditor)
 
                 return {
                     ...state,
-                    tabs: newTabs,
-                    activeTabId: tabId
+                    editors: newEditors,
+                    tabs: newTabs
                 }
             })
         },
 
-        closeTab: (tabId: string): void => {
+        closeTab: (editorId: string, tabId: string): void => {
             writableEditorStore.update(state => {
+                const editor = state.editors.get(editorId)
+                if (!editor) {
+                    console.error(`Editor ${editorId} not found`)
+                    return state
+                }
+
                 const tab = state.tabs.get(tabId)
                 if (!tab) return state
+
+                // Verify tab belongs to this editor
+                if (tab.editorId !== editorId) {
+                    console.error(`Tab ${tabId} does not belong to editor ${editorId}`)
+                    return state
+                }
 
                 const buffer = state.buffers.get(tab.bufferId)
 
@@ -218,28 +361,45 @@ export function useEditorStore(): EditorStoreInterface {
                     newBuffers.delete(tab.bufferId)
                 }
 
-                // Determine new active tab
-                let newActiveTabId = state.activeTabId
-                if (state.activeTabId === tabId) {
-                    // Find startup tab first
-                    for (const [id, t] of newTabs) {
-                        const buf = newBuffers.get(t.bufferId)
-                        if (buf?.isStartupFile) {
-                            newActiveTabId = id
-                            break
+                // Update editor: remove tabId from tabIds
+                const updatedTabIds = editor.tabIds.filter(tid => tid !== tabId)
+
+                // Determine new active tab for this editor
+                let newActiveTabId = editor.activeTabId
+                if (editor.activeTabId === tabId) {
+                    // Find startup tab first (among this editor's tabs)
+                    for (const tid of updatedTabIds) {
+                        const t = newTabs.get(tid)
+                        if (t) {
+                            const buf = newBuffers.get(t.bufferId)
+                            if (buf?.isStartupFile) {
+                                newActiveTabId = tid
+                                break
+                            }
                         }
                     }
-                    // If no startup tab, use first available
-                    if (newActiveTabId === tabId && newTabs.size > 0) {
-                        newActiveTabId = newTabs.keys().next().value || null
+                    // If no startup tab, use first available tab of this editor
+                    if (newActiveTabId === tabId && updatedTabIds.length > 0) {
+                        newActiveTabId = updatedTabIds[0] || null
+                    } else if (updatedTabIds.length === 0) {
+                        newActiveTabId = null
                     }
                 }
 
+                const updatedEditor: EditorInstance = {
+                    ...editor,
+                    tabIds: updatedTabIds,
+                    activeTabId: newActiveTabId
+                }
+
+                const newEditors = new Map(state.editors)
+                newEditors.set(editorId, updatedEditor)
+
                 return {
                     ...state,
+                    editors: newEditors,
                     tabs: newTabs,
-                    buffers: newBuffers,
-                    activeTabId: newActiveTabId
+                    buffers: newBuffers
                 }
             })
         },
@@ -403,17 +563,6 @@ export function useEditorStore(): EditorStoreInterface {
     }
 
     // Getters: read-only derived stores
-    const activeTab = derived(writableEditorStore, $state =>
-        $state.activeTabId ? $state.tabs.get($state.activeTabId) || null : null
-    )
-
-    const activeBuffer = derived(writableEditorStore, $state => {
-        if (!$state.activeTabId) return null
-        const tab = $state.tabs.get($state.activeTabId)
-        if (!tab) return null
-        return $state.buffers.get(tab.bufferId) || null
-    })
-
     const tabs = derived(writableEditorStore, $state =>
         Array.from($state.tabs.values()).sort((a, b) => a.order - b.order)
     )
@@ -433,13 +582,54 @@ export function useEditorStore(): EditorStoreInterface {
         return null
     })
 
+    // Editor-specific getter functions
+    const getEditor = (editorId: string) => {
+        return derived(writableEditorStore, $state =>
+            $state.editors.get(editorId) || null
+        )
+    }
+
+    const getEditorTabs = (editorId: string) => {
+        return derived(writableEditorStore, $state => {
+            const editor = $state.editors.get(editorId)
+            if (!editor) return []
+
+            return editor.tabIds
+                .map(tabId => $state.tabs.get(tabId))
+                .filter((tab): tab is TabInterface => tab !== undefined)
+                .sort((a, b) => a.order - b.order)
+        })
+    }
+
+    const getEditorActiveTab = (editorId: string) => {
+        return derived(writableEditorStore, $state => {
+            const editor = $state.editors.get(editorId)
+            if (!editor || !editor.activeTabId) return null
+            return $state.tabs.get(editor.activeTabId) || null
+        })
+    }
+
+    const getEditorActiveBuffer = (editorId: string) => {
+        return derived(writableEditorStore, $state => {
+            const editor = $state.editors.get(editorId)
+            if (!editor || !editor.activeTabId) return null
+
+            const tab = $state.tabs.get(editor.activeTabId)
+            if (!tab) return null
+
+            return $state.buffers.get(tab.bufferId) || null
+        })
+    }
+
     const getters: EditorStoreGettersInterface = {
-        activeTab,
-        activeBuffer,
         tabs,
         buffers,
         settings,
-        startupBuffer
+        startupBuffer,
+        getEditor,
+        getEditorTabs,
+        getEditorActiveTab,
+        getEditorActiveBuffer
     }
 
     return { actions, getters }

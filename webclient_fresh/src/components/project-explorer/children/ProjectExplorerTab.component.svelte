@@ -1,10 +1,9 @@
 <script lang="ts">
   import { useProjectStore } from '../../../store/project'
   import { useI18nStore } from '../../../store/i18n/I18n.store'
-  import { useEditorStore } from '../../../store/editor'
+  import { dispatchLoadFile } from '../../../events/editorEvents'
   import type { DirectoryEntry } from '../../../models/file-explorer'
   import FileExplorerModal from '../../shared/FileExplorerModal.component.svelte'
-  import { get } from 'svelte/store'
 
   let {
     componentId,
@@ -19,8 +18,6 @@
 
   const { getters: i18nGetters } = useI18nStore()
   const { translate } = i18nGetters
-
-  const editorStore = useEditorStore()
 
   let showFileExplorer = $state(false)
 
@@ -78,33 +75,14 @@
 
   async function loadFileInEditor(filePath: string, fileName: string) {
     try {
-      // Check if a buffer with this file path already exists
-      const buffers = get(editorStore.getters.buffers)
-      const existingBuffer = buffers.find(b => b.filePath === filePath)
-
-      if (existingBuffer) {
-        // Find tab with this buffer
-        const tabs = get(editorStore.getters.tabs)
-        const tab = tabs.find(t => t.bufferId === existingBuffer.id)
-
-        if (tab) {
-          editorStore.actions.switchToTab(tab.id)
-          return
-        }
-      }
-
       const response = await fetch(`http://localhost:8000/api/file-explorer/read?path=${encodeURIComponent(filePath)}`)
 
       if (response.ok) {
         const data = await response.json()
         const content = data.content || ''
 
-        // Load content in new editor tab
-        if (editorStore?.actions?.loadContentInNewTab) {
-          // Remove file extension for tab title
-          const tabTitle = fileName.replace(/\.[^/.]+$/, '')
-          editorStore.actions.loadContentInNewTab(content, tabTitle, filePath)
-        }
+        const tabTitle = fileName.replace(/\.[^/.]+$/, '')
+        dispatchLoadFile(content, tabTitle, filePath)
       } else {
         const errorData = await response.json()
         error = errorData.detail || 'Failed to load file'

@@ -5,6 +5,7 @@
   import { useEditorStore } from '../../../store/editor';
   import { useProjectStore } from '../../../store/project';
   import { useI18nStore } from '../../../store/i18n/I18n.store';
+  import type { LoadFileEvent } from '../../../events/editorEvents';
   import logger from '../../../services/logger.service';
   import { onMount, onDestroy } from 'svelte';
 
@@ -17,7 +18,7 @@
   } = $props();
 
   const { actions, getters } = useEditorStore();
-  const { tabs, buffers } = getters;
+  const { buffers } = getters;
 
   const { getters: projectGetters } = useProjectStore();
   const { currentProject } = projectGetters;
@@ -25,55 +26,64 @@
   const { getters: i18nGetters } = useI18nStore();
   const { translate } = i18nGetters;
 
-  // Track local tab IDs for this editor instance
-  let localTabIds = $state<string[]>([]);
-  let activeLocalTabId = $state<string | null>(null);
+  let editorId = $state<string>('');
   let showConfirmClose = $state(false);
   let pendingCloseTabId = $state<string | null>(null);
 
-  // Get active buffer from active local tab
-  let activeBuffer = $derived.by(() => {
-    if (!activeLocalTabId) return null;
-    const tab = $tabs.find((t) => t.id === activeLocalTabId);
-    if (!tab) return null;
-    return $buffers.find((b) => b.id === tab.bufferId) || null;
-  });
+  // Get editor-specific derived stores
+  let localTabs = $derived(editorId ? getters.getEditorTabs(editorId) : null);
+  let activeTab = $derived(editorId ? getters.getEditorActiveTab(editorId) : null);
+  let activeBuffer = $derived(editorId ? getters.getEditorActiveBuffer(editorId) : null);
 
-  // Get local tabs
-  let localTabs = $derived($tabs.filter((t) => localTabIds.includes(t.id)));
-
-  // Create initial buffer for this code editor instance
+  // Register editor and create initial buffer
   $effect(() => {
-    if (localTabIds.length === 0) {
+    if (!editorId) {
+      editorId = actions.registerEditor(componentId);
+      logger.debug('CodeEditorWrapper', 'Registered editor', { editorId, componentId });
+
+      // Create initial buffer and tab
       const newBufferId = actions.createBuffer({
         name: title || 'Code Editor',
         content: '',
         language: 'python',
       });
-      const newTabId = actions.createTab(newBufferId);
-      localTabIds = [newTabId];
-      activeLocalTabId = newTabId;
+      actions.createTab(editorId, newBufferId);
     }
   });
 
-  // Sync new tabs created globally to local tab list
+  // Listen for file load events
   $effect(() => {
-    const allTabIds = $tabs.map(t => t.id);
-    const newTabs = allTabIds.filter(id => !localTabIds.includes(id));
+    const handleLoadFile = (event: CustomEvent) => {
+      if (!editorId) return
+      const { content, title, filePath } = event.detail
+      logger.debug('CodeEditorWrapper', 'Received loadFile event', { title, filePath })
 
-    if (newTabs.length > 0) {
-      localTabIds = [...localTabIds, ...newTabs];
-      // Switch to the newest tab
-      const newestTab = $tabs.find(t => t.isActive);
-      if (newestTab) {
-        activeLocalTabId = newestTab.id;
+      // Check if file already open
+      const tabs = $localTabs || []
+      const existingTab = tabs.find(t => {
+        const buf = $buffers.find(b => b.id === t.bufferId)
+        return buf?.filePath === filePath
+      })
+
+      if (existingTab) {
+        logger.debug('CodeEditorWrapper', 'File already open, switching to tab', { tabId: existingTab.id })
+        actions.switchToTab(editorId, existingTab.id)
+      } else {
+        logger.debug('CodeEditorWrapper', 'Loading file in new tab')
+        actions.loadContentInNewTab(editorId, content, title, filePath)
       }
     }
-  });
+
+    window.addEventListener('editor:loadFile', handleLoadFile as EventListener)
+
+    return () => {
+      window.removeEventListener('editor:loadFile', handleLoadFile as EventListener)
+    }
+  })
 
   function handleChange(value: string) {
-    if (activeBuffer) {
-      actions.updateBufferContent(activeBuffer.id, value);
+    if ($activeBuffer) {
+      actions.updateBufferContent($activeBuffer.id, value);
     }
   }
 
@@ -82,28 +92,27 @@
   }
 
   function handleCreateTab() {
+    if (!editorId) return;
     const newBufferId = actions.createBuffer({
       name: 'Untitled',
       content: '',
       language: 'python',
     });
-    const newTabId = actions.createTab(newBufferId);
-    localTabIds = [...localTabIds, newTabId];
-    activeLocalTabId = newTabId;
-    actions.switchToTab(newTabId);
+    actions.createTab(editorId, newBufferId);
   }
 
   function handleSwitchTab(tabId: string) {
-    activeLocalTabId = tabId;
-    actions.switchToTab(tabId);
+    if (!editorId) return;
+    actions.switchToTab(editorId, tabId);
   }
 
   function handleCloseTab(tabId: string) {
+    if (!editorId) return;
     logger.debug('CodeEditorWrapper', 'handleCloseTab called', { tabId });
 
-    const tab = $tabs.find(t => t.id === tabId);
+    const tab = $localTabs?.find(t => t.id === tabId);
     if (!tab) {
-      logger.warn('CodeEditorWrapper', 'Tab not found, returning');
+      logger.warn('CodeEditorWrapper', 'Tab not found');
       return;
     }
 
@@ -124,12 +133,8 @@
   }
 
   function closeTabDirectly(tabId: string) {
-    actions.closeTab(tabId);
-    localTabIds = localTabIds.filter((id) => id !== tabId);
-    if (activeLocalTabId === tabId && localTabIds.length > 0) {
-      activeLocalTabId = localTabIds[0];
-      actions.switchToTab(localTabIds[0]);
-    }
+    if (!editorId) return;
+    actions.closeTab(editorId, tabId);
   }
 
   function handleConfirmClose() {
@@ -157,13 +162,13 @@
   }
 
   function handleSave() {
-    if (!activeBuffer) return
+    if (!$activeBuffer) return
     showSaveModal = true
   }
 
   async function handleFileSave(filePath: string) {
-    if (!activeBuffer) return
-    const result = await actions.saveBuffer(activeBuffer.id, filePath)
+    if (!$activeBuffer) return
+    const result = await actions.saveBuffer($activeBuffer.id, filePath)
     if (!result.success) {
       alert(result.message)
     }
@@ -175,19 +180,23 @@
 
   onDestroy(() => {
     document.removeEventListener('keydown', handleKeyDown)
+    if (editorId) {
+      actions.unregisterEditor(editorId)
+      logger.debug('CodeEditorWrapper', 'Unregistered editor', { editorId })
+    }
   })
 </script>
 
 <div class="h-full flex flex-col overflow-hidden">
-  {#if localTabs.length > 1}
+  {#if $localTabs && $localTabs.length > 1}
     <!-- Tab bar -->
     <div
       class="flex items-center bg-surface-200 dark:bg-surface-800 border-b border-surface-300 dark:border-surface-700"
     >
-      {#each localTabs as tab}
+      {#each $localTabs as tab}
         <div class="flex items-center group">
           <button
-            class="px-3 py-2 text-sm transition-colors {tab.id === activeLocalTabId
+            class="px-3 py-2 text-sm transition-colors {tab.id === $activeTab?.id
               ? 'bg-surface-100 dark:bg-surface-900 border-b-2 border-primary-500'
               : 'hover:bg-surface-300 dark:hover:bg-surface-700'}"
             onclick={() => handleSwitchTab(tab.id)}
@@ -210,9 +219,9 @@
 
   <!-- Editor content -->
   <div class="flex-1 overflow-hidden">
-    {#if activeBuffer}
+    {#if $activeBuffer}
       <CodeEditor
-        buffer={activeBuffer}
+        buffer={$activeBuffer}
         onchange={handleChange}
         onexecute={handleExecute}
         oncreatetab={handleCreateTab}
