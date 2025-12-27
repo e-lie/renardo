@@ -50,18 +50,6 @@
   })
 
   // Actions
-  async function tick() {
-    try {
-      const response = await fetch('http://localhost:8000/api/clock/tick', { method: 'POST' })
-      const data = await response.json()
-      if (data.success) {
-        console.log('Tick:', data)
-      }
-    } catch (e) {
-      console.error('Failed to tick:', e)
-    }
-  }
-
   async function setMeasureSize(size: number) {
     try {
       const response = await fetch(`http://localhost:8000/api/clock/set-measure-size?size=${size}`, { method: 'POST' })
@@ -126,14 +114,6 @@
 
   <!-- Controls -->
   <div class="mt-auto pt-4 border-t border-surface-300 dark:border-surface-700 space-y-3">
-    <!-- Tick Button -->
-    <button
-      class="w-full btn variant-filled-primary"
-      onclick={tick}
-    >
-      Tick (Space)
-    </button>
-
     <!-- Measure Size -->
     <div class="flex gap-2">
       <button
@@ -175,12 +155,3 @@
     </button>
   </div>
 </div>
-
-<svelte:window
-  onkeydown={(e) => {
-    if (e.code === 'Space' && !e.repeat) {
-      e.preventDefault()
-      tick()
-    }
-  }}
-/>

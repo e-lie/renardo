@@ -92,12 +92,11 @@ async def health_check():
     return {"status": "healthy"}
 
 
-# Clock endpoints
-@app.post("/api/clock/tick")
-async def clock_tick():
-    """Incrémente le beat de l'horloge"""
-    await clock_state.tick()
-    return {"success": True, "current_beat": clock_state.current_beat, "measure_size": clock_state.measure_size}
+# Clock endpoints - auto-started on server startup
+@app.on_event("startup")
+async def startup_clock():
+    """Démarre l'horloge automatiquement au démarrage du serveur"""
+    await clock_state.start()
 
 
 @app.post("/api/clock/set-measure-size")
