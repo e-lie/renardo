@@ -12,6 +12,8 @@
 
 - le projet utilise `uv` pour gérer la partie python et `npm` pour gérer la partie web
 - pour l'implémentation de nouvelles fonctionnalités dans `webclient_fresh` toujours suivre les directives dans `webclient_fresh/ARCHITECTURE_GUIDE.md`
+- toujours utiliser le logger du backend et du frontend pour ajouter du log et debugger l'application (pas console.log)
+- ne pas hésiter à ajouter du log quand qqch ne fonctionne pas
 
 ## Architecture
 
