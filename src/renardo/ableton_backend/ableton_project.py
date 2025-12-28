@@ -138,10 +138,17 @@ class AbletonProject:
 
             # Scan track-level mixer parameters (volume, pan, sends, etc.)
             try:
-                # Try to access track volume through different possible attributes
+                # Access track mixer parameters via mixer_device
+                # track.volume/panning return values, not Parameter objects
                 volume_param = None
-                if hasattr(track, "volume"):
-                    volume_param = track.volume
+                pan_param = None
+
+                if hasattr(track, "mixer_device"):
+                    mixer = track.mixer_device
+                    if hasattr(mixer, "volume"):
+                        volume_param = mixer.volume
+                    if hasattr(mixer, "panning"):
+                        pan_param = mixer.panning
 
                 if volume_param is not None:
                     param_key = f"{track_name}_volume"
@@ -157,11 +164,6 @@ class AbletonProject:
                         "parameter": volume_param,
                         "is_track_param": True,
                     }
-
-                # Try to access track pan through different possible attributes
-                pan_param = None
-                if hasattr(track, "panning"):
-                    pan_param = track.panning
 
                 if pan_param is not None:
                     param_key = f"{track_name}_pan"
