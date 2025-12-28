@@ -402,7 +402,7 @@ class ServerManager:
         """ Returns the OSC Bundle for a notew based on a Player's SynthDef, and event and effects dictionaries """
         # Create a specific message for midi
 
-        if synthdef in ["MidiInstrumentProxy", "ReaperInstrumentProxy"]:  # this should be in a dict of synthdef to functions maybe? we need a "nudge to sync"
+        if synthdef in ["MidiInstrumentProxy", "ReaperInstrumentProxy", "AbletonInstrument"]:  # this should be in a dict of synthdef to functions maybe? we need a "nudge to sync"
             return self.get_midi_message(synthdef, packet, timestamp)
 
         # Create a bundle

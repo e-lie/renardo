@@ -384,6 +384,16 @@ if settings.get("reaper_backend.REAPER_BACKEND_ENABLED"):
     from .reaper_backend_init import *
     create_selected_instruments = ReaperInstrumentFactory(FoxDotCode) # then we can call create_selected_instruments as a function
 
+## Conditional init of ableton backend
+if settings.get("ableton_backend.ABLETON_BACKEND_ENABLED"):
+    from renardo.ableton_backend import (
+        AbletonProject,
+        AbletonInstrument,
+        AbletonInstrumentFacade,
+        create_ableton_instruments,
+    )
+    # Initialize global ableton_project variable (will be set by create_ableton_instruments)
+    ableton_project = None
 
 schedule = Clock.schedule
 now = Clock.now
