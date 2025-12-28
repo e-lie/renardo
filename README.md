@@ -11,6 +11,7 @@ Renardo is currently going through a wide and deep refactoring toward version 1.
 - **Multiple Backends**:
   - SuperCollider integration for synthesis and audio processing
   - REAPER backend for advanced DAW integration
+  - Ableton Live backend with Link synchronization
   - MIDI output support
 - **Web-based Interface**: Modern, responsive web client built with Svelte
 - **Desktop Application**: Optional Electron-based desktop app
@@ -25,7 +26,8 @@ Renardo is currently going through a wide and deep refactoring toward version 1.
 - **Python** 3.9 or higher
 - **SuperCollider** (for audio synthesis)
 - **uv** (Python package manager) - recommended
-- **REAPER** (optional, for DAW integration)
+- **REAPER** (optional, for REAPER DAW integration)
+- **Ableton Live** (optional, for Ableton Live integration)
 
 ### Installation
 
@@ -95,8 +97,9 @@ cli --pipe
 # Launch with specific backend
 renardo --backend supercollider
 renardo --backend reaper
+renardo --backend ableton
 
-# Configure REAPER integration
+# Configure backend integration
 renardo --configure-reaper
 ```
 
@@ -109,6 +112,7 @@ renardo/
 ├── lib/              # Core library (patterns, players, effects)
 ├── sc_backend/       # SuperCollider integration
 ├── reaper_backend/   # REAPER DAW integration
+├── ableton_backend/  # Ableton Live integration
 ├── midi_backend/     # MIDI output support
 ├── webserver/        # Flask-based web server
 ├── runtime/          # Runtime environment and state management
@@ -142,6 +146,7 @@ Topics covered:
 7. Advanced features (scales, groups, vars)
 8. SuperCollider instruments
 9. REAPER backend integration
+10. Ableton Live backend integration
 
 # Contributing
 
@@ -179,8 +184,9 @@ Renardo uses TOML files for configuration:
 # Default config location
 ~/.renardo/settings.toml
 
-# REAPER backend settings
+# Backend settings (REAPER, Ableton, etc.)
 ~/.renardo/reaper_backend.toml
+~/.renardo/ableton_backend.toml
 ```
 
 ### Example Configuration
@@ -197,6 +203,11 @@ audio_device = "default"
 [reaper]
 enabled = true
 project_path = "~/Music/renardo_sessions"
+
+[ableton_backend]
+ABLETON_BACKEND_ENABLED = false
+ABLETON_MAX_MIDI_TRACKS = 16
+ABLETON_SCAN_AUDIO_TRACKS = true
 ```
 
 ## Backends
@@ -230,6 +241,39 @@ reaper.configure()
 # Create REAPER instruments
 r1 >> ReaperInstrument("my_synth.RfxChain", notes=[0, 4, 7])
 ```
+
+### Ableton Live Backend
+
+Deep integration with Ableton Live via pylive and Ableton Link:
+
+```python
+# Initialize Ableton backend
+from renardo.ableton_backend import create_ableton_instruments
+
+# Scan Live set and create instruments
+instruments = create_ableton_instruments()
+bass = instruments['Bass']
+synth = instruments['Synth']
+
+# Play notes and control parameters
+p1 >> bass.out([0, 3, 7], dur=1/2, filter_cutoff=80)
+p2 >> synth.out([7, 9, 12], reverb_mix=0.5)
+
+# Trigger clips
+p3 >> bass.out(clip=P[0, 1, 2], dur=4)
+
+# Automate parameters with TimeVar (300Hz!)
+p1 >> synth.out(degree=0, filter_cutoff=var([20, 127], 8))
+```
+
+Features:
+- MIDI note output + OSC parameter control
+- Clip triggering and scene launching
+- TimeVar automation at 300Hz
+- Ableton Link tempo synchronization (dual-threaded clock)
+- Auto-discovery of tracks, devices, and parameters
+
+See [docs/ableton_backend.md](docs/ableton_backend.md) for detailed documentation.
 
 ### MIDI Backend
 
@@ -283,6 +327,8 @@ See the [LICENSE](LICENSE) file for details.
 - **FoxDot**: Original live coding environment by Ryan Kirkbride
 - **SuperCollider**: Synthesis engine
 - **REAPER**: Digital Audio Workstation
+- **Ableton Live**: Digital Audio Workstation
+- **pylive** and **AbletonOSC**: Ableton Live OSC control
 - All contributors to the Renardo project
 
 
