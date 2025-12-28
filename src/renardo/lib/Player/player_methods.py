@@ -63,17 +63,16 @@ def kill(self: Player):
 
     # ABLETON INTEGRATION HOOK for player kill
     # Freeze Ableton TimeVars and stop clips before reset (only if backend is enabled)
-    if settings.get("ableton_backend.ABLETON_BACKEND_ENABLED"):
-        if "ableton_track" in self.attr.keys() and "ableton_project_ref" in self.attr.keys():
-            ableton_track = self.attr["ableton_track"][0]
-            ableton_project = self.attr["ableton_project_ref"][0]
-            if hasattr(ableton_project, 'freeze_timevars_for_track') and hasattr(ableton_track, 'name'):
-                from renardo.ableton_backend.ableton_project import make_snake_name
-                track_name = make_snake_name(ableton_track.name)
-                ableton_project.freeze_timevars_for_track(track_name)
-                # Stop any playing clip on this track
-                if hasattr(ableton_project, 'stop_clip'):
-                    ableton_project.stop_clip(track_name)
+    if "ableton_track" in self.attr.keys() and "ableton_project_ref" in self.attr.keys():
+        ableton_track = self.attr["ableton_track"][0]
+        ableton_project = self.attr["ableton_project_ref"][0]
+        if hasattr(ableton_project, 'freeze_timevars_for_track') and hasattr(ableton_track, 'name'):
+            from renardo.ableton_backend.ableton_project import make_snake_name
+            track_name = make_snake_name(ableton_track.name)
+            ableton_project.freeze_timevars_for_track(track_name)
+            # Stop any playing clip on this track
+            if hasattr(ableton_project, 'stop_clip'):
+                ableton_project.stop_clip(track_name)
 
     self.reset()
     if self in self.main_event_clock.playing:
