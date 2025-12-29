@@ -206,8 +206,6 @@ project_path = "~/Music/renardo_sessions"
 
 [ableton_backend]
 ABLETON_BACKEND_ENABLED = false
-ABLETON_MAX_MIDI_TRACKS = 16
-ABLETON_SCAN_AUDIO_TRACKS = true
 ```
 
 ## Backends
