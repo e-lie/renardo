@@ -658,6 +658,7 @@ class TempoClock(object):
         self.link = None
         self.link_enabled = False
         self.link_sync_interval = 1  # Sync every 1 beat by default
+        self.link_phase_offset = -0.5  # Phase offset to align Link beats with Renardo (adjustable)
 
         # Deprecated network sync attributes (kept for backward compatibility)
         self.waiting_for_sync = False  # Legacy: was used for network sync
@@ -699,6 +700,21 @@ class TempoClock(object):
         setattr(cls, func.__name__, func)
 
     # ===== Ableton Link Integration =====
+
+    def _get_link_beat(self, session, link_time, quantum=1):
+        """
+        Get beat from Link session with phase offset applied.
+
+        Args:
+            session: Link session state
+            link_time: Link time in microseconds
+            quantum: Quantum for beat alignment (default=1)
+
+        Returns:
+            Link beat with phase offset applied
+        """
+        link_beat = session.beatAtTime(link_time, quantum)
+        return link_beat + self.link_phase_offset
 
     def sync_to_link(self, enabled=True, sync_interval=1):
         """Enable synchronization with Ableton Link.
@@ -810,7 +826,7 @@ class TempoClock(object):
 
             # === BEAT/PHASE SYNC (IMPROVED) ===
             # Use quantum=1 for beat-by-beat sync
-            link_beat = session.beatAtTime(link_time, 1)
+            link_beat = self._get_link_beat(session, link_time, quantum=1)
             clock_beat = beat
 
             # Calculate drift (difference between Link and our clock)
@@ -872,7 +888,7 @@ class TempoClock(object):
                 if self.debugging:
                     print(f"[Link Sync PERIODIC] Full resync at beat {beat_int}")
 
-                link_beat_periodic = session.beatAtTime(link_time, 1)
+                link_beat_periodic = self._get_link_beat(session, link_time, quantum=1)
                 current_time = time.time()
                 with self._beat_lock:
                     self._current_beat = link_beat_periodic
@@ -918,7 +934,7 @@ class TempoClock(object):
             link_time = self.link.clock().micros()
 
             tempo = session.tempo()
-            beat = session.beatAtTime(link_time, 4)
+            beat = self._get_link_beat(session, link_time, quantum=4)
             phase = session.phaseAtTime(link_time, 4)
             is_playing = session.isPlaying()
             num_peers = self.link.numPeers()
@@ -1163,7 +1179,7 @@ class TempoClock(object):
                         link_time = self.link.clock().micros()
 
                         # Get beat directly from Link - this is the authoritative source
-                        link_beat = session.beatAtTime(link_time, 1)
+                        link_beat = self._get_link_beat(session, link_time, quantum=1)
 
                         # Cache this reference point
                         self._link_beat_reference = link_beat
@@ -1420,12 +1436,12 @@ class TempoClock(object):
                 link_time_micros = self.link.clock().micros()
 
                 # Beat actuel de Link
-                link_beat_now = session.beatAtTime(link_time_micros, 1)
+                link_beat_now = self._get_link_beat(session, link_time_micros, quantum=1)
 
                 # Beat théorique de Link au moment où l'OSC sera envoyé (block.time)
                 # Convertir scheduled_time (secondes) en microsecondes Link
                 scheduled_time_micros = int(scheduled_time * 1_000_000)
-                link_beat_theoretical = session.beatAtTime(scheduled_time_micros, 1)
+                link_beat_theoretical = self._get_link_beat(session, scheduled_time_micros, quantum=1)
 
                 link_drift_now = link_beat_now - beat
                 link_drift_theoretical = link_beat_theoretical - block.beat
