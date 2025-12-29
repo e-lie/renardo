@@ -1012,6 +1012,31 @@ class TempoClock(object):
             self.last_now_call = self.bpm_start_time = bpm_start_time
             self.bpm_start_beat = bpm_start_beat
 
+            # Push tempo to Ableton Link if enabled
+            if self.link_enabled and self.link is not None:
+                try:
+                    session = self.link.captureSessionState()
+                    link_time = self.link.clock().micros()
+                    session.setTempo(bpm, link_time)
+                    self.link.commitSessionState(session)
+                    if self.debugging:
+                        print(f"[Link] Pushed tempo to Link: {bpm:.2f} BPM")
+                except Exception as e:
+                    print(f"[Link] Error pushing tempo: {e}")
+
+            # Also push tempo to Ableton Live directly if ableton backend is enabled
+            from renardo.settings_manager import settings
+            if settings.get("ableton_backend.ABLETON_BACKEND_ENABLED"):
+                try:
+                    from renardo import runtime
+                    if hasattr(runtime, 'ableton_project') and runtime.ableton_project is not None:
+                        runtime.ableton_project.change_ableton_bpm(bpm)
+                        if self.debugging:
+                            print(f"[Ableton] Pushed tempo to Ableton Live: {bpm:.2f} BPM")
+                except Exception as e:
+                    if self.debugging:
+                        print(f"[Ableton] Error pushing tempo: {e}")
+
         # Schedule tempo change for next bar
         self.schedule(func, next_bar, is_priority=True)
 
