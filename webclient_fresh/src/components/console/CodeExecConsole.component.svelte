@@ -69,7 +69,7 @@
           <div class="mb-2">
             {#if formatted.type === 'code'}
               <div class="text-primary-400">
-                <span class="opacity-50">>>> </span><span class="whitespace-pre-wrap">{formatted.content}</span>
+                <span class="opacity-50">>>>&nbsp;</span><span class="whitespace-pre-wrap">{formatted.content}</span>
               </div>
             {:else if formatted.type === 'error'}
               <div class="text-error font-bold whitespace-pre-wrap ml-4">{formatted.content}</div>
