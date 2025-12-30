@@ -50,6 +50,9 @@ async def execute_code(request: ExecuteCodeRequest):
     try:
         from ..runtime import execute
 
+        # Print code to stdout
+        print(f">>> {request.code}")
+
         # Send execution start message
         await websocket_manager.send_console_message(
             "info",
@@ -68,6 +71,10 @@ async def execute_code(request: ExecuteCodeRequest):
 
         # Get captured output
         output_text = captured_output.getvalue()
+
+        # Print to actual stdout for logging
+        if output_text:
+            print(output_text, end='')
 
         # Send stdout output if any
         if output_text.strip():
