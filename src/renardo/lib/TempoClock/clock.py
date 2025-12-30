@@ -685,6 +685,10 @@ class TempoClock(object):
         self._timing_thread_active = False
         self._scheduling_thread_active = False
 
+        # Beat callback system for external observers (e.g., WebSocket)
+        self._beat_callbacks = []
+        self._beat_callbacks_lock = threading.Lock()
+        self._last_callback_beat = -1  # Track last beat we notified for
 
     @classmethod
     def set_server(cls, server):
@@ -699,6 +703,65 @@ class TempoClock(object):
     def add_method(cls, func):
         """Add a custom method to the TempoClock class dynamically"""
         setattr(cls, func.__name__, func)
+
+    # ===== Beat Callback System =====
+
+    def register_beat_callback(self, callback):
+        """Register a callback to be called at each integer beat.
+
+        Callback signature: callback(beat: int, bpm: float, meter: tuple, ticking: bool)
+        Thread-safe - callback is called from SchedulingThread.
+
+        Args:
+            callback: Callable that receives beat state updates
+
+        Returns:
+            The callback (for potential decorator usage)
+        """
+        with self._beat_callbacks_lock:
+            if callback not in self._beat_callbacks:
+                self._beat_callbacks.append(callback)
+                if self.debugging:
+                    print(f"[TempoClock] Registered beat callback: {callback}")
+        return callback
+
+    def unregister_beat_callback(self, callback):
+        """Unregister a previously registered beat callback.
+
+        Args:
+            callback: The callback to remove
+        """
+        with self._beat_callbacks_lock:
+            if callback in self._beat_callbacks:
+                self._beat_callbacks.remove(callback)
+                if self.debugging:
+                    print(f"[TempoClock] Unregistered beat callback: {callback}")
+
+    def _notify_beat_callbacks(self, beat_int):
+        """Call all registered beat callbacks (called from SchedulingThread).
+
+        Thread-safe: creates a copy of callbacks list before iteration.
+        Each callback is wrapped in try/except to prevent one failure from affecting others.
+
+        Args:
+            beat_int: Current integer beat number
+        """
+        # Thread-safe copy of callbacks
+        with self._beat_callbacks_lock:
+            callbacks_copy = list(self._beat_callbacks)
+
+        # Call each callback with current state
+        for callback in callbacks_copy:
+            try:
+                callback(
+                    beat=beat_int,
+                    bpm=self.get_bpm(),
+                    meter=self.meter,
+                    ticking=self.ticking
+                )
+            except Exception as e:
+                if self.debugging:
+                    print(f"[TempoClock] Error in beat callback {callback}: {e}")
 
     # ===== Ableton Link Integration =====
 
@@ -1302,6 +1365,13 @@ class TempoClock(object):
             while self.ticking:
                 # Get current beat from shared state (thread-safe read)
                 beat = self.get_beat()
+
+                # Notify beat callbacks at each integer beat
+                current_beat_int = int(beat)
+                if current_beat_int != self._last_callback_beat:
+                    self._last_callback_beat = current_beat_int
+                    if self._beat_callbacks:
+                        self._notify_beat_callbacks(current_beat_int)
 
                 # Check if event should trigger
                 if self.scheduling_queue.after_next_event(beat):
