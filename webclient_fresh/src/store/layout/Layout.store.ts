@@ -27,12 +27,13 @@ const initialState: LayoutStateInterface = {
       { id: 'tab-left-bottom-1', title: 'Scratch', componentType: 'TextArea', componentId: 'text-scratch', closable: true, active: true }
     ]],
     ['right-top', [
-      { id: 'tab-right-top-3', title: 'projectExplorer', componentType: 'ProjectExplorerTab', componentId: 'project-explorer-1', closable: true, active: false },
-      { id: 'tab-right-top-2', title: 'musicExamples', componentType: 'MusicExampleTab', componentId: 'music-example-1', closable: true, active: true },
-      { id: 'tab-right-top-1', title: 'tutorials', componentType: 'TutorialTab', componentId: 'tutorial-1', closable: true, active: false },
+      { id: 'tab-right-top-1', title: 'Clock', componentType: 'ClockDisplay', componentId: 'clock-1', closable: true, active: true }
     ]],
     ['right-middle', [
-      { id: 'tab-right-middle-1', title: 'Clock', componentType: 'ClockDisplay', componentId: 'clock-1', closable: true, active: true }
+      { id: 'tab-right-middle-4', title: 'tutorials', componentType: 'TutorialTab', componentId: 'tutorial-1', closable: true, active: false },
+      { id: 'tab-right-middle-3', title: 'projectExplorer', componentType: 'ProjectExplorerTab', componentId: 'project-explorer-1', closable: true, active: false },
+      { id: 'tab-right-middle-2', title: 'userDirectory', componentType: 'UserDirectoryExplorerTab', componentId: 'user-directory-1', closable: true, active: false },
+      { id: 'tab-right-middle-1', title: 'musicExamples', componentType: 'MusicExampleTab', componentId: 'music-example-1', closable: true, active: true },
     ]],
     ['right-bottom', [
       { id: 'tab-right-bottom-1', title: 'Workspace', componentType: 'TextArea', componentId: 'text-2', closable: true, active: true }

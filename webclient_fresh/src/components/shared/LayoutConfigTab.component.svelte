@@ -16,7 +16,7 @@
     return 'bg-surface-100 dark:bg-surface-900'
   }
 
-  function addTabToPane(position: string, componentType: 'TextArea' | 'CodeEditor' | 'CodeExecConsole' | 'TutorialTab' | 'MusicExampleTab' | 'ProjectExplorerTab' | 'ClockDisplay') {
+  function addTabToPane(position: string, componentType: 'TextArea' | 'CodeEditor' | 'CodeExecConsole' | 'TutorialTab' | 'MusicExampleTab' | 'ProjectExplorerTab' | 'UserDirectoryExplorerTab' | 'ClockDisplay') {
     const titles = {
       'TextArea': 'Text Area',
       'CodeEditor': 'Code Editor',
@@ -24,6 +24,7 @@
       'TutorialTab': 'Tutorials',
       'MusicExampleTab': 'Music Examples',
       'ProjectExplorerTab': 'Project Explorer',
+      'UserDirectoryExplorerTab': 'User Directory',
       'ClockDisplay': 'Clock'
     }
     actions.addTab(position, {
@@ -254,7 +255,7 @@
                         disabled={index === ($paneTabConfigs.get(position)?.length || 0) - 1}
                       >▼</button>
                     </div>
-                    <span>{tab.componentType === 'TextArea' ? '📝' : tab.componentType === 'CodeExecConsole' ? 'ฅ^•ﻌ•^ฅ' : tab.componentType === 'TutorialTab' ? '📚' : tab.componentType === 'MusicExampleTab' ? '🎵' : tab.componentType === 'ProjectExplorerTab' ? '📁' : tab.componentType === 'ClockDisplay' ? '🕐' : '💻'}</span>
+                    <span>{tab.componentType === 'TextArea' ? '📝' : tab.componentType === 'CodeExecConsole' ? 'ฅ^•ﻌ•^ฅ' : tab.componentType === 'TutorialTab' ? '📚' : tab.componentType === 'MusicExampleTab' ? '🎵' : tab.componentType === 'ProjectExplorerTab' ? '📁' : tab.componentType === 'UserDirectoryExplorerTab' ? '🏠' : tab.componentType === 'ClockDisplay' ? '🕐' : '💻'}</span>
                     <span class="flex-1 truncate text-surface-900 dark:text-surface-50">{tab.title}</span>
                     {#if tab.closable}
                       <button class="text-error-500 hover:bg-error-500/20 rounded px-1" onclick={() => removeTabFromPane(position, tab.id)}>×</button>
@@ -278,8 +279,14 @@
                     <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700" onclick={() => { addTabToPane(position, 'TutorialTab'); openMenuPosition = null }}>
                       📚 Tutorials
                     </button>
-                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-b-lg" onclick={() => { addTabToPane(position, 'MusicExampleTab'); openMenuPosition = null }}>
+                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700" onclick={() => { addTabToPane(position, 'MusicExampleTab'); openMenuPosition = null }}>
                       🎵 Music Examples
+                    </button>
+                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700" onclick={() => { addTabToPane(position, 'ProjectExplorerTab'); openMenuPosition = null }}>
+                      📁 Project Explorer
+                    </button>
+                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-b-lg" onclick={() => { addTabToPane(position, 'UserDirectoryExplorerTab'); openMenuPosition = null }}>
+                      🏠 User Directory
                     </button>
                   </div>
                 {/if}
@@ -326,7 +333,7 @@
                         disabled={index === ($paneTabConfigs.get(position)?.length || 0) - 1}
                       >▼</button>
                     </div>
-                    <span>{tab.componentType === 'TextArea' ? '📝' : tab.componentType === 'CodeExecConsole' ? 'ฅ^•ﻌ•^ฅ' : tab.componentType === 'TutorialTab' ? '📚' : tab.componentType === 'MusicExampleTab' ? '🎵' : tab.componentType === 'ProjectExplorerTab' ? '📁' : tab.componentType === 'ClockDisplay' ? '🕐' : '💻'}</span>
+                    <span>{tab.componentType === 'TextArea' ? '📝' : tab.componentType === 'CodeExecConsole' ? 'ฅ^•ﻌ•^ฅ' : tab.componentType === 'TutorialTab' ? '📚' : tab.componentType === 'MusicExampleTab' ? '🎵' : tab.componentType === 'ProjectExplorerTab' ? '📁' : tab.componentType === 'UserDirectoryExplorerTab' ? '🏠' : tab.componentType === 'ClockDisplay' ? '🕐' : '💻'}</span>
                     <span class="flex-1 truncate text-surface-900 dark:text-surface-50">{tab.title}</span>
                     {#if tab.closable}
                       <button class="text-error-500 hover:bg-error-500/20 rounded px-1" onclick={() => removeTabFromPane(position, tab.id)}>×</button>
@@ -350,8 +357,14 @@
                     <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700" onclick={() => { addTabToPane(position, 'TutorialTab'); openMenuPosition = null }}>
                       📚 Tutorials
                     </button>
-                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-b-lg" onclick={() => { addTabToPane(position, 'MusicExampleTab'); openMenuPosition = null }}>
+                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700" onclick={() => { addTabToPane(position, 'MusicExampleTab'); openMenuPosition = null }}>
                       🎵 Music Examples
+                    </button>
+                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700" onclick={() => { addTabToPane(position, 'ProjectExplorerTab'); openMenuPosition = null }}>
+                      📁 Project Explorer
+                    </button>
+                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-b-lg" onclick={() => { addTabToPane(position, 'UserDirectoryExplorerTab'); openMenuPosition = null }}>
+                      🏠 User Directory
                     </button>
                   </div>
                 {/if}
