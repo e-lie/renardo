@@ -368,6 +368,86 @@ async def read_file(path: str):
         )
 
 
+# User Directory endpoints
+@app.get("/api/user-directory")
+async def get_user_directory():
+    """Get current user directory path"""
+    try:
+        from ..settings_manager import settings
+        user_dir = settings.get_renardo_user_dir()
+        return {"success": True, "path": str(user_dir)}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error getting user directory: {str(e)}"
+        )
+
+
+@app.get("/api/user-directory/list")
+async def list_user_directory(subpath: str = ""):
+    """List contents of user directory or subdirectory"""
+    try:
+        from ..settings_manager import settings
+        user_dir = settings.get_renardo_user_dir()
+
+        # Construct full path
+        if subpath:
+            full_path = (user_dir / subpath).resolve()
+        else:
+            full_path = user_dir.resolve()
+
+        # Security: ensure path is within user directory
+        try:
+            full_path.relative_to(user_dir.resolve())
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Access denied")
+
+        # Check if path exists
+        if not full_path.exists():
+            raise HTTPException(status_code=404, detail="Path not found")
+
+        # List directory contents
+        file_explorer = FileExplorerService()
+        entries = file_explorer.list_directory(str(full_path))
+
+        return {"success": True, "entries": entries, "current_path": str(full_path)}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error listing user directory: {str(e)}"
+        )
+
+
+class SetUserDirectoryRequest(BaseModel):
+    path: str
+
+
+@app.post("/api/user-directory/set")
+async def set_user_directory(request: SetUserDirectoryRequest):
+    """Set new user directory path"""
+    try:
+        from ..settings_manager import settings
+        new_path = Path(request.path)
+
+        # Validate path
+        if not new_path.is_absolute():
+            raise HTTPException(status_code=400, detail="Path must be absolute")
+
+        # Set the new user directory
+        success = settings.set_user_dir_path(new_path)
+
+        if success:
+            return {"success": True, "path": str(new_path)}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to set user directory")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error setting user directory: {str(e)}"
+        )
+
+
 # Project endpoints
 class OpenProjectRequest(BaseModel):
     root_path: str

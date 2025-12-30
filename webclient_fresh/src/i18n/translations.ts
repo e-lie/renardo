@@ -29,6 +29,7 @@ export const translations = {
     tutorials: 'Tutorials',
     musicExamples: 'Music Examples',
     projectExplorer: 'Project Explorer',
+    userDirectory: 'User Directory',
     addComponent: '+ Add Component',
     hidden: 'Hidden',
 
@@ -85,6 +86,7 @@ export const translations = {
     tutorials: 'Tutoriels',
     musicExamples: 'Exemples musicaux',
     projectExplorer: 'Explorateur de projet',
+    userDirectory: 'Répertoire utilisateur',
     addComponent: '+ Ajouter un composant',
     hidden: 'Masqué',
 
@@ -141,6 +143,7 @@ export const translations = {
     tutorials: 'Tutoriales',
     musicExamples: 'Ejemplos musicales',
     projectExplorer: 'Explorador de proyecto',
+    userDirectory: 'Directorio de usuario',
     addComponent: '+ Añadir componente',
     hidden: 'Oculto',
 
@@ -197,6 +200,7 @@ export const translations = {
     tutorials: 'Anleitungen',
     musicExamples: 'Musikbeispiele',
     projectExplorer: 'Projekt-Explorer',
+    userDirectory: 'Benutzerverzeichnis',
     addComponent: '+ Komponente hinzufügen',
     hidden: 'Versteckt',
 

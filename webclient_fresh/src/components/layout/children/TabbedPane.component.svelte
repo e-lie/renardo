@@ -8,6 +8,7 @@
   import { TutorialTab } from '../../tutorial'
   import { MusicExampleTab } from '../../music-example'
   import { ProjectExplorerTab } from '../../project-explorer'
+  import { UserDirectoryExplorerTab } from '../../user-directory-explorer'
   import { CodeExecConsole } from '../../index'
   import ClockDisplay from '../../clock/ClockDisplay.component.svelte'
 
@@ -29,6 +30,7 @@
     'TutorialTab': TutorialTab,
     'MusicExampleTab': MusicExampleTab,
     'ProjectExplorerTab': ProjectExplorerTab,
+    'UserDirectoryExplorerTab': UserDirectoryExplorerTab,
     'CodeExecConsole': CodeExecConsole,
     'ClockDisplay': ClockDisplay
   }
