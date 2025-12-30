@@ -6,6 +6,7 @@
   import CodeEditorWrapper from './CodeEditorWrapper.component.svelte'
   import TopMenu from './TopMenu.component.svelte'
   import { TutorialTab } from '../../tutorial'
+  import { MusicExampleTab } from '../../music-example'
   import { ProjectExplorerTab } from '../../project-explorer'
   import { CodeExecConsole } from '../../index'
   import ClockDisplay from '../../clock/ClockDisplay.component.svelte'
@@ -26,6 +27,7 @@
     'TopMenu': TopMenu,
     'CodeEditorWrapper': CodeEditorWrapper,
     'TutorialTab': TutorialTab,
+    'MusicExampleTab': MusicExampleTab,
     'ProjectExplorerTab': ProjectExplorerTab,
     'CodeExecConsole': CodeExecConsole,
     'ClockDisplay': ClockDisplay

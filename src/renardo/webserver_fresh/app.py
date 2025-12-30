@@ -141,6 +141,72 @@ async def clock_get_state():
     return await runtime_state.get_state()
 
 
+# Music Examples endpoints
+@app.get("/api/music-examples/files")
+async def get_music_example_files():
+    """Get list of music example files"""
+    try:
+        from ..tutorial import get_music_examples_path
+
+        music_examples_path = get_music_examples_path()
+        files = []
+
+        if music_examples_path.exists():
+            for file_path in music_examples_path.glob("*.py"):
+                files.append(
+                    {
+                        "name": file_path.name,
+                        "path": str(file_path),
+                        "url": f"/api/music-examples/files/{file_path.name}",
+                    }
+                )
+            files.sort(key=lambda x: x["name"])
+
+        return {"success": True, "files": files}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error loading music example files: {str(e)}"
+        )
+
+
+@app.get("/api/music-examples/files/{filename}")
+async def get_music_example_file(filename: str):
+    """Get content of a specific music example file"""
+    try:
+        from ..tutorial import get_music_examples_path
+
+        # Security: ensure we're staying within music_examples directory
+        if ".." in filename or "/" in filename:
+            raise HTTPException(status_code=400, detail="Invalid filename")
+
+        music_examples_path = get_music_examples_path()
+        file_path = music_examples_path / filename
+
+        # Security: ensure file exists and is within music_examples directory
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="Music example file not found")
+
+        # Additional security check
+        try:
+            file_path.resolve().relative_to(music_examples_path.resolve())
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Access denied")
+
+        # Read and return file content
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        return PlainTextResponse(content=content)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error reading music example file: {str(e)}"
+        )
+
+
 # Tutorial endpoints
 @app.get("/api/tutorial/files")
 async def get_tutorial_files(lang: str | None = None):

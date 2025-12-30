@@ -16,12 +16,15 @@
     return 'bg-surface-100 dark:bg-surface-900'
   }
 
-  function addTabToPane(position: string, componentType: 'TextArea' | 'CodeEditor' | 'CodeExecConsole' | 'TutorialTab') {
+  function addTabToPane(position: string, componentType: 'TextArea' | 'CodeEditor' | 'CodeExecConsole' | 'TutorialTab' | 'MusicExampleTab' | 'ProjectExplorerTab' | 'ClockDisplay') {
     const titles = {
       'TextArea': 'Text Area',
       'CodeEditor': 'Code Editor',
       'CodeExecConsole': 'ฅ^•ﻌ•^ฅ >> output',
-      'TutorialTab': 'Tutorials'
+      'TutorialTab': 'Tutorials',
+      'MusicExampleTab': 'Music Examples',
+      'ProjectExplorerTab': 'Project Explorer',
+      'ClockDisplay': 'Clock'
     }
     actions.addTab(position, {
       title: titles[componentType],
@@ -251,7 +254,7 @@
                         disabled={index === ($paneTabConfigs.get(position)?.length || 0) - 1}
                       >▼</button>
                     </div>
-                    <span>{tab.componentType === 'TextArea' ? '📝' : tab.componentType === 'CodeExecConsole' ? 'ฅ^•ﻌ•^ฅ' : tab.componentType === 'TutorialTab' ? '📚' : '💻'}</span>
+                    <span>{tab.componentType === 'TextArea' ? '📝' : tab.componentType === 'CodeExecConsole' ? 'ฅ^•ﻌ•^ฅ' : tab.componentType === 'TutorialTab' ? '📚' : tab.componentType === 'MusicExampleTab' ? '🎵' : tab.componentType === 'ProjectExplorerTab' ? '📁' : tab.componentType === 'ClockDisplay' ? '🕐' : '💻'}</span>
                     <span class="flex-1 truncate text-surface-900 dark:text-surface-50">{tab.title}</span>
                     {#if tab.closable}
                       <button class="text-error-500 hover:bg-error-500/20 rounded px-1" onclick={() => removeTabFromPane(position, tab.id)}>×</button>
@@ -272,8 +275,11 @@
                     <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700" onclick={() => { addTabToPane(position, 'CodeExecConsole'); openMenuPosition = null }}>
                       ฅ^•ﻌ•^ฅ Console Output
                     </button>
-                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-b-lg" onclick={() => { addTabToPane(position, 'TutorialTab'); openMenuPosition = null }}>
+                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700" onclick={() => { addTabToPane(position, 'TutorialTab'); openMenuPosition = null }}>
                       📚 Tutorials
+                    </button>
+                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-b-lg" onclick={() => { addTabToPane(position, 'MusicExampleTab'); openMenuPosition = null }}>
+                      🎵 Music Examples
                     </button>
                   </div>
                 {/if}
@@ -320,7 +326,7 @@
                         disabled={index === ($paneTabConfigs.get(position)?.length || 0) - 1}
                       >▼</button>
                     </div>
-                    <span>{tab.componentType === 'TextArea' ? '📝' : tab.componentType === 'CodeExecConsole' ? 'ฅ^•ﻌ•^ฅ' : tab.componentType === 'TutorialTab' ? '📚' : '💻'}</span>
+                    <span>{tab.componentType === 'TextArea' ? '📝' : tab.componentType === 'CodeExecConsole' ? 'ฅ^•ﻌ•^ฅ' : tab.componentType === 'TutorialTab' ? '📚' : tab.componentType === 'MusicExampleTab' ? '🎵' : tab.componentType === 'ProjectExplorerTab' ? '📁' : tab.componentType === 'ClockDisplay' ? '🕐' : '💻'}</span>
                     <span class="flex-1 truncate text-surface-900 dark:text-surface-50">{tab.title}</span>
                     {#if tab.closable}
                       <button class="text-error-500 hover:bg-error-500/20 rounded px-1" onclick={() => removeTabFromPane(position, tab.id)}>×</button>
@@ -341,8 +347,11 @@
                     <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700" onclick={() => { addTabToPane(position, 'CodeExecConsole'); openMenuPosition = null }}>
                       ฅ^•ﻌ•^ฅ Console Output
                     </button>
-                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-b-lg" onclick={() => { addTabToPane(position, 'TutorialTab'); openMenuPosition = null }}>
+                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700" onclick={() => { addTabToPane(position, 'TutorialTab'); openMenuPosition = null }}>
                       📚 Tutorials
+                    </button>
+                    <button class="w-full px-2 py-1 text-left text-xs hover:bg-surface-200 dark:hover:bg-surface-700 rounded-b-lg" onclick={() => { addTabToPane(position, 'MusicExampleTab'); openMenuPosition = null }}>
+                      🎵 Music Examples
                     </button>
                   </div>
                 {/if}

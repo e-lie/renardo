@@ -27,8 +27,9 @@ const initialState: LayoutStateInterface = {
       { id: 'tab-left-bottom-1', title: 'Scratch', componentType: 'TextArea', componentId: 'text-scratch', closable: true, active: true }
     ]],
     ['right-top', [
-      { id: 'tab-right-top-2', title: 'projectExplorer', componentType: 'ProjectExplorerTab', componentId: 'project-explorer-1', closable: true, active: false },
-      { id: 'tab-right-top-1', title: 'tutorials', componentType: 'TutorialTab', componentId: 'tutorial-1', closable: true, active: true },
+      { id: 'tab-right-top-3', title: 'projectExplorer', componentType: 'ProjectExplorerTab', componentId: 'project-explorer-1', closable: true, active: false },
+      { id: 'tab-right-top-2', title: 'musicExamples', componentType: 'MusicExampleTab', componentId: 'music-example-1', closable: true, active: true },
+      { id: 'tab-right-top-1', title: 'tutorials', componentType: 'TutorialTab', componentId: 'tutorial-1', closable: true, active: false },
     ]],
     ['right-middle', [
       { id: 'tab-right-middle-1', title: 'Clock', componentType: 'ClockDisplay', componentId: 'clock-1', closable: true, active: true }
