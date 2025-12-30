@@ -30,20 +30,6 @@ class WebSocketManager:
         await websocket.accept()
         self.active_connections.add(websocket)
 
-        # Send connection confirmation
-        await self.send_message(
-            websocket,
-            {
-                "type": MessageType.CONSOLE_MESSAGE,
-                "data": {
-                    "timestamp": datetime.now().isoformat(),
-                    "level": "info",
-                    "source": "system",
-                    "message": "WebSocket connected successfully",
-                },
-            },
-        )
-
     def disconnect(self, websocket: WebSocket):
         """Remove WebSocket connection"""
         self.active_connections.discard(websocket)

@@ -7,7 +7,7 @@
   import TopMenu from './TopMenu.component.svelte'
   import { TutorialTab } from '../../tutorial'
   import { ProjectExplorerTab } from '../../project-explorer'
-  import { ConsoleOutput } from '../../index'
+  import { CodeExecConsole } from '../../index'
   import ClockDisplay from '../../clock/ClockDisplay.component.svelte'
 
   let { position }: { position: PanePosition } = $props()
@@ -27,7 +27,7 @@
     'CodeEditorWrapper': CodeEditorWrapper,
     'TutorialTab': TutorialTab,
     'ProjectExplorerTab': ProjectExplorerTab,
-    'ConsoleOutput': ConsoleOutput,
+    'CodeExecConsole': CodeExecConsole,
     'ClockDisplay': ClockDisplay
   }
 

@@ -21,43 +21,38 @@
     }
   })
 
-  function getMessageClass(level: string): string {
-    switch (level.toLowerCase()) {
-      case 'info':
-        return 'text-info'
-      case 'command':
-        return 'text-accent font-bold'
-      case 'error':
-        return 'text-error font-bold'
-      case 'success':
-        return 'text-success'
-      case 'warn':
-        return 'text-warning'
-      default:
-        return ''
-    }
+  interface FormattedOutput {
+    type: 'code' | 'result' | 'error' | 'empty'
+    content: string
   }
 
-  function formatMessage(message: string): string {
+  function formatMessage(message: string): FormattedOutput {
     // Remove runtime prefixes from WebSocket messages
     if (message.startsWith('[runtime] ')) {
       const content = message.substring(10) // Remove '[runtime] '
-      
-      // Remove execution and result prefixes
+
+      // Handle code execution
       if (content.startsWith('Executing code: ')) {
-        return '' // Hide execution messages entirely
+        const code = content.substring(16)
+        return { type: 'code', content: code }
       }
+
+      // Handle execution result
       if (content.startsWith('Execution result: ')) {
-        return content.substring(18) // Show only the result
+        const result = content.substring(18)
+        return { type: 'result', content: result }
       }
+
+      // Handle execution error
       if (content.startsWith('Execution error: ')) {
-        return content.substring(17) // Show only the error message
+        const error = content.substring(17)
+        return { type: 'error', content: error }
       }
-      
-      return content
+
+      return { type: 'result', content }
     }
-    
-    return message
+
+    return { type: 'result', content: message }
   }
 </script>
 
@@ -69,9 +64,18 @@
       </div>
     {:else}
       {#each $messages as output}
-        {#if formatMessage(output.message) !== ''}
+        {@const formatted = formatMessage(output.message)}
+        {#if formatted.type !== 'empty'}
           <div class="mb-2">
-            <span class="{getMessageClass(output.level)} whitespace-pre-wrap">{formatMessage(output.message)}</span>
+            {#if formatted.type === 'code'}
+              <div class="text-primary-400">
+                <span class="opacity-50">>>> </span><span class="whitespace-pre-wrap">{formatted.content}</span>
+              </div>
+            {:else if formatted.type === 'error'}
+              <div class="text-error font-bold whitespace-pre-wrap ml-4">{formatted.content}</div>
+            {:else}
+              <div class="text-success-400 whitespace-pre-wrap ml-4">{formatted.content}</div>
+            {/if}
           </div>
         {/if}
       {/each}

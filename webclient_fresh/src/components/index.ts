@@ -8,4 +8,4 @@ export { default as Navbar } from './shared/Navbar.component.svelte'
 export * from './tutorial'
 
 // Console
-export { default as ConsoleOutput } from './console/ConsoleOutput.component.svelte'
+export { default as CodeExecConsole } from './console/CodeExecConsole.component.svelte'
