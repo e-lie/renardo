@@ -40,7 +40,7 @@ const initialState: LayoutStateInterface = {
       { id: 'tab-bottom-left-1', title: 'Draft', componentType: 'TextArea', componentId: 'text-4', closable: true, active: true }
     ]],
     ['bottom-right', [
-      { id: 'tab-bottom-right-1', title: 'ฅ^•ﻌ•^ฅ >> output', componentType: 'ConsoleOutput', componentId: 'console-1', closable: true, active: true }
+      { id: 'tab-bottom-right-1', title: 'ฅ^•ﻌ•^ฅ >> output', componentType: 'CodeExecConsole', componentId: 'console-1', closable: true, active: true }
     ]]
   ]),
   paneVisibility: new Map([

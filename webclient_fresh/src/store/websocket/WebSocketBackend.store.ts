@@ -43,7 +43,6 @@ function connectWebSocket() {
     ws = new WebSocket(wsUrl)
 
     ws.onopen = () => {
-      console.log('WebSocket connected')
       reconnectAttempts = 0
       writableWebSocketStore.update(state => ({ 
         ...state, 

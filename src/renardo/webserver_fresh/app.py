@@ -5,6 +5,8 @@ from pydantic import BaseModel
 from pathlib import Path
 from typing import List
 import os
+import sys
+from io import StringIO
 
 from .file_explorer import DirectoryEntry, FileExplorerService
 from .project import Project, project_service
@@ -52,13 +54,29 @@ async def execute_code(request: ExecuteCodeRequest):
         await websocket_manager.send_console_message(
             "info",
             "runtime",
-            f"Executing code: {request.code[:100]}{'...' if len(request.code) > 100 else ''}",
+            f"Executing code: {request.code}",
         )
 
-        result = execute(request.code, verbose=True)
+        # Capture stdout during execution
+        old_stdout = sys.stdout
+        sys.stdout = captured_output = StringIO()
 
-        # Send execution result
-        if result:
+        try:
+            result = execute(request.code, verbose=False)
+        finally:
+            sys.stdout = old_stdout
+
+        # Get captured output
+        output_text = captured_output.getvalue()
+
+        # Send stdout output if any
+        if output_text.strip():
+            await websocket_manager.send_console_message(
+                "info", "runtime", f"Execution result: {output_text.strip()}"
+            )
+
+        # Send return value if different from None and not already printed
+        elif result is not None:
             await websocket_manager.send_console_message(
                 "info", "runtime", f"Execution result: {str(result)}"
             )
@@ -66,9 +84,12 @@ async def execute_code(request: ExecuteCodeRequest):
         return ExecuteCodeResponse(
             success=True,
             message="Code executed successfully",
-            output=str(result) if result else None,
+            output=output_text if output_text else (str(result) if result else None),
         )
     except Exception as e:
+        # Restore stdout if error occurred
+        sys.stdout = old_stdout
+
         # Send error message
         await websocket_manager.send_console_message(
             "error", "runtime", f"Execution error: {str(e)}"
