@@ -101,8 +101,8 @@
 /* Add glassmorphism blur effect to cards and surfaces */
 [data-theme='glass'] .card,
 [data-theme='glass'] [class*='bg-surface'] {
-  backdrop-filter: blur(12px) saturate(150%);
-  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 /* Force text to be fully opaque in glass theme */
@@ -117,13 +117,17 @@
     0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-/* Stronger text shadow for code editor */
+/* Stronger text shadow for code editor - black box behind text */
 [data-theme='glass'] .cm-content,
 [data-theme='glass'] .cm-content * {
   text-shadow:
-    0 0 10px rgba(0, 0, 0, 0.9),
-    0 0 15px rgba(0, 0, 0, 0.7),
-    0 2px 4px rgba(0, 0, 0, 1) !important;
+    -2px -2px 6px rgba(0, 0, 0, 1),
+    2px -2px 6px rgba(0, 0, 0, 1),
+    -2px 2px 6px rgba(0, 0, 0, 1),
+    2px 2px 6px rgba(0, 0, 0, 1),
+    0 0 10px rgba(0, 0, 0, 1),
+    0 0 15px rgba(0, 0, 0, 0.9),
+    0 2px 8px rgba(0, 0, 0, 1) !important;
 }
 
 [data-theme='glass'] .text-surface-900:not(.cm-content *),
