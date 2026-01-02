@@ -6,6 +6,7 @@
   const { translate } = i18n.getters;
 
   const SKELETON_THEMES = [
+    'glass',
     'cerberus',
     'catppuccin',
     'concord',
