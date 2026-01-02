@@ -110,29 +110,41 @@
   color: oklch(0.95 0 0);
 }
 
+/* Text shadow for all interface text - light */
 [data-theme='glass'] * {
-  color: inherit;
+  text-shadow:
+    0 0 4px rgba(0, 0, 0, 0.4),
+    0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-[data-theme='glass'] .text-surface-900,
-[data-theme='glass'] .dark\:text-surface-50 {
+/* Stronger text shadow for code editor */
+[data-theme='glass'] .cm-content,
+[data-theme='glass'] .cm-content * {
+  text-shadow:
+    0 0 10px rgba(0, 0, 0, 0.9),
+    0 0 15px rgba(0, 0, 0, 0.7),
+    0 2px 4px rgba(0, 0, 0, 1) !important;
+}
+
+[data-theme='glass'] .text-surface-900:not(.cm-content *),
+[data-theme='glass'] .dark\:text-surface-50:not(.cm-content *) {
   color: oklch(0.95 0 0) !important;
 }
 
-[data-theme='glass'] .text-surface-600,
-[data-theme='glass'] .dark\:text-surface-400 {
+[data-theme='glass'] .text-surface-600:not(.cm-content *),
+[data-theme='glass'] .dark\:text-surface-400:not(.cm-content *) {
   color: oklch(0.8 0 0) !important;
 }
 
-[data-theme='glass'] .text-primary-400 {
+[data-theme='glass'] .text-primary-400:not(.cm-content *) {
   color: oklch(0.75 0.15 280) !important;
 }
 
-[data-theme='glass'] .text-success-400 {
+[data-theme='glass'] .text-success-400:not(.cm-content *) {
   color: oklch(0.75 0.14 150) !important;
 }
 
-[data-theme='glass'] .text-error {
+[data-theme='glass'] .text-error:not(.cm-content *) {
   color: oklch(0.75 0.15 30) !important;
 }
 
@@ -198,4 +210,23 @@ body {
 
 [data-theme='glass'] * {
   background-color: transparent;
+}
+
+/* CodeMirror syntax highlighting preserved in glass theme */
+[data-theme='glass'] .cm-editor {
+  background-color: transparent !important;
+}
+
+[data-theme='glass'] .cm-scroller {
+  background-color: transparent !important;
+}
+
+[data-theme='glass'] .cm-gutters {
+  background-color: transparent !important;
+}
+
+
+/* Keep syntax colors vivid and preserve highlighting */
+[data-theme='glass'] .cm-content * {
+  background-color: transparent !important;
 }
