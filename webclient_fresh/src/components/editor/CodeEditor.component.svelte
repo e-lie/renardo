@@ -40,6 +40,7 @@
       readonly={false}
       placeholder=""
       theme={$settings.theme}
+      showLineNumbers={$settings.showLineNumbers}
       testid="code-editor"
       onchange={handleChange}
       onexecute={handleExecute}

@@ -21,6 +21,8 @@ export const translations = {
     // Themes
     syntaxTheme: 'Syntax Theme',
     skeletonUITheme: 'Skeleton UI Theme',
+    showLineNumbers: 'Show Line Numbers',
+    showLineNumbersDescription: 'Display line numbers in the code editor',
 
     // Layout
     textArea: 'Text Area',
@@ -78,6 +80,8 @@ export const translations = {
     // Themes
     syntaxTheme: 'Thème de syntaxe',
     skeletonUITheme: 'Thème de l\'interface',
+    showLineNumbers: 'Afficher les numéros de ligne',
+    showLineNumbersDescription: 'Afficher les numéros de ligne dans l\'éditeur de code',
 
     // Layout
     textArea: 'Zone de texte',
@@ -135,6 +139,8 @@ export const translations = {
     // Themes
     syntaxTheme: 'Tema de sintaxis',
     skeletonUITheme: 'Tema de interfaz',
+    showLineNumbers: 'Mostrar números de línea',
+    showLineNumbersDescription: 'Mostrar números de línea en el editor de código',
 
     // Layout
     textArea: 'Área de texto',
@@ -192,6 +198,8 @@ export const translations = {
     // Themes
     syntaxTheme: 'Syntax-Theme',
     skeletonUITheme: 'UI-Theme',
+    showLineNumbers: 'Zeilennummern anzeigen',
+    showLineNumbersDescription: 'Zeilennummern im Code-Editor anzeigen',
 
     // Layout
     textArea: 'Textbereich',
