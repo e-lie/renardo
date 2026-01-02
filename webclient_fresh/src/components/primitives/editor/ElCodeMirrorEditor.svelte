@@ -43,6 +43,7 @@
   const themeCompartment = new Compartment();
   const lineNumbersCompartment = new Compartment();
   const vimCompartment = new Compartment();
+  const baseStyleCompartment = new Compartment();
 
   // Sync local content with prop
   $effect(() => {
@@ -97,6 +98,50 @@
 
       editorView.dispatch({
         effects: vimCompartment.reconfigure(currentVimMode ? vim() : [])
+      });
+    }
+  });
+
+  // Update font family when prop changes
+  $effect(() => {
+    const currentFontFamily = fontFamily;
+
+    if (editorView) {
+      logger.info('ElCodeMirrorEditor', 'Font family prop changed, updating editor', { fontFamily: currentFontFamily });
+
+      editorView.dispatch({
+        effects: baseStyleCompartment.reconfigure(
+          EditorView.theme({
+            '&': {
+              height: '100%',
+              fontSize: '14px',
+              fontFamily: `${currentFontFamily}, "JetBrains Mono", "Consolas", monospace`,
+              position: 'relative',
+            },
+            '.cm-scroller': {
+              overflow: 'auto',
+              fontFamily: `${currentFontFamily}, "JetBrains Mono", "Consolas", monospace`,
+              position: 'absolute',
+              top: '0',
+              left: '0',
+              right: '0',
+              bottom: '0',
+            },
+            '.cm-content': {
+              padding: '16px',
+              lineHeight: '1.5',
+            },
+            '.cm-focused': {
+              outline: 'none',
+            },
+            '.cm-editor': {
+              height: '100%',
+            },
+            '.cm-line': {
+              padding: '0 0',
+            },
+          })
+        )
       });
     }
   });
@@ -287,37 +332,39 @@
     const startState = EditorState.create({
       doc: content,
       extensions: [
-        // Base editor styling
-        EditorView.theme({
-          '&': {
-            height: '100%',
-            fontSize: '14px',
-            fontFamily: `${fontFamily}, "JetBrains Mono", "Consolas", monospace`,
-            position: 'relative',
-          },
-          '.cm-scroller': {
-            overflow: 'auto',
-            fontFamily: `${fontFamily}, "JetBrains Mono", "Consolas", monospace`,
-            position: 'absolute',
-            top: '0',
-            left: '0',
-            right: '0',
-            bottom: '0',
-          },
-          '.cm-content': {
-            padding: '16px',
-            lineHeight: '1.5',
-          },
-          '.cm-focused': {
-            outline: 'none',
-          },
-          '.cm-editor': {
-            height: '100%',
-          },
-          '.cm-line': {
-            padding: '0 0',
-          },
-        }),
+        // Base editor styling (with compartment for dynamic font updates)
+        baseStyleCompartment.of(
+          EditorView.theme({
+            '&': {
+              height: '100%',
+              fontSize: '14px',
+              fontFamily: `${fontFamily}, "JetBrains Mono", "Consolas", monospace`,
+              position: 'relative',
+            },
+            '.cm-scroller': {
+              overflow: 'auto',
+              fontFamily: `${fontFamily}, "JetBrains Mono", "Consolas", monospace`,
+              position: 'absolute',
+              top: '0',
+              left: '0',
+              right: '0',
+              bottom: '0',
+            },
+            '.cm-content': {
+              padding: '16px',
+              lineHeight: '1.5',
+            },
+            '.cm-focused': {
+              outline: 'none',
+            },
+            '.cm-editor': {
+              height: '100%',
+            },
+            '.cm-line': {
+              padding: '0 0',
+            },
+          })
+        ),
 
         // Theme (with compartment for dynamic updates)
         themeCompartment.of(getTheme(theme)),

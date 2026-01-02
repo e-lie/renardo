@@ -2,6 +2,24 @@
 
 @import '@skeletonlabs/skeleton';
 @import '@skeletonlabs/skeleton-svelte';
+
+/* JGS Fonts */
+@font-face {
+  font-family: 'JGS5';
+  src: url('/fonts/jgs/jgs5.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JGS7';
+  src: url('/fonts/jgs/jgs7.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JGS9';
+  src: url('/fonts/jgs/jgs9.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JGS';
+  src: url('/fonts/jgs/jgs_Font.woff2') format('woff2');
+}
 @import '@skeletonlabs/skeleton/themes/cerberus';
 @import '@skeletonlabs/skeleton/themes/catppuccin';
 @import '@skeletonlabs/skeleton/themes/concord';
