@@ -162,16 +162,16 @@
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
       event.preventDefault();
       event.stopPropagation();
-      
+
       if (editorView) {
         // Get current block of code
         const block = getCurrentBlock(editorView);
-        
+
         // Create execution highlight
         createExecutionHighlight(editorView, block.from, block.to);
-        
+
         // Execute block
-        logger.debug('ElCodeMirrorEditor', 'Executing code block', { 
+        logger.debug('ElCodeMirrorEditor', 'Executing code block', {
           codeLength: block.text.length,
           from: block.from,
           to: block.to
@@ -180,7 +180,52 @@
       }
       return;
     }
-    
+
+    // Alt+Enter for current line execution
+    if (event.altKey && event.key === 'Enter') {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (editorView) {
+        const state = editorView.state;
+        const cursorPos = state.selection.main.head;
+        const line = state.doc.lineAt(cursorPos);
+        const lineText = line.text;
+
+        // Create execution highlight
+        createExecutionHighlight(editorView, line.from, line.to);
+
+        // Execute line
+        logger.debug('ElCodeMirrorEditor', 'Executing current line', {
+          lineText,
+          from: line.from,
+          to: line.to
+        });
+        onexecute?.(lineText);
+      }
+      return;
+    }
+
+    // Shift+Enter for executing all code in editor
+    if (event.shiftKey && event.key === 'Enter') {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (editorView) {
+        const allCode = editorView.state.doc.toString();
+
+        // Create execution highlight for whole document
+        createExecutionHighlight(editorView, 0, editorView.state.doc.length);
+
+        // Execute all code
+        logger.debug('ElCodeMirrorEditor', 'Executing all code', {
+          codeLength: allCode.length
+        });
+        onexecute?.(allCode);
+      }
+      return;
+    }
+
     // Ctrl+. or Cmd+. for Clock.clear()
     if ((event.ctrlKey || event.metaKey) && event.key === '.') {
       event.preventDefault();
