@@ -27,7 +27,7 @@ export function initBackgroundCanvas() {
   const h = hydra.synth
 
   // Run the Hydra code
-  h.osc().modulate(h.noise(3)).out()
+  h.solid().modulate(h.noise(3)).out()
 
   // Handle window resize
   const resize = () => {

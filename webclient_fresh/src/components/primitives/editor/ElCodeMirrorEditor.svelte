@@ -5,6 +5,7 @@
   import { defaultKeymap, indentWithTab, standardKeymap, insertTab } from '@codemirror/commands';
   import { python } from '@codemirror/lang-python';
   import { highlightSelectionMatches } from '@codemirror/search';
+  import { vim } from '@replit/codemirror-vim';
   import { logger } from '../../../services/logger.service';
   import { getTheme } from '../../../lib/themes/codemirror-themes';
 
@@ -15,6 +16,8 @@
     placeholder = 'Enter your code here...',
     theme = 'dracula',
     showLineNumbers = true,
+    vimMode = false,
+    fontFamily = 'Fira Code',
     testid = 'not-set',
     onchange,
     onexecute,
@@ -25,6 +28,8 @@
     placeholder?: string;
     theme?: string;
     showLineNumbers?: boolean;
+    vimMode?: boolean;
+    fontFamily?: string;
     testid?: string;
     onchange?: (value: string) => void;
     onexecute?: (code: string) => void;
@@ -37,6 +42,7 @@
   // Theme compartment for dynamic reconfiguration
   const themeCompartment = new Compartment();
   const lineNumbersCompartment = new Compartment();
+  const vimCompartment = new Compartment();
 
   // Sync local content with prop
   $effect(() => {
@@ -78,6 +84,19 @@
 
       editorView.dispatch({
         effects: lineNumbersCompartment.reconfigure(currentShowLineNumbers ? lineNumbers() : [])
+      });
+    }
+  });
+
+  // Update vim mode when prop changes
+  $effect(() => {
+    const currentVimMode = vimMode;
+
+    if (editorView) {
+      logger.info('ElCodeMirrorEditor', 'Vim mode prop changed, updating editor', { vimMode: currentVimMode });
+
+      editorView.dispatch({
+        effects: vimCompartment.reconfigure(currentVimMode ? vim() : [])
       });
     }
   });
@@ -273,12 +292,12 @@
           '&': {
             height: '100%',
             fontSize: '14px',
-            fontFamily: 'Fira Code, "JetBrains Mono", "Consolas", monospace',
+            fontFamily: `${fontFamily}, "JetBrains Mono", "Consolas", monospace`,
             position: 'relative',
           },
           '.cm-scroller': {
             overflow: 'auto',
-            fontFamily: 'Fira Code, "JetBrains Mono", "Consolas", monospace',
+            fontFamily: `${fontFamily}, "JetBrains Mono", "Consolas", monospace`,
             position: 'absolute',
             top: '0',
             left: '0',
@@ -305,6 +324,9 @@
 
         // Line numbers (with compartment for dynamic updates)
         lineNumbersCompartment.of(showLineNumbers ? lineNumbers() : []),
+
+        // Vim mode (with compartment for dynamic updates)
+        vimCompartment.of(vimMode ? vim() : []),
 
         // Language support
         getLanguageSupport(language),
