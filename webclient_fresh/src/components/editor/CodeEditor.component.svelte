@@ -41,6 +41,8 @@
       placeholder=""
       theme={$settings.theme}
       showLineNumbers={$settings.showLineNumbers}
+      vimMode={$settings.vimMode}
+      fontFamily={$settings.fontFamily}
       testid="code-editor"
       onchange={handleChange}
       onexecute={handleExecute}

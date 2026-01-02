@@ -52,6 +52,7 @@
     "@codemirror/view": "^6.39.4",
     "@keenmate/svelte-treeview": "^4.4.0",
     "@lezer/highlight": "^1.2.3",
+    "@replit/codemirror-vim": "^6.3.0",
     "@urql/core": "^4.0.15",
     "@urql/svelte": "^4.0.4",
     "graphql": "^16.8.1",

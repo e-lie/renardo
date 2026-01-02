@@ -23,6 +23,10 @@ export const translations = {
     skeletonUITheme: 'Skeleton UI Theme',
     showLineNumbers: 'Show Line Numbers',
     showLineNumbersDescription: 'Display line numbers in the code editor',
+    vimMode: 'Vim Mode',
+    vimModeDescription: 'Enable Vim keybindings in the code editor',
+    fontFamily: 'Font Family',
+    fontFamilyDescription: 'Choose the font for the code editor',
 
     // Layout
     textArea: 'Text Area',
@@ -82,6 +86,10 @@ export const translations = {
     skeletonUITheme: 'Thème de l\'interface',
     showLineNumbers: 'Afficher les numéros de ligne',
     showLineNumbersDescription: 'Afficher les numéros de ligne dans l\'éditeur de code',
+    vimMode: 'Mode Vim',
+    vimModeDescription: 'Activer les raccourcis Vim dans l\'éditeur de code',
+    fontFamily: 'Police de caractères',
+    fontFamilyDescription: 'Choisir la police pour l\'éditeur de code',
 
     // Layout
     textArea: 'Zone de texte',
@@ -141,6 +149,10 @@ export const translations = {
     skeletonUITheme: 'Tema de interfaz',
     showLineNumbers: 'Mostrar números de línea',
     showLineNumbersDescription: 'Mostrar números de línea en el editor de código',
+    vimMode: 'Modo Vim',
+    vimModeDescription: 'Activar atajos de teclado Vim en el editor de código',
+    fontFamily: 'Familia de fuentes',
+    fontFamilyDescription: 'Elegir la fuente para el editor de código',
 
     // Layout
     textArea: 'Área de texto',
@@ -200,6 +212,10 @@ export const translations = {
     skeletonUITheme: 'UI-Theme',
     showLineNumbers: 'Zeilennummern anzeigen',
     showLineNumbersDescription: 'Zeilennummern im Code-Editor anzeigen',
+    vimMode: 'Vim-Modus',
+    vimModeDescription: 'Vim-Tastenkombinationen im Code-Editor aktivieren',
+    fontFamily: 'Schriftart',
+    fontFamilyDescription: 'Schriftart für den Code-Editor wählen',
 
     // Layout
     textArea: 'Textbereich',
