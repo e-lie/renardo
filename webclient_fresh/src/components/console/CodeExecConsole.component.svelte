@@ -56,7 +56,7 @@
   }
 </script>
 
-<div class="card h-full bg-neutral-950">
+<div class="card h-full bg-surface-100 dark:bg-surface-900">
   <div class="overflow-y-auto h-full p-4 font-mono text-sm" bind:this={consoleContainer}>
     {#if $messages.length === 0}
       <div class="flex items-center justify-center h-full opacity-50 italic text-neutral-400">

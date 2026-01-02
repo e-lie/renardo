@@ -18,7 +18,7 @@
   )
 
   const cssClass = $derived(
-    `${sizeClass} bg-surface-300 dark:bg-surface-600 ${cursorClass} hover:bg-primary-500 transition-colors flex-shrink-0`
+    `${sizeClass} bg-surface-100 dark:bg-surface-900 ${cursorClass} hover:bg-primary-500 transition-colors flex-shrink-0`
   )
 </script>
 
