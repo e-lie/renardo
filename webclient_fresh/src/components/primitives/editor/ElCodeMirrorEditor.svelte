@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { EditorView, keymap, placeholder as cmPlaceholder } from '@codemirror/view';
+  import { EditorView, keymap, placeholder as cmPlaceholder, lineNumbers } from '@codemirror/view';
   import { EditorState, Compartment } from '@codemirror/state';
   import { defaultKeymap, indentWithTab, standardKeymap, insertTab } from '@codemirror/commands';
   import { python } from '@codemirror/lang-python';
@@ -14,6 +14,7 @@
     readonly = false,
     placeholder = 'Enter your code here...',
     theme = 'dracula',
+    showLineNumbers = true,
     testid = 'not-set',
     onchange,
     onexecute,
@@ -23,6 +24,7 @@
     readonly?: boolean;
     placeholder?: string;
     theme?: string;
+    showLineNumbers?: boolean;
     testid?: string;
     onchange?: (value: string) => void;
     onexecute?: (code: string) => void;
@@ -34,6 +36,7 @@
 
   // Theme compartment for dynamic reconfiguration
   const themeCompartment = new Compartment();
+  const lineNumbersCompartment = new Compartment();
 
   // Sync local content with prop
   $effect(() => {
@@ -62,6 +65,19 @@
 
       editorView.dispatch({
         effects: themeCompartment.reconfigure(getTheme(currentTheme))
+      });
+    }
+  });
+
+  // Update line numbers when prop changes
+  $effect(() => {
+    const currentShowLineNumbers = showLineNumbers;
+
+    if (editorView) {
+      logger.info('ElCodeMirrorEditor', 'Line numbers prop changed, updating editor', { showLineNumbers: currentShowLineNumbers });
+
+      editorView.dispatch({
+        effects: lineNumbersCompartment.reconfigure(currentShowLineNumbers ? lineNumbers() : [])
       });
     }
   });
@@ -286,6 +302,9 @@
 
         // Theme (with compartment for dynamic updates)
         themeCompartment.of(getTheme(theme)),
+
+        // Line numbers (with compartment for dynamic updates)
+        lineNumbersCompartment.of(showLineNumbers ? lineNumbers() : []),
 
         // Language support
         getLanguageSupport(language),
