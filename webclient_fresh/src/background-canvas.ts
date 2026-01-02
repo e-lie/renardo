@@ -1,3 +1,5 @@
+import Hydra from 'hydra-synth'
+
 export function initBackgroundCanvas() {
   const container = document.getElementById('background-canvas-container')
   if (!container) {
@@ -11,36 +13,28 @@ export function initBackgroundCanvas() {
   container.appendChild(canvas)
 
   // Set canvas size to window size
+  canvas.width = window.innerWidth
+  canvas.height = window.innerHeight
+
+  // Initialize Hydra
+  const hydra = new Hydra({
+    canvas,
+    detectAudio: false,
+    enableStreamCapture: false,
+  })
+
+  // Make Hydra functions available globally on the hydra instance
+  const h = hydra.synth
+
+  // Run the Hydra code
+  h.osc().out()
+
+  // Handle window resize
   const resize = () => {
     canvas.width = window.innerWidth
     canvas.height = window.innerHeight
-    drawGradient()
   }
-
-  // Draw purple to black gradient
-  const drawGradient = () => {
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    // Create diagonal gradient (top-left to bottom-right)
-    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height)
-
-    // Purple to black gradient
-    gradient.addColorStop(0, '#5a3f9e')    // Purple
-    gradient.addColorStop(0.25, '#3d2a6d') // Dark purple
-    gradient.addColorStop(0.5, '#221844')  // Very dark purple
-    gradient.addColorStop(0.75, '#0f0a1f') // Almost black
-    gradient.addColorStop(1, '#000000')    // Black
-
-    ctx.fillStyle = gradient
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-  }
-
-  // Initial draw
-  resize()
-
-  // Resize on window resize
   window.addEventListener('resize', resize)
 
-  return canvas
+  return { canvas, hydra }
 }
