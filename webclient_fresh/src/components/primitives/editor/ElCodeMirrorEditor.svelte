@@ -102,49 +102,77 @@
     }
   });
 
-  // Update font family when prop changes
+  // Update font family when prop changes with lazy loading
   $effect(() => {
     const currentFontFamily = fontFamily;
 
     if (editorView) {
       logger.info('ElCodeMirrorEditor', 'Font family prop changed, updating editor', { fontFamily: currentFontFamily });
 
-      editorView.dispatch({
-        effects: baseStyleCompartment.reconfigure(
-          EditorView.theme({
-            '&': {
-              height: '100%',
-              fontSize: '14px',
-              fontFamily: `${currentFontFamily}, "JetBrains Mono", "Consolas", monospace`,
-              position: 'relative',
-            },
-            '.cm-scroller': {
-              overflow: 'auto',
-              fontFamily: `${currentFontFamily}, "JetBrains Mono", "Consolas", monospace`,
-              position: 'absolute',
-              top: '0',
-              left: '0',
-              right: '0',
-              bottom: '0',
-            },
-            '.cm-content': {
-              padding: '16px',
-              lineHeight: '1.5',
-            },
-            '.cm-focused': {
-              outline: 'none',
-            },
-            '.cm-editor': {
-              height: '100%',
-            },
-            '.cm-line': {
-              padding: '0 0',
-            },
-          })
-        )
-      });
+      // Lazy load JGS fonts if needed
+      const jgsFonts = ['JGS', 'JGS5', 'JGS7', 'JGS9'];
+      if (jgsFonts.includes(currentFontFamily)) {
+        const fontMap = {
+          'JGS': '12px JGS',
+          'JGS5': '12px JGS5',
+          'JGS7': '12px JGS7',
+          'JGS9': '12px JGS9'
+        };
+
+        logger.debug('ElCodeMirrorEditor', 'Lazy loading JGS font', { fontFamily: currentFontFamily });
+
+        // Load the font before applying it
+        document.fonts.load(fontMap[currentFontFamily as keyof typeof fontMap]).then(() => {
+          logger.debug('ElCodeMirrorEditor', 'JGS font loaded successfully', { fontFamily: currentFontFamily });
+          applyFontStyle(currentFontFamily);
+        }).catch((err) => {
+          logger.error('ElCodeMirrorEditor', 'Failed to load JGS font', { fontFamily: currentFontFamily, error: err });
+          applyFontStyle(currentFontFamily); // Apply anyway
+        });
+      } else {
+        applyFontStyle(currentFontFamily);
+      }
     }
   });
+
+  function applyFontStyle(currentFontFamily: string) {
+    if (!editorView) return;
+
+    editorView.dispatch({
+      effects: baseStyleCompartment.reconfigure(
+        EditorView.theme({
+          '&': {
+            height: '100%',
+            fontSize: '14px',
+            fontFamily: `${currentFontFamily}, "JetBrains Mono", "Consolas", monospace`,
+            position: 'relative',
+          },
+          '.cm-scroller': {
+            overflow: 'auto',
+            fontFamily: `${currentFontFamily}, "JetBrains Mono", "Consolas", monospace`,
+            position: 'absolute',
+            top: '0',
+            left: '0',
+            right: '0',
+            bottom: '0',
+          },
+          '.cm-content': {
+            padding: '16px',
+            lineHeight: '1.5',
+          },
+          '.cm-focused': {
+            outline: 'none',
+          },
+          '.cm-editor': {
+            height: '100%',
+          },
+          '.cm-line': {
+            padding: '0 0',
+          },
+        })
+      )
+    });
+  }
 
   // Language support with enhanced syntax highlighting
   function getLanguageSupport(lang: string) {
