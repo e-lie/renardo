@@ -12,12 +12,16 @@ from .file_explorer import DirectoryEntry, FileExplorerService
 from .project import Project, project_service
 from .websocket.routes import router as websocket_router
 from .websocket.manager import websocket_manager
+from .sc_backend.routes import router as sc_backend_router, init_sc_service
 from ..logger import get_main_logger
 
 app = FastAPI(title="Renardo WebServer Fresh", version="1.0.0")
 
 # Include WebSocket routes
 app.include_router(websocket_router, prefix="/ws", tags=["websocket"])
+
+# Include SC Backend routes
+app.include_router(sc_backend_router)
 
 # Configure CORS
 app.add_middleware(
@@ -125,6 +129,12 @@ async def startup_runtime_state():
     """Start runtime state monitoring on server startup"""
     from .websocket.runtime_state import runtime_state
     await runtime_state.start()
+
+
+@app.on_event("startup")
+async def startup_sc_backend_service():
+    """Initialize SC backend service with WebSocket manager"""
+    init_sc_service(websocket_manager)
 
 
 @app.on_event("shutdown")
