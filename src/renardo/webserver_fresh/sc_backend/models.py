@@ -41,3 +41,20 @@ class AudioDeviceSettingRequest(BaseModel):
 
 class AudioDeviceSettingResponse(BaseModel):
     audio_output_index: int
+
+
+class ChannelsSettingRequest(BaseModel):
+    num_output_channels: int
+    num_input_channels: int
+
+
+class ChannelsSettingResponse(BaseModel):
+    num_output_channels: int
+    num_input_channels: int
+
+
+class ReconfigureResponse(BaseModel):
+    success: bool
+    message: str
+    regenerated: bool
+    restarted: bool

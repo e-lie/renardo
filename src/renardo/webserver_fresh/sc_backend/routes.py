@@ -3,7 +3,9 @@ from .models import (
     StartBackendRequest, StartBackendResponse,
     StopBackendResponse, StatusResponse,
     AudioDevicesResponse, LaunchIDEResponse,
-    AudioDeviceSettingRequest, AudioDeviceSettingResponse
+    AudioDeviceSettingRequest, AudioDeviceSettingResponse,
+    ChannelsSettingRequest, ChannelsSettingResponse,
+    ReconfigureResponse
 )
 
 router = APIRouter(prefix="/api/sc-backend", tags=["sc-backend"])
@@ -113,3 +115,53 @@ async def set_audio_device_setting(request: AudioDeviceSettingRequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error setting device: {str(e)}")
+
+
+@router.get("/settings/channels", response_model=ChannelsSettingResponse)
+async def get_channels_setting():
+    """Get current channels settings."""
+    if sc_service is None:
+        raise HTTPException(status_code=500, detail="SC service not initialized")
+
+    try:
+        channels = sc_service.get_channels_settings()
+        return ChannelsSettingResponse(**channels)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting channels: {str(e)}")
+
+
+@router.post("/settings/channels", response_model=ChannelsSettingResponse)
+async def set_channels_setting(request: ChannelsSettingRequest):
+    """Set channels settings and regenerate SC files."""
+    if sc_service is None:
+        raise HTTPException(status_code=500, detail="SC service not initialized")
+
+    try:
+        success = await sc_service.set_channels_settings(
+            request.num_output_channels,
+            request.num_input_channels
+        )
+        if success:
+            return ChannelsSettingResponse(
+                num_output_channels=request.num_output_channels,
+                num_input_channels=request.num_input_channels
+            )
+        else:
+            raise HTTPException(status_code=500, detail="Failed to set channels")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error setting channels: {str(e)}")
+
+
+@router.post("/reconfigure", response_model=ReconfigureResponse)
+async def reconfigure_backend():
+    """Regenerate SC files, stop and restart backend with new configuration."""
+    if sc_service is None:
+        raise HTTPException(status_code=500, detail="SC service not initialized")
+
+    try:
+        result = await sc_service.reconfigure_backend()
+        return ReconfigureResponse(**result)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reconfiguring: {str(e)}")

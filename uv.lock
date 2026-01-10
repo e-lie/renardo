@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.9"
 resolution-markers = [
     "python_full_version >= '3.11'",
@@ -1749,6 +1749,7 @@ dependencies = [
     { name = "gevent-websocket" },
     { name = "gunicorn" },
     { name = "indexed" },
+    { name = "jinja2" },
     { name = "linkpython-extern" },
     { name = "markdown" },
     { name = "midiutil" },
@@ -1788,6 +1789,7 @@ requires-dist = [
     { name = "gevent-websocket" },
     { name = "gunicorn" },
     { name = "indexed" },
+    { name = "jinja2", specifier = ">=3.1.0" },
     { name = "linkpython-extern", specifier = ">=1.1.0" },
     { name = "markdown", specifier = ">=3.5.1" },
     { name = "midiutil" },

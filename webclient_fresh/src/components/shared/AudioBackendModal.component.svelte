@@ -22,17 +22,29 @@
     isLoading,
     error,
     showDeviceSelector,
-    scLogs
+    scLogs,
+    channels
   } = getters
 
   // Local state
   let showManualSetup = $state(false)
+  let numOutputChannels = $state(8)
+  let numInputChannels = $state(8)
 
   // Load data on modal open
   $effect(() => {
     if (isOpen) {
       actions.loadStatus()
       actions.loadAudioDevices()
+      actions.loadChannels()
+    }
+  })
+
+  // Sync local state with store
+  $effect(() => {
+    if ($channels) {
+      numOutputChannels = $channels.numOutputChannels
+      numInputChannels = $channels.numInputChannels
     }
   })
 
@@ -62,6 +74,14 @@
 
   async function handleLaunchIDE() {
     await actions.launchIDE()
+  }
+
+  async function handleChannelsChange() {
+    await actions.setChannels(numOutputChannels, numInputChannels)
+  }
+
+  async function handleReconfigure() {
+    await actions.reconfigureBackend()
   }
 </script>
 
@@ -117,6 +137,68 @@
                 </select>
               </div>
             {/if}
+
+            <!-- Channels Configuration -->
+            <div class="space-y-3">
+              <h3 class="h4">Bus Channels Configuration</h3>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="label">
+                    <span>Output Channels</span>
+                  </label>
+                  <input
+                    type="number"
+                    class="input variant-form-material"
+                    min="2"
+                    max="128"
+                    bind:value={numOutputChannels}
+                    disabled={$isLoading || !isOpen}
+                  />
+                </div>
+
+                <div>
+                  <label class="label">
+                    <span>Input Channels</span>
+                  </label>
+                  <input
+                    type="number"
+                    class="input variant-form-material"
+                    min="2"
+                    max="128"
+                    bind:value={numInputChannels}
+                    disabled={$isLoading || !isOpen}
+                  />
+                </div>
+              </div>
+
+              <div class="flex gap-2">
+                <button
+                  class="btn variant-filled-secondary flex-1"
+                  onclick={handleChannelsChange}
+                  disabled={$isLoading || !isOpen}
+                >
+                  💾 Save Channels
+                </button>
+
+                <button
+                  class="btn variant-filled-warning flex-1"
+                  onclick={handleReconfigure}
+                  disabled={$isLoading || !isOpen}
+                >
+                  {#if $isLoading}
+                    <span class="animate-spin">⏳</span>
+                  {:else}
+                    🔄
+                  {/if}
+                  Reconfigure Backend
+                </button>
+              </div>
+
+              <p class="text-xs opacity-70">
+                ℹ️ Changes require backend restart. Use "Reconfigure Backend" to apply automatically.
+              </p>
+            </div>
 
             <!-- Action Buttons -->
             <div class="flex gap-2">
