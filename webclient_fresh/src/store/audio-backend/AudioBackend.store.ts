@@ -10,6 +10,7 @@ const initialState: AudioBackendStateInterface = {
   status: { running: false, message: '' },
   devices: null,
   selectedDeviceIndex: -1,
+  channels: null,
   isLoading: false,
   error: null,
   platform: null
@@ -112,6 +113,58 @@ export function useAudioBackendStore(): AudioBackendStoreInterface {
 
     clearError: () => {
       writableStore.update(s => ({ ...s, error: null }))
+    },
+
+    loadChannels: async () => {
+      try {
+        const result = await apiClient.get('/api/sc-backend/settings/channels')
+        writableStore.update(s => ({
+          ...s,
+          channels: {
+            numOutputChannels: result.num_output_channels,
+            numInputChannels: result.num_input_channels
+          }
+        }))
+      } catch (error: any) {
+        writableStore.update(s => ({ ...s, error: error.message }))
+      }
+    },
+
+    setChannels: async (numOutput: number, numInput: number) => {
+      writableStore.update(s => ({ ...s, isLoading: true, error: null }))
+      try {
+        const result = await apiClient.post('/api/sc-backend/settings/channels', {
+          num_output_channels: numOutput,
+          num_input_channels: numInput
+        })
+        writableStore.update(s => ({
+          ...s,
+          channels: {
+            numOutputChannels: result.num_output_channels,
+            numInputChannels: result.num_input_channels
+          },
+          isLoading: false
+        }))
+      } catch (error: any) {
+        writableStore.update(s => ({ ...s, error: error.message, isLoading: false }))
+      }
+    },
+
+    reconfigureBackend: async () => {
+      writableStore.update(s => ({ ...s, isLoading: true, error: null }))
+      try {
+        const result = await apiClient.post('/api/sc-backend/reconfigure', {})
+
+        if (result.success) {
+          await actions.loadStatus()
+        } else {
+          writableStore.update(s => ({ ...s, error: result.message }))
+        }
+
+        writableStore.update(s => ({ ...s, isLoading: false }))
+      } catch (error: any) {
+        writableStore.update(s => ({ ...s, error: error.message, isLoading: false }))
+      }
     }
   }
 
@@ -134,6 +187,8 @@ export function useAudioBackendStore(): AudioBackendStoreInterface {
     )
   )
 
+  const channels = derived(writableStore, $s => $s.channels)
+
   const getters = {
     status,
     devices,
@@ -142,7 +197,8 @@ export function useAudioBackendStore(): AudioBackendStoreInterface {
     error,
     platform,
     showDeviceSelector,
-    scLogs
+    scLogs,
+    channels
   }
 
   return { actions, getters }

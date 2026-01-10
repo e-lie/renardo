@@ -1,6 +1,6 @@
 import type { Readable } from 'svelte/store'
 import type { AudioBackendStateInterface } from './AudioBackendState.interface'
-import type { AudioDevicesInterface, AudioBackendStatusInterface } from '../../../models/audio-backend'
+import type { AudioDevicesInterface, AudioBackendStatusInterface, ChannelsInterface } from '../../../models/audio-backend'
 import type { ConsoleMessageInterface } from '../../../models/websocket'
 
 export interface AudioBackendStoreActionsInterface {
@@ -11,6 +11,9 @@ export interface AudioBackendStoreActionsInterface {
   setAudioDevice: (index: number) => Promise<void>
   launchIDE: () => Promise<void>
   clearError: () => void
+  loadChannels: () => Promise<void>
+  setChannels: (numOutput: number, numInput: number) => Promise<void>
+  reconfigureBackend: () => Promise<void>
 }
 
 export interface AudioBackendStoreGettersInterface {
@@ -22,6 +25,7 @@ export interface AudioBackendStoreGettersInterface {
   platform: Readable<string | null>
   showDeviceSelector: Readable<boolean>
   scLogs: Readable<ConsoleMessageInterface[]>
+  channels: Readable<ChannelsInterface | null>
 }
 
 export interface AudioBackendStoreInterface {

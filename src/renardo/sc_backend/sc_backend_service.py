@@ -262,3 +262,111 @@ class SCBackendService:
         except Exception as e:
             self.logger.error(f"Error setting audio device: {str(e)}")
             return False
+
+    def get_channels_settings(self) -> dict:
+        """Get NUM_OUTPUT_BUS_CHANNELS and NUM_INPUT_BUS_CHANNELS from settings.
+
+        Returns:
+            dict: {"num_output_channels": int, "num_input_channels": int}
+        """
+        return {
+            "num_output_channels": settings.get("sc_backend.NUM_OUTPUT_BUS_CHANNELS"),
+            "num_input_channels": settings.get("sc_backend.NUM_INPUT_BUS_CHANNELS")
+        }
+
+    async def set_channels_settings(self, num_output: int, num_input: int) -> bool:
+        """Set bus channels and regenerate SC class files.
+
+        Args:
+            num_output (int): Number of output bus channels
+            num_input (int): Number of input bus channels
+
+        Returns:
+            bool: True if successful
+        """
+        try:
+            # Update settings
+            settings.set("sc_backend.NUM_OUTPUT_BUS_CHANNELS", num_output)
+            settings.set("sc_backend.NUM_INPUT_BUS_CHANNELS", num_input)
+            settings.save_to_file()
+
+            # Regenerate SC class files
+            from renardo.sc_backend.supercollider_mgt import ensure_sc_classes_are_current
+            ensure_sc_classes_are_current()
+
+            self.logger.info(f"Bus channels updated: output={num_output}, input={num_input}")
+            return True
+        except Exception as e:
+            self.logger.error(f"Error setting bus channels: {str(e)}")
+            return False
+
+    async def reconfigure_backend(self) -> dict:
+        """Regenerate SC files and restart backend with new configuration.
+
+        This is a convenience method that:
+        1. Ensures SC class files are current (regenerates if needed)
+        2. Stops the running backend
+        3. Restarts the backend with current settings
+
+        Returns:
+            dict: {"success": bool, "message": str, "regenerated": bool, "restarted": bool}
+        """
+        try:
+            # Step 1: Ensure SC files are regenerated
+            from renardo.sc_backend.supercollider_mgt import ensure_sc_classes_are_current
+            self.logger.info("Regenerating SuperCollider class files...")
+            ensure_sc_classes_are_current()
+            regenerated = True
+
+            # Step 2: Stop if running
+            was_running = self.sc_instance.is_sclang_running()
+            if was_running:
+                self.logger.info("Stopping SuperCollider backend...")
+                stop_result = await self.stop_backend()
+                if not stop_result["success"]:
+                    return {
+                        "success": False,
+                        "message": "Failed to stop backend before reconfiguration",
+                        "regenerated": regenerated,
+                        "restarted": False
+                    }
+
+            # Step 3: Restart if was running
+            restarted = False
+            if was_running:
+                self.logger.info("Restarting SuperCollider backend with new configuration...")
+                audio_device_index = settings.get("sc_backend.AUDIO_OUTPUT_DEVICE_INDEX")
+                start_result = await self.start_backend(audio_device_index)
+
+                if start_result["success"]:
+                    restarted = True
+                    return {
+                        "success": True,
+                        "message": "Backend reconfigured and restarted successfully",
+                        "regenerated": regenerated,
+                        "restarted": restarted
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "message": f"Files regenerated but failed to restart: {start_result['message']}",
+                        "regenerated": regenerated,
+                        "restarted": False
+                    }
+            else:
+                return {
+                    "success": True,
+                    "message": "Files regenerated successfully (backend was not running)",
+                    "regenerated": regenerated,
+                    "restarted": False
+                }
+
+        except Exception as e:
+            error_msg = f"Error during reconfiguration: {str(e)}"
+            self.logger.error(error_msg)
+            return {
+                "success": False,
+                "message": error_msg,
+                "regenerated": False,
+                "restarted": False
+            }
