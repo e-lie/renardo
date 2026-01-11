@@ -10,8 +10,13 @@ Renardo {
 
     *configure {
         arg remote = false;
+        {% if use_default_server %}
+        // Use the default SuperCollider server (port 57110)
+        server = Server.default;
+        {% else %}
         // Create a custom server with the specified port using NetAddr
         server = Server(\renardo, NetAddr("127.0.0.1", {{ osc_port }}));
+        {% endif %}
         server.options.memSize = 8192 * 16;
         server.options.maxNodes = 1024 * 32;
         server.options.numOutputBusChannels = {{ num_output_channels }};
@@ -90,7 +95,11 @@ Renardo {
 
         StageLimiterBis.activate(2);
 
+        {% if use_default_server %}
+        ("Renardo using default SuperCollider server on port " ++ server.addr.port).postln;
+        {% else %}
         ("Listening for messages from Renardo on port " ++ {{ osc_port }}).postln;
+        {% endif %}
     }
 
     *startRemote {

@@ -40,6 +40,9 @@ settings.set_defaults_from_dict({
         "DEFAULT_SCCODE_PACK_NAME": "0_foxdot_core",
         "NUM_OUTPUT_BUS_CHANNELS": 8,
         "NUM_INPUT_BUS_CHANNELS": 8,
+        # If True, use SuperCollider default server (port 57110)
+        # If False, create custom server with specified PORT
+        "USE_DEFAULT_SERVER": True,
     }
 },
 internal=True
