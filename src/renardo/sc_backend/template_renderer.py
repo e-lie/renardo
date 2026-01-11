@@ -38,6 +38,7 @@ class SCTemplateRenderer:
             dict: Variables to pass to Jinja2 templates
         """
         return {
+            'use_default_server': settings.get("sc_backend.USE_DEFAULT_SERVER"),
             'osc_port': settings.get("sc_backend.PORT"),
             'num_output_channels': settings.get("sc_backend.NUM_OUTPUT_BUS_CHANNELS"),
             'num_input_channels': settings.get("sc_backend.NUM_INPUT_BUS_CHANNELS"),
