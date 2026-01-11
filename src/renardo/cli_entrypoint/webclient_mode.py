@@ -161,7 +161,7 @@ def start_frontend_server(webclient_dir: Path, config: Dict[str, Any]) -> Option
                 cwd=webclient_dir,
                 capture_output=True,
                 text=True,
-                shell=True  # Required on Windows to find npm
+                shell=(sys.platform == "windows")  # Required on Windows to find npm but avoid on MacOs
             )
 
             if install_process.returncode != 0:
@@ -182,7 +182,7 @@ def start_frontend_server(webclient_dir: Path, config: Dict[str, Any]) -> Option
             stderr=subprocess.PIPE,
             universal_newlines=True,
             bufsize=1,
-            shell=True  # Required on Windows to find npm
+            shell=(sys.platform == "windows")  # Required on Windows to find npm but avoid on macOS
         )
 
         # Start a thread to handle frontend output
