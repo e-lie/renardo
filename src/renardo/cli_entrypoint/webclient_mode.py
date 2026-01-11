@@ -160,7 +160,8 @@ def start_frontend_server(webclient_dir: Path, config: Dict[str, Any]) -> Option
                 install_cmd,
                 cwd=webclient_dir,
                 capture_output=True,
-                text=True
+                text=True,
+                shell=True  # Required on Windows to find npm
             )
 
             if install_process.returncode != 0:
@@ -180,7 +181,8 @@ def start_frontend_server(webclient_dir: Path, config: Dict[str, Any]) -> Option
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             universal_newlines=True,
-            bufsize=1
+            bufsize=1,
+            shell=True  # Required on Windows to find npm
         )
 
         # Start a thread to handle frontend output
