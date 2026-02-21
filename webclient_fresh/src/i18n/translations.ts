@@ -21,6 +21,7 @@ export const translations = {
     // Themes
     syntaxTheme: 'Syntax Theme',
     skeletonUITheme: 'Skeleton UI Theme',
+    colorSchemeMode: 'Color Scheme',
     showLineNumbers: 'Show Line Numbers',
     showLineNumbersDescription: 'Display line numbers in the code editor',
     vimMode: 'Vim Mode',
@@ -84,6 +85,7 @@ export const translations = {
     // Themes
     syntaxTheme: 'Thème de syntaxe',
     skeletonUITheme: 'Thème de l\'interface',
+    colorSchemeMode: 'Schéma de couleurs',
     showLineNumbers: 'Afficher les numéros de ligne',
     showLineNumbersDescription: 'Afficher les numéros de ligne dans l\'éditeur de code',
     vimMode: 'Mode Vim',
@@ -147,6 +149,7 @@ export const translations = {
     // Themes
     syntaxTheme: 'Tema de sintaxis',
     skeletonUITheme: 'Tema de interfaz',
+    colorSchemeMode: 'Esquema de color',
     showLineNumbers: 'Mostrar números de línea',
     showLineNumbersDescription: 'Mostrar números de línea en el editor de código',
     vimMode: 'Modo Vim',
@@ -210,6 +213,7 @@ export const translations = {
     // Themes
     syntaxTheme: 'Syntax-Theme',
     skeletonUITheme: 'UI-Theme',
+    colorSchemeMode: 'Farbschema',
     showLineNumbers: 'Zeilennummern anzeigen',
     showLineNumbersDescription: 'Zeilennummern im Code-Editor anzeigen',
     vimMode: 'Vim-Modus',
