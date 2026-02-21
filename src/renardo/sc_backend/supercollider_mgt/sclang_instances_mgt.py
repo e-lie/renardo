@@ -132,19 +132,20 @@ class SupercolliderInstance:
                 if process_info and 'pid' in process_info:
                     # Create a mock process object for backward compatibility
                     class MockProcess:
-                        def __init__(self, pid):
+                        def __init__(self, pid, process_manager, sclang_process_id):
                             self.pid = pid
                             self.stdin = None
                             self.stdout = None
                             self.stderr = None
-                        
+                            self._process_manager = process_manager
+                            self._sclang_process_id = sclang_process_id
+
                         def poll(self):
-                            # Check with process manager
                             from ...process_manager.base import ProcessStatus
-                            status = self.process_manager.get_process_status(self.sclang_process_id)
+                            status = self._process_manager.get_process_status(self._sclang_process_id)
                             return None if status == ProcessStatus.RUNNING else 0
-                    
-                    self.sclang_process = MockProcess(process_info['pid'])
+
+                    self.sclang_process = MockProcess(process_info['pid'], self.process_manager, self.sclang_process_id)
                 
                 self.logger.info("sclang process started successfully via process manager")
                 return True
