@@ -6,6 +6,30 @@
 @import '@skeletonlabs/skeleton';
 @import '@skeletonlabs/skeleton-svelte';
 
+/* Fira Code */
+@font-face {
+  font-family: 'Fira Code';
+  src: url('/fonts/fira-code/FiraCode-Regular.woff2') format('woff2');
+  font-weight: 400;
+}
+@font-face {
+  font-family: 'Fira Code';
+  src: url('/fonts/fira-code/FiraCode-Medium.woff2') format('woff2');
+  font-weight: 500;
+}
+
+/* Source Code Pro */
+@font-face {
+  font-family: 'Source Code Pro';
+  src: url('/fonts/source-code-pro/SourceCodePro-Regular.woff2') format('woff2');
+  font-weight: 400;
+}
+@font-face {
+  font-family: 'Source Code Pro';
+  src: url('/fonts/source-code-pro/SourceCodePro-Medium.woff2') format('woff2');
+  font-weight: 500;
+}
+
 /* JGS Fonts */
 @font-face {
   font-family: 'JGS5';
