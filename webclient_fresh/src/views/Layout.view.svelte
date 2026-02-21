@@ -1,14 +1,22 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { useLayoutStore } from '../store/layout';
+  import { useEditorStore } from '../store/editor/Editor.store';
   import { edgeDetectionService } from '../services/layout/edgeDetection.service';
   import PaneContainer from '../components/layout/PaneContainer.component.svelte';
   import ElResizeHandle from '../components/primitives/layout/ElResizeHandle.svelte';
   import ElFloatingToggle from '../components/primitives/layout/ElFloatingToggle.svelte';
   import SettingsModal from '../components/shared/SettingsModal.component.svelte';
   import AudioBackendModal from '../components/shared/AudioBackendModal.component.svelte';
+  import { setHydraBackground } from '../background-canvas';
 
   const { getters, actions } = useLayoutStore();
+  const { getters: editorGetters } = useEditorStore();
+  const { settings } = editorGetters;
+
+  $effect(() => {
+    setHydraBackground($settings.hydraBackground);
+  });
   const {
     paneSetVisibility,
     paneVisibility,

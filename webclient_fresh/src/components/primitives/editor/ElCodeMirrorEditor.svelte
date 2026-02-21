@@ -4,6 +4,7 @@
   import { EditorState, Compartment } from '@codemirror/state';
   import { defaultKeymap, indentWithTab, standardKeymap, insertTab } from '@codemirror/commands';
   import { python } from '@codemirror/lang-python';
+  import { javascript } from '@codemirror/lang-javascript';
   import { highlightSelectionMatches } from '@codemirror/search';
   import { vim } from '@replit/codemirror-vim';
   import { logger } from '../../../services/logger.service';
@@ -11,7 +12,7 @@
 
   let {
     content = '',
-    language = 'python',
+    language = 'python' as 'python' | 'hydra',
     readonly = false,
     placeholder = 'Enter your code here...',
     theme = 'dracula',
@@ -25,7 +26,7 @@
     onexecute,
   }: {
     content?: string;
-    language?: 'python';
+    language?: 'python' | 'hydra';
     readonly?: boolean;
     placeholder?: string;
     theme?: string;
@@ -180,6 +181,8 @@
     switch (lang) {
       case 'python':
         return python();
+      case 'hydra':
+        return javascript();
       default:
         return [];
     }

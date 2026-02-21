@@ -3,6 +3,7 @@
   import SkeletonThemeSelector from '../editor/children/SkeletonThemeSelector.component.svelte';
   import LineNumbersToggle from '../editor/children/LineNumbersToggle.component.svelte';
   import VimModeToggle from '../editor/children/VimModeToggle.component.svelte';
+  import HydraBackgroundToggle from '../editor/children/HydraBackgroundToggle.component.svelte';
   import FontFamilySelector from '../editor/children/FontFamilySelector.component.svelte';
   import FontSizeSelector from '../editor/children/FontSizeSelector.component.svelte';
   import LineHeightSelector from '../editor/children/LineHeightSelector.component.svelte';
@@ -81,6 +82,7 @@
           <LineHeightSelector />
           <LineNumbersToggle />
           <VimModeToggle />
+          <HydraBackgroundToggle />
         {:else if activeTab === 'layout'}
           <LayoutConfigTab />
         {/if}
