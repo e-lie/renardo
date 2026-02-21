@@ -4,6 +4,8 @@
   import LineNumbersToggle from '../editor/children/LineNumbersToggle.component.svelte';
   import VimModeToggle from '../editor/children/VimModeToggle.component.svelte';
   import FontFamilySelector from '../editor/children/FontFamilySelector.component.svelte';
+  import FontSizeSelector from '../editor/children/FontSizeSelector.component.svelte';
+  import LineHeightSelector from '../editor/children/LineHeightSelector.component.svelte';
   import LayoutConfigTab from './LayoutConfigTab.component.svelte';
   import LanguageSelector from './LanguageSelector.component.svelte';
   import { useI18nStore } from '../../store/i18n/I18n.store';
@@ -75,6 +77,8 @@
           <ThemeSelector />
           <SkeletonThemeSelector />
           <FontFamilySelector />
+          <FontSizeSelector />
+          <LineHeightSelector />
           <LineNumbersToggle />
           <VimModeToggle />
         {:else if activeTab === 'layout'}

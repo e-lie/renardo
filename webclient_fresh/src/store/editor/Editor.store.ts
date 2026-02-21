@@ -33,6 +33,7 @@ function loadSettingsFromLocalStorage(): EditorSettingsInterface {
     return {
         theme: 'dracula',
         fontSize: 14,
+        lineHeight: 1.5,
         fontFamily: 'Fira Code',
         tabSize: 4,
         showLineNumbers: true,
