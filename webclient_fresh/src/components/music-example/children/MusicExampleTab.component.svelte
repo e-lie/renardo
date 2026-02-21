@@ -33,7 +33,6 @@
 </script>
 
 <div class="p-4 h-full overflow-auto">
-  <ElText tag="h2" text={title || 'Music Examples'} addCss="text-xl font-bold mb-4" />
 
   {#if $error}
     <div class="alert alert-error mb-4">
