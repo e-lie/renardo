@@ -2,10 +2,11 @@ import Hydra from 'hydra-synth'
 import logger from './services/logger.service'
 
 let hydraInstance: { canvas: HTMLCanvasElement; hydra: InstanceType<typeof Hydra> } | null = null
+let hydraEnabled = true
 
 const INITIAL_PATTERN = () => {
   const h = hydraInstance!.hydra.synth
-  h.osc().contrast(.5).modulate(h.noise(3)).out()
+  h.osc().mult(h.solid(.1,.1,.1)).out()
 }
 
 export function initBackgroundCanvas() {
@@ -71,6 +72,8 @@ export function setHydraBackground(enabled: boolean): void {
     logger.warn('setHydraBackground', 'Hydra not initialized')
     return
   }
+  if (enabled === hydraEnabled) return
+  hydraEnabled = enabled
   const { canvas, hydra } = hydraInstance
   if (enabled) {
     canvas.style.display = ''

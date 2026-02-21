@@ -99,7 +99,7 @@
     if (!editorId) return;
     const newBufferId = actions.createBuffer({
       name: language === 'hydra' ? 'Hydra' : 'Untitled',
-      content: '',
+      content: language === 'hydra' ? 'osc().mult(solid(.1,.1,.1)).out()' : '',
       language,
     });
     actions.createTab(editorId, newBufferId);
