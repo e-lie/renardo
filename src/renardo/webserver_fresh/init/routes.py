@@ -32,14 +32,23 @@ def _is_user_dir_configured() -> bool:
 @router.get("/status")
 async def get_init_status():
     """Get initialization status: user dir configured + resources downloaded."""
-    from ...gatherer.sample_management.default_samples import is_default_spack_initialized
+    from ...gatherer.sample_management.default_samples import (
+        is_default_spack_initialized,
+        backfill_sample_markers,
+    )
     from ...gatherer.sccode_management.default_sccode_pack import (
         is_default_sccode_pack_initialized,
         is_special_sccode_initialized,
+        backfill_sccode_markers,
     )
 
     user_dir_configured = _is_user_dir_configured()
     user_dir = str(SettingsManager.get_renardo_user_dir())
+
+    # Backfill markers for directories that already have content (previous installs, manual setup)
+    backfill_sample_markers()
+    backfill_sccode_markers()
+
     samples_initialized = is_default_spack_initialized()
     sccode_initialized = is_default_sccode_pack_initialized() and is_special_sccode_initialized()
 

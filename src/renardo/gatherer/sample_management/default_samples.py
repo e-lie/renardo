@@ -5,6 +5,12 @@ import os
 from renardo.settings_manager import settings
 from renardo.gatherer.collection_download import download_files_from_json_index_concurrent
 
+def _write_marker(path: Path) -> None:
+    path.mkdir(parents=True, exist_ok=True)
+    with open(path / 'downloaded_at.txt', mode='w') as f:
+        f.write(str(datetime.now()))
+
+
 def is_default_spack_initialized():
     """Check if the default sample pack has been downloaded."""
     return (settings.get_path("SAMPLES_DIR") / settings.get("samples.DEFAULT_SAMPLE_PACK_NAME") / 'downloaded_at.txt').exists()
@@ -13,6 +19,15 @@ def is_default_spack_initialized():
 def is_sample_pack_initialized(pack_name):
     """Check if a specific sample pack has been downloaded."""
     return (settings.get_path("SAMPLES_DIR") / pack_name / 'downloaded_at.txt').exists()
+
+
+def backfill_sample_markers() -> None:
+    """Create missing downloaded_at.txt markers if sample directories already have content."""
+    samples_dir = settings.get_path("SAMPLES_DIR")
+    pack_name = settings.get("samples.DEFAULT_SAMPLE_PACK_NAME")
+    pack_dir = samples_dir / pack_name
+    if pack_dir.is_dir() and any(pack_dir.iterdir()) and not (pack_dir / 'downloaded_at.txt').exists():
+        _write_marker(pack_dir)
 
 
 def download_default_sample_pack(logger=None):

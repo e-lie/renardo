@@ -5,6 +5,12 @@ import os
 from renardo.settings_manager import settings
 from renardo.gatherer.collection_download import download_files_from_json_index_concurrent
 
+def _write_marker(path: Path) -> None:
+    path.mkdir(parents=True, exist_ok=True)
+    with open(path / 'downloaded_at.txt', mode='w') as f:
+        f.write(str(datetime.now()))
+
+
 def is_default_sccode_pack_initialized():
     """Check if the default SuperCollider code pack has been downloaded."""
     return (settings.get_path("SCCODE_LIBRARY") / settings.get("sc_backend.DEFAULT_SCCODE_PACK_NAME") / 'downloaded_at.txt').exists()
@@ -18,6 +24,20 @@ def is_special_sccode_initialized():
 def is_sccode_pack_initialized(pack_name):
     """Check if a specific SuperCollider code pack has been downloaded."""
     return (settings.get_path("SCCODE_LIBRARY") / pack_name / 'downloaded_at.txt').exists()
+
+
+def backfill_sccode_markers() -> None:
+    """Create missing downloaded_at.txt markers if sccode directories already have content."""
+    # Special sccode
+    special_dir = settings.get_path("SPECIAL_SCCODE_DIR")
+    if special_dir.is_dir() and any(special_dir.iterdir()) and not (special_dir / 'downloaded_at.txt').exists():
+        _write_marker(special_dir)
+
+    # Default sccode pack
+    pack_name = settings.get("sc_backend.DEFAULT_SCCODE_PACK_NAME")
+    pack_dir = settings.get_path("SCCODE_LIBRARY") / pack_name
+    if pack_dir.is_dir() and any(pack_dir.iterdir()) and not (pack_dir / 'downloaded_at.txt').exists():
+        _write_marker(pack_dir)
 
 
 def download_special_sccode_pack(logger=None):
