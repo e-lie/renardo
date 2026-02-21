@@ -32,4 +32,5 @@ export interface EditorSettingsInterface {
     showLineNumbers: boolean
     lineWrapping: boolean
     vimMode: boolean
+    hydraBackground: boolean
 }

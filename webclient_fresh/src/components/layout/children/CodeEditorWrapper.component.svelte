@@ -88,15 +88,19 @@
   }
 
   function handleExecute(code: string) {
-    actions.executeCode(code);
+    if ($activeBuffer?.language === 'hydra') {
+      actions.executeHydraCode(code);
+    } else {
+      actions.executeCode(code);
+    }
   }
 
-  function handleCreateTab() {
+  function handleCreateTab(language: 'python' | 'hydra' = 'python') {
     if (!editorId) return;
     const newBufferId = actions.createBuffer({
-      name: 'Untitled',
+      name: language === 'hydra' ? 'Hydra' : 'Untitled',
       content: '',
-      language: 'python',
+      language,
     });
     actions.createTab(editorId, newBufferId);
   }
@@ -224,7 +228,7 @@
         buffer={$activeBuffer}
         onchange={handleChange}
         onexecute={handleExecute}
-        oncreatetab={handleCreateTab}
+        oncreatetab={(lang) => handleCreateTab(lang)}
       />
     {:else}
       <div class="h-full flex items-center justify-center text-surface-500">

@@ -14,6 +14,7 @@ import type {
     EditorStoreGettersInterface
 } from './models'
 import { executeCode as executeCodeApi } from '../../api-client/rest/api'
+import { executeHydraCode as executeHydraCodeCanvas } from '../../background-canvas'
 
 // Helper function to generate unique IDs
 function generateId(): string {
@@ -38,7 +39,8 @@ function loadSettingsFromLocalStorage(): EditorSettingsInterface {
         tabSize: 4,
         showLineNumbers: true,
         lineWrapping: true,
-        vimMode: false
+        vimMode: false,
+        hydraBackground: true
     }
 }
 
@@ -136,7 +138,7 @@ export function useEditorStore(): EditorStoreInterface {
                 id: bufferId,
                 name: options.name,
                 content: options.content || '',
-                language: 'python', // Force Python for all buffers
+                language: options.language || 'python',
                 isStartupFile: options.isStartupFile || false,
                 isDirty: false,
                 filePath: options.filePath,
@@ -560,6 +562,10 @@ export function useEditorStore(): EditorStoreInterface {
                     message: error instanceof Error ? error.message : 'Unknown error'
                 }
             }
+        },
+
+        executeHydraCode: (code: string): { success: boolean; error?: string } => {
+            return executeHydraCodeCanvas(code)
         }
     }
 

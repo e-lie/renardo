@@ -1,11 +1,13 @@
 /**
  * Buffer interface representing a text buffer in the editor
  */
+export type BufferLanguage = 'python' | 'hydra'
+
 export interface BufferInterface {
     id: string
     name: string
     content: string
-    language: 'python'
+    language: BufferLanguage
     isStartupFile: boolean
     isDirty: boolean
     filePath?: string
@@ -18,7 +20,7 @@ export interface BufferInterface {
  */
 export interface CreateBufferOptions {
     name: string
-    language?: 'python'
+    language?: BufferLanguage
     isStartupFile?: boolean
     filePath?: string
     content?: string

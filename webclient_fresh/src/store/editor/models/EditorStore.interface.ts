@@ -25,6 +25,7 @@ export interface EditorStoreActionsInterface {
     // Settings and execution
     updateSettings: (settings: Partial<EditorSettingsInterface>) => void
     executeCode: (code: string) => Promise<{ success: boolean; message: string }>
+    executeHydraCode: (code: string) => { success: boolean; error?: string }
 }
 
 /**
