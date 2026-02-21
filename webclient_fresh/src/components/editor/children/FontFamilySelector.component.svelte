@@ -9,7 +9,6 @@
 
   const fontFamilies = [
     { name: 'Fira Code', value: 'Fira Code' },
-    { name: 'JetBrains Mono', value: 'JetBrains Mono' },
     { name: 'Source Code Pro', value: 'Source Code Pro' },
     { name: 'JGS', value: 'JGS' },
     { name: 'JGS5', value: 'JGS5' },

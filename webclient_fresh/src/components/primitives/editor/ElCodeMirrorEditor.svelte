@@ -144,12 +144,12 @@
           '&': {
             height: '100%',
             fontSize: '14px',
-            fontFamily: `${currentFontFamily}, "JetBrains Mono", "Consolas", monospace`,
+            fontFamily: `${currentFontFamily}, "Consolas", monospace`,
             position: 'relative',
           },
           '.cm-scroller': {
             overflow: 'auto',
-            fontFamily: `${currentFontFamily}, "JetBrains Mono", "Consolas", monospace`,
+            fontFamily: `${currentFontFamily}, "Consolas", monospace`,
             position: 'absolute',
             top: '0',
             left: '0',
@@ -366,12 +366,12 @@
             '&': {
               height: '100%',
               fontSize: '14px',
-              fontFamily: `${fontFamily}, "JetBrains Mono", "Consolas", monospace`,
+              fontFamily: `${fontFamily}, "Consolas", monospace`,
               position: 'relative',
             },
             '.cm-scroller': {
               overflow: 'auto',
-              fontFamily: `${fontFamily}, "JetBrains Mono", "Consolas", monospace`,
+              fontFamily: `${fontFamily}, "Consolas", monospace`,
               position: 'absolute',
               top: '0',
               left: '0',
@@ -479,7 +479,6 @@
   }
 
   :global(.cm-scroller) {
-    font-family: 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
     line-height: 1.5;
     position: absolute;
     top: 0;
