@@ -13,6 +13,7 @@ from .project import Project, project_service
 from .websocket.routes import router as websocket_router
 from .websocket.manager import websocket_manager
 from .sc_backend.routes import router as sc_backend_router, init_sc_service
+from .init.routes import router as init_router
 from ..logger import get_main_logger
 
 app = FastAPI(title="Renardo WebServer Fresh", version="1.0.0")
@@ -22,6 +23,9 @@ app.include_router(websocket_router, prefix="/ws", tags=["websocket"])
 
 # Include SC Backend routes
 app.include_router(sc_backend_router)
+
+# Include Init routes
+app.include_router(init_router)
 
 # Configure CORS
 app.add_middleware(

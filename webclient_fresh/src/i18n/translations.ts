@@ -67,7 +67,25 @@ export const translations = {
     notes: 'Notes',
     scratch: 'Scratch',
     workspace: 'Workspace',
-    draft: 'Draft'
+    draft: 'Draft',
+
+    // Init - User Dir Picker
+    initUserDirTitle: 'Choose Your User Directory',
+    initUserDirDescription: 'Select a folder where Renardo will store your samples, sounds and settings.',
+    initUserDirSelectButton: 'Select This Folder',
+    initUserDirCurrentSelection: 'Selected folder:',
+
+    // Init - Resources Modal
+    initResourcesTitle: 'Missing Resources',
+    initResourcesDescription: 'The following resources are needed to use Renardo. Download them now?',
+    initSamplesLabel: 'Default Sample Pack',
+    initSccodeLabel: 'SuperCollider Sound Library',
+    initDownloadButton: 'Download Missing Resources',
+    initDownloadingTitle: 'Downloading...',
+    initDownloadCompleteTitle: 'Download Complete',
+    initDownloadErrorTitle: 'Download Error',
+    initSkipButton: 'Skip for now',
+    initDownloadLogs: 'Download logs'
   },
   fr: {
     // Settings
@@ -135,7 +153,25 @@ export const translations = {
     notes: 'Notes',
     scratch: 'Brouillon',
     workspace: 'Espace de travail',
-    draft: 'Ébauche'
+    draft: 'Ébauche',
+
+    // Init - User Dir Picker
+    initUserDirTitle: 'Choisissez votre répertoire utilisateur',
+    initUserDirDescription: 'Sélectionnez un dossier où Renardo stockera vos samples, sons et paramètres.',
+    initUserDirSelectButton: 'Sélectionner ce dossier',
+    initUserDirCurrentSelection: 'Dossier sélectionné :',
+
+    // Init - Resources Modal
+    initResourcesTitle: 'Ressources manquantes',
+    initResourcesDescription: 'Les ressources suivantes sont nécessaires pour utiliser Renardo. Les télécharger maintenant ?',
+    initSamplesLabel: 'Pack de samples par défaut',
+    initSccodeLabel: 'Bibliothèque sonore SuperCollider',
+    initDownloadButton: 'Télécharger les ressources manquantes',
+    initDownloadingTitle: 'Téléchargement...',
+    initDownloadCompleteTitle: 'Téléchargement terminé',
+    initDownloadErrorTitle: 'Erreur de téléchargement',
+    initSkipButton: 'Ignorer pour l\'instant',
+    initDownloadLogs: 'Logs de téléchargement'
   },
   es: {
     // Settings
@@ -203,7 +239,25 @@ export const translations = {
     notes: 'Notas',
     scratch: 'Borrador',
     workspace: 'Espacio de trabajo',
-    draft: 'Borrador'
+    draft: 'Borrador',
+
+    // Init - User Dir Picker
+    initUserDirTitle: 'Elige tu directorio de usuario',
+    initUserDirDescription: 'Selecciona una carpeta donde Renardo almacenará tus muestras, sonidos y configuración.',
+    initUserDirSelectButton: 'Seleccionar esta carpeta',
+    initUserDirCurrentSelection: 'Carpeta seleccionada:',
+
+    // Init - Resources Modal
+    initResourcesTitle: 'Recursos faltantes',
+    initResourcesDescription: 'Los siguientes recursos son necesarios para usar Renardo. ¿Descargarlos ahora?',
+    initSamplesLabel: 'Pack de muestras predeterminado',
+    initSccodeLabel: 'Biblioteca de sonidos SuperCollider',
+    initDownloadButton: 'Descargar recursos faltantes',
+    initDownloadingTitle: 'Descargando...',
+    initDownloadCompleteTitle: 'Descarga completa',
+    initDownloadErrorTitle: 'Error de descarga',
+    initSkipButton: 'Omitir por ahora',
+    initDownloadLogs: 'Registros de descarga'
   },
   de: {
     // Settings
@@ -271,7 +325,25 @@ export const translations = {
     notes: 'Notizen',
     scratch: 'Entwurf',
     workspace: 'Arbeitsbereich',
-    draft: 'Entwurf'
+    draft: 'Entwurf',
+
+    // Init - User Dir Picker
+    initUserDirTitle: 'Benutzerverzeichnis wählen',
+    initUserDirDescription: 'Wähle einen Ordner, in dem Renardo deine Samples, Sounds und Einstellungen speichert.',
+    initUserDirSelectButton: 'Diesen Ordner auswählen',
+    initUserDirCurrentSelection: 'Ausgewählter Ordner:',
+
+    // Init - Resources Modal
+    initResourcesTitle: 'Fehlende Ressourcen',
+    initResourcesDescription: 'Die folgenden Ressourcen werden für Renardo benötigt. Jetzt herunterladen?',
+    initSamplesLabel: 'Standard-Sample-Paket',
+    initSccodeLabel: 'SuperCollider-Klangbibliothek',
+    initDownloadButton: 'Fehlende Ressourcen herunterladen',
+    initDownloadingTitle: 'Wird heruntergeladen...',
+    initDownloadCompleteTitle: 'Download abgeschlossen',
+    initDownloadErrorTitle: 'Download-Fehler',
+    initSkipButton: 'Vorerst überspringen',
+    initDownloadLogs: 'Download-Protokoll'
   }
 } as const
 
