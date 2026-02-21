@@ -22,7 +22,7 @@
     onclose?: () => void;
   } = $props();
 
-  let activeTab = $state<'editor' | 'layout'>('editor')
+  let activeTab = $state<'editor' | 'layout'>('editor');
 
   function handleClose() {
     onclose?.();
@@ -58,21 +58,25 @@
       <!-- Tabs -->
       <div class="flex gap-2 border-b border-surface-300 dark:border-surface-700">
         <button
-          class="px-4 py-2 text-sm transition-colors {activeTab === 'editor' ? 'border-b-2 border-primary-500 text-primary-500' : 'text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-50'}"
-          onclick={() => activeTab = 'editor'}
+          class="px-4 py-2 text-sm transition-colors {activeTab === 'editor'
+            ? 'border-b-2 border-primary-500 text-primary-500'
+            : 'text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-50'}"
+          onclick={() => (activeTab = 'editor')}
         >
           {$translate('editor')}
         </button>
         <button
-          class="px-4 py-2 text-sm transition-colors {activeTab === 'layout' ? 'border-b-2 border-primary-500 text-primary-500' : 'text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-50'}"
-          onclick={() => activeTab = 'layout'}
+          class="px-4 py-2 text-sm transition-colors {activeTab === 'layout'
+            ? 'border-b-2 border-primary-500 text-primary-500'
+            : 'text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-50'}"
+          onclick={() => (activeTab = 'layout')}
         >
           {$translate('layout')}
         </button>
       </div>
 
       <!-- Content -->
-      <div class="space-y-6 max-h-[60vh] overflow-y-auto">
+      <div class="space-y-6 max-h-[60vh] overflow-y-auto pr-6">
         {#if activeTab === 'editor'}
           <LanguageSelector />
           <ThemeSelector />
