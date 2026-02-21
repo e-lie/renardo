@@ -45,6 +45,32 @@ def download_file_in_pool(url, dest_path: Path, retries=5, delay=1, logger=None)
                 return False
 
 
+def get_file_paths_from_json_index(json_url: str, download_dir: Path) -> list | None:
+    """Fetch a collection index JSON and return the list of expected local file paths.
+
+    Returns None if the index cannot be fetched.
+    """
+    download_dir = Path(download_dir)
+    try:
+        response = requests.get(json_url, timeout=15)
+        response.raise_for_status()
+        file_tree = response.json()
+    except Exception:
+        return None
+
+    def collect_paths(node, current_dir=Path()):
+        paths = []
+        if "url" in node:
+            paths.append(download_dir / current_dir / Path(node["path"]).name)
+        if "children" in node:
+            child_dir = current_dir / Path(node["path"]).name if "path" in node else current_dir
+            for child in node["children"]:
+                paths.extend(collect_paths(child, child_dir))
+        return paths
+
+    return collect_paths(file_tree)
+
+
 def download_files_from_json_index_concurrent(json_url, download_dir, max_workers=3, logger=None):
     download_dir = Path(download_dir)
 

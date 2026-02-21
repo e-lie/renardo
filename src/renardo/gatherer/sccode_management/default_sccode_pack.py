@@ -3,7 +3,10 @@ from pathlib import Path
 import os
 
 from renardo.settings_manager import settings
-from renardo.gatherer.collection_download import download_files_from_json_index_concurrent
+from renardo.gatherer.collection_download import (
+    download_files_from_json_index_concurrent,
+    get_file_paths_from_json_index,
+)
 
 def _write_marker(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
@@ -26,18 +29,55 @@ def is_sccode_pack_initialized(pack_name):
     return (settings.get_path("SCCODE_LIBRARY") / pack_name / 'downloaded_at.txt').exists()
 
 
+def verify_special_sccode_pack() -> bool:
+    """Verify all files from the special sccode collection index exist on disk.
+
+    Returns True if complete, False if any file is missing or the index is unreachable.
+    """
+    special_sccode_dir = settings.get_path("SPECIAL_SCCODE_DIR")
+    if special_sccode_dir is None:
+        return False
+    json_url = '{}/{}/collection_index.json'.format(
+        settings.get("core.COLLECTIONS_DOWNLOAD_SERVER"),
+        settings.get("sc_backend.SPECIAL_SCCODE_DIR_NAME"),
+    )
+    expected = get_file_paths_from_json_index(json_url, special_sccode_dir.parent)
+    if expected is None:
+        return False
+    return all(p.exists() for p in expected)
+
+
+def verify_sccode_pack(pack_name) -> bool:
+    """Verify all files from the sccode pack collection index exist on disk.
+
+    Returns True if complete, False if any file is missing or the index is unreachable.
+    """
+    sccode_library = settings.get_path("SCCODE_LIBRARY")
+    if sccode_library is None:
+        return False
+    json_url = '{}/{}/{}/collection_index.json'.format(
+        settings.get("core.COLLECTIONS_DOWNLOAD_SERVER"),
+        settings.get("sc_backend.SCCODE_LIBRARY_DIR_NAME"),
+        pack_name,
+    )
+    expected = get_file_paths_from_json_index(json_url, sccode_library)
+    if expected is None:
+        return False
+    return all(p.exists() for p in expected)
+
+
 def backfill_sccode_markers() -> None:
-    """Create missing downloaded_at.txt markers if sccode directories already have content."""
-    # Special sccode
+    """Create missing downloaded_at.txt markers for complete sccode packs on disk."""
     special_dir = settings.get_path("SPECIAL_SCCODE_DIR")
-    if special_dir.is_dir() and any(special_dir.iterdir()) and not (special_dir / 'downloaded_at.txt').exists():
+    if special_dir is not None and not (special_dir / 'downloaded_at.txt').exists() and verify_special_sccode_pack():
         _write_marker(special_dir)
 
-    # Default sccode pack
-    pack_name = settings.get("sc_backend.DEFAULT_SCCODE_PACK_NAME")
-    pack_dir = settings.get_path("SCCODE_LIBRARY") / pack_name
-    if pack_dir.is_dir() and any(pack_dir.iterdir()) and not (pack_dir / 'downloaded_at.txt').exists():
-        _write_marker(pack_dir)
+    sccode_library = settings.get_path("SCCODE_LIBRARY")
+    if sccode_library is not None:
+        pack_name = settings.get("sc_backend.DEFAULT_SCCODE_PACK_NAME")
+        pack_dir = sccode_library / pack_name
+        if not (pack_dir / 'downloaded_at.txt').exists() and verify_sccode_pack(pack_name):
+            _write_marker(pack_dir)
 
 
 def download_special_sccode_pack(logger=None):

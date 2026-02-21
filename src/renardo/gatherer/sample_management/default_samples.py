@@ -3,7 +3,10 @@ from pathlib import Path
 import os
 
 from renardo.settings_manager import settings
-from renardo.gatherer.collection_download import download_files_from_json_index_concurrent
+from renardo.gatherer.collection_download import (
+    download_files_from_json_index_concurrent,
+    get_file_paths_from_json_index,
+)
 
 def _write_marker(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
@@ -21,12 +24,28 @@ def is_sample_pack_initialized(pack_name):
     return (settings.get_path("SAMPLES_DIR") / pack_name / 'downloaded_at.txt').exists()
 
 
+def verify_sample_pack(pack_name) -> bool:
+    """Verify all files from the collection index exist on disk for the given sample pack.
+
+    Returns True if complete (all files present), False if any file is missing
+    or the index cannot be fetched.
+    """
+    json_url = '{}/{}/{}/collection_index.json'.format(
+        settings.get("core.COLLECTIONS_DOWNLOAD_SERVER"),
+        settings.get("samples.SAMPLES_DIR_NAME"),
+        pack_name,
+    )
+    expected = get_file_paths_from_json_index(json_url, settings.get_path("SAMPLES_DIR"))
+    if expected is None:
+        return False
+    return all(p.exists() for p in expected)
+
+
 def backfill_sample_markers() -> None:
-    """Create missing downloaded_at.txt markers if sample directories already have content."""
-    samples_dir = settings.get_path("SAMPLES_DIR")
+    """Create missing downloaded_at.txt markers for complete sample packs on disk."""
     pack_name = settings.get("samples.DEFAULT_SAMPLE_PACK_NAME")
-    pack_dir = samples_dir / pack_name
-    if pack_dir.is_dir() and any(pack_dir.iterdir()) and not (pack_dir / 'downloaded_at.txt').exists():
+    pack_dir = settings.get_path("SAMPLES_DIR") / pack_name
+    if not (pack_dir / 'downloaded_at.txt').exists() and verify_sample_pack(pack_name):
         _write_marker(pack_dir)
 
 
