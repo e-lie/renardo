@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+/* Use data-mode attribute strategy for dark mode (Skeleton v4 recommended) */
+@custom-variant dark (&:where([data-mode="dark"], [data-mode="dark"] *));
+
 @import '@skeletonlabs/skeleton';
 @import '@skeletonlabs/skeleton-svelte';
 

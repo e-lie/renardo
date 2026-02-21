@@ -8,6 +8,14 @@
     <script>
       // Polyfill for hydra-synth
       window.global = window;
+      // Apply color scheme mode before render to avoid flash (Skeleton v4 data-mode strategy)
+      (function () {
+        var mode = localStorage.getItem('color-scheme-mode') || 'dark';
+        if (mode === 'auto') {
+          mode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-mode', mode);
+      })();
     </script>
   </head>
   <body>
