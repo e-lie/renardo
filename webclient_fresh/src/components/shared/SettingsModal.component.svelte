@@ -39,7 +39,7 @@
     role="dialog"
     aria-modal="true"
   >
-    <div class="card variant-glass-surface w-full max-w-4xl p-6 space-y-6">
+    <div class="card bg-surface-100 dark:bg-surface-800 w-full max-w-4xl p-6 space-y-6">
       <!-- Header -->
       <div class="flex justify-between items-center">
         <h2 class="h2">{$translate('settings')}</h2>
