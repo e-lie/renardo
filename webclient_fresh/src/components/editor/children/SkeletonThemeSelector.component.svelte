@@ -1,12 +1,16 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, untrack } from 'svelte';
   import { useI18nStore } from '../../../store/i18n/I18n.store';
+  import { useEditorStore } from '../../../store/editor/Editor.store';
 
   const i18n = useI18nStore();
   const { translate } = i18n.getters;
 
+  const { getters: editorGetters } = useEditorStore();
+  const { settings } = editorGetters;
+  const hydraBackground = $derived($settings.hydraBackground);
+
   const SKELETON_THEMES = [
-    'glass',
     'cerberus',
     'catppuccin',
     'concord',
@@ -38,6 +42,23 @@
   let colorSchemeMode = $state<ColorSchemeMode>('dark');
   let mediaQueryListener: ((e: MediaQueryListEvent) => void) | null = null;
   let mediaQuery: MediaQueryList | null = null;
+
+  $effect(() => {
+    const isEnabled = hydraBackground; // seule dépendance réactive
+    const theme = untrack(() => currentTheme); // lu sans créer de dépendance
+
+    if (isEnabled && theme !== 'glass') {
+      localStorage.setItem('skeleton-theme-last-non-glass', theme);
+      currentTheme = 'glass';
+      localStorage.setItem('skeleton-theme', 'glass');
+      applyTheme('glass');
+    } else if (!isEnabled && theme === 'glass') {
+      const fallback = localStorage.getItem('skeleton-theme-last-non-glass') || 'cerberus';
+      currentTheme = fallback;
+      localStorage.setItem('skeleton-theme', fallback);
+      applyTheme(fallback);
+    }
+  });
 
   onMount(() => {
     const savedTheme = localStorage.getItem('skeleton-theme') || 'cerberus';
@@ -85,6 +106,9 @@
     const newTheme = target.value;
     currentTheme = newTheme;
     localStorage.setItem('skeleton-theme', newTheme);
+    if (newTheme !== 'glass') {
+      localStorage.setItem('skeleton-theme-last-non-glass', newTheme);
+    }
     applyTheme(newTheme);
   }
 
@@ -123,6 +147,9 @@
     value={currentTheme}
     onchange={handleThemeChange}
   >
+    {#if hydraBackground}
+      <option value="glass">Glass</option>
+    {/if}
     {#each SKELETON_THEMES as theme}
       <option value={theme}>{theme.charAt(0).toUpperCase() + theme.slice(1)}</option>
     {/each}
