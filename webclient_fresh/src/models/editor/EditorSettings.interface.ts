@@ -26,6 +26,7 @@ export const AVAILABLE_THEMES: EditorThemeInterface[] = [
 export interface EditorSettingsInterface {
     theme: 'monokai' | 'dracula' | 'material' | 'nord' | 'solarized-dark' | 'solarized-light' | 'darcula' | 'eclipse'
     fontSize: number
+    lineHeight: number
     fontFamily: string
     tabSize: number
     showLineNumbers: boolean

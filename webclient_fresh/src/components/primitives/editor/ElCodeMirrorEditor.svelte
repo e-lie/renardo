@@ -18,6 +18,8 @@
     showLineNumbers = true,
     vimMode = false,
     fontFamily = 'Fira Code',
+    fontSize = 14,
+    lineHeight = 1.5,
     testid = 'not-set',
     onchange,
     onexecute,
@@ -30,6 +32,8 @@
     showLineNumbers?: boolean;
     vimMode?: boolean;
     fontFamily?: string;
+    fontSize?: number;
+    lineHeight?: number;
     testid?: string;
     onchange?: (value: string) => void;
     onexecute?: (code: string) => void;
@@ -102,40 +106,35 @@
     }
   });
 
-  // Update font family when prop changes with lazy loading
+  // Update font family, font size, line height when props change
   $effect(() => {
     const currentFontFamily = fontFamily;
+    const currentFontSize = fontSize;
+    const currentLineHeight = lineHeight;
 
     if (editorView) {
-      logger.info('ElCodeMirrorEditor', 'Font family prop changed, updating editor', { fontFamily: currentFontFamily });
+      logger.info('ElCodeMirrorEditor', 'Font props changed, updating editor', { fontFamily: currentFontFamily, fontSize: currentFontSize, lineHeight: currentLineHeight });
 
-      // Lazy load JGS fonts if needed
       const jgsFonts = ['JGS', 'JGS5', 'JGS7', 'JGS9'];
       if (jgsFonts.includes(currentFontFamily)) {
-        const fontMap = {
-          'JGS': '12px JGS',
-          'JGS5': '12px JGS5',
-          'JGS7': '12px JGS7',
-          'JGS9': '12px JGS9'
+        const fontMap: Record<string, string> = {
+          'JGS': `${currentFontSize}px JGS`,
+          'JGS5': `${currentFontSize}px JGS5`,
+          'JGS7': `${currentFontSize}px JGS7`,
+          'JGS9': `${currentFontSize}px JGS9`
         };
-
-        logger.debug('ElCodeMirrorEditor', 'Lazy loading JGS font', { fontFamily: currentFontFamily });
-
-        // Load the font before applying it
-        document.fonts.load(fontMap[currentFontFamily as keyof typeof fontMap]).then(() => {
-          logger.debug('ElCodeMirrorEditor', 'JGS font loaded successfully', { fontFamily: currentFontFamily });
-          applyFontStyle(currentFontFamily);
-        }).catch((err) => {
-          logger.error('ElCodeMirrorEditor', 'Failed to load JGS font', { fontFamily: currentFontFamily, error: err });
-          applyFontStyle(currentFontFamily); // Apply anyway
+        document.fonts.load(fontMap[currentFontFamily]).then(() => {
+          applyFontStyle(currentFontFamily, currentFontSize, currentLineHeight);
+        }).catch(() => {
+          applyFontStyle(currentFontFamily, currentFontSize, currentLineHeight);
         });
       } else {
-        applyFontStyle(currentFontFamily);
+        applyFontStyle(currentFontFamily, currentFontSize, currentLineHeight);
       }
     }
   });
 
-  function applyFontStyle(currentFontFamily: string) {
+  function applyFontStyle(currentFontFamily: string, currentFontSize: number, currentLineHeight: number) {
     if (!editorView) return;
 
     editorView.dispatch({
@@ -143,7 +142,7 @@
         EditorView.theme({
           '&': {
             height: '100%',
-            fontSize: '14px',
+            fontSize: `${currentFontSize}px`,
             fontFamily: `${currentFontFamily}, "Consolas", monospace`,
             position: 'relative',
           },
@@ -158,7 +157,7 @@
           },
           '.cm-content': {
             padding: '16px',
-            lineHeight: '1.5',
+            lineHeight: String(currentLineHeight),
           },
           '.cm-focused': {
             outline: 'none',
@@ -365,7 +364,7 @@
           EditorView.theme({
             '&': {
               height: '100%',
-              fontSize: '14px',
+              fontSize: `${fontSize}px`,
               fontFamily: `${fontFamily}, "Consolas", monospace`,
               position: 'relative',
             },
@@ -380,7 +379,7 @@
             },
             '.cm-content': {
               padding: '16px',
-              lineHeight: '1.5',
+              lineHeight: String(lineHeight),
             },
             '.cm-focused': {
               outline: 'none',

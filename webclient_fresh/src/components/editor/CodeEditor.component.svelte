@@ -43,6 +43,8 @@
       showLineNumbers={$settings.showLineNumbers}
       vimMode={$settings.vimMode}
       fontFamily={$settings.fontFamily}
+      fontSize={$settings.fontSize}
+      lineHeight={$settings.lineHeight}
       testid="code-editor"
       onchange={handleChange}
       onexecute={handleExecute}

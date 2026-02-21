@@ -28,6 +28,8 @@ export const translations = {
     vimModeDescription: 'Enable Vim keybindings in the code editor',
     fontFamily: 'Font Family',
     fontFamilyDescription: 'Choose the font for the code editor',
+    fontSize: 'Font Size',
+    lineHeight: 'Line Height',
 
     // Layout
     textArea: 'Text Area',
@@ -92,6 +94,8 @@ export const translations = {
     vimModeDescription: 'Activer les raccourcis Vim dans l\'éditeur de code',
     fontFamily: 'Police de caractères',
     fontFamilyDescription: 'Choisir la police pour l\'éditeur de code',
+    fontSize: 'Taille de police',
+    lineHeight: 'Interligne',
 
     // Layout
     textArea: 'Zone de texte',
@@ -156,6 +160,8 @@ export const translations = {
     vimModeDescription: 'Activar atajos de teclado Vim en el editor de código',
     fontFamily: 'Familia de fuentes',
     fontFamilyDescription: 'Elegir la fuente para el editor de código',
+    fontSize: 'Tamaño de fuente',
+    lineHeight: 'Altura de línea',
 
     // Layout
     textArea: 'Área de texto',
@@ -220,6 +226,8 @@ export const translations = {
     vimModeDescription: 'Vim-Tastenkombinationen im Code-Editor aktivieren',
     fontFamily: 'Schriftart',
     fontFamilyDescription: 'Schriftart für den Code-Editor wählen',
+    fontSize: 'Schriftgröße',
+    lineHeight: 'Zeilenhöhe',
 
     // Layout
     textArea: 'Textbereich',
