@@ -19,7 +19,7 @@ class LogEntry:
     level: str  # DEBUG, INFO, WARNING, ERROR, CRITICAL
     logger: str  # Logger name (e.g., 'renardo.main')
     source: str  # Source type (e.g., 'renardo', 'subprocess')
-    process: str  # Process name (e.g., 'BACKEND', 'FRONTEND', 'FLOK')
+    process: str  # Process name (e.g., 'BACKEND', 'FRONTEND')
     module_path: Optional[str] = None  # Path to the module that logged
     message: str = ""
     extra: Optional[Dict[str, Any]] = None
