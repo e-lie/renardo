@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from pathlib import Path
 from typing import List
@@ -17,6 +18,43 @@ from .init.routes import router as init_router
 from ..logger import get_main_logger
 
 app = FastAPI(title="Renardo WebServer Fresh", version="1.0.0")
+
+# Static files configuration
+def get_static_folder() -> Path:
+    """Find the static folder for serving frontend files."""
+    logger = get_main_logger()
+
+    # Check for RENARDO_STATIC_FOLDER env var (set by Electron)
+    env_static = os.environ.get("RENARDO_STATIC_FOLDER")
+    logger.info(f"RENARDO_STATIC_FOLDER env: {env_static}")
+    if env_static:
+        env_path = Path(env_static)
+        if env_path.exists() and (env_path / "index.html").exists():
+            logger.info(f"Using static folder from env: {env_path}")
+            return env_path
+        else:
+            logger.warning(f"Static folder from env does not exist or missing index.html: {env_path}")
+
+    # Try to find webclient_fresh/dist relative to this file
+    current_file = Path(__file__).resolve()
+    logger.info(f"Current file: {current_file}")
+
+    # Go up to find project root (where pyproject.toml is)
+    for parent in current_file.parents:
+        dist_path = parent / "webclient_fresh" / "dist"
+        if dist_path.exists() and (dist_path / "index.html").exists():
+            logger.info(f"Found static folder at: {dist_path}")
+            return dist_path
+        # Also check for static folder in webserver_fresh (packaged app)
+        static_path = parent / "webserver_fresh" / "static"
+        if static_path.exists() and (static_path / "index.html").exists():
+            logger.info(f"Found static folder at: {static_path}")
+            return static_path
+
+    logger.warning("No static folder found")
+    return None
+
+STATIC_FOLDER = get_static_folder()
 
 # Include WebSocket routes
 app.include_router(websocket_router, prefix="/ws", tags=["websocket"])
@@ -35,6 +73,8 @@ app.add_middleware(
         "http://127.0.0.1:3001",
         "ws://localhost:3001",
         "ws://127.0.0.1:3001",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -119,6 +159,9 @@ async def execute_code(request: ExecuteCodeRequest):
 
 @app.get("/")
 async def root():
+    """Serve index.html for SPA or return API message"""
+    if STATIC_FOLDER and (STATIC_FOLDER / "index.html").exists():
+        return FileResponse(STATIC_FOLDER / "index.html")
     return {"message": "Renardo WebServer Fresh is running!"}
 
 
@@ -544,3 +587,23 @@ async def frontend_logs(request: FrontendLogRequest):
         logger.info(message)
 
     return {"success": True}
+
+
+# SPA catch-all route - must be at the end
+@app.get("/{full_path:path}")
+async def serve_spa(full_path: str):
+    """Serve static files or index.html for SPA routing"""
+    if not STATIC_FOLDER:
+        raise HTTPException(status_code=404, detail="Static files not configured")
+
+    # Try to serve the exact file
+    file_path = STATIC_FOLDER / full_path
+    if file_path.exists() and file_path.is_file():
+        return FileResponse(file_path)
+
+    # For SPA routing, return index.html for non-file paths
+    index_path = STATIC_FOLDER / "index.html"
+    if index_path.exists():
+        return FileResponse(index_path)
+
+    raise HTTPException(status_code=404, detail="File not found")

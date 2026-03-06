@@ -12,7 +12,12 @@ from typing import Optional, Dict
 
 def _ensure_log_dir():
     """Ensure the log directory exists."""
-    log_dir = Path("./ignored_files/logs")
+    # In Electron mode, use temp directory (AppImage is read-only)
+    if os.environ.get("RENARDO_WEB_MODE") == "electron":
+        import tempfile
+        log_dir = Path(tempfile.gettempdir()) / "renardo-logs"
+    else:
+        log_dir = Path("./ignored_files/logs")
     log_dir.mkdir(parents=True, exist_ok=True)
     return log_dir
 

@@ -3,6 +3,13 @@
   "version": "1.0.0",
   "type": "module",
   "private": true,
+  "main": "electron/main.js",
+  "description": "Renardo Web Client Fresh - Live coding with Python and SuperCollider",
+  "homepage": "https://github.com/e-music-comp/renardo",
+  "author": {
+    "name": "Renardo Project",
+    "email": "music.music@music.music"
+  },
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 3001",
     "build": "vite build",
@@ -12,7 +19,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "format": "prettier --write .",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "dev:electron": "concurrently \"npm run dev\" \"electron .\"",
+    "build:electron": "vite build && electron-builder",
+    "dist": "vite build && electron-builder --publish=never",
+    "dist:appimage": "vite build && electron-builder --linux AppImage --publish=never"
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "^11.12.0",
@@ -24,6 +35,9 @@
     "@typescript-eslint/eslint-plugin": "^6.19.1",
     "@typescript-eslint/parser": "^6.19.1",
     "autoprefixer": "^10.4.17",
+    "concurrently": "^8.2.2",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0",
     "eslint": "^8.56.0",
     "eslint-plugin-svelte": "^2.35.1",
     "postcss": "^8.4.33",
@@ -59,5 +73,60 @@
     "graphql-tag": "^2.12.6",
     "graphql-ws": "^5.14.2",
     "hydra-synth": "^1.4.0"
+  },
+  "build": {
+    "appId": "com.renardo.app",
+    "productName": "Renardo",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "!python/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "python",
+        "to": "python",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "../src/renardo",
+        "to": "renardo",
+        "filter": [
+          "**/*.py",
+          "**/*.json",
+          "**/*.yaml",
+          "**/*.conf",
+          "**/*.txt",
+          "**/*.md",
+          "**/*.toml"
+        ]
+      },
+      {
+        "from": "dist",
+        "to": "renardo/webserver_fresh/static",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.music"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Audio",
+      "maintainer": "Renardo Project <music.music@music.music>"
+    },
+    "win": {
+      "target": "nsis"
+    }
   }
 }
