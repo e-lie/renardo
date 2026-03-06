@@ -6,8 +6,13 @@ import { startServer, stopServer, isServerRunning } from './pythonManager.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// If laggy with Nvidia drivers on Linux (breaks Hydra/WebGL):
-// app.commandLine.appendSwitch('disable-gpu');
+// GPU acceleration flags for Nvidia on Linux
+if (process.platform === 'linux') {
+  app.commandLine.appendSwitch('use-gl', 'egl');
+  app.commandLine.appendSwitch('enable-gpu-rasterization');
+  app.commandLine.appendSwitch('ignore-gpu-blocklist');
+  app.commandLine.appendSwitch('enable-features', 'VaapiVideoDecoder,VaapiIgnoreDriverChecks,Vulkan');
+}
 
 let mainWindow = null;
 
