@@ -16,8 +16,9 @@ from .websocket.manager import websocket_manager
 from .sc_backend.routes import router as sc_backend_router, init_sc_service
 from .init.routes import router as init_router
 from ..logger import get_main_logger
+from ..__about__ import __version__
 
-app = FastAPI(title="Renardo WebServer Fresh", version="1.0.0")
+app = FastAPI(title="Renardo WebServer Fresh", version=__version__)
 
 # Static files configuration
 def get_static_folder() -> Path:
