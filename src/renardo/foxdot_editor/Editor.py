@@ -53,7 +53,8 @@ class workspace:
         CodeClass.namespace["GUI"] = self
         CodeClass.namespace["Player"].widget = self
 
-        self.version = this_version = "1.0.0a4"
+        from renardo.__about__ import __version__
+        self.version = this_version = __version__
 
         pypi_version = get_pypi_version()
         self.theme = settings.get("foxdot_editor.COLOR_THEME")

@@ -6,6 +6,8 @@ import argparse
 import sys
 from typing import Dict, Any
 
+from renardo.__about__ import __version__
+
 
 def parse_arguments(args=None) -> Dict[str, Any]:
     """
@@ -38,7 +40,7 @@ For more information, visit: https://renardo.org/
     parser.add_argument(
         '--version', 
         action='version',
-        version='Renardo CLI 1.0.0'
+        version=f'Renardo CLI {__version__}'
     )
     
     # Main modes
