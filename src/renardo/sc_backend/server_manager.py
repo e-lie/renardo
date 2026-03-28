@@ -1,6 +1,8 @@
 """ Handles OSC messages being sent to SuperCollider.
 """
 import sys
+import logging
+_logger = logging.getLogger('renardo.main')
 
 import queue
 
@@ -43,6 +45,7 @@ class OSCClientWrapper(OSCClient):
         except OSCClientError as e:
             if not OSCClientWrapper.error_printed:
                 print("Error sending message to SuperCollider server instance: make sure FoxDot quark is running and try again.")
+                _logger.error(f"OSC send failed: {e} | args={args[1:]}")
                 OSCClientWrapper.error_printed = True
 
 class OSCConnect(OSCClientWrapper):
@@ -173,8 +176,11 @@ class ServerManager:
             return False
 
     def init_connection(self):
+        _logger.debug(f"Connecting to scsynth at {self.addr}:{self.port}")
+        _logger.debug(f"Connecting to sclang at {self.addr}:{self.SCLang_port}")
         self.client.connect((self.addr, self.port))
         self.sclang.connect((self.addr, self.SCLang_port))
+        _logger.debug("OSC connections established")
 
         # Use bidirectionnal connection to ask SuperCollider for info
         if settings.get("sc_backend.GET_SC_INFO"):

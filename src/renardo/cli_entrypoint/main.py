@@ -42,6 +42,13 @@ def main(args=None) -> int:
         logger.info("Renardo CLI starting")
         logger.debug(f"Configuration: {config}")
         
+        # Handle --create-scfiles before routing to a mode
+        if config.get('create_scfiles'):
+            from renardo.sc_backend import write_sc_renardo_files_in_user_config
+            write_sc_renardo_files_in_user_config()
+            print("SuperCollider files regenerated.")
+            return 0
+
         # Route to appropriate mode
         if config.get('pipe'):
             logger.info("Starting pipe mode")

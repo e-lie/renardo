@@ -96,6 +96,12 @@ For more information, visit: https://renardo.org/
     
     # SuperCollider options
     parser.add_argument(
+        '--create-scfiles',
+        action='store_true',
+        help='Regenerate Renardo SuperCollider class files in SC user config dir'
+    )
+
+    parser.add_argument(
         '--sclang',
         action='store_true',
         help='Launch SuperCollider (sclang) instance before starting pipe mode'

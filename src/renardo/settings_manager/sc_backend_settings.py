@@ -23,7 +23,7 @@ settings.set_defaults_from_dict({
         "OSC_MIDI_ADDRESS": "/foxdot_midi",
         "GET_SC_INFO": True,
         "ADDRESS": 'localhost',
-        "PORT": 23456,
+        "PORT": 57000,
         "PORT2": 57120,
         "FORWARD_PORT": 0,
         "FORWARD_ADDRESS": '',
@@ -42,7 +42,7 @@ settings.set_defaults_from_dict({
         "NUM_INPUT_BUS_CHANNELS": 8,
         # If True, use SuperCollider default server (port 57110)
         # If False, create custom server with specified PORT
-        "USE_DEFAULT_SERVER": True,
+        "USE_DEFAULT_SERVER": False,
     }
 },
 internal=True
