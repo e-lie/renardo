@@ -26,7 +26,7 @@ download_artifacts:
 	@echo "Clearing ignored_files/artifacts..."
 	@rm -rf ignored_files/artifacts && mkdir -p ignored_files/artifacts
 	@echo "Downloading latest release artifacts..."
-	gh release download --repo e-lie/renardo --dir ignored_files/artifacts
+	gh release download --repo e-lie/renardo --dir ignored_files/artifacts --pattern '*'
 	@echo "Done."
 
 publish_electron_release:
