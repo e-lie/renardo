@@ -31,4 +31,4 @@ download_artifacts:
 
 publish_electron_release:
 	@echo "Triggering electron release for v$(CURRENT_VERSION)"
-	gh workflow run publish-electron-release.yml --field tag=v$(CURRENT_VERSION)
+	gh workflow run publish-electron-release.yml --ref $(shell git rev-parse --abbrev-ref HEAD) --field tag=v$(CURRENT_VERSION)
