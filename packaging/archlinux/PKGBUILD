@@ -1,0 +1,20 @@
+# Maintainer: renardo team
+pkgname=renardo
+pkgver=1.0.0a10
+pkgrel=1
+pkgdesc="Renardo livecoding musical editor"
+arch=('x86_64')
+url="https://github.com/e-lie/renardo"
+license=('GPL3')
+depends=('alsa-lib' 'nss' 'libxtst' 'libxss' 'gtk3' 'libnotify' 'libuuid')
+options=('!strip')
+
+_debver=$(echo "$pkgver" | sed 's/\([0-9]\)\([a-z]\)/\1-\2/')
+source=("${pkgname}-webclient-fresh_${_debver}_amd64.deb::https://github.com/e-lie/renardo/releases/download/v${pkgver}/renardo-webclient-fresh_${_debver}_amd64.deb")
+sha256sums=('SKIP')
+
+package() {
+    cd "$srcdir"
+    ar x "${pkgname}-webclient-fresh_${_debver}_amd64.deb"
+    tar -xf data.tar.* -C "$pkgdir/"
+}

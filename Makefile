@@ -1,4 +1,4 @@
-.PHONY: format publish_beta publish_electron_release download_artifacts
+.PHONY: format publish_beta publish_electron_release download_artifacts update_pkgbuild
 
 VERSION_FILE := VERSION
 CURRENT_VERSION := $(shell cat $(VERSION_FILE))
@@ -14,7 +14,8 @@ publish_beta:
 		echo "New version: $$NEW_VERSION" && \
 		echo "$$NEW_VERSION" > $(VERSION_FILE) && \
 		sed -i 's/"version": "[^"]*"/"version": "'$$NEW_VERSION'"/' webclient_fresh/package.json && \
-		git add $(VERSION_FILE) webclient_fresh/package.json && \
+		sed -i 's/^pkgver=.*/pkgver='$$NEW_VERSION'/' packaging/archlinux/PKGBUILD && \
+		git add $(VERSION_FILE) webclient_fresh/package.json packaging/archlinux/PKGBUILD && \
 		git commit -m "Bump version to $$NEW_VERSION" && \
 		git tag "v$$NEW_VERSION" && \
 		git push && \
@@ -28,6 +29,9 @@ download_artifacts:
 	@echo "Downloading latest release artifacts..."
 	gh release download --repo e-lie/renardo --dir ignored_files/artifacts --pattern '*'
 	@echo "Done."
+
+update_pkgbuild:
+	sed -i 's/^pkgver=.*/pkgver=$(CURRENT_VERSION)/' packaging/archlinux/PKGBUILD
 
 publish_electron_release:
 	@echo "Triggering electron release for v$(CURRENT_VERSION)"
