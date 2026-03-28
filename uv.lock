@@ -1736,7 +1736,6 @@ wheels = [
 
 [[package]]
 name = "renardo"
-version = "1.0.0a4"
 source = { editable = "." }
 dependencies = [
     { name = "diskcache" },

@@ -36,13 +36,13 @@ def get_static_folder() -> Path:
         else:
             logger.warning(f"Static folder from env does not exist or missing index.html: {env_path}")
 
-    # Try to find webclient_fresh/dist relative to this file
+    # Try to find webclient/dist relative to this file
     current_file = Path(__file__).resolve()
     logger.info(f"Current file: {current_file}")
 
     # Go up to find project root (where pyproject.toml is)
     for parent in current_file.parents:
-        dist_path = parent / "webclient_fresh" / "dist"
+        dist_path = parent / "webclient" / "dist"
         if dist_path.exists() and (dist_path / "index.html").exists():
             logger.info(f"Found static folder at: {dist_path}")
             return dist_path

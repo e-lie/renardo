@@ -1,14 +1,11 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    './index.html',
-    './src/**/*.{svelte,js,ts,jsx,tsx}',
-  ],
+  content: ['./src/**/*.{html,js,svelte,ts}'],
   theme: {
     extend: {},
   },
-  plugins: ['daisyui'],
+  plugins: [require('daisyui')],
   daisyui: {
-    themes: ["default", "light", "dark", "synthwave", "coffee", "pastel", "cyberpunk"],
-  },
+    themes: ['light', 'dark', 'cupcake', 'bumblebee']
+  }
 }

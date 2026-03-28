@@ -1,33 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html data-theme="cerberus" lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="/fonts/fonts.css">
-    <link rel="stylesheet" href="/themes/renardo.css">
-    <link rel="stylesheet" href="/themes/light.css">
-    <link rel="stylesheet" href="/themes/dark.css">
-    <link rel="stylesheet" href="/themes/synthwave.css">
-    <link rel="stylesheet" href="/themes/coffee.css">
-    <link rel="stylesheet" href="/themes/pastel.css">
-    <link rel="stylesheet" href="/themes/cyberpunk.css">
-    <title>Renardo ฅ^•ﻌ•^ฅ</title>
+    <title>Renardo WebClient</title>
     <script>
-      // Initialize theme from localStorage on page load
-      (function() {
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) {
-          document.documentElement.setAttribute('data-theme', savedTheme);
-        } else {
-          document.documentElement.setAttribute('data-theme', 'default');
-          localStorage.setItem('theme', 'default');
+      // Polyfill for hydra-synth
+      window.global = window;
+      // Apply color scheme mode before render to avoid flash (Skeleton v4 data-mode strategy)
+      (function () {
+        var mode = localStorage.getItem('color-scheme-mode') || 'dark';
+        if (mode === 'auto') {
+          mode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
+        document.documentElement.setAttribute('data-mode', mode);
       })();
     </script>
   </head>
   <body>
+    <div id="background-canvas-container"></div>
     <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
+    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

@@ -47,7 +47,7 @@ def run_webclient_mode(config: Dict[str, Any]) -> int:
         logger.error("Could not find project root (pyproject.toml not found)")
         return 1
 
-    webclient_dir = project_root / "webclient_fresh"
+    webclient_dir = project_root / "webclient"
 
     if not webclient_dir.exists():
         logger.error(f"Webclient directory not found: {webclient_dir}")

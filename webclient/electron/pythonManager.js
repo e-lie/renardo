@@ -7,23 +7,18 @@ import http from 'http';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-let pythonProcess = null;
+let serverProcess = null;
 
-/**
- * Find the Python executable path based on environment
- */
 function findPython() {
   const isWindows = process.platform === 'win32';
-  
+
   if (app.isPackaged) {
-    // In packaged app: python is in resources
     if (isWindows) {
       return join(process.resourcesPath, 'python', 'python.exe');
     } else {
       return join(process.resourcesPath, 'python', 'bin', 'python3.12');
     }
   } else {
-    // In development: python is in webclient/python
     if (isWindows) {
       return join(__dirname, '..', 'python', 'python.exe');
     } else {
@@ -32,76 +27,75 @@ function findPython() {
   }
 }
 
-/**
- * Find the Renardo source path
- */
 function findRenardoPath() {
   if (app.isPackaged) {
-    // In packaged app: renardo source is in resources
     return join(process.resourcesPath, 'renardo');
   } else {
-    // In development: use the actual source directory
     return join(__dirname, '..', '..', 'src', 'renardo');
   }
 }
 
-/**
- * Find the Python path (parent directory containing renardo module)
- */
 function findPythonPath() {
   if (app.isPackaged) {
-    // In packaged app: resources directory contains the renardo module
     return process.resourcesPath;
   } else {
-    // In development: src directory contains the renardo module
     return join(__dirname, '..', '..', 'src');
   }
 }
 
-/**
- * Get the local site-packages directory for the bundled Python
- */
+function findStaticFolder() {
+  if (app.isPackaged) {
+    return join(process.resourcesPath, 'renardo', 'webserver_fresh', 'static');
+  } else {
+    return join(__dirname, '..', 'dist');
+  }
+}
+
 function getLocalSitePackages() {
-  // Create a local site-packages directory in app's temp space
   const tempDir = app.getPath('temp');
   return join(tempDir, 'renardo-electron', 'site-packages');
 }
 
-/**
- * Install required dependencies in the bundled Python
- * In development, we'll run with the system Python setup
- */
 async function installDependencies() {
   if (app.isPackaged) {
     const pythonPath = findPython();
     const localSitePackages = getLocalSitePackages();
-    
+    const fs = await import('fs');
+    const markerFile = join(localSitePackages, '.deps-installed');
+
+    // Check if dependencies are already installed
+    if (fs.existsSync(markerFile)) {
+      console.log('Dependencies already installed, skipping...');
+      return Promise.resolve();
+    }
+
     console.log('Installing dependencies in packaged app...');
     console.log('Local site-packages:', localSitePackages);
-    
+
     return new Promise((resolve, reject) => {
-      // Install all pip packages needed by renardo (from pyproject.toml dependencies)
-      // Use --target to install to a specific directory instead of user directory
       const installProcess = spawn(pythonPath, [
         '-m', 'pip', 'install', '--target', localSitePackages,
         'midiutil', 'tomli', 'tomli-w', 'requests', 'psutil', 'indexed',
         'python-rtmidi', 'ttkbootstrap', 'textual<3', 'fastnumbers>=5.1.1',
-        'mido>=1.3.3', 'flask>=3.1.0', 'flask-sock>=0.7.0', 'flask-cors>=3.0.10',
-        'websockets>=10.4', 'gunicorn', 'gevent', 'gevent-websocket',
-        'markdown>=3.5.1', 'python-reapy>=0.10.0', 'python-osc>=1.8.3'
+        'mido>=1.3.3', 'fastapi>=0.109.0', 'uvicorn>=0.27.0',
+        'websockets>=10.4', 'markdown>=3.5.1', 'python-reapy>=0.10.0',
+        'python-osc>=1.8.3', 'diskcache>=5.6.0', 'strawberry-graphql>=0.217.0',
+        'pydantic>=2.0.0', 'jinja2>=3.1.0'
       ]);
-      
+
       installProcess.stdout.on('data', (data) => {
         console.log(`Pip install: ${data.toString()}`);
       });
-      
+
       installProcess.stderr.on('data', (data) => {
         console.error(`Pip install error: ${data.toString()}`);
       });
-      
+
       installProcess.on('close', (code) => {
         if (code === 0) {
           console.log('Dependencies installed successfully');
+          // Create marker file to skip install next time
+          fs.writeFileSync(markerFile, new Date().toISOString());
           resolve();
         } else {
           reject(new Error(`Failed to install dependencies, exit code: ${code}`));
@@ -114,139 +108,116 @@ async function installDependencies() {
   }
 }
 
-/**
- * Start the Flask server
- */
-async function startFlaskServer() {
-  let pythonExecutable, renardoPath, pythonPath;
-  
+async function startServer() {
+  let pythonExecutable, renardoPath, pythonPath, staticFolder;
+
   if (app.isPackaged) {
-    // Production: use embedded Python
     pythonExecutable = findPython();
     renardoPath = findRenardoPath();
     pythonPath = findPythonPath();
-    
+    staticFolder = findStaticFolder();
+
     console.log('Production mode');
     console.log('Python executable:', pythonExecutable);
     console.log('Renardo source path:', renardoPath);
     console.log('Python module path:', pythonPath);
-    
+    console.log('Static folder:', staticFolder);
+
     try {
       await installDependencies();
     } catch (error) {
       console.error('Failed to install dependencies:', error);
       throw error;
     }
-    
-    // Start the Flask server by running renardo module
-    // Set PYTHONPATH to include both the renardo module and local site-packages
+
     const localSitePackages = getLocalSitePackages();
     const pathSeparator = process.platform === 'win32' ? ';' : ':';
     const pythonPathEnv = `${localSitePackages}${pathSeparator}${pythonPath}`;
-    
-    pythonProcess = spawn(pythonExecutable, ['-m', 'renardo', '--no-browser'], {
+
+    // Run uvicorn with webserver_fresh
+    serverProcess = spawn(pythonExecutable, [
+      '-m', 'uvicorn',
+      'renardo.webserver_fresh.app:app',
+      '--host', '0.0.0.0',
+      '--port', '8000'
+    ], {
       cwd: pythonPath,
       env: {
         ...process.env,
         PYTHONPATH: pythonPathEnv,
-        RENARDO_WEB_MODE: 'electron'
+        RENARDO_WEB_MODE: 'electron',
+        RENARDO_STATIC_FOLDER: staticFolder
       }
     });
   } else {
-    // Development: use system Python with uv
     renardoPath = findRenardoPath();
     pythonPath = findPythonPath();
+    staticFolder = findStaticFolder();
+
     console.log('Development mode');
     console.log('Renardo source path:', renardoPath);
     console.log('Python module path:', pythonPath);
-    
-    // Use uv to run renardo with proper environment
-    pythonProcess = spawn('uv', ['run', 'python', '-m', 'renardo', '--no-browser'], {
-      cwd: pythonPath,
+    console.log('Static folder:', staticFolder);
+
+    // Use uv to run uvicorn with proper environment
+    serverProcess = spawn('uv', [
+      'run', 'uvicorn',
+      'renardo.webserver_fresh.app:app',
+      '--host', '0.0.0.0',
+      '--port', '8000',
+      '--reload'
+    ], {
+      cwd: join(__dirname, '..', '..'),
       env: {
         ...process.env,
-        RENARDO_WEB_MODE: 'electron'
+        RENARDO_WEB_MODE: 'electron',
+        RENARDO_STATIC_FOLDER: staticFolder
       }
     });
   }
-  
-  console.log('Starting Flask server...');
-  
-  pythonProcess.stdout.on('data', (data) => {
-    const output = data.toString();
-    console.log(`Flask stdout: ${output}`);
+
+  console.log('Starting uvicorn server...');
+
+  serverProcess.stdout.on('data', (data) => {
+    console.log(`Server stdout: ${data.toString()}`);
   });
-  
-  pythonProcess.stderr.on('data', (data) => {
-    const output = data.toString();
-    console.log(`Flask stderr: ${output}`);
+
+  serverProcess.stderr.on('data', (data) => {
+    console.log(`Server stderr: ${data.toString()}`);
   });
-  
-  pythonProcess.on('close', (code) => {
-    console.log(`Flask process exited with code ${code}`);
-    pythonProcess = null;
+
+  serverProcess.on('close', (code) => {
+    console.log(`Server process exited with code ${code}`);
+    serverProcess = null;
   });
-  
-  pythonProcess.on('error', (error) => {
-    console.error('Failed to start Flask process:', error);
-    pythonProcess = null;
+
+  serverProcess.on('error', (error) => {
+    console.error('Failed to start server process:', error);
+    serverProcess = null;
   });
-  
-  // Give Flask a moment to start, then proceed
-  console.log('Giving Flask server time to start...');
+
+  console.log('Giving server time to start...');
   await new Promise(resolve => setTimeout(resolve, 3000));
-  
-  // Optional: try health check once but don't fail if it doesn't work
+
   try {
     const result = await checkHealth();
     if (result) {
-      console.log('Flask server confirmed ready!');
+      console.log('Server confirmed ready!');
     } else {
-      console.log('Flask server not responding to health check, but proceeding anyway...');
+      console.log('Server not responding to health check, but proceeding anyway...');
     }
   } catch (error) {
     console.log('Health check failed, but proceeding anyway...');
   }
-  
+
   return true;
 }
 
-/**
- * Wait for Flask server to be ready
- */
-async function waitForFlask(maxAttempts = 30) {
-  console.log('Waiting for Flask server to be ready...');
-  
-  for (let i = 0; i < maxAttempts; i++) {
-    try {
-      const result = await checkHealth();
-      if (result) {
-        console.log('Flask server is ready!');
-        return true;
-      }
-    } catch (error) {
-      // Server not ready yet, continue waiting
-    }
-    
-    console.log(`Attempt ${i + 1}/${maxAttempts}: Flask not ready, waiting...`);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-  }
-  
-  throw new Error(`Flask server failed to start after ${maxAttempts} attempts`);
-}
-
-/**
- * Check Flask health using http module
- */
 function checkHealth() {
-  return new Promise((resolve, reject) => {
-    const req = http.get('http://localhost:12345/api/health', (res) => {
+  return new Promise((resolve) => {
+    const req = http.get('http://localhost:8000/health', (res) => {
       let data = '';
-      
-      res.on('data', (chunk) => {
-        data += chunk;
-      });
-      
+      res.on('data', (chunk) => { data += chunk; });
       res.on('end', () => {
         if (res.statusCode === 200) {
           console.log('Health check successful:', data);
@@ -256,11 +227,8 @@ function checkHealth() {
         }
       });
     });
-    
-    req.on('error', (error) => {
-      resolve(false); // Don't reject, just return false to continue trying
-    });
-    
+
+    req.on('error', () => resolve(false));
     req.setTimeout(2000, () => {
       req.destroy();
       resolve(false);
@@ -268,35 +236,28 @@ function checkHealth() {
   });
 }
 
-/**
- * Stop the Flask server
- */
-function stopFlaskServer() {
-  if (pythonProcess) {
-    console.log('Stopping Flask server...');
-    pythonProcess.kill('SIGTERM');
-    
-    // Force kill after 5 seconds if still running
+function stopServer() {
+  if (serverProcess) {
+    console.log('Stopping server...');
+    serverProcess.kill('SIGTERM');
+
     setTimeout(() => {
-      if (pythonProcess && !pythonProcess.killed) {
-        console.log('Force killing Flask process...');
-        pythonProcess.kill('SIGKILL');
+      if (serverProcess && !serverProcess.killed) {
+        console.log('Force killing server process...');
+        serverProcess.kill('SIGKILL');
       }
     }, 5000);
-    
-    pythonProcess = null;
+
+    serverProcess = null;
   }
 }
 
-/**
- * Check if Flask server is running
- */
-function isFlaskRunning() {
-  return pythonProcess !== null && !pythonProcess.killed;
+function isServerRunning() {
+  return serverProcess !== null && !serverProcess.killed;
 }
 
 export {
-  startFlaskServer,
-  stopFlaskServer,
-  isFlaskRunning
+  startServer,
+  stopServer,
+  isServerRunning
 };
