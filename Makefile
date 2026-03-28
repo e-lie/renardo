@@ -1,4 +1,4 @@
-.PHONY: format publish_beta publish_electron_release download_artifacts update_pkgbuild
+.PHONY: format publish_beta publish_electron_release download_artifacts update_pkgbuild logs
 
 VERSION_FILE := VERSION
 CURRENT_VERSION := $(shell cat $(VERSION_FILE))
@@ -29,6 +29,9 @@ download_artifacts:
 	@echo "Downloading latest release artifacts..."
 	gh release download --repo e-lie/renardo --dir ignored_files/artifacts --pattern '*'
 	@echo "Done."
+
+logs:
+	lnav $(shell uv run python -c "from platformdirs import user_log_dir; print(user_log_dir('renardo'))")
 
 update_pkgbuild:
 	sed -i 's/^pkgver=.*/pkgver=$(CURRENT_VERSION)/' packaging/archlinux/PKGBUILD
