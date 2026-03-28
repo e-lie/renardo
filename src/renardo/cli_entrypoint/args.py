@@ -20,17 +20,18 @@ def parse_arguments(args=None) -> Dict[str, Any]:
         Dictionary of parsed arguments
     """
     parser = argparse.ArgumentParser(
-        prog='renardo-cli',
+        prog='renardo',
         description='Renardo Live Coding Environment',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  uv run cli --pipe          # Interactive pipe mode with separate runtime
-  uv run cli --webclient     # Start web client application (Svelte + FastAPI)
-  uv run cli --sclang        # Start with SuperCollider instance
-  uv run cli --sclang --pipe # Pipe mode with SuperCollider
-  uv run cli --version       # Show version information
-  uv run cli --help          # Show this help message
+  uv run renardo --pipe            # Interactive pipe mode with separate runtime
+  uv run renardo --webclient       # Start web client application (Svelte + FastAPI)
+  uv run renardo --foxdot-editor   # Start the classic FoxDot Tk editor
+  uv run renardo --sclang          # Start with SuperCollider instance
+  uv run renardo --sclang --pipe   # Pipe mode with SuperCollider
+  uv run renardo --version         # Show version information
+  uv run renardo --help            # Show this help message
 
 For more information, visit: https://renardo.org/
         """
@@ -56,6 +57,12 @@ For more information, visit: https://renardo.org/
         '--webclient',
         action='store_true',
         help='Start the web client application (Svelte frontend + FastAPI backend)'
+    )
+
+    mode_group.add_argument(
+        '--foxdot-editor',
+        action='store_true',
+        help='Start the classic FoxDot Tk editor'
     )
     
     # Logging options

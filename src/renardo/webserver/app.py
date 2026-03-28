@@ -46,8 +46,8 @@ def get_static_folder() -> Path:
         if dist_path.exists() and (dist_path / "index.html").exists():
             logger.info(f"Found static folder at: {dist_path}")
             return dist_path
-        # Also check for static folder in webserver_fresh (packaged app)
-        static_path = parent / "webserver_fresh" / "static"
+        # Also check for static folder in webserver (packaged app)
+        static_path = parent / "webserver" / "static"
         if static_path.exists() and (static_path / "index.html").exists():
             logger.info(f"Found static folder at: {static_path}")
             return static_path

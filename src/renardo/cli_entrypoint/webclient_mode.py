@@ -112,7 +112,7 @@ def start_backend_server(config: Dict[str, Any]) -> Optional[subprocess.Popen]:
         # Use uvicorn to run the FastAPI app
         cmd = [
             "uv", "run", "uvicorn",
-            "renardo.webserver_fresh.app:app",
+            "renardo.webserver.app:app",
             "--host", "0.0.0.0",
             "--port", "8000",
             "--reload"
@@ -211,7 +211,7 @@ def log_process_output(process: subprocess.Popen, prefix: str):
 
                 # Also send to GraphQL if possible
                 try:
-                    from ..webserver_fresh.log_handler import capture_subprocess_output
+                    from ..webserver.log_handler import capture_subprocess_output
                     capture_subprocess_output(prefix, line.strip(), "INFO")
                 except:
                     pass  # Silently fail if GraphQL not available
@@ -224,7 +224,7 @@ def log_process_output(process: subprocess.Popen, prefix: str):
 
                 # Also send to GraphQL if possible
                 try:
-                    from ..webserver_fresh.log_handler import capture_subprocess_output
+                    from ..webserver.log_handler import capture_subprocess_output
                     capture_subprocess_output(prefix, line.strip(), "WARNING")
                 except:
                     pass  # Silently fail if GraphQL not available

@@ -145,7 +145,7 @@ class SCBackendService:
                 }
 
             # Kill SC processes
-            from renardo.webserver.routes.sc_utils import kill_supercollider_processes
+            from renardo.sc_backend.process_utils import kill_supercollider_processes
             success = kill_supercollider_processes(self.logger, force=True)
 
             self._broadcast_status(False)

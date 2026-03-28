@@ -49,6 +49,12 @@ def main(args=None) -> int:
         elif config.get('webclient'):
             logger.info("Starting webclient mode")
             return run_webclient_mode(config)
+        elif config.get('foxdot_editor'):
+            logger.info("Starting FoxDot editor")
+            from renardo.runtime import FoxDotCode
+            from renardo.foxdot_editor.Editor import workspace
+            workspace(FoxDotCode).run()
+            return 0
         else:
             # This shouldn't happen due to argument parsing defaults
             print("Error: No mode specified", file=sys.stderr)
