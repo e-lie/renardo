@@ -70,10 +70,10 @@ app.include_router(init_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3001",
-        "http://127.0.0.1:3001",
-        "ws://localhost:3001",
-        "ws://127.0.0.1:3001",
+        "http://localhost:54321",
+        "http://127.0.0.1:54321",
+        "ws://localhost:54321",
+        "ws://127.0.0.1:54321",
         "http://localhost:8000",
         "http://127.0.0.1:8000",
     ],

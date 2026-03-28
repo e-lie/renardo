@@ -11,9 +11,9 @@
     "email": "music.music@music.music"
   },
   "scripts": {
-    "dev": "vite --host 0.0.0.0 --port 3001",
+    "dev": "vite --host 0.0.0.0 --port 54321",
     "build": "vite build",
-    "preview": "vite preview --host 0.0.0.0 --port 3001",
+    "preview": "vite preview --host 0.0.0.0 --port 54321",
     "start": "npm run dev",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "test": "vitest run",

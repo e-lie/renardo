@@ -60,9 +60,9 @@ async function createWindow() {
 
   console.log('Loading application...');
   try {
-    // In dev mode: Vite dev server on 3001, backend on 8000
+    // In dev mode: Vite dev server on 54321, backend on 8000
     // In packaged mode: uvicorn serves both static files and API on 8000
-    const url = app.isPackaged ? 'http://localhost:8000' : 'http://localhost:3001';
+    const url = app.isPackaged ? 'http://localhost:8000' : 'http://localhost:54321';
     await mainWindow.loadURL(url);
     if (!app.isPackaged) {
       mainWindow.webContents.openDevTools();

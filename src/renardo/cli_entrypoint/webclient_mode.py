@@ -75,7 +75,7 @@ def run_webclient_mode(config: Dict[str, Any]) -> int:
             cleanup_processes(processes)
             return 1
 
-        print("Renardo is starting... open http://localhost:3001 in your browser")
+        print("Renardo is starting... open http://localhost:54321 in your browser")
         print("Press Ctrl+C to stop")
 
         # Wait for processes to complete or user interruption

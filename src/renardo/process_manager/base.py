@@ -159,7 +159,7 @@ class ManagedProcess:
             # Prepare subprocess arguments
             popen_args = {
                 'env': env,
-                'bufsize': 1,  # Line buffered
+                'bufsize': -1,  # Default buffering
                 'universal_newlines': False  # Binary mode for better control
             }
             
