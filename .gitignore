@@ -16,6 +16,8 @@ dist
 
 gunicorn.pid
 
+packaging/archlinux
+
 MUSIC.md
 
 # Virtual environments

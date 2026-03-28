@@ -6,7 +6,7 @@ pkgdesc="Renardo livecoding musical editor"
 arch=('x86_64')
 url="https://github.com/e-lie/renardo"
 license=('GPL3')
-depends=('alsa-lib' 'nss' 'libxtst' 'libxss' 'gtk3' 'libnotify' 'libuuid')
+depends=('alsa-lib' 'nss' 'libxtst' 'libxss' 'gtk3' 'libnotify' 'util-linux-libs')
 options=('!strip')
 
 _debver=$(echo "$pkgver" | sed 's/\([0-9]\)\([a-z]\)/\1-\2/')
