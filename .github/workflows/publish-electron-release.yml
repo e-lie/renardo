@@ -19,30 +19,24 @@ jobs:
         uses: dawidd6/action-download-artifact@v6
         with:
           workflow: electron-build-linux.yml
-          commit: ${{ github.sha }}
           name: renardo-linux-deb
           path: release-artifacts/linux
-          search_artifacts: true
           workflow_conclusion: success
 
       - name: Download Windows artifact
         uses: dawidd6/action-download-artifact@v6
         with:
           workflow: electron-build-windows.yml
-          commit: ${{ github.sha }}
           name: renardo-windows
           path: release-artifacts/windows
-          search_artifacts: true
           workflow_conclusion: success
 
       - name: Download macOS artifact
         uses: dawidd6/action-download-artifact@v6
         with:
           workflow: electron-build-macos.yml
-          commit: ${{ github.sha }}
           name: renardo-macos
           path: release-artifacts/macos
-          search_artifacts: true
           workflow_conclusion: success
 
       - name: Publish GitHub Release
