@@ -3,7 +3,6 @@ Pipe mode implementation for Renardo CLI using process_manager.
 """
 
 import sys
-import signal
 import threading
 import queue
 import time
@@ -48,14 +47,6 @@ class PipeMode:
         setup_process_manager_with_logging()
         self.process_manager = get_process_manager()
         
-        # Setup signal handlers
-        signal.signal(signal.SIGINT, self._signal_handler)
-        signal.signal(signal.SIGTERM, self._signal_handler)
-    
-    def _signal_handler(self, signum, frame):
-        """Handle shutdown signals."""
-        self.logger.info(f"Received signal {signum}, shutting down...")
-        self.stop()
     
     def start(self) -> bool:
         """
@@ -102,25 +93,15 @@ class PipeMode:
         self.logger.info("Stopping pipe mode")
         self.running = False
         
-        # Stop Renardo runtime process
         if self.renardo_process_id:
             try:
-                success = self.process_manager.stop_process(self.renardo_process_id, timeout=5.0)
-                if success:
-                    self.logger.info("Renardo runtime stopped successfully")
-                else:
-                    self.logger.warning("Failed to stop Renardo runtime gracefully")
+                self.process_manager.stop_process(self.renardo_process_id, timeout=1.0)
             except Exception as e:
                 self.logger.error(f"Error stopping Renardo runtime: {e}")
-        
-        # Stop SuperCollider process
+
         if self.sclang_process_id:
             try:
-                success = self.process_manager.stop_process(self.sclang_process_id, timeout=5.0)
-                if success:
-                    self.logger.info("SuperCollider stopped successfully")
-                else:
-                    self.logger.warning("Failed to stop SuperCollider gracefully")
+                self.process_manager.stop_process(self.sclang_process_id, timeout=1.0)
             except Exception as e:
                 self.logger.error(f"Error stopping SuperCollider: {e}")
         
