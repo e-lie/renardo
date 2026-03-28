@@ -255,7 +255,7 @@ class PipeMode:
                     if line.strip() == "":
                         consecutive_newlines += 1
                         
-                        if consecutive_newlines >= 2:
+                        if consecutive_newlines >= 1:
                             # Execute the current buffer
                             if self.input_buffer.strip():
                                 self._execute_code(self.input_buffer.strip())
@@ -299,14 +299,6 @@ class PipeMode:
             return
         
         try:
-            # Show what we're executing
-            if not self.config.get('no_color'):
-                print(f"\033[1;33m>>> Executing:\033[0m")
-                print(f"\033[0;33m{code}\033[0m")
-            else:
-                print(f">>> Executing:")
-                print(f"{code}")
-            
             # Execute the code
             success = self.process_manager.execute_code(self.renardo_process_id, code)
             
