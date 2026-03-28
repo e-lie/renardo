@@ -1,6 +1,6 @@
 {
   "name": "renardo-webclient-fresh",
-  "version": "1.0.0a9",
+  "version": "1.0.0a10",
   "type": "module",
   "private": true,
   "main": "electron/main.js",
