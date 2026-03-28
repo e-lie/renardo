@@ -1,4 +1,4 @@
-.PHONY: format publish_beta
+.PHONY: format publish_beta publish_electron_release download_artifacts
 
 VERSION_FILE := VERSION
 CURRENT_VERSION := $(shell cat $(VERSION_FILE))
@@ -21,3 +21,14 @@ publish_beta:
 		git push origin "v$$NEW_VERSION" && \
 		rm -f .new_version
 	@echo "Published v$$(cat $(VERSION_FILE))"
+
+download_artifacts:
+	@echo "Clearing ignored_files/artifacts..."
+	@rm -rf ignored_files/artifacts && mkdir -p ignored_files/artifacts
+	@echo "Downloading latest release artifacts..."
+	gh release download --repo e-lie/renardo --dir ignored_files/artifacts
+	@echo "Done."
+
+publish_electron_release:
+	@echo "Triggering electron release for v$(CURRENT_VERSION)"
+	gh workflow run publish-electron-release.yml --field tag=v$(CURRENT_VERSION)
