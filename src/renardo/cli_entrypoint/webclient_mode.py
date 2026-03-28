@@ -75,17 +75,15 @@ def run_webclient_mode(config: Dict[str, Any]) -> int:
             cleanup_processes(processes)
             return 1
 
-        logger.info("Webclient application is running!")
-        logger.info("Frontend: http://localhost:3001")
-        logger.info("Backend GraphQL: http://localhost:8000/graphql")
-        logger.info("Press Ctrl+C to stop all servers")
+        print("Renardo is starting... open http://localhost:3001 in your browser")
+        print("Press Ctrl+C to stop")
 
         # Wait for processes to complete or user interruption
         try:
             while all(p.poll() is None for p in processes):
                 time.sleep(1)
         except KeyboardInterrupt:
-            logger.info("Shutting down servers...")
+            print("\nShutting down...")
 
         return 0
 

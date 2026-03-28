@@ -133,9 +133,9 @@ For more information, visit: https://renardo.org/
     if result.get('debug'):
         result['log_level'] = 'DEBUG'
     
-    # If no mode is specified, default to pipe mode
-    if not any([result.get('pipe'), result.get('webclient')]):
-        result['pipe'] = True
+    # If no mode is specified, default to webclient mode
+    if not any([result.get('pipe'), result.get('webclient'), result.get('foxdot_editor')]):
+        result['webclient'] = True
     
     return result
 
