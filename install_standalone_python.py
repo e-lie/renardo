@@ -103,18 +103,26 @@ def extract_archive(archive_path, dest_dir, extension):
     print("Extraction complete!")
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--yes', '-y', action='store_true', help='Skip confirmation prompt')
+    args = parser.parse_args()
+
     # Determine paths
     script_dir = Path(__file__).parent
     webclient_dir = script_dir / "webclient"
     python_dir = webclient_dir / "python"
-    
+
     # Check if already installed
     if python_dir.exists():
-        response = input(f"Python standalone already exists at {python_dir}. Replace it? (y/n): ")
-        if response.lower() != 'y':
-            print("Installation cancelled.")
-            return
-        print(f"Removing existing installation...")
+        if args.yes:
+            print(f"Removing existing installation...")
+        else:
+            response = input(f"Python standalone already exists at {python_dir}. Replace it? (y/n): ")
+            if response.lower() != 'y':
+                print("Installation cancelled.")
+                return
+            print(f"Removing existing installation...")
         shutil.rmtree(python_dir)
     
     # Get platform information

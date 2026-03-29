@@ -19,6 +19,14 @@ jobs:
           cache: 'npm'
           cache-dependency-path: webclient/package-lock.json
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Download standalone Python
+        run: python install_standalone_python.py --yes
+
       - name: Install dependencies
         working-directory: webclient
         run: npm ci
