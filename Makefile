@@ -20,6 +20,7 @@ publish_beta:
 		git tag "v$$NEW_VERSION" && \
 		git push && \
 		git push origin "v$$NEW_VERSION" && \
+		gh release create "v$$NEW_VERSION" --prerelease --title "Renardo $$NEW_VERSION" --notes "Pre-release $$NEW_VERSION" && \
 		rm -f .new_version
 	@echo "Published v$$(cat $(VERSION_FILE))"
 
