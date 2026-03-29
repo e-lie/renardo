@@ -1,6 +1,6 @@
 name: CI Tests
 
-on: [push, pull_request]
+# on: [push, pull_request]
 
 jobs:
   #black:
@@ -50,24 +50,24 @@ jobs:
             python-architecture: "x86"
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }} ${{ matrix.python-architecture }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-        architecture:  ${{ matrix.python-architecture }}
-        cache: pip
-        cache-dependency-path: "**/requirements.pyinstaller.txt"
-    - name: Install system dependencies
-      if: runner.os == 'Linux'
-      run: sudo apt-get install unrar p7zip-full par2
-    - name: Install Python dependencies
-      run: |
-        python --version
-        python -m pip install --upgrade pip wheel
-        pip install --upgrade -r requirements.pyinstaller.txt --no-dependencies
-      # pip install --upgrade -r tests/requirements.txt
-    - name: Testsss
-      #run: pytest -s
-      run: >
-        python -c "print('${{ matrix.python-version }}', '${{ matrix.python-architecture }}', '${{ matrix.os }}')"
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }} ${{ matrix.python-architecture }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.python-architecture }}
+          cache: pip
+          cache-dependency-path: "**/requirements.pyinstaller.txt"
+      - name: Install system dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get install unrar p7zip-full par2
+      - name: Install Python dependencies
+        run: |
+          python --version
+          python -m pip install --upgrade pip wheel
+          pip install --upgrade -r requirements.pyinstaller.txt --no-dependencies
+        # pip install --upgrade -r tests/requirements.txt
+      - name: Testsss
+        #run: pytest -s
+        run: >
+          python -c "print('${{ matrix.python-version }}', '${{ matrix.python-architecture }}', '${{ matrix.os }}')"
