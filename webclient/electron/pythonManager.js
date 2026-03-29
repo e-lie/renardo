@@ -45,7 +45,7 @@ function findPythonPath() {
 
 function findStaticFolder() {
   if (app.isPackaged) {
-    return join(process.resourcesPath, 'renardo', 'webserver_fresh', 'static');
+    return join(process.resourcesPath, 'renardo', 'webserver', 'static');
   } else {
     return join(__dirname, '..', 'dist');
   }
@@ -134,10 +134,10 @@ async function startServer() {
     const pathSeparator = process.platform === 'win32' ? ';' : ':';
     const pythonPathEnv = `${localSitePackages}${pathSeparator}${pythonPath}`;
 
-    // Run uvicorn with webserver_fresh
+    // Run uvicorn with webserver
     serverProcess = spawn(pythonExecutable, [
       '-m', 'uvicorn',
-      'renardo.webserver_fresh.app:app',
+      'renardo.webserver.app:app',
       '--host', '0.0.0.0',
       '--port', '8000'
     ], {
@@ -162,7 +162,7 @@ async function startServer() {
     // Use uv to run uvicorn with proper environment
     serverProcess = spawn('uv', [
       'run', 'uvicorn',
-      'renardo.webserver_fresh.app:app',
+      'renardo.webserver.app:app',
       '--host', '0.0.0.0',
       '--port', '8000',
       '--reload'

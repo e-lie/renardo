@@ -1,5 +1,5 @@
 {
-  "name": "renardo-webclient-fresh",
+  "name": "Renardo",
   "version": "1.0.0a10",
   "type": "module",
   "private": true,
@@ -109,7 +109,7 @@
       },
       {
         "from": "dist",
-        "to": "renardo/webserver_fresh/static",
+        "to": "renardo/webserver/static",
         "filter": [
           "**/*"
         ]
