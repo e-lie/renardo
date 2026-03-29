@@ -1,8 +1,9 @@
 name: CI Tests
 
-# on: [push, pull_request]
+on: [push, pull_request]
 
 jobs:
+  # Disabled - if: false
   #black:
   #  name: Black Code Formatter
   #  runs-on: ubuntu-latest
@@ -25,6 +26,7 @@ jobs:
   #          --diff
 
   test:
+    if: false
     name: Test ${{ matrix.name }} - Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20

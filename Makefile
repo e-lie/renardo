@@ -37,6 +37,6 @@ logs:
 update_pkgbuild:
 	sed -i 's/^pkgver=.*/pkgver=$(CURRENT_VERSION)/' packaging/archlinux/PKGBUILD
 
-publish_electron_release:
+publish_electron:
 	@echo "Triggering electron release for v$(CURRENT_VERSION)"
 	gh workflow run publish-electron-release.yml --ref $(shell git rev-parse --abbrev-ref HEAD) --field tag=v$(CURRENT_VERSION)
