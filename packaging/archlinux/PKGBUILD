@@ -1,6 +1,6 @@
 # Maintainer: renardo team
 pkgname=renardo
-pkgver=1.0.0a13
+pkgver=1.0.0a14
 pkgrel=1
 pkgdesc="Renardo livecoding musical editor"
 arch=('x86_64')
