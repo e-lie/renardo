@@ -1,4 +1,4 @@
-.PHONY: format publish_beta publish_electron_release download_artifacts update_pkgbuild logs install_macos uninstall_macos
+.PHONY: format publish_beta publish_electron_release download_artifacts update_pkgbuild logs install_archlinux install_macos uninstall_macos
 
 VERSION_FILE := VERSION
 CURRENT_VERSION := $(shell cat $(VERSION_FILE))
@@ -34,6 +34,9 @@ download_artifacts:
 
 logs:
 	lnav $(shell uv run python -c "from platformdirs import user_log_dir; print(user_log_dir('renardo'))")
+
+install_archlinux:
+	cd packaging/archlinux && makepkg -si && find . ! -name 'PKGBUILD' -mindepth 1 -delete
 
 update_pkgbuild:
 	sed -i 's/^pkgver=.*/pkgver=$(CURRENT_VERSION)/' packaging/archlinux/PKGBUILD
