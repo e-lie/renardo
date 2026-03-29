@@ -10,7 +10,7 @@ depends=('alsa-lib' 'nss' 'libxtst' 'libxss' 'gtk3' 'libnotify' 'util-linux-libs
 options=('!strip')
 
 _debver=$(echo "$pkgver" | sed 's/\([0-9]\)\([a-z]\)/\1-\2/')
-source=("${pkgname}-webclient-fresh_${_debver}_amd64.deb::https://github.com/e-lie/renardo/releases/download/v${pkgver}/renardo-webclient-fresh_${_debver}_amd64.deb")
+source=("${pkgname}-webclient-fresh_${_debver}_amd64.deb::https://github.com/e-lie/renardo/releases/download/v${pkgver}/Renardo_${_debver}_amd64.deb")
 sha256sums=('SKIP')
 
 package() {
