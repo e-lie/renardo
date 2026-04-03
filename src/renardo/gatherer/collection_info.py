@@ -83,15 +83,6 @@ def get_collection_status(collection_type: str, collection_name: str) -> Dict:
         # Check if it's the default collection
         is_default = collection_name == settings.get("sc_backend.DEFAULT_SCCODE_PACK_NAME")
 
-    elif collection_type == 'reaper':
-        from renardo.gatherer.reaper_resource_management.default_reaper_pack import is_reaper_pack_initialized
-        
-        # Check if the collection is installed
-        is_installed = is_reaper_pack_initialized(collection_name)
-        
-        # Check if it's the default collection
-        is_default = collection_name == settings.get("reaper_backend.DEFAULT_REAPER_PACK_NAME", "0_renardo_core")
-    
     else:
         raise ValueError(f"Unknown collection type: {collection_type}")
     

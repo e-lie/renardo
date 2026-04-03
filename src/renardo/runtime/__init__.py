@@ -360,29 +360,16 @@ Attributes = Player.get_attributes()
 PatternMethods = Pattern.get_methods()
 PatternTypes = functions(Sequences)
 
-## Conditionnal init of reaper backend
+## Conditional init of reaper_backend_fresh
 if settings.get("reaper_backend.REAPER_BACKEND_ENABLED"):
-    from renardo.reaper_backend.reaside import ReaperClient, Reaper, ReaProject
-    from renardo.runtime.managers_instanciation import reaper_resource_library
-    from renardo.reaper_backend import ReaperInstrument, ReaperEffect #, init_reapy_project
-    #reaproject = init_reapy_project(Clock)
-    reaper_client = ReaperClient()
-    reaper_instance = Reaper(reaper_client)
-    reaproject: ReaProject = reaper_instance.current_project
-    ReaperInstrument.set_class_attributes(
-        presets={},
-        reaper_instance=reaper_instance,
-        project=reaproject,
-        resource_library=reaper_resource_library
+    from renardo.reaper_backend_fresh import (
+        ReaperFreshProject,
+        ReaperFreshInstrumentFacade,
+        ReaperFreshInstrumentWrapper,
+        create_reaper_instruments,
+        setup_reaper_fresh,
     )
-    ReaperEffect.set_class_attributes(
-        reaper_instance=reaper_instance,
-        reaproject=reaproject,
-        presets={},
-        reaper_resource_library=reaper_resource_library
-    )
-    from .reaper_backend_init import *
-    create_selected_instruments = ReaperInstrumentFactory(FoxDotCode) # then we can call create_selected_instruments as a function
+    reaper_fresh_project = None  # set by create_reaper_instruments()
 
 ## Conditional init of ableton backend
 if settings.get("ableton_backend.ABLETON_BACKEND_ENABLED"):
