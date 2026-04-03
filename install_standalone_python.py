@@ -169,7 +169,7 @@ def main():
         with open(version_file, 'w') as f:
             json.dump(version_info, f, indent=2)
         
-        print(f"✅ Python {PYTHON_VERSION} standalone successfully installed to {python_dir}")
+        print(f"OK Python {PYTHON_VERSION} standalone successfully installed to {python_dir}")
         
         # Platform-specific instructions
         if platform_info['system'] == 'windows':
