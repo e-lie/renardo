@@ -5,6 +5,7 @@ from renardo.reaper_backend_fresh.reaper_fresh_instruments import (
     ReaperFreshInstrumentWrapper,
     create_reaper_instruments,
 )
+from renardo.reaper_backend_fresh.setup import setup_reaper_fresh
 
 __all__ = [
     "ReaperFreshProject",
@@ -12,4 +13,5 @@ __all__ = [
     "ReaperFreshInstrumentFacade",
     "ReaperFreshInstrumentWrapper",
     "create_reaper_instruments",
+    "setup_reaper_fresh",
 ]
