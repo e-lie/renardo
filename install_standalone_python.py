@@ -80,7 +80,7 @@ def download_file(url, dest_path):
         percent = min(downloaded * 100 / total_size, 100) if total_size > 0 else 0
         bar_length = 40
         filled_length = int(bar_length * percent / 100)
-        bar = '█' * filled_length + '-' * (bar_length - filled_length)
+        bar = '#' * filled_length + '-' * (bar_length - filled_length)
         sys.stdout.write(f'\r|{bar}| {percent:.1f}% ({downloaded / 1024 / 1024:.1f}/{total_size / 1024 / 1024:.1f} MB)')
         sys.stdout.flush()
     
