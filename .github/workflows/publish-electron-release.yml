@@ -63,13 +63,13 @@ jobs:
           path: release-artifacts/reaper-ext
           workflow_conclusion: success
 
-      - name: Download REAPER ext — macOS x86_64
-        uses: dawidd6/action-download-artifact@v6
-        with:
-          workflow: reaper-ext-build.yml
-          name: reaper_renardo_fresh_macos_x86_64.dylib
-          path: release-artifacts/reaper-ext
-          workflow_conclusion: success
+      # - name: Download REAPER ext — macOS x86_64
+      #   uses: dawidd6/action-download-artifact@v6
+      #   with:
+      #     workflow: reaper-ext-build.yml
+      #     name: reaper_renardo_fresh_macos_x86_64.dylib
+      #     path: release-artifacts/reaper-ext
+      #     workflow_conclusion: success
 
       - name: Download REAPER ext — macOS arm64
         uses: dawidd6/action-download-artifact@v6
