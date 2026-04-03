@@ -41,7 +41,7 @@ jobs:
           gh release create "$tag" \
              --repo="$GITHUB_REPOSITORY" \
              --title="${GITHUB_REPOSITORY#*/} ${tag#v}" \
-             --generate-notes \
+             --generate-notes || true
   
   pypi-publish-renardo:
     runs-on: ubuntu-latest

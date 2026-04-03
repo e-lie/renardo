@@ -27,10 +27,10 @@ jobs:
             artifact_name: reaper_renardo_fresh_windows_x86_64.dll
             lib_name: renardo_reaper_fresh_ext.dll
 
-          - os: macos-12
-            target: x86_64-apple-darwin
-            artifact_name: reaper_renardo_fresh_macos_x86_64.dylib
-            lib_name: librenardo_reaper_fresh_ext.dylib
+          # - os: macos-12
+          #   target: x86_64-apple-darwin
+          #   artifact_name: reaper_renardo_fresh_macos_x86_64.dylib
+          #   lib_name: librenardo_reaper_fresh_ext.dylib
 
           - os: macos-latest
             target: aarch64-apple-darwin
