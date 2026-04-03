@@ -39,6 +39,46 @@ jobs:
           path: release-artifacts/macos
           workflow_conclusion: success
 
+      - name: Download REAPER ext — Linux x86_64
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: reaper-ext-build.yml
+          name: reaper_renardo_fresh_linux_x86_64.so
+          path: release-artifacts/reaper-ext
+          workflow_conclusion: success
+
+      - name: Download REAPER ext — Linux aarch64
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: reaper-ext-build.yml
+          name: reaper_renardo_fresh_linux_aarch64.so
+          path: release-artifacts/reaper-ext
+          workflow_conclusion: success
+
+      - name: Download REAPER ext — Windows x86_64
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: reaper-ext-build.yml
+          name: reaper_renardo_fresh_windows_x86_64.dll
+          path: release-artifacts/reaper-ext
+          workflow_conclusion: success
+
+      - name: Download REAPER ext — macOS x86_64
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: reaper-ext-build.yml
+          name: reaper_renardo_fresh_macos_x86_64.dylib
+          path: release-artifacts/reaper-ext
+          workflow_conclusion: success
+
+      - name: Download REAPER ext — macOS arm64
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: reaper-ext-build.yml
+          name: reaper_renardo_fresh_macos_arm64.dylib
+          path: release-artifacts/reaper-ext
+          workflow_conclusion: success
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -50,3 +90,6 @@ jobs:
             release-artifacts/linux/*.deb
             release-artifacts/windows/*.exe
             release-artifacts/macos/*.dmg
+            release-artifacts/reaper-ext/*.so
+            release-artifacts/reaper-ext/*.dll
+            release-artifacts/reaper-ext/*.dylib
