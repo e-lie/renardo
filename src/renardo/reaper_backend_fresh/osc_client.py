@@ -109,6 +109,23 @@ class ReaperFreshOscClient:
                      value: float) -> None:
         self.send("/fx/param/set", track_idx, fx_idx, param_idx, float(value))
 
+    def scan_fx_params(self, track_idx: int, fx_idx: int, offset: int = 0,
+                       count: int = 50, timeout: float = 5.0) -> Optional[dict]:
+        """Fetch a batch of FX parameter metadata.
+
+        Returns:
+            {'total': int, 'params': flat_list} where flat_list contains groups of
+            [name, value, min, max, formatted] per parameter, or None on failure.
+        """
+        resp = self.request("/fx/params/scan", "/fx/params/scan/response",
+                            track_idx, fx_idx, offset, count, timeout=timeout)
+        if not resp or resp[0] != "success":
+            return None
+        # resp: ["success", track_idx, fx_idx, offset, total_count, blob]
+        total = resp[4] if len(resp) > 4 else 0
+        blob = resp[5] if len(resp) > 5 and isinstance(resp[5], bytes) else b""
+        return {"total": int(total), "params": _parse_blob(blob)}
+
     # ── MIDI ─────────────────────────────────────────────────────────────────
 
     def play_note(self, channel: int, note: int, velocity: int,

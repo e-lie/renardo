@@ -49,31 +49,14 @@ def _parse_fx_blob(flat: list) -> list:
         if not isinstance(param_count, int):
             break
 
-        params = {}
-        for _ in range(param_count):
-            if pos + 5 > n:
-                break
-            p_name     = flat[pos]; pos += 1
-            p_value    = flat[pos]; pos += 1
-            p_min      = flat[pos]; pos += 1
-            p_max      = flat[pos]; pos += 1
-            p_formatted = flat[pos]; pos += 1
-
-            snake_name = _snake(str(p_name))
-            params[snake_name] = {
-                "name":      p_name,
-                "value":     p_value,
-                "min":       p_min,
-                "max":       p_max,
-                "formatted": p_formatted,
-            }
-
+        # Param values are fetched separately via /fx/params/scan (paginated)
         fx_list.append({
-            "name":    fx_name,
-            "snake":   _snake(str(fx_name)),
-            "enabled": fx_enabled,
-            "preset":  fx_preset,
-            "params":  params,
+            "name":        fx_name,
+            "snake":       _snake(str(fx_name)),
+            "enabled":     fx_enabled,
+            "preset":      fx_preset,
+            "param_count": param_count,
+            "params":      {},
         })
 
     return fx_list
@@ -152,21 +135,26 @@ class ReaperFreshProject:
                 "max":       1.0,
             }
 
-            for fx in fx_list:
+            for fx_pos, fx in enumerate(fx_list):
                 fx_snake = fx["snake"]
+                total_params = fx.get("param_count", 0)
+
+                # Fetch all params for this FX in batches of 50
+                params = self._fetch_fx_params(idx, fx_pos, total_params)
+
                 track_info["devices"][fx_snake] = {
-                    "fx_index": fx_list.index(fx),
+                    "fx_index": fx_pos,
                     "name":     fx["name"],
-                    "params":   fx["params"],
+                    "params":   params,
                 }
 
-                for p_snake, p_info in fx["params"].items():
+                for p_idx, (p_snake, p_info) in enumerate(params.items()):
                     full_key = f"{snake_name}_{fx_snake}_{p_snake}"
                     self._param_map[full_key] = {
                         "type":      "fx",
                         "track_idx": idx,
-                        "fx_idx":    fx_list.index(fx),
-                        "param_idx": list(fx["params"].keys()).index(p_snake),
+                        "fx_idx":    fx_pos,
+                        "param_idx": p_idx,
                         "min":       p_info["min"],
                         "max":       p_info["max"],
                     }
@@ -174,6 +162,38 @@ class ReaperFreshProject:
             self._track_map[snake_name] = track_info
 
         logger.info(f"Scan done: {len(self._track_map)} tracks, {len(self._param_map)} params")
+
+    def _fetch_fx_params(self, track_idx: int, fx_idx: int, total: int,
+                         batch_size: int = 50) -> dict:
+        """Fetch all parameters for one FX using paginated /fx/params/scan calls."""
+        params = {}
+        offset = 0
+        while offset < total:
+            result = self._osc.scan_fx_params(track_idx, fx_idx, offset, batch_size)
+            if result is None:
+                logger.warning(f"scan_fx_params({track_idx},{fx_idx},offset={offset}) failed")
+                break
+            flat = result["params"]
+            # Groups of 5: name, value, min, max, formatted
+            i = 0
+            while i + 4 < len(flat):
+                p_name = flat[i];     i += 1
+                p_value = flat[i];    i += 1
+                p_min = flat[i];      i += 1
+                p_max = flat[i];      i += 1
+                p_formatted = flat[i]; i += 1
+                p_snake = _snake(str(p_name))
+                params[p_snake] = {
+                    "name":      p_name,
+                    "value":     p_value,
+                    "min":       p_min,
+                    "max":       p_max,
+                    "formatted": p_formatted,
+                }
+            offset += batch_size
+            if result["total"] <= offset:
+                break
+        return params
 
     # ── param resolution ─────────────────────────────────────────────────────
 

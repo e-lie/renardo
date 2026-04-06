@@ -110,14 +110,14 @@ pub fn handle_scan_track(msg: &OscMessage, sender_addr: SocketAddr) {
                 response_args.push(OscType::Int(0));
             }
             
-            // FX information
+            // FX information — metadata only (no param values, use /fx/params/scan for those)
             let mut fx_data = vec![];
             if let Some(fx_count_fn) = TRACK_FX_GET_COUNT {
                 let fx_count = fx_count_fn(track);
-                fx_data.push(OscType::Int(fx_count));
-                
+                // Note: fx_count is NOT pushed to fx_data — Python parses FX entries until blob ends
+
                 show_console_msg(&format!("[renardo-ext] Track has {} FX\n", fx_count));
-                
+
                 for fx_idx in 0..fx_count {
                     // FX name
                     if let Some(get_fx_name) = TRACK_FX_GET_FX_NAME {
@@ -132,7 +132,7 @@ pub fn handle_scan_track(msg: &OscMessage, sender_addr: SocketAddr) {
                             fx_data.push(OscType::String("Unknown".to_string()));
                         }
                     }
-                    
+
                     // FX enabled
                     if let Some(get_enabled) = TRACK_FX_GET_ENABLED {
                         let enabled = get_enabled(track, fx_idx);
@@ -140,7 +140,7 @@ pub fn handle_scan_track(msg: &OscMessage, sender_addr: SocketAddr) {
                     } else {
                         fx_data.push(OscType::Bool(true));
                     }
-                    
+
                     // FX preset
                     if let Some(get_preset) = TRACK_FX_GET_PRESET {
                         let mut preset_buf = vec![0u8; 256];
@@ -154,57 +154,15 @@ pub fn handle_scan_track(msg: &OscMessage, sender_addr: SocketAddr) {
                             fx_data.push(OscType::String("".to_string()));
                         }
                     }
-                    
-                    // Parameter count
+
+                    // Parameter count only — actual param values fetched via /fx/params/scan
                     if let Some(get_param_count) = TRACK_FX_GET_NUM_PARAMS {
                         let param_count = get_param_count(track, fx_idx);
                         fx_data.push(OscType::Int(param_count));
-                        
-                        // Scan all parameters
-                        let max_params = param_count;
-                        for param_idx in 0..max_params {
-                            // Parameter name
-                            if let Some(get_param_name) = TRACK_FX_GET_PARAM_NAME {
-                                let mut name_buf = vec![0u8; 256];
-                                let success = get_param_name(track, fx_idx, param_idx, name_buf.as_mut_ptr() as *mut c_char, 256);
-                                if success {
-                                    let param_name = std::ffi::CStr::from_ptr(name_buf.as_ptr() as *const c_char)
-                                        .to_string_lossy()
-                                        .to_string();
-                                    fx_data.push(OscType::String(param_name));
-                                } else {
-                                    fx_data.push(OscType::String(format!("Param {}", param_idx)));
-                                }
-                            }
-                            
-                            // Parameter value
-                            if let Some(get_param) = TRACK_FX_GET_PARAM {
-                                let mut min_val: f64 = 0.0;
-                                let mut max_val: f64 = 0.0;
-                                let value = get_param(track, fx_idx, param_idx, &mut min_val, &mut max_val);
-                                fx_data.push(OscType::Float(value as f32));
-                                fx_data.push(OscType::Float(min_val as f32));
-                                fx_data.push(OscType::Float(max_val as f32));
-                            }
-                            
-                            // Formatted value
-                            if let Some(get_formatted) = TRACK_FX_GET_FORMATTED_PARAM_VALUE {
-                                let mut value_buf = vec![0u8; 256];
-                                let success = get_formatted(track, fx_idx, param_idx, value_buf.as_mut_ptr() as *mut c_char, 256);
-                                if success {
-                                    let formatted = std::ffi::CStr::from_ptr(value_buf.as_ptr() as *const c_char)
-                                        .to_string_lossy()
-                                        .to_string();
-                                    fx_data.push(OscType::String(formatted));
-                                } else {
-                                    fx_data.push(OscType::String("".to_string()));
-                                }
-                            }
-                        }
+                    } else {
+                        fx_data.push(OscType::Int(0));
                     }
                 }
-            } else {
-                fx_data.push(OscType::Int(0)); // No FX count available
             }
             
             // Add FX data as blob
@@ -295,7 +253,7 @@ pub fn handle_scan_track(msg: &OscMessage, sender_addr: SocketAddr) {
 }
 
 /// Helper function to serialize OSC array to bytes
-fn serialize_osc_array(items: &[OscType]) -> Vec<u8> {
+pub fn serialize_osc_array(items: &[OscType]) -> Vec<u8> {
     // Simple serialization - in production, use proper OSC bundle serialization
     let mut bytes = Vec::new();
     

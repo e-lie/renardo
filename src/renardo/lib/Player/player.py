@@ -1134,11 +1134,29 @@ class Player(Repeatable):
         return None
 
     def _push_osc_to_server(self, packet, timestamp, verbose=True, **kwargs):
-        """ Adds message head, calculating frequency then sends to server if verbose is True and 
+        """ Adds message head, calculating frequency then sends to server if verbose is True and
             amp/bufnum values meet criteria """
 
         # Do any calculations e.g. frequency
         message = self._new_message_header(packet, **kwargs)
+
+        # REAPER FRESH hook — send notes via OSC to Rust extension instead of SC
+        if (settings.get("reaper_backend.REAPER_BACKEND_ENABLED")
+                and self.instrument_name == "ReaperFreshInstrument"):
+            from renardo import runtime as _rt
+            project = getattr(_rt, 'reaper_fresh_project', None)
+            if (project is not None and verbose
+                    and message.get("amp", 0) > 0
+                    and message.get("midinote") is not None):
+                channel_attr = self.attr.get("channel")
+                # channel is stored 0-indexed in Player; Rust expects 1-indexed
+                raw_ch = int(channel_attr[0]) if channel_attr else 0
+                midi_channel = raw_ch + 1
+                velocity = max(1, min(127, int(message.get("amp", 1.0) * 127)))
+                duration_ms = max(10, int(message.get("sus", 0.5) * 1000))
+                project._osc.play_note(midi_channel, int(message["midinote"]), velocity, duration_ms)
+            return  # never forward to SC
+
         # Only send if amp > 0 etc
         if (
             verbose

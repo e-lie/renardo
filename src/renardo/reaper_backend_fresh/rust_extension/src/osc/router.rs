@@ -6,7 +6,7 @@ use rosc::OscPacket;
 use crate::reaper::api::show_console_msg;
 use crate::reaper::project::{handle_track_count, handle_get_tempo, handle_set_tempo};
 use crate::reaper::track::{handle_get_track_name, handle_set_track_name, handle_get_track_volume, handle_set_track_volume, handle_get_track_pan, handle_set_track_pan, handle_scan_track};
-use crate::reaper::fx::{handle_add_fx, handle_remove_fx, handle_get_fx_param, handle_set_fx_param};
+use crate::reaper::fx::{handle_add_fx, handle_remove_fx, handle_get_fx_param, handle_set_fx_param, handle_scan_fx_params};
 use crate::reaper::midi::handle_play_note;
 
 /// Handle incoming OSC packets
@@ -44,10 +44,11 @@ fn handle_osc_message(msg: rosc::OscMessage, sender_addr: SocketAddr) {
         "/track/pan/set"     => handle_set_track_pan(&msg, sender_addr),
 
         // FX operations
-        "/fx/add"        => handle_add_fx(&msg, sender_addr),
-        "/fx/remove"     => handle_remove_fx(&msg, sender_addr),
-        "/fx/param/get"  => handle_get_fx_param(&msg, sender_addr),
-        "/fx/param/set"  => handle_set_fx_param(&msg, sender_addr),
+        "/fx/add"          => handle_add_fx(&msg, sender_addr),
+        "/fx/remove"       => handle_remove_fx(&msg, sender_addr),
+        "/fx/param/get"    => handle_get_fx_param(&msg, sender_addr),
+        "/fx/param/set"    => handle_set_fx_param(&msg, sender_addr),
+        "/fx/params/scan"  => handle_scan_fx_params(&msg, sender_addr),
 
         // MIDI operations
         "/note" => handle_play_note(&msg, sender_addr),
