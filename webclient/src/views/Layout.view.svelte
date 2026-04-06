@@ -8,6 +8,7 @@
   import ElFloatingToggle from '../components/primitives/layout/ElFloatingToggle.svelte';
   import SettingsModal from '../components/shared/SettingsModal.component.svelte';
   import AudioBackendModal from '../components/shared/AudioBackendModal.component.svelte';
+  import RenardoRuntimeModal from '../components/shared/RenardoRuntimeModal.component.svelte';
   import { setHydraBackground } from '../background-canvas';
 
   const { getters, actions } = useLayoutStore();
@@ -29,6 +30,7 @@
   let resizeData = $state<any>(null);
   let showSettings = $state(false);
   let showAudioBackend = $state(false);
+  let showRuntime = $state(false);
 
   onMount(() => {
     document.addEventListener('mousemove', handleGlobalMouseMove);
@@ -396,6 +398,24 @@
 
   <!-- Floating button group (top-right) -->
   <div class="fixed top-4 right-4 z-50 flex gap-2">
+    <!-- Runtime button -->
+    <button
+      class="btn btn-square variant-filled-secondary shadow-lg"
+      onclick={() => (showRuntime = true)}
+      title="Renardo Runtime"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="2"
+        stroke="currentColor"
+        class="w-6 h-6"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+      </svg>
+    </button>
+
     <!-- AudioBackend button -->
     <button
       class="btn btn-square variant-filled-primary shadow-lg"
@@ -441,6 +461,7 @@
     </button>
   </div>
 
+  <RenardoRuntimeModal isOpen={showRuntime} onclose={() => (showRuntime = false)} />
   <AudioBackendModal isOpen={showAudioBackend} onclose={() => (showAudioBackend = false)} />
   <SettingsModal isOpen={showSettings} onclose={() => (showSettings = false)} />
 </div>

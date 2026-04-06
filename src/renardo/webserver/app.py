@@ -6,8 +6,6 @@ from pydantic import BaseModel
 from pathlib import Path
 from typing import List
 import os
-import sys
-from io import StringIO
 
 from .file_explorer import DirectoryEntry, FileExplorerService
 from .project import Project, project_service
@@ -15,6 +13,8 @@ from .websocket.routes import router as websocket_router
 from .websocket.manager import websocket_manager
 from .sc_backend.routes import router as sc_backend_router, init_sc_service
 from .init.routes import router as init_router
+from .runtime.routes import router as runtime_router
+from .runtime.service import runtime_service
 from ..logger import get_main_logger
 from ..__about__ import __version__
 
@@ -66,6 +66,9 @@ app.include_router(sc_backend_router)
 # Include Init routes
 app.include_router(init_router)
 
+# Include Runtime routes
+app.include_router(runtime_router)
+
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
@@ -95,65 +98,25 @@ class ExecuteCodeResponse(BaseModel):
 
 @app.post("/execute", response_model=ExecuteCodeResponse)
 async def execute_code(request: ExecuteCodeRequest):
-    """Execute Python code in the Renardo runtime"""
-    try:
-        from ..runtime import execute
+    """Execute Python code by sending it to the Renardo runtime subprocess."""
+    await websocket_manager.send_console_message(
+        "info", "runtime", f">>> {request.code}"
+    )
 
-        # Print code to stdout
-        print(f">>> {request.code}")
+    sent = runtime_service.execute_code(request.code)
 
-        # Send execution start message
-        await websocket_manager.send_console_message(
-            "info",
-            "runtime",
-            f"Executing code: {request.code}",
-        )
-
-        # Capture stdout during execution
-        old_stdout = sys.stdout
-        sys.stdout = captured_output = StringIO()
-
-        try:
-            result = execute(request.code, verbose=False)
-        finally:
-            sys.stdout = old_stdout
-
-        # Get captured output
-        output_text = captured_output.getvalue()
-
-        # Print to actual stdout for logging
-        if output_text:
-            print(output_text, end='')
-
-        # Send stdout output if any
-        if output_text.strip():
-            await websocket_manager.send_console_message(
-                "info", "runtime", f"Execution result: {output_text.strip()}"
-            )
-
-        # Send return value if different from None and not already printed
-        elif result is not None:
-            await websocket_manager.send_console_message(
-                "info", "runtime", f"Execution result: {str(result)}"
-            )
-
+    if sent:
         return ExecuteCodeResponse(
             success=True,
-            message="Code executed successfully",
-            output=output_text if output_text else (str(result) if result else None),
+            message="Code sent to runtime",
+            output=None,
         )
-    except Exception as e:
-        # Restore stdout if error occurred
-        sys.stdout = old_stdout
-
-        # Send error message
-        await websocket_manager.send_console_message(
-            "error", "runtime", f"Execution error: {str(e)}"
-        )
-
+    else:
+        msg = "Runtime subprocess is not running — start it from the Runtime panel"
+        await websocket_manager.send_console_message("error", "runtime", msg)
         return ExecuteCodeResponse(
             success=False,
-            message=f"Error executing code: {str(e)}",
+            message=msg,
             output=None,
         )
 
@@ -183,6 +146,13 @@ async def startup_runtime_state():
 async def startup_sc_backend_service():
     """Initialize SC backend service with WebSocket manager"""
     init_sc_service(websocket_manager)
+
+
+@app.on_event("startup")
+async def startup_runtime_service():
+    """Initialize Renardo runtime service with WebSocket manager and event loop."""
+    import asyncio
+    runtime_service.init(websocket_manager, asyncio.get_event_loop())
 
 
 @app.on_event("shutdown")
