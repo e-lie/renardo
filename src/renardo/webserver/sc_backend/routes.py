@@ -67,7 +67,9 @@ async def get_audio_devices():
         raise HTTPException(status_code=500, detail="SC service not initialized")
 
     try:
-        result = sc_service.get_audio_devices()
+        import asyncio
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(None, sc_service.get_audio_devices)
         return AudioDevicesResponse(**result)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting audio devices: {str(e)}")

@@ -172,6 +172,19 @@ class ProcessManager:
                 self.logger.error(f"Error executing code on process {process_id}: {e}")
                 return False
     
+    def get_process(self, process_id: str):
+        """
+        Get the process object directly.
+
+        Args:
+            process_id: ID of the process
+
+        Returns:
+            Process object or None if not found
+        """
+        with self._lock:
+            return self.processes.get(process_id)
+
     def get_process_status(self, process_id: str) -> Optional[ProcessStatus]:
         """
         Get the status of a managed process.

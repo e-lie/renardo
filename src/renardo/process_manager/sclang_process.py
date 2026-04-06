@@ -34,9 +34,9 @@ class SclangProcess(ManagedProcess):
         # Check if path is provided in config
         if 'sclang_path' in self.config:
             self.sclang_exec = [self.config['sclang_path'], '-i', 'scqt']
-            self.check_exec = [self.config['sclang_path'], '--version']
+            self.check_exec = [self.config['sclang_path'], '-version']
             return
-        
+
         # Auto-detect based on platform
         if platform == "win32":
             path_glob = list(pathlib.Path("C:\\Program Files").glob("SuperCollider*"))
@@ -45,36 +45,36 @@ class SclangProcess(ManagedProcess):
                 os.environ["PATH"] += f"{sc_dir};"
                 sclang_path = sc_dir / "sclang.exe"
                 self.sclang_exec = [str(sclang_path), '-i', 'scqt']
-                self.check_exec = [str(sclang_path), '--version']
+                self.check_exec = [str(sclang_path), '-version']
             else:
                 self.logger.warning("SuperCollider not found in standard Windows location")
                 self.sclang_exec = ["sclang", '-i', 'scqt']
-                self.check_exec = ["sclang", '--version']
-        
+                self.check_exec = ["sclang", '-version']
+
         elif platform == "darwin":  # macOS
             # Standard macOS application paths
             standard_paths = [
                 "/Applications/SuperCollider.app",
                 os.path.expanduser("~/Applications/SuperCollider.app")
             ]
-            
+
             sclang_found = False
             for path in standard_paths:
                 if os.path.exists(path):
                     sclang_path = os.path.join(path, "Contents/MacOS/sclang")
                     if os.path.exists(sclang_path):
                         self.sclang_exec = [sclang_path, '-i', 'scqt']
-                        self.check_exec = [sclang_path, '--version']
+                        self.check_exec = [sclang_path, '-version']
                         sclang_found = True
                         break
-            
+
             if not sclang_found:
                 self.sclang_exec = ["sclang", '-i', 'scqt']
-                self.check_exec = ["sclang", '--version']
-        
+                self.check_exec = ["sclang", '-version']
+
         else:  # Linux
             self.sclang_exec = ["sclang", '-i', 'scqt']
-            self.check_exec = ["sclang", '--version']
+            self.check_exec = ["sclang", '-version']
     
     def _build_command(self) -> list:
         """Build the sclang command line."""
@@ -189,33 +189,87 @@ class SclangProcess(ManagedProcess):
             pass
         return ""
     
-    def list_audio_devices(self) -> Optional[Dict[str, Dict[int, str]]]:
+    def list_audio_devices(self, timeout: float = 15.0) -> Optional[Dict[str, Dict[int, str]]]:
         """
-        Query SuperCollider for available audio devices.
-        
+        Query SuperCollider for available audio devices using the running process output queue.
+
+        Args:
+            timeout: Maximum time in seconds to wait for device list response
+
         Returns:
-            Dictionary with 'output' and 'input' device mappings
+            Dictionary with 'output' and 'input' device mappings, or None on failure
         """
+        import queue as queue_module
+
         if self.status != ProcessStatus.RUNNING:
             self.logger.error("Cannot query audio devices - sclang is not running")
             return None
-        
-        # Execute the query code
-        sc_code = "Renardo.listAudioDevicesJson;"
-        self.execute_code(sc_code)
-        
-        # Wait for response
-        time.sleep(1)
-        
-        # Collect output
-        output_lines = []
+
+        # Drain stale items accumulated in the queue before sending the query
         while not self.output_queue.empty():
             try:
-                line, _ = self.output_queue.get_nowait()
-                output_lines.append(line)
-            except:
+                self.output_queue.get_nowait()
+            except queue_module.Empty:
                 break
-        
-        # Parse the output (simplified for now)
-        # TODO: Implement proper parsing
-        return {'output': {}, 'input': {}}
+
+        self.execute_code("Renardo.listAudioDevicesJson;")
+
+        # Collect output lines until end marker or timeout
+        collected = []
+        deadline = time.time() + timeout
+
+        while time.time() < deadline:
+            try:
+                line, _ = self.output_queue.get(timeout=0.5)
+                collected.append(line)
+                if "RENARDO_AUDIO_DEVICES_END" in line:
+                    break
+            except queue_module.Empty:
+                continue
+
+        if not collected:
+            self.logger.warning("No audio device output received from sclang")
+            return None
+
+        return self._parse_audio_devices_output("\n".join(collected))
+
+    def _parse_audio_devices_output(self, output: str) -> Dict[str, Dict[int, str]]:
+        """Parse sclang output to extract audio device information."""
+        try:
+            lines = output.split('\n')
+            in_device_section = False
+            output_devices = {}
+            input_devices = {}
+
+            for line in lines:
+                line = line.strip()
+                if line == "RENARDO_AUDIO_DEVICES_START":
+                    in_device_section = True
+                    continue
+                elif line == "RENARDO_AUDIO_DEVICES_END":
+                    break
+                elif not in_device_section:
+                    continue
+
+                if line.startswith("OUT:"):
+                    output_devices = self._parse_sc_dictionary(line[4:].strip())
+                elif line.startswith("IN:"):
+                    input_devices = self._parse_sc_dictionary(line[3:].strip())
+
+            return {'output': output_devices, 'input': input_devices}
+
+        except Exception as e:
+            self.logger.error(f"Error parsing audio devices output: {e}")
+            return {'output': {}, 'input': {}}
+
+    def _parse_sc_dictionary(self, dict_str: str) -> Dict[int, str]:
+        """Parse a SuperCollider dictionary string into a Python dict mapping index to device name."""
+        import re
+        try:
+            if dict_str.startswith('(') and dict_str.endswith(')'):
+                dict_str = dict_str[1:-1]
+            matches = re.findall(r'(\d+)\s*->\s*"([^"]*)"', dict_str)
+            return {int(idx): name for idx, name in matches}
+        except Exception as e:
+            self.logger.error(f"Error parsing SuperCollider dictionary: {e}")
+            return {}

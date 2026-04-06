@@ -274,164 +274,39 @@ class SupercolliderInstance:
             return False
 
     def list_audio_devices(self):
-        """Get available audio devices by launching sclang and querying SuperCollider
-        
+        """Get available audio devices by querying SuperCollider.
+
+        Uses the running SclangProcess (via process manager) if available.
+        Otherwise starts a temporary SclangProcess just for this query.
+
         Returns:
-            dict: Dictionary with 'output' and 'input' keys containing device dictionaries
-                  Each device dictionary maps index to device name
-                  Returns None if SuperCollider is not available or query fails
+            dict: {'output': {index: name}, 'input': {index: name}}, or None on failure
         """
+        from ...process_manager.sclang_process import SclangProcess
+        from ...process_manager.base import ProcessStatus
+
+        # --- Path 1: reuse the already-running sclang instance ---
+        if self.sclang_process_id:
+            status = self.process_manager.get_process_status(self.sclang_process_id)
+            if status == ProcessStatus.RUNNING:
+                sc_process = self.process_manager.get_process(self.sclang_process_id)
+                if sc_process is not None:
+                    return sc_process.list_audio_devices()
+
+        # --- Path 2: start a temporary SclangProcess for the query ---
         if not self.is_supercollider_ready():
             return None
-            
-        try:
-            # Start sclang process similar to start_sclang_subprocess
-            process = subprocess.Popen(
-                args=self.sclang_exec,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                stdin=subprocess.PIPE,
-                bufsize=1,  # Line buffered
-                universal_newlines=False  # Use binary mode
-            )
-            
-            # Wait for sclang to initialize
-            import time
-            time.sleep(2)  # Give sclang time to start
-            
-            # Collect output lines until we see the Welcome message
-            output_lines = []
-            while True:
-                try:
-                    line = process.stdout.readline().decode("utf-8", errors="replace")
-                    if not line:
-                        break
-                    output_lines.append(line)
-                    if "Welcome to" in line:
-                        break
-                except:
-                    break
-            
-            # Execute the audio devices query using the escape character method
-            sc_code = "Renardo.listAudioDevicesJson;"
-            raw = sc_code.encode("utf-8") + b"\x1b"
-            process.stdin.write(raw)
-            process.stdin.flush()
-            
-            # Collect output for a short time
-            time.sleep(1)
-            
-            # Read all available output
-            full_output = ""
-            while True:
-                try:
-                    line = process.stdout.readline().decode("utf-8", errors="replace")
-                    if not line:
-                        break
-                    full_output += line
-                    # Check if we've received the end marker
-                    if "RENARDO_AUDIO_DEVICES_END" in line:
-                        break
-                except:
-                    break
-            
-            # Execute exit command
-            exit_code = "0.exit;"
-            raw = exit_code.encode("utf-8") + b"\x1b"
-            process.stdin.write(raw)
-            process.stdin.flush()
-            
-            # Wait for process to exit
-            process.wait(timeout=2)
-            
-            # Parse the output
-            return self._parse_audio_devices_output(full_output)
-            
-        except subprocess.TimeoutExpired:
-            print("Timeout while querying audio devices")
-            if process:
-                process.kill()
-            return None
-        except Exception as e:
-            print(f"Error querying audio devices: {e}")
-            if 'process' in locals():
-                try:
-                    process.kill()
-                except:
-                    pass
-            return None
 
-    def _parse_audio_devices_output(self, output):
-        """Parse SuperCollider output to extract audio device information
-        
-        Args:
-            output (str): Raw output from sclang
-            
-        Returns:
-            dict: Dictionary with 'output' and 'input' keys containing device dictionaries
-        """
-        try:
-            lines = output.split('\n')
-            in_device_section = False
-            output_devices = {}
-            input_devices = {}
-            
-            for line in lines:
-                line = line.strip()
-                
-                if line == "RENARDO_AUDIO_DEVICES_START":
-                    in_device_section = True
-                    continue
-                elif line == "RENARDO_AUDIO_DEVICES_END":
-                    break
-                elif not in_device_section:
-                    continue
-                    
-                if line.startswith("OUT:"):
-                    # Parse SuperCollider dictionary format
-                    dict_str = line[4:].strip()
-                    output_devices = self._parse_sc_dictionary(dict_str)
-                elif line.startswith("IN:"):
-                    # Parse SuperCollider dictionary format
-                    dict_str = line[3:].strip()
-                    input_devices = self._parse_sc_dictionary(dict_str)
-            
-            return {
-                'output': output_devices,
-                'input': input_devices
-            }
-            
-        except Exception as e:
-            print(f"Error parsing audio devices output: {e}")
-            return {'output': {}, 'input': {}}
+        import uuid
+        temp_id = f"sclang_audio_query_{uuid.uuid4().hex[:8]}"
+        config = {'capture_output': True}
+        if hasattr(self, 'sclang_exec') and self.sclang_exec:
+            config['sclang_path'] = self.sclang_exec[0]
 
-    def _parse_sc_dictionary(self, dict_str):
-        """Parse a SuperCollider dictionary string into a Python dictionary
-        
-        Args:
-            dict_str (str): SuperCollider dictionary format string
-            
-        Returns:
-            dict: Parsed dictionary mapping indices to device names
-        """
+        temp_process = SclangProcess(temp_id, config)
         try:
-            devices = {}
-            
-            # Remove outer parentheses if present
-            if dict_str.startswith('(') and dict_str.endswith(')'):
-                dict_str = dict_str[1:-1]
-            
-            # Split on commas but be careful of commas within quoted strings
-            import re
-            # Find all key-value pairs in format: number -> "string"
-            pattern = r'(\d+)\s*->\s*"([^"]*)"'
-            matches = re.findall(pattern, dict_str)
-            
-            for index_str, device_name in matches:
-                devices[int(index_str)] = device_name
-                
-            return devices
-            
-        except Exception as e:
-            print(f"Error parsing SuperCollider dictionary: {e}")
-            return {}
+            if not temp_process.start():
+                return None
+            return temp_process.list_audio_devices()
+        finally:
+            temp_process.stop()
