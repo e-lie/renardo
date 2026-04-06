@@ -130,6 +130,8 @@ class ReaperFreshOscClient:
 
     def play_note(self, channel: int, note: int, velocity: int,
                   duration_ms: int) -> None:
+        logger.debug(f"[REAPER-FRESH OSC] play_note → /note ch={channel} note={note} vel={velocity} dur={duration_ms}ms")
+        print(f"[REAPER-FRESH OSC] play_note → /note ch={channel} note={note} vel={velocity} dur={duration_ms}ms")
         self.send("/note", channel, note, velocity, duration_ms)
 
     def close(self):

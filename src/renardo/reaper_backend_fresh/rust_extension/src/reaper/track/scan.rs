@@ -51,55 +51,37 @@ pub fn handle_scan_track(msg: &OscMessage, sender_addr: SocketAddr) {
                 }
             }
             
-            // Track properties
-            if let Some(get_set_info) = GET_SET_MEDIA_TRACK_INFO {
-                // Volume
-                let mut volume: f64 = 0.0;
-                let param = CString::new("D_VOL").unwrap();
-                get_set_info(track, param.as_ptr(), &mut volume as *mut f64 as *mut c_void, 0);
+            // Track properties — use GetMediaTrackInfo_Value (read-only, returns f64)
+            // NOTE: GET_SET_MEDIA_TRACK_INFO must NOT be used for reads here because our
+            // Rust declaration has a wrong 4th arg; the real REAPER API takes only 3 args
+            // and treats any non-NULL 3rd arg as a SET operation, corrupting project state.
+            if let Some(get_val) = GET_MEDIA_TRACK_INFO_VALUE {
+                let param_d_vol    = CString::new("D_VOL").unwrap();
+                let param_d_pan    = CString::new("D_PAN").unwrap();
+                let param_b_mute   = CString::new("B_MUTE").unwrap();
+                let param_i_solo   = CString::new("I_SOLO").unwrap();
+                let param_i_recarm = CString::new("I_RECARM").unwrap();
+                let param_i_recinput = CString::new("I_RECINPUT").unwrap();
+                let param_i_recmode  = CString::new("I_RECMODE").unwrap();
+                let param_i_recmon   = CString::new("I_RECMON").unwrap();
+
+                let volume   = get_val(track, param_d_vol.as_ptr());
+                let pan      = get_val(track, param_d_pan.as_ptr());
+                let mute     = get_val(track, param_b_mute.as_ptr());
+                let solo     = get_val(track, param_i_solo.as_ptr());
+                let rec_arm  = get_val(track, param_i_recarm.as_ptr());
+                let rec_input = get_val(track, param_i_recinput.as_ptr());
+                let rec_mode  = get_val(track, param_i_recmode.as_ptr());
+                let rec_mon   = get_val(track, param_i_recmon.as_ptr());
+
                 response_args.push(OscType::Float(volume as f32));
-                
-                // Pan
-                let mut pan: f64 = 0.0;
-                let param = CString::new("D_PAN").unwrap();
-                get_set_info(track, param.as_ptr(), &mut pan as *mut f64 as *mut c_void, 0);
                 response_args.push(OscType::Float(pan as f32));
-                
-                // Mute
-                let mut mute: f64 = 0.0;
-                let param = CString::new("B_MUTE").unwrap();
-                get_set_info(track, param.as_ptr(), &mut mute as *mut f64 as *mut c_void, 0);
                 response_args.push(OscType::Bool(mute > 0.0));
-                
-                // Solo
-                let mut solo: i32 = 0;
-                let param = CString::new("I_SOLO").unwrap();
-                get_set_info(track, param.as_ptr(), &mut solo as *mut i32 as *mut c_void, 0);
-                response_args.push(OscType::Bool(solo > 0));
-                
-                // Record arm
-                let mut rec_arm: i32 = 0;
-                let param = CString::new("I_RECARM").unwrap();
-                get_set_info(track, param.as_ptr(), &mut rec_arm as *mut i32 as *mut c_void, 0);
-                response_args.push(OscType::Bool(rec_arm > 0));
-                
-                // Record input
-                let mut rec_input: i32 = 0;
-                let param = CString::new("I_RECINPUT").unwrap();
-                get_set_info(track, param.as_ptr(), &mut rec_input as *mut i32 as *mut c_void, 0);
-                response_args.push(OscType::Int(rec_input));
-                
-                // Record mode
-                let mut rec_mode: i32 = 0;
-                let param = CString::new("I_RECMODE").unwrap();
-                get_set_info(track, param.as_ptr(), &mut rec_mode as *mut i32 as *mut c_void, 0);
-                response_args.push(OscType::Int(rec_mode));
-                
-                // Record monitor
-                let mut rec_mon: i32 = 0;
-                let param = CString::new("I_RECMON").unwrap();
-                get_set_info(track, param.as_ptr(), &mut rec_mon as *mut i32 as *mut c_void, 0);
-                response_args.push(OscType::Int(rec_mon));
+                response_args.push(OscType::Bool(solo > 0.0));
+                response_args.push(OscType::Bool(rec_arm > 0.0));
+                response_args.push(OscType::Int(rec_input as i32));
+                response_args.push(OscType::Int(rec_mode as i32));
+                response_args.push(OscType::Int(rec_mon as i32));
             }
             
             // Track color

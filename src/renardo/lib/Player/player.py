@@ -1145,6 +1145,10 @@ class Player(Repeatable):
                 and self.instrument_name == "ReaperFreshInstrument"):
             from renardo import runtime as _rt
             project = getattr(_rt, 'reaper_fresh_project', None)
+            print(f"[REAPER-FRESH hook] instrument={self.instrument_name!r} "
+                  f"project={'found' if project else 'NONE'} "
+                  f"verbose={verbose} amp={message.get('amp')} "
+                  f"midinote={message.get('midinote')}")
             if (project is not None and verbose
                     and message.get("amp", 0) > 0
                     and message.get("midinote") is not None):
@@ -1154,7 +1158,11 @@ class Player(Repeatable):
                 midi_channel = raw_ch + 1
                 velocity = max(1, min(127, int(message.get("amp", 1.0) * 127)))
                 duration_ms = max(10, int(message.get("sus", 0.5) * 1000))
+                print(f"[REAPER-FRESH hook] → play_note ch={midi_channel} "
+                      f"note={int(message['midinote'])} vel={velocity} dur={duration_ms}ms")
                 project._osc.play_note(midi_channel, int(message["midinote"]), velocity, duration_ms)
+            else:
+                print(f"[REAPER-FRESH hook] ✗ skipped (conditions not met)")
             return  # never forward to SC
 
         # Only send if amp > 0 etc

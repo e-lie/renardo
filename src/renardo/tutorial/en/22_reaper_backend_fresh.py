@@ -53,7 +53,9 @@ reaper_instruments = create_reaper_instruments(max_midi_tracks=16, scan_audio_tr
 # ── Step 6 : Play ─────────────────────────────────────────────────────────────
 # Use the .out attribute of each facade as the SynthDef for a Player:
 
-b1 >> reaper_instruments["bass_synth"].out([0, 3, 5, 7], dur=0.5)
+b1 >> reaper_instruments["bass303"].out([0, 3, 5, 7], dur=0.25, cutoff=linvar([0,1]), sus=.24, reso=linvar([0,1], 5))
+
+b2 >> blip([0,3,5,7], oct=7, amp=2)
 
 b1 >> reaper_instruments["bass_synth"].out([0, 3, 5], dur=[0.75, 0.75, 0.5])
 
