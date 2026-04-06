@@ -110,9 +110,10 @@ class SupercolliderInstance:
                 pass
         
         # Prepare configuration for process manager
+        # No init_code here: sc_backend_service.start_backend() calls Renardo.start()
+        # with the proper audio_output_index after the process is running.
         config = {
             'capture_output': True,
-            'init_code': 'Renardo.start; Renardo.midi;'
         }
 
         # Add sclang path if we have it from legacy detection
