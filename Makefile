@@ -1,7 +1,8 @@
-.PHONY: format publish_beta publish_electron_release download_artifacts update_pkgbuild logs
+.PHONY: format publish_beta publish_electron_release download_artifacts update_pkgbuild logs install_macos uninstall_macos
 
 VERSION_FILE := VERSION
 CURRENT_VERSION := $(shell cat $(VERSION_FILE))
+GITHUB_REPO := e-lie/renardo
 
 format:
 	uv run ruff format src/
@@ -40,3 +41,29 @@ update_pkgbuild:
 publish_electron:
 	@echo "Triggering electron release for v$(CURRENT_VERSION)"
 	gh workflow run publish-electron-release.yml --ref $(shell git rev-parse --abbrev-ref HEAD) --field tag=v$(CURRENT_VERSION)
+
+GITHUB_RELEASE_API := https://api.github.com/repos/$(GITHUB_REPO)/releases/tags/v$(CURRENT_VERSION)
+
+install_macos:
+	@echo "Fetching release info for v$(CURRENT_VERSION)..."
+	@mkdir -p /tmp/renardo-install
+	@DMG_URL=$$(curl -s "$(GITHUB_RELEASE_API)" \
+		| grep -o '"browser_download_url": *"[^"]*\.dmg"' \
+		| grep -o 'https://[^"]*'); \
+	if [ -z "$$DMG_URL" ]; then echo "Error: no DMG found for v$(CURRENT_VERSION)"; exit 1; fi; \
+	echo "Downloading $$DMG_URL..."; \
+	curl -L -o /tmp/renardo-install/renardo.dmg "$$DMG_URL"; \
+	echo "Mounting DMG..."; \
+	hdiutil attach /tmp/renardo-install/renardo.dmg -mountpoint /tmp/renardo-dmg -nobrowse -quiet; \
+	echo "Copying Renardo.app to /Applications..."; \
+	cp -R /tmp/renardo-dmg/Renardo.app /Applications/; \
+	hdiutil detach /tmp/renardo-dmg -quiet; \
+	echo "Removing quarantine attribute..."; \
+	xattr -cr /Applications/Renardo.app; \
+	rm -rf /tmp/renardo-install; \
+	echo "Renardo installed successfully."
+
+uninstall_macos:
+	@echo "Uninstalling Renardo..."
+	@rm -rf /Applications/Renardo.app
+	@echo "Renardo removed from /Applications."
