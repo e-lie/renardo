@@ -26,9 +26,22 @@ class WebSocketManager:
         self.max_console_messages = 1000  # Limit message history
 
     async def connect(self, websocket: WebSocket):
-        """Accept and store WebSocket connection"""
+        """Accept and store WebSocket connection, then replay console history."""
         await websocket.accept()
         self.active_connections.add(websocket)
+
+        # Replay stored console history so the client sees messages from before it connected
+        for entry in self.console_messages:
+            try:
+                await websocket.send_text(
+                    json.dumps({
+                        "type": MessageType.CONSOLE_MESSAGE,
+                        "data": entry,
+                        "timestamp": entry.get("timestamp"),
+                    })
+                )
+            except Exception:
+                break
 
     def disconnect(self, websocket: WebSocket):
         """Remove WebSocket connection"""

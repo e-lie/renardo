@@ -2,9 +2,11 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
+from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from pathlib import Path
 from typing import List
+import asyncio
 import os
 
 from .file_explorer import DirectoryEntry, FileExplorerService
@@ -18,7 +20,29 @@ from .runtime.service import runtime_service
 from ..logger import get_main_logger
 from ..__about__ import __version__
 
-app = FastAPI(title="Renardo WebServer Fresh", version=__version__)
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    # --- startup ---
+    from .websocket.runtime_state import runtime_state
+    await runtime_state.start()
+
+    init_sc_service(websocket_manager)
+    runtime_service.init(websocket_manager, asyncio.get_event_loop())
+
+    from .sc_backend.routes import sc_service as _sc_service
+    if _sc_service is not None:
+        audio_device_index = _sc_service.get_audio_device_setting()
+        asyncio.create_task(_sc_service.start_backend(audio_device_index))
+
+    runtime_service.start()
+
+    yield
+
+    # --- shutdown ---
+    await runtime_state.stop()
+
+
+app = FastAPI(title="Renardo WebServer Fresh", version=__version__, lifespan=lifespan)
 
 # Static files configuration
 def get_static_folder() -> Path:
@@ -134,32 +158,6 @@ async def health_check():
     return {"status": "healthy"}
 
 
-# Runtime state management
-@app.on_event("startup")
-async def startup_runtime_state():
-    """Start runtime state monitoring on server startup"""
-    from .websocket.runtime_state import runtime_state
-    await runtime_state.start()
-
-
-@app.on_event("startup")
-async def startup_sc_backend_service():
-    """Initialize SC backend service with WebSocket manager"""
-    init_sc_service(websocket_manager)
-
-
-@app.on_event("startup")
-async def startup_runtime_service():
-    """Initialize Renardo runtime service with WebSocket manager and event loop."""
-    import asyncio
-    runtime_service.init(websocket_manager, asyncio.get_event_loop())
-
-
-@app.on_event("shutdown")
-async def shutdown_runtime_state():
-    """Stop runtime state monitoring on server shutdown"""
-    from .websocket.runtime_state import runtime_state
-    await runtime_state.stop()
 
 
 @app.get("/api/clock/state")
