@@ -14,8 +14,8 @@ publish_beta:
 	@NEW_VERSION=$$(cat .new_version) && \
 		echo "New version: $$NEW_VERSION" && \
 		echo "$$NEW_VERSION" > $(VERSION_FILE) && \
-		sed -i 's/"version": "[^"]*"/"version": "'$$NEW_VERSION'"/' webclient/package.json && \
-		sed -i 's/^pkgver=.*/pkgver='$$NEW_VERSION'/' packaging/archlinux/PKGBUILD && \
+		awk '/"version":/{sub(/"version": "[^"]*"/, "\"version\": \"'$$NEW_VERSION'\"")}1' webclient/package.json > webclient/package.json.tmp && mv webclient/package.json.tmp webclient/package.json && \
+		awk '/^pkgver=/{sub(/pkgver=.*/, "pkgver='$$NEW_VERSION'")}1' packaging/archlinux/PKGBUILD > packaging/archlinux/PKGBUILD.tmp && mv packaging/archlinux/PKGBUILD.tmp packaging/archlinux/PKGBUILD && \
 		git add $(VERSION_FILE) webclient/package.json packaging/archlinux/PKGBUILD && \
 		git commit -m "Bump version to $$NEW_VERSION" && \
 		git tag "v$$NEW_VERSION" && \
@@ -39,7 +39,7 @@ install_archlinux:
 	cd packaging/archlinux && makepkg -si && find . ! -name 'PKGBUILD' -mindepth 1 -delete
 
 update_pkgbuild:
-	sed -i 's/^pkgver=.*/pkgver=$(CURRENT_VERSION)/' packaging/archlinux/PKGBUILD
+	awk '/^pkgver=/{sub(/pkgver=.*/, "pkgver=$(CURRENT_VERSION)")}1' packaging/archlinux/PKGBUILD > packaging/archlinux/PKGBUILD.tmp && mv packaging/archlinux/PKGBUILD.tmp packaging/archlinux/PKGBUILD
 
 publish_electron:
 	@echo "Triggering electron release for v$(CURRENT_VERSION)"
