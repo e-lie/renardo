@@ -15,11 +15,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download Linux artifact
+      - name: Download Linux deb artifact
         uses: dawidd6/action-download-artifact@v6
         with:
           workflow: electron-build-linux.yml
           name: renardo-linux-deb
+          path: release-artifacts/linux
+          workflow_conclusion: success
+
+      - name: Download Linux AppImage artifact
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: electron-build-linux.yml
+          name: renardo-linux-appimage
           path: release-artifacts/linux
           workflow_conclusion: success
 
@@ -88,8 +96,10 @@ jobs:
           prerelease: true
           files: |
             release-artifacts/linux/*.deb
+            release-artifacts/linux/*.AppImage
             release-artifacts/windows/*.exe
             release-artifacts/macos/*.dmg
             release-artifacts/reaper-ext/*.so
             release-artifacts/reaper-ext/*.dll
             release-artifacts/reaper-ext/*.dylib
+            packaging/archlinux/PKGBUILD

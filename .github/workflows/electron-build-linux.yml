@@ -33,10 +33,16 @@ jobs:
 
       - name: Build Electron app
         working-directory: webclient
-        run: npm run dist -- --linux deb
+        run: npm run dist -- --linux deb AppImage
 
-      - name: Upload artifact
+      - name: Upload deb artifact
         uses: actions/upload-artifact@v4
         with:
           name: renardo-linux-deb
           path: webclient/dist-electron/*.deb
+
+      - name: Upload AppImage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: renardo-linux-appimage
+          path: webclient/dist-electron/*.AppImage
