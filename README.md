@@ -33,7 +33,7 @@ Renardo is currently going through a wide and deep refactoring toward version 1.
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/renardo.git
+git clone https://github.com/e-lie/renardo.git
 cd renardo
 
 # Install with uv
@@ -289,7 +289,7 @@ See the [LICENSE](LICENSE) file for details.
 ## Contact & Community
 
 - **Website**: [renardo.org](http://renardo.org/)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/renardo/issues)
+- **Issues**: [GitHub Issues](https://github.com/e-lie/renardo/issues)
 - **Discussions**: FoxDot / Renardo telegram channel
 
 
