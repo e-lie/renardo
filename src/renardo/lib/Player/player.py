@@ -382,7 +382,9 @@ class Player(Repeatable):
     # Overrides the >> operator to assign an instrument to the player
     def __rshift__(self, other: InstrumentProxy):
         self.assign_instrument(other)
-        return self
+        # Return None so the Python REPL does not overwrite `_` with this Player.
+        # `_` is used as the rest/silence marker in patterns; returning self would
+        # silently corrupt it each time `p >> instrument(...)` is evaluated.
 
     def test_for_circular_reference(
         self, value, attr, last_player=None, last_attr=None

@@ -1,138 +1,58 @@
 """
-Renardo runtime process management (for future use).
+Renardo runtime process management.
 """
 
+import os
 import sys
-import shutil
 from typing import Dict, Any
 from .base import ManagedProcess, ProcessStatus
 
+# Sentinel that marks the end of a code block sent to the exec loop
+_EXEC_SENTINEL = "__EXEC_END__"
 
-def _normalize_for_repl(code: str) -> str:
-    """Insert blank lines between compound blocks and following top-level statements.
-
-    Python's interactive REPL (python -i) requires a blank line after a compound
-    statement body (for/while/if/def/class/try/with) to signal the end of that block.
-    Without it, the first non-indented line after the block triggers a SyntaxError.
-    """
-    lines = code.split('\n')
-    result = []
-    prev_indent_level = 0
-
-    for line in lines:
-        stripped = line.lstrip()
-        if not stripped:
-            result.append(line)
-            prev_indent_level = 0
-            continue
-
-        indent_level = len(line) - len(stripped)
-
-        # Transitioning from indented block back to top level without a blank line
-        if prev_indent_level > 0 and indent_level == 0 and result and result[-1].strip():
-            result.append('')
-
-        result.append(line)
-        prev_indent_level = indent_level
-
-    return '\n'.join(result)
+# Absolute path to the exec loop script
+_EXEC_LOOP = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    '..', 'runtime', 'exec_loop.py'
+)
 
 
 class RenardoRuntimeProcess(ManagedProcess):
-    """Manages a Renardo runtime process (for future use)."""
-    
+    """Manages the Renardo runtime as a persistent exec-loop subprocess."""
+
     def __init__(self, process_id: str, config: Dict[str, Any] = None):
-        """
-        Initialize a Renardo runtime process.
-        
-        Config options:
-            - python_path: Path to Python executable (default: 'uv run python')
-            - init_code: Code to execute on startup (default: 'from renardo_lib import *')
-            - working_dir: Working directory for the process
-        """
         super().__init__(process_id, 'renardo_runtime', config)
-        
-        # Default configuration  
-        self.config.setdefault('python_path', 'uv run python')
-        # Import renardo runtime for live coding
-        self.config.setdefault('init_code', 'from renardo.runtime import *')
         self.config.setdefault('capture_output', True)
-    
+
     def _build_command(self) -> list:
-        """Build the Renardo runtime command line."""
-        python_path = self.config['python_path']
-        
-        # If using 'uv run python', check if uv is available
-        if python_path == 'uv run python':
-            if not shutil.which('uv'):
-                self.logger.warning("uv not found, falling back to system python")
-                python_path = sys.executable
-            else:
-                return ['uv', 'run', 'python', '-i', '-u']
-        
-        # For regular python executable
-        if python_path == 'python' or python_path == sys.executable:
-            return [sys.executable, '-i', '-u']
-        
-        # Custom python path
-        return [python_path, '-i', '-u']
-    
+        """Run exec_loop.py with the same Python interpreter as the webserver."""
+        return [sys.executable, '-u', os.path.realpath(_EXEC_LOOP)]
+
     def start(self) -> bool:
         """Start the Renardo runtime process."""
         success = super().start()
-        
-        if success and self.config.get('init_code'):
-            # Give the process time to start
+        if success:
+            # Give the exec loop time to finish `from renardo.runtime import *`
             import time
             time.sleep(1)
-            
-            # Execute initialization code
-            self.execute_code(self.config['init_code'])
-        
         return success
-    
+
     def execute_code(self, code: str) -> bool:
-        """
-        Execute Renardo code.
-        
-        Args:
-            code: Renardo/Python code to execute
-            
-        Returns:
-            True if code sent successfully, False otherwise
-        """
         if self.status != ProcessStatus.RUNNING:
             self.logger.warning("Cannot execute code in non-running Renardo runtime")
             return False
-        
-        # For now, execute code directly without wrapper
-        # TODO: Implement execute() function in Renardo runtime for consistency
         return self.execute_raw(code)
-    
+
     def execute_raw(self, code: str) -> bool:
-        """
-        Execute raw Python code.
-
-        Args:
-            code: Raw Python code to execute
-
-        Returns:
-            True if code sent successfully, False otherwise
-        """
+        """Send a code block to the exec loop via stdin."""
         if self.status != ProcessStatus.RUNNING:
             self.logger.warning("Cannot execute code in non-running Renardo runtime")
             return False
+        # Terminate the block with the sentinel so exec_loop knows to exec() it
+        return self.send_command(code + '\n' + _EXEC_SENTINEL + '\n')
 
-        # Normalize code for the interactive REPL: insert blank lines between
-        # compound statement blocks and following top-level statements, then
-        # add a trailing double newline to close any final compound block.
-        normalized = _normalize_for_repl(code)
-        return self.send_command(normalized + '\n\n')
-    
     def stop_all_patterns(self) -> bool:
-        """Stop all playing patterns."""
         return self.execute_raw("Clock.clear()")
-    
+
     def get_clock_info(self) -> bool:
-        """Get clock information."""
         return self.execute_raw("print(f'BPM: {Clock.bpm}, Beat: {Clock.beat}')")

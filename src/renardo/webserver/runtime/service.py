@@ -6,7 +6,6 @@ its stdout/stderr output to the WebSocket manager in real time.
 """
 
 import asyncio
-import sys
 from typing import Optional
 
 from ...process_manager.renardo_process import RenardoRuntimeProcess
@@ -50,8 +49,6 @@ class RuntimeService:
         process = RenardoRuntimeProcess(
             process_id=RUNTIME_PROCESS_ID,
             config={
-                "python_path": sys.executable,   # same interpreter → renardo already installed
-                "init_code": "from renardo.runtime import *",
                 "capture_output": True,
             },
         )
