@@ -489,6 +489,17 @@ def fadeout(self: Player, dur=4, fvol=0, ivol=1, autostop=True):
     return self
 
 @player_method
+def fadep(self: Player, param_name, fvalue=1, dur=8, ivalue=None):
+    """ general fade to value method working with any param """
+    if ivalue is None:
+        ivalue = float(getattr(self, param_name))
+    setattr(self, param_name, linvar([ivalue, fvalue], [dur, inf], start=self.main_event_clock.mod(4)))
+    def static_final_value():
+        setattr(self, param_name, fvalue)
+    self.main_event_clock.schedule(static_final_value, self.main_event_clock.next_bar() + dur + 1)
+    return self
+
+@player_method
 def solofade(self: Player, dur=16, fvol=0, ivol=None, autostop=False):
     for player in list(self.main_event_clock.playing):
         if player is not self: # and not player.always_on:
