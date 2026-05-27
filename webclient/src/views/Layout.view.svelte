@@ -34,6 +34,17 @@
 
   onMount(() => {
     document.addEventListener('mousemove', handleGlobalMouseMove);
+
+    const savedTheme = localStorage.getItem('skeleton-theme') || 'cerberus';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+
+    const savedMode = localStorage.getItem('color-scheme-mode') || 'dark';
+    if (savedMode === 'auto') {
+      const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-mode', dark ? 'dark' : 'light');
+    } else {
+      document.documentElement.setAttribute('data-mode', savedMode);
+    }
   });
 
   onDestroy(() => {
