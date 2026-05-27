@@ -57,3 +57,17 @@ for scresource_bank in scresource_library:
                     effect_manager.new(sceffect)
                 except Exception as e:
                     print(f"Resource from {scresource_file.path} could not be loaded : {e}")
+
+# Load output effect last — must come after all other effects
+_output_resource_file = SCResourceFile(
+    path=settings.get_path("SPECIAL_SCCODE_DIR") / 'output.py',
+    resource_type=ResourceType.EFFECT,
+    category="routing"
+)
+try:
+    _output_effect = _output_resource_file.load_resource_from_python()
+    _output_effect.bank = "special"
+    _output_effect.category = "routing"
+    effect_manager.new(_output_effect)
+except Exception as e:
+    print(f"output effect could not be loaded: {e}")
