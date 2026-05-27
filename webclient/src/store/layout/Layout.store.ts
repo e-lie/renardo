@@ -86,8 +86,48 @@ const initialState: LayoutStateInterface = {
   hideAppNavbar: false
 }
 
-// Private writable store
-const writableLayoutStore = writable<LayoutStateInterface>(initialState)
+const LAYOUT_STORAGE_KEY = 'layout-config'
+
+function loadLayoutFromLocalStorage(): LayoutStateInterface {
+  const saved = localStorage.getItem(LAYOUT_STORAGE_KEY)
+  if (!saved) return initialState
+  try {
+    const config = JSON.parse(saved)
+    return {
+      ...initialState,
+      paneVisibility: config.paneVisibility
+        ? new Map(Object.entries(config.paneVisibility) as [string, boolean][])
+        : initialState.paneVisibility,
+      paneSetVisibility: config.paneSetVisibility ?? initialState.paneSetVisibility,
+      paneSizes: config.paneSizes ?? initialState.paneSizes,
+      containerSizes: config.containerSizes ?? initialState.containerSizes,
+      hideAppNavbar: config.hideAppNavbar ?? initialState.hideAppNavbar
+    }
+  } catch {
+    return initialState
+  }
+}
+
+function saveLayoutToLocalStorage(state: LayoutStateInterface) {
+  const config = {
+    paneVisibility: Object.fromEntries(state.paneVisibility),
+    paneSetVisibility: state.paneSetVisibility,
+    paneSizes: state.paneSizes,
+    containerSizes: state.containerSizes,
+    hideAppNavbar: state.hideAppNavbar
+  }
+  localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(config))
+}
+
+// Private writable store — initialized from localStorage
+const writableLayoutStore = writable<LayoutStateInterface>(loadLayoutFromLocalStorage())
+
+// Persist layout changes to localStorage (skip transient fields)
+writableLayoutStore.subscribe(state => {
+  if (!state.isResizing) {
+    saveLayoutToLocalStorage(state)
+  }
+})
 
 // Public hook
 export function useLayoutStore(): LayoutStoreInterface {
