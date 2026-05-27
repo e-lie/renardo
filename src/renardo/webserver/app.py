@@ -530,6 +530,41 @@ async def save_file(request: SaveFileRequest):
         raise HTTPException(status_code=500, detail=f"Error saving file: {str(e)}")
 
 
+# Frontend state persistence
+@app.get("/api/frontend-state")
+async def get_frontend_state():
+    """Return persisted frontend state from user_dir/frontend_state.json"""
+    import json
+    from ..settings_manager import settings
+    state_file = settings.get_renardo_user_dir() / "frontend_state.json"
+    if not state_file.exists():
+        return {}
+    try:
+        with open(state_file, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading frontend state: {e}")
+
+
+class SaveFrontendStateRequest(BaseModel):
+    state: dict
+
+
+@app.post("/api/frontend-state")
+async def save_frontend_state(request: SaveFrontendStateRequest):
+    """Persist frontend state to user_dir/frontend_state.json"""
+    import json
+    from ..settings_manager import settings
+    user_dir = settings.get_renardo_user_dir()
+    try:
+        user_dir.mkdir(parents=True, exist_ok=True)
+        with open(user_dir / "frontend_state.json", "w", encoding="utf-8") as f:
+            json.dump(request.state, f, indent=2, ensure_ascii=False)
+        return {"success": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error saving frontend state: {e}")
+
+
 # Frontend logging endpoint
 class FrontendLogRequest(BaseModel):
     level: str

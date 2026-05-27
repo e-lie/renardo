@@ -2,6 +2,7 @@
   import { onMount, onDestroy, untrack } from 'svelte';
   import { useI18nStore } from '../../../store/i18n/I18n.store';
   import { useEditorStore } from '../../../store/editor/Editor.store';
+  import { scheduleBackendSave } from '../../../services/frontend-state.service';
 
   const i18n = useI18nStore();
   const { translate } = i18n.getters;
@@ -110,6 +111,7 @@
       localStorage.setItem('skeleton-theme-last-non-glass', newTheme);
     }
     applyTheme(newTheme);
+    scheduleBackendSave();
   }
 
   function handleColorSchemeModeChange(event: Event) {
@@ -118,6 +120,7 @@
     colorSchemeMode = newMode;
     localStorage.setItem('color-scheme-mode', newMode);
     applyColorSchemeMode(newMode);
+    scheduleBackendSave();
   }
 </script>
 

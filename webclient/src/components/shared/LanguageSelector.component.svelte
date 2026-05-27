@@ -1,6 +1,7 @@
 <script lang="ts">
   import { useI18nStore } from '../../store/i18n/I18n.store'
   import type { Language } from '../../i18n/translations'
+  import { scheduleBackendSave } from '../../services/frontend-state.service'
 
   const { getters, actions } = useI18nStore()
   const { currentLanguage, translate } = getters
@@ -14,6 +15,7 @@
 
   function handleLanguageChange(lang: Language) {
     actions.setLanguage(lang)
+    scheduleBackendSave()
   }
 </script>
 

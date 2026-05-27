@@ -6,6 +6,7 @@
   import { useAppStore } from './store/root/Root.store';
   import { useConsoleStore } from './store/console/Console.store';
   import { useInitializationStore } from './store/initialization/Initialization.store';
+  import { loadFromBackend, startAutoSave } from './services/frontend-state.service';
 
   const appStore = useAppStore();
   const consoleStore = useConsoleStore();
@@ -18,6 +19,7 @@
   let showInitModal = $state(false);
 
   let websocketSyncUnsubscribe: (() => void) | undefined;
+  let stopAutoSave: (() => void) | undefined;
 
   onMount(async () => {
     appStore.webSocketBackendStore.actions.connect();
@@ -27,6 +29,10 @@
     }
 
     initStore.actions.subscribeToWebSocket(appStore.webSocketBackendStore);
+
+    // Charger l'état frontend depuis le backend (override localStorage si présent)
+    await loadFromBackend();
+    stopAutoSave = startAutoSave();
 
     await initStore.actions.checkStatus();
 
@@ -40,6 +46,9 @@
   onDestroy(() => {
     if (websocketSyncUnsubscribe) {
       websocketSyncUnsubscribe();
+    }
+    if (stopAutoSave) {
+      stopAutoSave();
     }
     appStore.webSocketBackendStore.actions.disconnect();
   });
