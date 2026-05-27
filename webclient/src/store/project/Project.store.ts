@@ -40,6 +40,7 @@ export function useProjectStore(): ProjectStoreInterface {
                     ...state,
                     currentProject: data.project
                 }))
+                localStorage.setItem('project-path', rootPath)
             } catch (error) {
                 console.error('Error opening project:', error)
                 throw error
@@ -48,6 +49,7 @@ export function useProjectStore(): ProjectStoreInterface {
 
         closeProject: (): void => {
             writableProjectStore.set(initialState)
+            localStorage.removeItem('project-path')
         },
 
         listFiles: async (pattern: string = '*', recursive: boolean = false): Promise<FileInfo[]> => {

@@ -1,6 +1,7 @@
 import { useLayoutStore } from '../store/layout'
 import { useEditorStore } from '../store/editor/Editor.store'
 import { useI18nStore } from '../store/i18n/I18n.store'
+import { useProjectStore } from '../store/project'
 
 const API_URL = 'http://localhost:8000'
 const DEBOUNCE_MS = 2000
@@ -12,6 +13,7 @@ const PERSISTENCE_KEYS = [
     'skeleton-theme-last-non-glass',
     'color-scheme-mode',
     'renardo-language',
+    'project-path',
 ] as const
 
 function collectState(): Record<string, unknown> {
@@ -72,6 +74,14 @@ export async function loadFromBackend(): Promise<void> {
             useI18nStore().actions.setLanguage(state['renardo-language'] as any)
         }
 
+        // Restaurer le projet ouvert
+        if (typeof state['project-path'] === 'string') {
+            useProjectStore().actions.openProject(state['project-path']).catch(() => {
+                // Le dossier n'existe peut-être plus, on nettoie
+                localStorage.removeItem('project-path')
+            })
+        }
+
         // Appliquer le skeleton theme au DOM
         if (typeof state['skeleton-theme'] === 'string') {
             document.documentElement.setAttribute('data-theme', state['skeleton-theme'])
@@ -96,6 +106,7 @@ export async function loadFromBackend(): Promise<void> {
 export function startAutoSave(): () => void {
     const { getters: layoutGetters } = useLayoutStore()
     const { getters: editorGetters } = useEditorStore()
+    const { getters: projectGetters } = useProjectStore()
 
     // Le subscribe Svelte fire immédiatement avec la valeur courante.
     // On ignore ce premier appel synchrone en settant initialized après.
@@ -108,6 +119,7 @@ export function startAutoSave(): () => void {
         layoutGetters.paneSizes.subscribe(defer),
         layoutGetters.containerSizes.subscribe(defer),
         editorGetters.settings.subscribe(defer),
+        projectGetters.currentProject.subscribe(defer),
     ]
 
     initialized = true
