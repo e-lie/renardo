@@ -14,6 +14,7 @@ const PERSISTENCE_KEYS = [
     'color-scheme-mode',
     'renardo-language',
     'project-path',
+    'editor-tabs',
 ] as const
 
 function collectState(): Record<string, unknown> {

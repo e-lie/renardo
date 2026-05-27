@@ -7,7 +7,14 @@
   import { useI18nStore } from '../../../store/i18n/I18n.store';
   import type { LoadFileEvent } from '../../../events/editorEvents';
   import logger from '../../../services/logger.service';
+  import { scheduleBackendSave } from '../../../services/frontend-state.service';
   import { onMount, onDestroy } from 'svelte';
+
+  interface SavedTab {
+    filePath: string;
+    title: string;
+    isActive: boolean;
+  }
 
   let {
     componentId = 'code-editor',
@@ -29,26 +36,91 @@
   let editorId = $state<string>('');
   let showConfirmClose = $state(false);
   let pendingCloseTabId = $state<string | null>(null);
+  let isTabsInitialized = $state(false);
 
   // Get editor-specific derived stores
   let localTabs = $derived(editorId ? getters.getEditorTabs(editorId) : null);
   let activeTab = $derived(editorId ? getters.getEditorActiveTab(editorId) : null);
   let activeBuffer = $derived(editorId ? getters.getEditorActiveBuffer(editorId) : null);
 
-  // Register editor and create initial buffer
+  // Register editor and restore or create initial tabs
   $effect(() => {
     if (!editorId) {
       editorId = actions.registerEditor(componentId);
       logger.debug('CodeEditorWrapper', 'Registered editor', { editorId, componentId });
-
-      // Create initial buffer and tab
-      const newBufferId = actions.createBuffer({
-        name: title || 'Code Editor',
-        content: '',
-        language: 'python',
-      });
-      actions.createTab(editorId, newBufferId);
+      initEditorTabs(editorId);
     }
+  });
+
+  async function initEditorTabs(eid: string) {
+    const savedTabs = getPersistedTabs();
+
+    if (savedTabs.length === 0) {
+      const bufferId = actions.createBuffer({ name: title || 'Code Editor', content: '', language: 'python' });
+      actions.createTab(eid, bufferId);
+      isTabsInitialized = true;
+      return;
+    }
+
+    let restoredCount = 0;
+    let activeTabId: string | null = null;
+
+    for (const saved of savedTabs) {
+      try {
+        const response = await fetch(
+          `http://localhost:8000/api/file-explorer/read?path=${encodeURIComponent(saved.filePath)}`
+        );
+        if (!response.ok) continue;
+        const data = await response.json();
+        const tabId = actions.loadContentInNewTab(eid, data.content || '', saved.title, saved.filePath);
+        if (saved.isActive) activeTabId = tabId;
+        restoredCount++;
+      } catch {
+        // Fichier inaccessible, on le saute
+      }
+    }
+
+    if (restoredCount === 0) {
+      // Tous les fichiers ont échoué, on crée un buffer vide
+      const bufferId = actions.createBuffer({ name: title || 'Code Editor', content: '', language: 'python' });
+      actions.createTab(eid, bufferId);
+    } else if (activeTabId) {
+      actions.switchToTab(eid, activeTabId);
+    }
+
+    isTabsInitialized = true;
+  }
+
+  function getPersistedTabs(): SavedTab[] {
+    const raw = localStorage.getItem('editor-tabs');
+    if (!raw) return [];
+    try {
+      return JSON.parse(raw)[componentId] || [];
+    } catch {
+      return [];
+    }
+  }
+
+  // Sauvegarder les onglets file-backed quand ils changent (après init seulement)
+  $effect(() => {
+    if (!editorId || !isTabsInitialized) return;
+
+    const openTabs: SavedTab[] = ($localTabs || [])
+      .map(tab => {
+        const buf = $buffers.find(b => b.id === tab.bufferId);
+        if (!buf?.filePath) return null;
+        return {
+          filePath: buf.filePath,
+          title: tab.title,
+          isActive: tab.id === $activeTab?.id,
+        };
+      })
+      .filter((t): t is SavedTab => t !== null);
+
+    const saved = JSON.parse(localStorage.getItem('editor-tabs') || '{}');
+    saved[componentId] = openTabs;
+    localStorage.setItem('editor-tabs', JSON.stringify(saved));
+    scheduleBackendSave();
   });
 
   // Listen for file load events
