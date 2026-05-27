@@ -1,14 +1,21 @@
-
-from renardo.lib.music_resource import ResourceType
-from renardo.sc_backend import SCInstrument, SCEffect
-from renardo.sc_backend import FileEffect, StartSoundEffect, MakeSoundEffect
-
 from pathlib import Path
 
 from renardo.gatherer import SCResourceFile
-from renardo.runtime.managers_instanciation import scresource_library, effect_manager, Server
-from renardo.settings_manager import settings
 from renardo.lib.Code import WarningMsg
+from renardo.lib.music_resource import ResourceType
+from renardo.runtime.managers_instanciation import (
+    Server,
+    effect_manager,
+    scresource_library,
+)
+from renardo.sc_backend import (
+    FileEffect,
+    MakeSoundEffect,
+    SCEffect,
+    SCInstrument,
+    StartSoundEffect,
+)
+from renardo.settings_manager import settings
 
 for scresource_bank in scresource_library:
     if scresource_bank.name in settings.get("sc_backend.ACTIVATED_SCCODE_BANKS"):
@@ -16,14 +23,18 @@ for scresource_bank in scresource_library:
             for scresource_file in instrument_category:
                 try:
                     # load the SCInstrument instance declared in every python resource file found in library
-                    scinstrument:SCInstrument = scresource_file.load_resource_from_python()
+                    scinstrument: SCInstrument = (
+                        scresource_file.load_resource_from_python()
+                    )
                     scinstrument.bank = scresource_bank.name
                     scinstrument.category = instrument_category.category
                     scinstrument.load_in_server_from_tempfile()
                     # define a variable for each scinstrument (callable in the context of a player and returns a InstrumentProxy)
                     globals()[scinstrument.shortname] = scinstrument
                 except Exception as e:
-                    print(f"Resource from {scresource_file.path} could not be loaded : {e}")
+                    print(
+                        f"Resource from {scresource_file.path} could not be loaded : {e}"
+                    )
 
 
 # create the special sccode dir in the user dir if not exist
@@ -31,16 +42,16 @@ settings.get_path("SPECIAL_SCCODE_DIR").mkdir(parents=True, exist_ok=True)
 
 # The 1 or 2 channels buffer strategy of play (which is currently sending a channel error in SC so broken strategry) implies a specific setup with two players
 play1_resource_file = SCResourceFile(
-    path=settings.get_path("SPECIAL_SCCODE_DIR") / 'play1.py',
+    path=settings.get_path("SPECIAL_SCCODE_DIR") / "play1.py",
     resource_type=ResourceType.INSTRUMENT,
-    category="sampler"
+    category="sampler",
 )
 play = play1_resource_file.load_resource_from_python()
 
 play2_resource_file = SCResourceFile(
-    path=settings.get_path("SPECIAL_SCCODE_DIR") / 'play2.py',
+    path=settings.get_path("SPECIAL_SCCODE_DIR") / "play2.py",
     resource_type=ResourceType.INSTRUMENT,
-    category="sampler"
+    category="sampler",
 )
 play = play2_resource_file.load_resource_from_python()
 
@@ -56,13 +67,15 @@ for scresource_bank in scresource_library:
                     sceffect.category = effect_category.category
                     effect_manager.new(sceffect)
                 except Exception as e:
-                    print(f"Resource from {scresource_file.path} could not be loaded : {e}")
+                    print(
+                        f"Resource from {scresource_file.path} could not be loaded : {e}"
+                    )
 
 # Load output effect last — must come after all other effects
 _output_resource_file = SCResourceFile(
-    path=settings.get_path("SPECIAL_SCCODE_DIR") / 'output.py',
+    path=settings.get_path("SPECIAL_SCCODE_DIR") / "output.py",
     resource_type=ResourceType.EFFECT,
-    category="routing"
+    category="routing",
 )
 try:
     _output_effect = _output_resource_file.load_resource_from_python()
