@@ -8,6 +8,36 @@ from typing import Dict, Any
 from .base import ManagedProcess, ProcessStatus
 
 
+def _normalize_for_repl(code: str) -> str:
+    """Insert blank lines between compound blocks and following top-level statements.
+
+    Python's interactive REPL (python -i) requires a blank line after a compound
+    statement body (for/while/if/def/class/try/with) to signal the end of that block.
+    Without it, the first non-indented line after the block triggers a SyntaxError.
+    """
+    lines = code.split('\n')
+    result = []
+    prev_indent_level = 0
+
+    for line in lines:
+        stripped = line.lstrip()
+        if not stripped:
+            result.append(line)
+            prev_indent_level = 0
+            continue
+
+        indent_level = len(line) - len(stripped)
+
+        # Transitioning from indented block back to top level without a blank line
+        if prev_indent_level > 0 and indent_level == 0 and result and result[-1].strip():
+            result.append('')
+
+        result.append(line)
+        prev_indent_level = indent_level
+
+    return '\n'.join(result)
+
+
 class RenardoRuntimeProcess(ManagedProcess):
     """Manages a Renardo runtime process (for future use)."""
     
@@ -82,19 +112,22 @@ class RenardoRuntimeProcess(ManagedProcess):
     def execute_raw(self, code: str) -> bool:
         """
         Execute raw Python code.
-        
+
         Args:
             code: Raw Python code to execute
-            
+
         Returns:
             True if code sent successfully, False otherwise
         """
         if self.status != ProcessStatus.RUNNING:
             self.logger.warning("Cannot execute code in non-running Renardo runtime")
             return False
-        
-        # Send code directly
-        return self.send_command(code + '\n')
+
+        # Normalize code for the interactive REPL: insert blank lines between
+        # compound statement blocks and following top-level statements, then
+        # add a trailing double newline to close any final compound block.
+        normalized = _normalize_for_repl(code)
+        return self.send_command(normalized + '\n\n')
     
     def stop_all_patterns(self) -> bool:
         """Stop all playing patterns."""
