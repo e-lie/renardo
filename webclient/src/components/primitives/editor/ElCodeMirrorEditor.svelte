@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { EditorView, keymap, placeholder as cmPlaceholder, lineNumbers, Decoration, type DecorationSet } from '@codemirror/view';
   import { EditorState, Compartment, StateEffect, StateField } from '@codemirror/state';
-  import { defaultKeymap, indentWithTab, standardKeymap, insertTab } from '@codemirror/commands';
+  import { defaultKeymap, indentWithTab, standardKeymap, insertTab, history } from '@codemirror/commands';
   import { python } from '@codemirror/lang-python';
   import { javascript } from '@codemirror/lang-javascript';
   import { highlightSelectionMatches } from '@codemirror/search';
@@ -422,6 +422,9 @@
 
         // Enhanced syntax highlighting
         highlightSelectionMatches(),
+
+        // Undo/redo history
+        history(),
 
         // Execution highlight decoration field
         executionHighlightField,
