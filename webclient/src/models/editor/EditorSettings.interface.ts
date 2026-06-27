@@ -33,4 +33,5 @@ export interface EditorSettingsInterface {
     lineWrapping: boolean
     vimMode: boolean
     hydraBackground: boolean
+    autoSave: boolean
 }

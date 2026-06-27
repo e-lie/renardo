@@ -40,7 +40,8 @@ function loadSettingsFromLocalStorage(): EditorSettingsInterface {
         showLineNumbers: true,
         lineWrapping: true,
         vimMode: false,
-        hydraBackground: true
+        hydraBackground: true,
+        autoSave: false,
     }
 }
 

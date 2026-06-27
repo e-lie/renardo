@@ -42,6 +42,7 @@
   let localTabs = $derived(editorId ? getters.getEditorTabs(editorId) : null);
   let activeTab = $derived(editorId ? getters.getEditorActiveTab(editorId) : null);
   let activeBuffer = $derived(editorId ? getters.getEditorActiveBuffer(editorId) : null);
+  const { settings } = getters;
 
   // Register editor and restore or create initial tabs
   $effect(() => {
@@ -246,6 +247,23 @@
     }
   }
 
+  function handleEditorBlur() {
+    if ($settings.autoSave && $activeBuffer?.filePath && $activeBuffer?.isDirty) {
+      handleFileSave($activeBuffer.filePath);
+    }
+  }
+
+  // Periodic autosave every 20s when autoSave is enabled
+  $effect(() => {
+    if (!$settings.autoSave) return;
+    const interval = setInterval(() => {
+      if ($activeBuffer?.filePath && $activeBuffer?.isDirty) {
+        handleFileSave($activeBuffer.filePath);
+      }
+    }, 20_000);
+    return () => clearInterval(interval);
+  });
+
   async function handleFileSave(filePath: string) {
     if (!$activeBuffer) return
     const result = await actions.saveBuffer($activeBuffer.id, filePath)
@@ -306,6 +324,7 @@
         onchange={handleChange}
         onexecute={handleExecute}
         oncreatetab={(lang) => handleCreateTab(lang)}
+        onblur={handleEditorBlur}
       />
     {:else}
       <div class="h-full flex items-center justify-center text-surface-500">

@@ -24,6 +24,7 @@
     testid = 'not-set',
     onchange,
     onexecute,
+    onblur,
   }: {
     content?: string;
     language?: 'python' | 'hydra';
@@ -38,6 +39,7 @@
     testid?: string;
     onchange?: (value: string) => void;
     onexecute?: (code: string) => void;
+    onblur?: () => void;
   } = $props();
 
   let containerElement: HTMLDivElement;
@@ -439,6 +441,9 @@
             const newContent = update.state.doc.toString();
             localContent = newContent;
             onchange?.(newContent);
+          }
+          if (update.focusChanged && !update.view.hasFocus) {
+            onblur?.();
           }
         }),
 

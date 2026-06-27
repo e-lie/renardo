@@ -9,11 +9,13 @@
     onchange,
     onexecute,
     oncreatetab,
+    onblur,
   }: {
     buffer: BufferInterface | null;
     onchange?: (content: string) => void;
     onexecute?: (code: string) => void;
     oncreatetab?: (language: 'python' | 'hydra') => void;
+    onblur?: () => void;
   } = $props();
 
   const { getters } = useEditorStore();
@@ -55,6 +57,7 @@
       testid="code-editor"
       onchange={handleChange}
       onexecute={handleExecute}
+      {onblur}
     />
     {#if oncreatetab}
       <div class="absolute top-2 right-2 z-10">
