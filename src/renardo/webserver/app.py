@@ -17,6 +17,7 @@ from .sc_backend.routes import router as sc_backend_router, init_sc_service
 from .init.routes import router as init_router
 from .runtime.routes import router as runtime_router
 from .runtime.service import runtime_service
+from .websocket.osc_clock_server import osc_server
 from ..logger import get_main_logger
 from ..__about__ import __version__
 
@@ -27,7 +28,11 @@ async def lifespan(_app: FastAPI):
     await runtime_state.start()
 
     init_sc_service(websocket_manager)
-    runtime_service.init(websocket_manager, asyncio.get_event_loop())
+    loop = asyncio.get_event_loop()
+    runtime_service.init(websocket_manager, loop)
+    osc_server.init(loop)
+    osc_server.register_builtin_handlers()
+    osc_server.start()
 
     from .sc_backend.routes import sc_service as _sc_service
     if _sc_service is not None:
@@ -40,6 +45,7 @@ async def lifespan(_app: FastAPI):
 
     # --- shutdown ---
     await runtime_state.stop()
+    osc_server.stop()
 
 
 app = FastAPI(title="Renardo WebServer Fresh", version=__version__, lifespan=lifespan)

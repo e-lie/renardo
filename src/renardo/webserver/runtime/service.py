@@ -101,6 +101,7 @@ class RuntimeService:
         success = self._process.start()
 
         if success:
+            self._inject_osc_clock_callback()
             return {"success": True, "message": "Runtime started", **self.get_status()}
         else:
             err = self._process.error_message or "Unknown error"
@@ -129,10 +130,31 @@ class RuntimeService:
         success = self._process.start()
 
         if success:
+            self._inject_osc_clock_callback()
             return {"success": True, "message": "Runtime restarted", **self.get_status()}
         else:
             err = self._process.error_message or "Unknown error"
             return {"success": False, "message": f"Failed to restart: {err}", **self.get_status()}
+
+    def _inject_osc_clock_callback(self):
+        """Register a beat callback in the subprocess that sends OSC to the webserver."""
+        from ..websocket.osc_clock_server import OSC_PORT
+        code = f"""
+import threading as _threading
+from pythonosc.udp_client import SimpleUDPClient as _OSCClient
+_osc_clock_client = _OSCClient("127.0.0.1", {OSC_PORT})
+
+def __renardo_osc_beat_callback(beat, bpm, meter, ticking):
+    try:
+        measure_size = int((meter[0] / meter[1]) * 4)
+        beat_in_measure = ((beat - 1) % measure_size) + 1
+        _osc_clock_client.send_message("/clock/beat", [beat_in_measure, measure_size, float(bpm), int(ticking)])
+    except Exception:
+        pass
+
+Clock.register_beat_callback(__renardo_osc_beat_callback)
+"""
+        self._process.execute_code(code)
 
     def execute_code(self, code: str) -> bool:
         """Send code to the runtime subprocess via stdin."""

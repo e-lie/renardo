@@ -6,7 +6,8 @@ import type {
   WebSocketBackendStoreGettersInterface,
   ConsoleMessageInterface,
   WebSocketMessageInterface,
-  WebSocketCommandInterface
+  WebSocketCommandInterface,
+  ClockStateInterface
 } from '../../models/websocket'
 
 // Helper function to generate unique IDs
@@ -14,11 +15,19 @@ function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
 
+const initialClockState: ClockStateInterface = {
+  current_beat: 1,
+  measure_size: 4,
+  bpm: 120,
+  ticking: false
+}
+
 // Initial state
 const initialState: WebSocketBackendStateInterface = {
   connectionStatus: 'disconnected',
   consoleMessages: [],
-  error: null
+  error: null,
+  clockState: initialClockState
 }
 
 // Private writable store
@@ -140,10 +149,7 @@ function handleWebSocketMessage(message: WebSocketMessageInterface) {
       }))
       break
     case 'clock_update':
-      // Dispatch clock update event for ClockDisplay component
-      window.dispatchEvent(new MessageEvent('message', {
-        data: JSON.stringify(message)
-      }))
+      writableWebSocketStore.update(state => ({ ...state, clockState: message.data }))
       break
     case 'pong':
       // Heartbeat response, no action needed
@@ -209,12 +215,14 @@ export function useWebSocketBackendStore(): WebSocketBackendStoreInterface {
   const consoleMessages = derived(writableWebSocketStore, $state => $state.consoleMessages)
   const error = derived(writableWebSocketStore, $state => $state.error)
   const isConnected = derived(connectionStatus, $status => $status === 'connected')
+  const clockState = derived(writableWebSocketStore, $state => $state.clockState)
 
   const getters: WebSocketBackendStoreGettersInterface = {
     connectionStatus,
     consoleMessages,
     error,
-    isConnected
+    isConnected,
+    clockState
   }
 
   return { actions, getters }

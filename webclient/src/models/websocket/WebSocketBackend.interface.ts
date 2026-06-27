@@ -1,7 +1,15 @@
+export interface ClockStateInterface {
+  current_beat: number
+  measure_size: number
+  bpm: number
+  ticking: boolean
+}
+
 export interface WebSocketBackendStateInterface {
   connectionStatus: 'disconnected' | 'connecting' | 'connected' | 'error'
   consoleMessages: ConsoleMessageInterface[]
   error: string | null
+  clockState: ClockStateInterface
 }
 
 export interface WebSocketBackendStoreInterface {
@@ -21,6 +29,7 @@ export interface WebSocketBackendStoreGettersInterface {
   consoleMessages: import('svelte/store').Readable<ConsoleMessageInterface[]>
   error: import('svelte/store').Readable<string | null>
   isConnected: import('svelte/store').Readable<boolean>
+  clockState: import('svelte/store').Readable<ClockStateInterface>
 }
 
 export interface ConsoleMessageInterface {
