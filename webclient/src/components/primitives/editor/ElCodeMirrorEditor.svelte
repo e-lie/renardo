@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { EditorView, keymap, placeholder as cmPlaceholder, lineNumbers, Decoration, type DecorationSet } from '@codemirror/view';
-  import { EditorState, Compartment, StateEffect, StateField } from '@codemirror/state';
+  import { EditorState, Compartment, StateEffect, StateField, Transaction } from '@codemirror/state';
   import { defaultKeymap, indentWithTab, standardKeymap, insertTab, history } from '@codemirror/commands';
   import { python } from '@codemirror/lang-python';
   import { javascript } from '@codemirror/lang-javascript';
@@ -49,6 +49,7 @@
   const lineNumbersCompartment = new Compartment();
   const vimCompartment = new Compartment();
   const baseStyleCompartment = new Compartment();
+  const historyCompartment = new Compartment();
 
   // Decoration-based execution highlight (does not touch cursor/selection)
   const addHighlightEffect = StateEffect.define<{ from: number; to: number }>();
@@ -89,17 +90,17 @@
     setTimeout(drainQueue, 0);
   }
 
-  // Sync local content with prop
+  // Sync local content with prop — reset history so buffer loads don't pollute undo stack
   $effect(() => {
     if (content !== localContent && editorView) {
       const currentDoc = editorView.state.doc.toString();
       if (currentDoc !== content) {
+        // 1. Reset history (fresh instance, clears undo stack)
+        editorView.dispatch({ effects: historyCompartment.reconfigure(history()) });
+        // 2. Load content without recording it in the new history
         editorView.dispatch({
-          changes: {
-            from: 0,
-            to: currentDoc.length,
-            insert: content,
-          },
+          changes: { from: 0, to: editorView.state.doc.length, insert: content },
+          annotations: Transaction.addToHistory.of(false),
         });
         localContent = content;
       }
@@ -423,8 +424,8 @@
         // Enhanced syntax highlighting
         highlightSelectionMatches(),
 
-        // Undo/redo history
-        history(),
+        // Undo/redo history (in compartment so it can be reset on buffer load)
+        historyCompartment.of(history()),
 
         // Execution highlight decoration field
         executionHighlightField,
