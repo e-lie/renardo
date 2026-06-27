@@ -274,6 +274,7 @@
       class="flex items-center bg-surface-200 dark:bg-surface-800 border-b border-surface-300 dark:border-surface-700"
     >
       {#each $localTabs as tab}
+        {@const tabBuffer = $buffers?.find(b => b.id === tab.bufferId)}
         <div class="flex items-center group">
           <button
             class="px-3 py-2 text-sm transition-colors {tab.id === $activeTab?.id
@@ -281,7 +282,7 @@
               : 'hover:bg-surface-300 dark:hover:bg-surface-700'}"
             onclick={() => handleSwitchTab(tab.id)}
           >
-            <span class="text-surface-900 dark:text-surface-50">{tab.title}</span>
+            <span class="text-surface-900 dark:text-surface-50 {tabBuffer?.isDirty ? 'italic opacity-70' : ''}">{tab.title}</span>
           </button>
           {#if !tab.isPinned}
             <button
