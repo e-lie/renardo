@@ -336,6 +336,13 @@
       return;
     }
 
+    // Prevent Cmd+Up / Cmd+Down from jumping to start/end of document
+    if (event.metaKey && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
     // Ctrl+. or Cmd+. for Clock.clear()
     if ((event.ctrlKey || event.metaKey) && event.key === '.') {
       event.preventDefault();
