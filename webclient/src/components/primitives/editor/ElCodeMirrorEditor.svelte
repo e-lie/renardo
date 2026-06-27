@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { EditorView, keymap, placeholder as cmPlaceholder, lineNumbers } from '@codemirror/view';
-  import { EditorState, Compartment } from '@codemirror/state';
+  import { EditorView, keymap, placeholder as cmPlaceholder, lineNumbers, Decoration, type DecorationSet } from '@codemirror/view';
+  import { EditorState, Compartment, StateEffect, StateField } from '@codemirror/state';
   import { defaultKeymap, indentWithTab, standardKeymap, insertTab } from '@codemirror/commands';
   import { python } from '@codemirror/lang-python';
   import { javascript } from '@codemirror/lang-javascript';
@@ -49,6 +49,45 @@
   const lineNumbersCompartment = new Compartment();
   const vimCompartment = new Compartment();
   const baseStyleCompartment = new Compartment();
+
+  // Decoration-based execution highlight (does not touch cursor/selection)
+  const addHighlightEffect = StateEffect.define<{ from: number; to: number }>();
+  const clearHighlightEffect = StateEffect.define<null>();
+  const executionHighlightField = StateField.define<DecorationSet>({
+    create: () => Decoration.none,
+    update(deco, tr) {
+      deco = deco.map(tr.changes);
+      for (const e of tr.effects) {
+        if (e.is(addHighlightEffect)) {
+          deco = deco.update({ add: [Decoration.mark({ class: 'cm-exec-highlight' }).range(e.value.from, e.value.to)] });
+        } else if (e.is(clearHighlightEffect)) {
+          deco = Decoration.none;
+        }
+      }
+      return deco;
+    },
+    provide: f => EditorView.decorations.from(f),
+  });
+
+  // Execution queue — decouples visual blink from runtime calls
+  const executionQueue: string[] = [];
+  let queueRunning = false;
+
+  function enqueueExecution(code: string) {
+    executionQueue.push(code);
+    if (!queueRunning) drainQueue();
+  }
+
+  function drainQueue() {
+    if (executionQueue.length === 0) {
+      queueRunning = false;
+      return;
+    }
+    queueRunning = true;
+    const code = executionQueue.shift()!;
+    onexecute?.(code);
+    setTimeout(drainQueue, 0);
+  }
 
   // Sync local content with prop
   $effect(() => {
@@ -224,46 +263,12 @@
     };
   }
 
-  // Simple execution highlight using CSS
+  // Decoration-based highlight — cursor/selection never touched
   function createExecutionHighlight(view: EditorView, from: number, to: number) {
-    // Create temporary selection for highlight
-    view.dispatch({
-      selection: { anchor: from, head: to }
-    });
-    
-    // Add highlight style
-    const highlightStyle = document.createElement('style');
-    highlightStyle.id = 'execution-highlight';
-    highlightStyle.textContent = `
-      .cm-editor .cm-selectionLayer .cm-selectionBackground,
-      .cm-editor .cm-selectionBackground {
-        background-color: rgba(34, 197, 94, 0.3) !important;
-        border-radius: 2px;
-        animation: executionPulse 0.8s ease-in-out;
-      }
-      @keyframes executionPulse {
-        0% { background-color: rgba(34, 197, 94, 0.8); }
-        50% { background-color: rgba(34, 197, 94, 0.4); }
-        100% { background-color: rgba(34, 197, 94, 0.2); }
-      }
-    `;
-    document.head.appendChild(highlightStyle);
-    
-    // Clear highlight after animation
+    view.dispatch({ effects: addHighlightEffect.of({ from, to }) });
     setTimeout(() => {
-      try {
-        const style = document.getElementById('execution-highlight');
-        if (style) {
-          document.head.removeChild(style);
-        }
-        // Clear selection to return to normal
-        view.dispatch({
-          selection: { anchor: from, head: from }
-        });
-      } catch (e) {
-        // Ignore cleanup errors
-      }
-    }, 800);
+      if (editorView) editorView.dispatch({ effects: clearHighlightEffect.of(null) });
+    }, 200);
   }
 
   // Custom key handlers for Ctrl+Enter execution and Ctrl+. for stop
@@ -286,7 +291,7 @@
           from: block.from,
           to: block.to
         });
-        onexecute?.(block.text);
+        enqueueExecution(block.text);
       }
       return;
     }
@@ -311,7 +316,7 @@
           from: line.from,
           to: line.to
         });
-        onexecute?.(lineText);
+        enqueueExecution(lineText);
       }
       return;
     }
@@ -331,7 +336,7 @@
         logger.debug('ElCodeMirrorEditor', 'Executing all code', {
           codeLength: allCode.length
         });
-        onexecute?.(allCode);
+        enqueueExecution(allCode);
       }
       return;
     }
@@ -418,6 +423,9 @@
         // Enhanced syntax highlighting
         highlightSelectionMatches(),
 
+        // Execution highlight decoration field
+        executionHighlightField,
+
         // Keymaps (standard keymaps only, custom handled via DOM events)
         keymap.of([...defaultKeymap, ...standardKeymap, indentWithTab, insertTab]),
 
@@ -502,5 +510,16 @@
 
   :global(.cm-focused) {
     outline: none;
+  }
+
+  :global(.cm-exec-highlight) {
+    background-color: rgba(34, 197, 94, 0.2);
+    border-radius: 2px;
+    animation: execPulse 0.2s ease-out forwards;
+  }
+
+  @keyframes execPulse {
+    from { background-color: rgba(34, 197, 94, 0.7); }
+    to   { background-color: rgba(34, 197, 94, 0.2); }
   }
 </style>
