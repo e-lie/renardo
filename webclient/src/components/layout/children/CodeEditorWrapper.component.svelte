@@ -239,7 +239,11 @@
 
   function handleSave() {
     if (!$activeBuffer) return
-    showSaveModal = true
+    if ($activeBuffer.filePath) {
+      handleFileSave($activeBuffer.filePath)
+    } else {
+      showSaveModal = true
+    }
   }
 
   async function handleFileSave(filePath: string) {
