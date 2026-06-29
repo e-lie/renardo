@@ -261,42 +261,41 @@ class Player(Repeatable):
             pass
         return self.__dict__[name]
 
-    # NOTE: This first __getattr__ is shadowed by the second one below (Python keeps the last
-    # definition). It is preserved as a reference / black-magic safety net — do not delete.
-    # The Ableton integration hook has been moved into the active second __getattr__.
-    # def __getattr__(self, name):
-    #     """Get attribute value, including from Ableton if enabled"""
-    #     try:
-    #         if settings.get("ableton_backend.ABLETON_BACKEND_ENABLED"):
-    #             if "ableton_track" in self.attr.keys() and "ableton_project_ref" in self.attr.keys():
-    #                 ableton_track = self.attr["ableton_track"][0]
-    #                 ableton_project = self.attr["ableton_project_ref"][0]
-    #                 if hasattr(ableton_project, 'get_parameter_info') and hasattr(ableton_track, 'name'):
-    #                     from renardo.ableton_backend.ableton_project import make_snake_name
-    #                     track_name = make_snake_name(ableton_track.name)
-    #                     param_info = ableton_project.get_parameter_info(name, track_name)
-    #                     if param_info is not None:
-    #                         parameter = param_info['parameter']
-    #                         value_result = parameter.value
-    #                         if isinstance(value_result, (list, tuple)) and len(value_result) > 0:
-    #                             raw_value = value_result[-1]
-    #                         else:
-    #                             raw_value = value_result
-    #                         param_range = parameter.max - parameter.min
-    #                         if param_range > 0:
-    #                             normalized = (raw_value - parameter.min) / param_range
-    #                             return max(0.0, min(1.0, normalized))
-    #                         return raw_value
-    #         name = self.alias.get(name, name)
-    #         if name in self.attr and name not in self.__dict__:
-    #             self._update_player_key(name, self.now(name), 0)
-    #         item = self.__dict__[name]
-    #         if isinstance(item, PlayerKey) and name not in self.accessed_keys:
-    #             self.accessed_keys.append(name)
-    #         return item
-    #     except KeyError:
-    #         err = "Player Object has no attribute '{}'".format(name)
-    #         raise AttributeError(err)
+    # NOTE: shadowed by the second __getattr__ below (Python keeps the last definition).
+    # Kept as black-magic safety net — do not delete.
+    def __getattr__(self, name):
+        """Get attribute value, including from Ableton if enabled"""
+        try:
+            if settings.get("ableton_backend.ABLETON_BACKEND_ENABLED"):
+                if "ableton_track" in self.attr.keys() and "ableton_project_ref" in self.attr.keys():
+                    ableton_track = self.attr["ableton_track"][0]
+                    ableton_project = self.attr["ableton_project_ref"][0]
+                    if hasattr(ableton_project, 'get_parameter_info') and hasattr(ableton_track, 'name'):
+                        from renardo.ableton_backend.ableton_project import make_snake_name
+                        track_name = make_snake_name(ableton_track.name)
+                        param_info = ableton_project.get_parameter_info(name, track_name)
+                        if param_info is not None:
+                            parameter = param_info['parameter']
+                            value_result = parameter.value
+                            if isinstance(value_result, (list, tuple)) and len(value_result) > 0:
+                                raw_value = value_result[-1]
+                            else:
+                                raw_value = value_result
+                            param_range = parameter.max - parameter.min
+                            if param_range > 0:
+                                normalized = (raw_value - parameter.min) / param_range
+                                return max(0.0, min(1.0, normalized))
+                            return raw_value
+            name = self.alias.get(name, name)
+            if name in self.attr and name not in self.__dict__:
+                self._update_player_key(name, self.now(name), 0)
+            item = self.__dict__[name]
+            if isinstance(item, PlayerKey) and name not in self.accessed_keys:
+                self.accessed_keys.append(name)
+            return item
+        except KeyError:
+            err = "Player Object has no attribute '{}'".format(name)
+            raise AttributeError(err)
 
     def __eq__(self, other):
         return self is other
