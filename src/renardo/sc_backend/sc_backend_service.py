@@ -130,7 +130,7 @@ class SCBackendService:
 
     async def stop_backend(self) -> dict:
         """
-        Stop SC backend processes.
+        Stop SC backend — kills ALL sclang/scsynth processes system-wide.
 
         Returns:
             dict: {"success": bool, "message": str, "running": bool}
@@ -144,13 +144,13 @@ class SCBackendService:
                     "running": False
                 }
 
-            # Kill SC processes
+            # Kill all SC processes
             from renardo.sc_backend.process_utils import kill_supercollider_processes
             success = kill_supercollider_processes(self.logger, force=True)
 
             self._broadcast_status(False)
 
-            result_message = "SuperCollider backend stopped successfully"
+            result_message = "All SuperCollider processes stopped"
             if not success:
                 result_message += " (some processes may still be running)"
 
@@ -164,6 +164,63 @@ class SCBackendService:
 
         except Exception as e:
             error_msg = f"Error stopping SuperCollider backend: {str(e)}"
+            self.logger.error(error_msg)
+            return {
+                "success": False,
+                "message": error_msg,
+                "running": self.sc_instance.is_sclang_running()
+            }
+
+    async def stop_renardo_only(self) -> dict:
+        """
+        Kill only the sclang process Renardo started (+ its children like scsynth),
+        identified by the tracked PID in sc_instance.
+
+        Returns:
+            dict: {"success": bool, "message": str, "running": bool}
+        """
+        try:
+            if not self.sc_instance.is_sclang_running():
+                return {
+                    "success": True,
+                    "message": "SuperCollider backend is not running",
+                    "running": False
+                }
+
+            sclang_process = getattr(self.sc_instance, 'sclang_process', None)
+            pid = getattr(sclang_process, 'pid', None) if sclang_process else None
+
+            if pid is None:
+                return {
+                    "success": False,
+                    "message": "Could not determine Renardo sclang PID — use Stop All instead",
+                    "running": self.sc_instance.is_sclang_running()
+                }
+
+            import psutil
+            try:
+                proc = psutil.Process(pid)
+                children = proc.children(recursive=True)
+                for child in children:
+                    child.terminate()
+                proc.terminate()
+                gone, alive = psutil.wait_procs([proc] + children, timeout=3)
+                for p in alive:
+                    p.kill()
+            except psutil.NoSuchProcess:
+                pass
+
+            self._broadcast_status(False)
+            self.logger.info(f"Renardo sclang (PID {pid}) and its children terminated")
+
+            return {
+                "success": True,
+                "message": f"Renardo sclang process (PID {pid}) stopped",
+                "running": False
+            }
+
+        except Exception as e:
+            error_msg = f"Error stopping Renardo sclang: {str(e)}"
             self.logger.error(error_msg)
             return {
                 "success": False,

@@ -52,6 +52,20 @@ export function useAudioBackendStore(): AudioBackendStoreInterface {
       }
     },
 
+    stopRenardoOnly: async () => {
+      writableStore.update(s => ({ ...s, isLoading: true, error: null }))
+      try {
+        const result = await apiClient.post('/api/sc-backend/stop-renardo', {})
+        writableStore.update(s => ({
+          ...s,
+          status: { running: result.running, message: result.message },
+          isLoading: false
+        }))
+      } catch (error: any) {
+        writableStore.update(s => ({ ...s, error: error.message, isLoading: false }))
+      }
+    },
+
     loadStatus: async () => {
       try {
         const result = await apiClient.get('/api/sc-backend/status')

@@ -6,6 +6,7 @@ import type { ConsoleMessageInterface } from '../../../models/websocket'
 export interface AudioBackendStoreActionsInterface {
   startBackend: (audioOutputIndex?: number) => Promise<void>
   stopBackend: () => Promise<void>
+  stopRenardoOnly: () => Promise<void>
   loadStatus: () => Promise<void>
   loadAudioDevices: () => Promise<void>
   setAudioDevice: (index: number) => Promise<void>

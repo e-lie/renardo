@@ -36,7 +36,7 @@ async def start_backend(request: StartBackendRequest):
 
 @router.post("/stop", response_model=StopBackendResponse)
 async def stop_backend():
-    """Stop SuperCollider backend."""
+    """Stop SuperCollider backend — kills ALL sclang/scsynth processes system-wide."""
     if sc_service is None:
         raise HTTPException(status_code=500, detail="SC service not initialized")
 
@@ -45,6 +45,19 @@ async def stop_backend():
         return StopBackendResponse(**result)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error stopping backend: {str(e)}")
+
+
+@router.post("/stop-renardo", response_model=StopBackendResponse)
+async def stop_renardo_only():
+    """Stop only the sclang process Renardo started (by tracked PID + children)."""
+    if sc_service is None:
+        raise HTTPException(status_code=500, detail="SC service not initialized")
+
+    try:
+        result = await sc_service.stop_renardo_only()
+        return StopBackendResponse(**result)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error stopping Renardo sclang: {str(e)}")
 
 
 @router.get("/status", response_model=StatusResponse)

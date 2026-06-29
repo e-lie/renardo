@@ -63,6 +63,10 @@
   }
 
   async function handleStop() {
+    await actions.stopRenardoOnly()
+  }
+
+  async function handleStopAll() {
     await actions.stopBackend()
   }
 
@@ -219,6 +223,7 @@
                 class="btn variant-filled-error flex-1"
                 onclick={handleStop}
                 disabled={$isLoading || !$status.running || !isOpen}
+                title="Stop only the sclang process Renardo started (by PID)"
               >
                 {#if $isLoading && $status.running}
                   <span class="animate-spin">⏳</span>
@@ -228,6 +233,15 @@
                 Stop
               </button>
             </div>
+
+            <button
+              class="btn variant-outline-error w-full text-sm"
+              onclick={handleStopAll}
+              disabled={$isLoading || !isOpen}
+              title="Kill all sclang and scsynth processes on this machine"
+            >
+              ☠ Stop All SuperCollider Processes
+            </button>
 
             <!-- Launch IDE Button -->
             <button
