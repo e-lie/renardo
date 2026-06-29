@@ -17,6 +17,8 @@ from .sc_backend.routes import router as sc_backend_router, init_sc_service
 from .init.routes import router as init_router
 from .runtime.routes import router as runtime_router
 from .runtime.service import runtime_service
+from .ableton.routes import router as ableton_router
+from .ableton.service import ableton_service
 from .websocket.osc_clock_server import osc_server
 from ..logger import get_main_logger
 from ..__about__ import __version__
@@ -40,6 +42,11 @@ async def lifespan(_app: FastAPI):
         asyncio.create_task(_sc_service.start_backend(audio_device_index))
 
     runtime_service.start()
+
+    if ableton_service.is_startup_enabled():
+        import time
+        time.sleep(2)  # give the runtime a moment to finish importing
+        ableton_service.start()
 
     yield
 
@@ -98,6 +105,9 @@ app.include_router(init_router)
 
 # Include Runtime routes
 app.include_router(runtime_router)
+
+# Include Ableton routes
+app.include_router(ableton_router)
 
 # Configure CORS
 app.add_middleware(
