@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 # !/usr/bin/python
 
-""" Tkinter interface made for Live Coding with Python syntax highlighting """
+"""Tkinter interface made for Live Coding with Python syntax highlighting"""
 
 # This removed blurry fonts on Windows
 try:
     from ctypes import windll
+
     windll.shcore.SetProcessDpiAwareness(1)
 except Exception:
     pass
 # Tkinter Interface
 from renardo.foxdot_editor.tkimport import SYSTEM, MAC_OS, WINDOWS, LINUX
 from renardo.foxdot_editor.tkimport import *
+
 # Custom app modules
 from renardo.lib.Code import write_to_file
 from renardo.lib.Utils import get_pypi_version
@@ -27,6 +29,7 @@ from .SampleChart import SampleChart
 from .SearchBar import SearchBar
 from .Console import console
 from functools import partial
+
 # from distutils.version import LooseVersion as VersionNumber
 import webbrowser
 import os
@@ -39,6 +42,7 @@ from renardo.settings_manager import settings
 from renardo.lib.Code import execute
 from renardo.sc_backend import TempoServer
 
+
 # App object
 class workspace:
     default_font = settings.get("foxdot_editor.FONT")
@@ -46,10 +50,10 @@ class workspace:
 
     def __init__(self, CodeClass):
         # Configure Renardo's namespace to include the editor
-        CodeClass.namespace['GUI'] = self
-        CodeClass.namespace['Player'].widget = self
+        CodeClass.namespace["GUI"] = self
+        CodeClass.namespace["Player"].widget = self
 
-        self.version = this_version = '1.0.0a4'
+        self.version = this_version = "1.0.0a4"
 
         pypi_version = get_pypi_version()
         self.theme = settings.get("foxdot_editor.COLOR_THEME")
@@ -62,10 +66,44 @@ class workspace:
             # to your command prompt and running:\n\n
             # pip install Renardo --upgrade")
             return
+
         # Used for docstring prompt
         self.namespace = CodeClass.namespace
         # Set up master widget
-        self.root = tb.Window(themename=self.theme)
+        # Import and run Tcl/Tk wrapper before creating window
+        import sys
+        import os
+
+        # Add the project root to path to import our wrapper
+        project_root = os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        )
+        wrapper_path = os.path.join(project_root, "tcl_wrapper.py")
+
+        if os.path.exists(wrapper_path):
+            try:
+                # Execute the wrapper to set up environment
+                exec(open(wrapper_path).read(), globals())
+                fix_tcl_version()
+            except Exception as e:
+                print(f"Warning: Tcl wrapper failed: {e}")
+
+        # Try creating themed window with fallback
+        try:
+            self.root = tb.Window(themename=self.theme)
+        except Exception as e:
+            print(f"Warning: Failed to create themed window: {e}")
+            try:
+                print("Attempting to create basic Tkinter window...")
+                import tkinter as tk
+
+                self.root = tk.Tk()
+                # Apply basic styling
+                self.root.configure(bg="#1a1a1a")
+            except Exception as e2:
+                print(f"Failed to create Tkinter window: {e2}")
+                print("Tcl/Tk environment issue detected. Cannot start FoxDot editor.")
+                raise SystemExit("Tcl/Tk not properly configured")
         self.root.title("FoxDot >> Renardo")
         self.root.minsize(800, 600)
         self.width = 1024
@@ -95,7 +133,9 @@ class workspace:
         self.treeview_toggled = BooleanVar()
         self.treeview_toggled.set(settings.get("foxdot_editor.TREEVIEW_ON_STARTUP"))
         self.linenumbers_toggled = BooleanVar()
-        self.linenumbers_toggled.set(settings.get("foxdot_editor.LINENUMBERS_ON_STARTUP"))
+        self.linenumbers_toggled.set(
+            settings.get("foxdot_editor.LINENUMBERS_ON_STARTUP")
+        )
         self.searchbar_toggled = BooleanVar()
         self.searchbar_toggled.set(False)
         self.console_toggled = BooleanVar()
@@ -109,13 +149,25 @@ class workspace:
         # --- Set icon
         try:
             # Use .ico file by default
-            self.root.iconbitmap(str(settings.get_path("FOXDOT_EDITOR_ROOT") / settings.get("foxdot_editor.ICON")))
+            self.root.iconbitmap(
+                str(
+                    settings.get_path("FOXDOT_EDITOR_ROOT")
+                    / settings.get("foxdot_editor.ICON")
+                )
+            )
         except TclError:
             # Use .gif if necessary
-            self.root.tk.call('wm',
-                              'iconphoto',
-                              self.root._w,
-                              PhotoImage(file=str(settings.get_path("FOXDOT_EDITOR_ROOT") / settings.get("foxdot_editor.ICON_GIF"))))
+            self.root.tk.call(
+                "wm",
+                "iconphoto",
+                self.root._w,
+                PhotoImage(
+                    file=str(
+                        settings.get_path("FOXDOT_EDITOR_ROOT")
+                        / settings.get("foxdot_editor.ICON_GIF")
+                    )
+                ),
+            )
         # --- Setup font
         system_fonts = tkFont.families()
         self.codefont = "CodeFont"  # name for font
@@ -131,8 +183,7 @@ class workspace:
             else:
                 self.console_font = self.codefont = self.default_font = "TkFixedFont"
         if self.codefont == "CodeFont":
-            self.font = tkFont.Font(font=(self.default_font, 12),
-                                    name=self.codefont)
+            self.font = tkFont.Font(font=(self.default_font, 12), name=self.codefont)
             self.font.configure(family=self.default_font)
             self.console_font = (self.default_font, 12)
         self.help_key = "K" if SYSTEM == MAC_OS else "H"
@@ -141,32 +192,33 @@ class workspace:
         self.popup = PopupMenu(self)
         # Create y-axis scrollbar
         self.y_scroll = tb.Scrollbar(self.root)
-        self.y_scroll.grid(row=0, column=3, sticky='ns')
+        self.y_scroll.grid(row=0, column=3, sticky="ns")
         # Create text box for code
-        self.text = ThreadedText(self.root,
-                                 padx=5,
-                                 pady=5,
-                                 bg=colour_map['background'],
-                                 fg=colour_map['plaintext'],
-                                 insertbackground="white",
-                                 font=self.codefont,
-                                 yscrollcommand=self.y_scroll.set,
-                                 width=100,
-                                 height=20,
-                                 bd=0,
-                                 undo=True,
-                                 autoseparators=True,
-                                 maxundo=50)
+        self.text = ThreadedText(
+            self.root,
+            padx=5,
+            pady=5,
+            bg=colour_map["background"],
+            fg=colour_map["plaintext"],
+            insertbackground="white",
+            font=self.codefont,
+            yscrollcommand=self.y_scroll.set,
+            width=100,
+            height=20,
+            bd=0,
+            undo=True,
+            autoseparators=True,
+            maxundo=50,
+        )
         self.text.grid(row=0, column=2, sticky="nsew")
         self.y_scroll.config(command=self.text.yview)
         self.text.focus_set()
         self.text_as_string = ""
         # Create box for line numbers
-        self.linenumbers = LineNumbers(self, width=50,
-                                       bg=colour_map['background'],
-                                       bd=0,
-                                       highlightthickness=0)
-        self.linenumbers.grid(row=0, column=1, sticky='nsew')
+        self.linenumbers = LineNumbers(
+            self, width=50, bg=colour_map["background"], bd=0, highlightthickness=0
+        )
+        self.linenumbers.grid(row=0, column=1, sticky="nsew")
         # Docstring prompt label
         self.prompt = TextPrompt(self)
         # Key bindings (Use command key on Mac)
@@ -180,8 +232,9 @@ class workspace:
         self.text.bind("<Escape>", self.toggle_fullscreen)
         # self.text.bind("<F11>", self.toggle_true_fullscreen)
         self.text.bind("<Key>", self.keypress)
-        self.text.bind("<Button-{}>".format(2 if SYSTEM == MAC_OS else 3),
-                       self.show_popup)
+        self.text.bind(
+            "<Button-{}>".format(2 if SYSTEM == MAC_OS else 3), self.show_popup
+        )
         self.text.bind("<{}-BackSpace>".format(ctrl), self.delete_word)
         self.text.bind("<{}-Delete>".format(ctrl), self.delete_next_word)
         self.text.bind("<{}-Return>".format(ctrl), self.exec_block)
@@ -219,26 +272,62 @@ class workspace:
         self.text.bind("<{}-0>".format(ctrl), self.toggle_linenumbers)
         self.text.bind("<{}-p>".format(ctrl), self.open_preferences)
         # insert lambda
-        self.text.bind("<{}-l>".format(ctrl),
-                       lambda event: self.insert_char(u"\u03BB"))
-        self.text.bind("<{}-t>".format(ctrl),
-                       lambda event: self.insert_char("~"))
-        self.text.bind("<{}-{}>".format(ctrl, self.help_key.lower()),
-                       self.help)
+        self.text.bind("<{}-l>".format(ctrl), lambda event: self.insert_char("\u03bb"))
+        self.text.bind("<{}-t>".format(ctrl), lambda event: self.insert_char("~"))
+        self.text.bind("<{}-{}>".format(ctrl, self.help_key.lower()), self.help)
         # Number pad
-        for event in ["KP_Right", "KP_Left", "KP_Up", "KP_Down", "KP_Delete",
-                      "KP_Home",  "KP_End",  "KP_Next", "KP_Prior"]:
+        for event in [
+            "KP_Right",
+            "KP_Left",
+            "KP_Up",
+            "KP_Down",
+            "KP_Delete",
+            "KP_Home",
+            "KP_End",
+            "KP_Next",
+            "KP_Prior",
+        ]:
             try:
                 event1 = "<{}>".format(event)
                 event2 = "<{}-{}>".format(ctrl, event)
                 event3 = "<{}-{}>".format("Shift", event)
                 event4 = "<{}-{}-{}>".format("Shift", ctrl, event)
                 event5 = "<{}-{}-{}>".format(ctrl, "Shift", event)
-                self.text.bind(event1, partial(lambda *args: self.text.event_generate(args[0]), event1.replace("KP_", "")))
-                self.text.bind(event2, partial(lambda *args: self.text.event_generate(args[0]), event2.replace("KP_", "")))
-                self.text.bind(event3, partial(lambda *args: self.text.event_generate(args[0]), event3.replace("KP_", "")))
-                self.text.bind(event4, partial(lambda *args: self.text.event_generate(args[0]), event4.replace("KP_", "")))
-                self.text.bind(event5, partial(lambda *args: self.text.event_generate(args[0]), event5.replace("KP_", "")))
+                self.text.bind(
+                    event1,
+                    partial(
+                        lambda *args: self.text.event_generate(args[0]),
+                        event1.replace("KP_", ""),
+                    ),
+                )
+                self.text.bind(
+                    event2,
+                    partial(
+                        lambda *args: self.text.event_generate(args[0]),
+                        event2.replace("KP_", ""),
+                    ),
+                )
+                self.text.bind(
+                    event3,
+                    partial(
+                        lambda *args: self.text.event_generate(args[0]),
+                        event3.replace("KP_", ""),
+                    ),
+                )
+                self.text.bind(
+                    event4,
+                    partial(
+                        lambda *args: self.text.event_generate(args[0]),
+                        event4.replace("KP_", ""),
+                    ),
+                )
+                self.text.bind(
+                    event5,
+                    partial(
+                        lambda *args: self.text.event_generate(args[0]),
+                        event5.replace("KP_", ""),
+                    ),
+                )
             except TclError:
                 pass
         try:
@@ -286,13 +375,20 @@ class workspace:
         sys.stdout = self.console
         # Ask after widget loaded
         self.linenumbers.redraw()  # ToDo: move to generic redraw functions
+
         # Check temporary file
         def recover_work():
-            tempfile_path_str = str(settings.get_path("FOXDOT_EDITOR_ROOT")/settings.get("foxdot_editor.TEMP_FILE"))
+            tempfile_path_str = str(
+                settings.get_path("FOXDOT_EDITOR_ROOT")
+                / settings.get("foxdot_editor.TEMP_FILE")
+            )
             with open(tempfile_path_str) as f:
                 text = f.read()
             if len(text):
-                loading = tkMessageBox.askyesno("Load unsaved work?", "Your code wasn't saved last time you used Renardo, do you want to load any unsaved work?")
+                loading = tkMessageBox.askyesno(
+                    "Load unsaved work?",
+                    "Your code wasn't saved last time you used Renardo, do you want to load any unsaved work?",
+                )
                 self.root.update()
                 if loading:
                     self.set_all(text)
@@ -301,6 +397,7 @@ class workspace:
                 self.text_as_string = self.get_all()
             # Execute startup file
             return execute.load_startup_file()
+
         # Check online if a new version if available
         if settings.get("foxdot_editor.CHECK_FOR_UPDATE"):
             self.root.after(90, check_versions)
@@ -316,13 +413,13 @@ class workspace:
         return self.root.title("Renardo v{} - {}".format(self.version, text))
 
     def run(self):
-        """ Starts the Tk mainloop for the master widget """
+        """Starts the Tk mainloop for the master widget"""
         while True:
             try:
                 self.root.mainloop()
                 break
             # Temporary fix to Unicode issues with macOS
-            except (UnicodeDecodeError):
+            except UnicodeDecodeError:
                 pass
             except (KeyboardInterrupt, SystemExit):
                 # Clean exit
@@ -334,24 +431,24 @@ class workspace:
         return
 
     def toggle_fullscreen(self, event=None, zoom=False):
-        """ Zoom the screen - close with Escape """
-        if self.root.attributes('-fullscreen'):
-            self.root.attributes('-fullscreen', 0)
+        """Zoom the screen - close with Escape"""
+        if self.root.attributes("-fullscreen"):
+            self.root.attributes("-fullscreen", 0)
             self.fullscreen_toggled.set(False)
         elif zoom:
-            self.root.attributes('-fullscreen', 1)
+            self.root.attributes("-fullscreen", 1)
             self.fullscreen_toggled.set(True)
         return
 
     def reload(self):
-        """ Reloads synths / samples """
-        return self.namespace['_reload_synths'].__call__()
+        """Reloads synths / samples"""
+        return self.namespace["_reload_synths"].__call__()
 
     def read(self):
         return self.text.get("1.0", END)
 
     def keypress(self, event=None):
-        """ Handles any keypress """
+        """Handles any keypress"""
         # For non string characters, return normally
         self.text.tag_delete("tag_open_brackets")
         if not event.char or isHex(event.char):
@@ -373,8 +470,9 @@ class workspace:
     """
         Getting blocks / lines
     """
+
     def exec_line(self, event=None, insert=INSERT):
-        """ Highlights a single line and executes """
+        """Highlights a single line and executes"""
         line, column = index(self.text.index(insert))
         a, b = "%d.0" % line, "%d.end" % line
         self.highlight(a, b, "red")
@@ -387,7 +485,7 @@ class workspace:
         return "break"
 
     def exec_block(self, event=None, insert=INSERT):
-        """ Method to highlight block of code and execute """
+        """Method to highlight block of code and execute"""
         try:
             # Evaluate selection
             a = index(self.text.index(SEL_FIRST))[0]
@@ -395,7 +493,7 @@ class workspace:
         except TclError:
             # Get start and end of the buffer
             start, end = "1.0", self.text.index(END)
-            lastline = int(end.split('.')[0]) + 1
+            lastline = int(end.split(".")[0]) + 1
             # Indicies of block to execute
             block = [0, 0]
             # 1. Get position of cursor
@@ -439,14 +537,14 @@ class workspace:
         return
 
     def insert_char(self, char):
-        """ Inserts a character into the text editor at the INSERT cursor
-            then updates the syntax highlighting etc """
+        """Inserts a character into the text editor at the INSERT cursor
+        then updates the syntax highlighting etc"""
         self.text.insert(INSERT, char)
         self.update()
         return "break"
 
     def insert_lambda_symbol(self, event):
-        return self.insert_char(u"\u03BB")
+        return self.insert_char("\u03bb")
 
     # Undo action: Ctrl+Z
     # --------------------
@@ -501,11 +599,12 @@ class workspace:
     # Save the current text: Ctrl+s
     # ------------------------------
     def save(self, event=None):
-        """ Saves the contents of the text editor """
+        """Saves the contents of the text editor"""
         text = self.text.get("0.0", END)
         if not self.saved:
-            self.filename = tkFileDialog.asksaveasfilename(filetypes=[("Python files", ".py")],
-                                                           defaultextension=".py")
+            self.filename = tkFileDialog.asksaveasfilename(
+                filetypes=[("Python files", ".py")], defaultextension=".py"
+            )
         if self.filename:
             write_to_file(self.filename, text)
             self.saved = True
@@ -517,8 +616,9 @@ class workspace:
     # Open save
     def saveAs(self, event=None):
         text = self.text.get("0.0", END)
-        self.filename = tkFileDialog.asksaveasfilename(filetypes=[("Python files", ".py")],
-                                                       defaultextension=".py")
+        self.filename = tkFileDialog.asksaveasfilename(
+            filetypes=[("Python files", ".py")], defaultextension=".py"
+        )
         if not self.filename:
             pass
         else:
@@ -556,49 +656,62 @@ class workspace:
         try:
             f = open(path, encoding="utf8")
         except Exception as e:
-            return print("{} error occurred when loading file:\n    - '{}'".format(e.__class__.__name__, path))
+            return print(
+                "{} error occurred when loading file:\n    - '{}'".format(
+                    e.__class__.__name__, path
+                )
+            )
         self.set_all(f.read())
         f.close()
         return
 
     def newfile(self, event=None):
-        ''' Clears the document and asks if the user wants to save '''
-        answer = tkMessageBox.askyesnocancel("New file", "Save your work before creating a new document?")
+        """Clears the document and asks if the user wants to save"""
+        answer = tkMessageBox.askyesnocancel(
+            "New file", "Save your work before creating a new document?"
+        )
         if answer is not None:
             if answer is True:
                 if not self.save():
                     return "break"
             self.saved = False
-            self.filename = ''
+            self.filename = ""
             self.set_all("")
             self.set_window_title()
         return "break"
 
     def export_console(self):
-        fn = tkFileDialog.asksaveasfilename(filetypes=[("Plain Text File", ".txt")],
-                                            defaultextension=".txt")
-        with open(fn, 'w') as f:
+        fn = tkFileDialog.asksaveasfilename(
+            filetypes=[("Plain Text File", ".txt")], defaultextension=".txt"
+        )
+        with open(fn, "w") as f:
             f.write(self.console.read())
         return
 
     def open_preferences(self, event=None):
         from renardo.foxdot_editor.Preferences import Preferences
+
         Preferences().start()
         return
 
     def open_samples_folder(self):
         import subprocess
+
         if SYSTEM == WINDOWS:
-            cmd = 'explorer'
+            cmd = "explorer"
         elif SYSTEM == MAC_OS:
-            cmd = 'open'
+            cmd = "open"
         else:
-            cmd = 'xdg-open'
+            cmd = "xdg-open"
         try:
             subprocess.Popen([cmd, str(settings.get_path("SAMPLES_DIR"))])
         except OSError as e:
             print(e)
-            print("Hmm... Looks like we couldn't open the directory but you can find the samples in {}".format(settings.get_path("SAMPLES_DIR")))
+            print(
+                "Hmm... Looks like we couldn't open the directory but you can find the samples in {}".format(
+                    settings.get_path("SAMPLES_DIR")
+                )
+            )
         return
 
     def open_samples_chart_app(self):
@@ -632,12 +745,12 @@ class workspace:
         if console_toggle:
             self.menu.viewmenu.entryconfigure(5, label="Show Console")
             self.console.hide()
-            self.text.config(height=self.text.cget('height')+self.console.height)
+            self.text.config(height=self.text.cget("height") + self.console.height)
             self.console_toggled.set(False)
         elif not console_toggle:
             self.menu.viewmenu.entryconfigure(5, label="Hide Console")
             self.console.show()
-            self.text.config(height=self.text.cget('height')-self.console.height)
+            self.text.config(height=self.text.cget("height") - self.console.height)
             self.console_toggled.set(True)
         return
 
@@ -684,7 +797,7 @@ class workspace:
         return "break"
 
     # TODO remove this toggle feature since it's not gonna be pertinent in new arch
-    # def toggle_sc3_plugins(self, event=None): 
+    # def toggle_sc3_plugins(self, event=None):
     #     """
     #     Allows you to change the SC3 plugins variable from the editor.
     #     Restart of the editor is required.
@@ -718,21 +831,23 @@ class workspace:
                         self.console.config(background=alpha)
 
                         if SYSTEM == WINDOWS:
-                            self.root.wm_attributes('-transparentcolor', alpha)
+                            self.root.wm_attributes("-transparentcolor", alpha)
                         else:
                             self.root.wm_attributes("-transdef toggle_prparent", True)
                     except TclError:
                         self.using_alpha = True
                 if self.using_alpha:
-                    self.root.wm_attributes("-alpha", settings.get("foxdot_editor.ALPHA_VALUE"))
+                    self.root.wm_attributes(
+                        "-alpha", settings.get("foxdot_editor.ALPHA_VALUE")
+                    )
             # Re-set the colours
             elif not self.using_alpha:
                 # self.text.config(background=colour_map['background'])
-                self.linenumbers.config(background=colour_map['background'])
+                self.linenumbers.config(background=colour_map["background"])
                 self.console.config(background="Black")
 
                 if SYSTEM == WINDOWS:
-                    self.root.wm_attributes('-transparentcolor', "")
+                    self.root.wm_attributes("-transparentcolor", "")
                 else:
                     self.root.wm_attributes("-transparent", False)
             else:
@@ -751,7 +866,7 @@ class workspace:
 
     # Copy/paste etc
     def edit_paste(self, event=None):
-        """ Pastes any text and updates the IDE """
+        """Pastes any text and updates the IDE"""
         self.text.event_generate("<<Paste>>")
         self.update_all()
         return "break"
@@ -767,7 +882,7 @@ class workspace:
     # Newline
     # --------
     def newline(self, event=None, insert=INSERT):
-        """ Adds whitespace to newlines where necessary """
+        """Adds whitespace to newlines where necessary"""
         # Enter from auto prompt
         if self.prompt.visible:
             self.prompt.autocomplete()
@@ -790,7 +905,7 @@ class workspace:
         elif in_brackets(j, line) or at_function(j, line):
             whitespace = whitespace + self.tabspace()
         # Add the necessary whitespace
-        self.text.insert(index(i+1, 0), whitespace)
+        self.text.insert(index(i + 1, 0), whitespace)
         # Update the IDE colours
         self.update(event)
         return "break"
@@ -798,10 +913,12 @@ class workspace:
     # Tab
     # ----
     def tab(self, event=None, insert=INSERT):
-        """ Move selected text forward 4 spaces """
+        """Move selected text forward 4 spaces"""
         try:  # Move any selected lines forwards
-            a, b = (index(a)[0] for a in (self.text.index(SEL_FIRST),
-                                          self.text.index(SEL_LAST)))
+            a, b = (
+                index(a)[0]
+                for a in (self.text.index(SEL_FIRST), self.text.index(SEL_LAST))
+            )
             if a < b:
                 self.indent(event)
                 return "break"
@@ -819,18 +936,20 @@ class workspace:
     # Indent: Ctrl+]
     # ---------------
     def indent(self, event=None, insert=INSERT):
-        """ Indent the current line or selected text """
+        """Indent the current line or selected text"""
         try:
             if not self.text_selected():
                 a = index(self.text.index(INSERT))
-                a = a[0], a[1]-1
-                b = a[0], a[1]+1
+                a = a[0], a[1] - 1
+                b = a[0], a[1] + 1
                 self.text.tag_add(SEL, index(*a), index(*b))
             sel_a = index(index(self.text.index(SEL_FIRST))[0], 0)
-            sel_b = index(index(self.text.index(SEL_LAST))[0], 'end')
-            start, end = (index(a) for a in (self.text.index(SEL_FIRST),
-                                             self.text.index(SEL_LAST)))
-            for row in range(start[0], end[0]+1):
+            sel_b = index(index(self.text.index(SEL_LAST))[0], "end")
+            start, end = (
+                index(a)
+                for a in (self.text.index(SEL_FIRST), self.text.index(SEL_LAST))
+            )
+            for row in range(start[0], end[0] + 1):
                 # Add intentation
                 self.text.insert(index(row, 0), self.tabspace())
             self.text.tag_add(SEL, sel_a, sel_b)
@@ -841,30 +960,32 @@ class workspace:
     # Un-inden: Ctrl+[
     # -----------------
     def unindent(self, event):
-        """ Moves the current row or selected text back by 4 spaces """
+        """Moves the current row or selected text back by 4 spaces"""
         if not self.text_selected():
             a = index(self.text.index(INSERT))
-            a = a[0], a[1]-1
-            b = a[0], a[1]+1
+            a = a[0], a[1] - 1
+            b = a[0], a[1] + 1
             self.text.tag_add(SEL, index(*a), index(*b))
         sel_a = index(index(self.text.index(SEL_FIRST))[0], 0)
-        sel_b = index(index(self.text.index(SEL_LAST))[0], 'end')
-        start, end = (index(a) for a in (self.text.index(SEL_FIRST), self.text.index(SEL_LAST)))
-        for row in range(start[0], end[0]+1):
+        sel_b = index(index(self.text.index(SEL_LAST))[0], "end")
+        start, end = (
+            index(a) for a in (self.text.index(SEL_FIRST), self.text.index(SEL_LAST))
+        )
+        for row in range(start[0], end[0] + 1):
             # Unindent
-            line = self.text.get(index(row, 0), index(row, 'end'))
+            line = self.text.get(index(row, 0), index(row, "end"))
             for n, char in enumerate(line[:tabsize]):
                 if char != " ":
                     break
             if n > 0:
-                self.text.delete(index(row, 0), index(row, n+1))
+                self.text.delete(index(row, 0), index(row, n + 1))
         self.text.tag_add(SEL, sel_a, sel_b)
         return "break"
 
     # Deletion
     # ---------
     def backspace(self, event=None, insert=INSERT):
-        """ Deletes a character or selected area """
+        """Deletes a character or selected area"""
         # If there is a selected area, delete that
         if self.delete_selection():
             # Update player line numbers
@@ -880,20 +1001,20 @@ class workspace:
             self.update(event)
             # Update player line numbers
             # execute.update_line_numbers(self.text, start="%d.0" % (line-1), remove=int(line!=1))
-            self.text.delete(index(line-1, END), insert)
+            self.text.delete(index(line - 1, END), insert)
         else:
-            tab = index(line, column-tabsize)
+            tab = index(line, column - tabsize)
             # Check if there's a tab
             if self.text.get(tab, insert) == self.tabspace():
                 self.text.delete(tab, insert)
             else:
-                self.text.delete(index(line, column-1), insert)
+                self.text.delete(index(line, column - 1), insert)
         # Update the IDE
         self.update(event)
         return "break"
 
     def delete(self, event=None, insert=INSERT):
-        """ Delete the next character """
+        """Delete the next character"""
         if not self.delete_selection():
             self.text.delete(self.text.index(insert))
         self.update(event)
@@ -901,7 +1022,7 @@ class workspace:
         return "break"
 
     def look(self, direction=-1):
-        """ Finds the start of the next / previous word """
+        """Finds the start of the next / previous word"""
         num_words = abs(direction)
         direction = 1 if direction > 0 else -1
         end = self.text.index(INSERT)
@@ -938,7 +1059,7 @@ class workspace:
         return start, end
 
     def delete_word(self, event):
-        """ Deletes the preceeding text """
+        """Deletes the preceeding text"""
         if not self.delete_selection():
             start, end = self.look(-1)
             self.text.delete(start, end)
@@ -947,7 +1068,7 @@ class workspace:
         return
 
     def delete_next_word(self, event):
-        """ Deletes the following word """
+        """Deletes the following word"""
         if not self.delete_selection():
             start, end = self.look(1)
             self.text.delete(start, end)
@@ -955,7 +1076,7 @@ class workspace:
         return
 
     def delete_selection(self):
-        """ If an area is selected, it is deleted and returns True """
+        """If an area is selected, it is deleted and returns True"""
         try:
             text = self.text.get(SEL_FIRST, SEL_LAST)
             a, b = self.text.index(SEL_FIRST), self.text.index(SEL_LAST)
@@ -965,7 +1086,7 @@ class workspace:
             return False
 
     def text_selected(self):
-        """ Returns True if text is selected """
+        """Returns True if text is selected"""
         try:
             self.text.index(SEL_FIRST)
             return True
@@ -976,19 +1097,20 @@ class workspace:
         Keyboard Shortcuts
         ==================
     """
+
     # Select all: Ctrl+a
     # -------------------
     def select_all(self, event=None):
-        """ Select the contents of the editor """
+        """Select the contents of the editor"""
         self.text.tag_add(SEL, "1.0", END)
         self.text.mark_set(INSERT, "1.0")
         self.text.see(INSERT)
-        return 'break'
+        return "break"
 
     # Kill all: Ctrl+.
     # -----------------
     def killall(self, event=None):
-        """ Stops all player objects """
+        """Stops all player objects"""
         execute("_Clock.clear()", verbose=False)
         print("Clock.clear()")
         return "break"
@@ -996,36 +1118,36 @@ class workspace:
     # Zoom in: Ctrl+=
     # ----------------
     def zoom_in(self, event=None):
-        """ Ctrl+= increases text size """
+        """Ctrl+= increases text size"""
         self.root.grid_propagate(False)
         font = tkFont.nametofont(self.codefont)
-        size = font.actual()["size"]+2
+        size = font.actual()["size"] + 2
         font.configure(size=size)
         # Increase size of line number
         self.linenumbers.config(width=self.linenumbers.winfo_width() + 3)
-        return 'break'
+        return "break"
 
     # Zoom out: Ctrl+-
     # -----------------
     def zoom_out(self, event=None):
-        """ Ctrl+- decreases text size (minimum of 8) """
+        """Ctrl+- decreases text size (minimum of 8)"""
         self.root.grid_propagate(False)
         font = tkFont.nametofont(self.codefont)
-        size = font.actual()["size"]-2
+        size = font.actual()["size"] - 2
         if size >= 8:
             font.configure(size=size)
             self.linenumbers.config(width=self.linenumbers.winfo_width() - 3)
-        return 'break'
+        return "break"
 
     def submit(self, code_str):
-        """ Runs the chunk of code through Renardo processing and execute """
+        """Runs the chunk of code through Renardo processing and execute"""
         try:
             execute(code_str)
         except Exception as e:
             print(e)
 
     def highlight(self, start, end, colour="Red"):
-        """ Highlights an area of text """
+        """Highlights an area of text"""
         # Label block (start and end are lines before & after the code itself)
         self.text.tag_add("code", start, end)
         # Highlight
@@ -1061,6 +1183,7 @@ class workspace:
         Methods that view the Renardo namespace
         --------------------------------------
     """
+
     def update_prompt(self, visible=True):
         if visible:
             self.prompt.show()
@@ -1086,7 +1209,7 @@ class workspace:
             self.prompt.hide()
 
     def check_namespace(self):
-        """ Sets the label """
+        """Sets the label"""
         obj = self.namespace[self.last_word]
         if obj:
             if obj.__doc__ is not None:
@@ -1098,6 +1221,7 @@ class workspace:
         Methods that update the contents of the IDE
         -------------------------------------------
     """
+
     def on_text_modified(self, event):
         self.text.modifying = not self.text.modifying
         if self.text.modifying:
@@ -1113,14 +1237,14 @@ class workspace:
         return "break"
 
     def update(self, event=None, insert=INSERT):
-        """ Updates the the colours of the IDE """
+        """Updates the the colours of the IDE"""
         # Move the window to view the current line
         self.text.see(INSERT)
         self.update_prompt()
         return "break"
 
     def update_all(self):
-        """ Updates every line in the IDE """
+        """Updates every line in the IDE"""
         row, col = index(self.text.index(END))
         lines = row + 1
         for line in range(lines):
@@ -1140,9 +1264,7 @@ class workspace:
                     self.text.tag_remove(tag_name, start_of_line, end_of_line)
             # Re-apply tags
             for tag_name, start, end in findstyles(thisline):
-                self.text.tag_add(tag_name,
-                                  index(line, start),
-                                  index(line, end))
+                self.text.tag_add(tag_name, index(line, start), index(line, end))
         except Exception as e:
             print(e)
         # Find comments (not done with regex)
@@ -1193,7 +1315,7 @@ class workspace:
         line, column = index(self.text.index(INSERT))
         string = ""
         while True:
-            char = self.text.get(index(line, column-1))
+            char = self.text.get(index(line, column - 1))
             if char.isalpha():
                 string = char + string
             else:
@@ -1222,7 +1344,7 @@ class workspace:
         row, col = index(self.text.index(INSERT))
         searching = True
         if col == 0:
-            _,  line_length = index(self.text.index("{}.end".format(row)))
+            _, line_length = index(self.text.index("{}.end".format(row)))
             if line_length == 0:
                 new_row, new_col = row + 1, 0
                 searching = False
@@ -1272,7 +1394,9 @@ class workspace:
                         new_row, new_col = row, i
                         self.text.mark_set(INSERT, index(new_row, new_col))
                         return "break"
-                _, line_length = row, col = index(self.text.index("{}.end".format(row - 1)))
+                _, line_length = row, col = index(
+                    self.text.index("{}.end".format(row - 1))
+                )
             else:
                 searching = False
                 new_row, new_col = row, 0
@@ -1280,13 +1404,21 @@ class workspace:
         return "break"
 
     def select_word_right(self, event=None):
-        """ Calls self.move_word_right() and also selects the text moved """
-        old, _, new = self.text.index(INSERT), self.move_word_right(keep_selection=True), self.text.index(INSERT)
+        """Calls self.move_word_right() and also selects the text moved"""
+        old, _, new = (
+            self.text.index(INSERT),
+            self.move_word_right(keep_selection=True),
+            self.text.index(INSERT),
+        )
         self.invert_selection(old, new)
         return "break"
 
     def select_word_left(self, event=None):
-        old, _, new = self.text.index(INSERT), self.move_word_left(keep_selection=True), self.text.index(INSERT)
+        old, _, new = (
+            self.text.index(INSERT),
+            self.move_word_left(keep_selection=True),
+            self.text.index(INSERT),
+        )
         self.invert_selection(old, new)
         return "break"
 
@@ -1299,7 +1431,10 @@ class workspace:
             if self.text.is_selected(index):
                 self.text.tag_remove(SEL, index)
             else:
-                self.text.tag_add(SEL, index,)
+                self.text.tag_add(
+                    SEL,
+                    index,
+                )
         return
 
     """
@@ -1308,8 +1443,9 @@ class workspace:
         - Correct exiting
         - Tabspace (todo: customise)
     """
+
     def kill(self):
-        """ Proper exit function """
+        """Proper exit function"""
         self.terminate()
         self.root.destroy()
         return
@@ -1318,7 +1454,7 @@ class workspace:
         return " " * tabsize
 
     def terminate(self):
-        """ Called on window close. Ends Clock thread process """
+        """Called on window close. Ends Clock thread process"""
         execute("_Clock.stop()")
         execute("Server.quit()")
         return
@@ -1328,7 +1464,7 @@ class workspace:
         return
 
     def replace(self, line, old, new):
-        """ Replaces text on a specified line and updates the IDE """
+        """Replaces text on a specified line and updates the IDE"""
         try:
             # Store cursor
             origin = self.text.index(INSERT)
@@ -1349,7 +1485,7 @@ class workspace:
             return
 
     def replace_re(self, line, new=""):
-        """ Replaces text on a specified line and updates the IDE """
+        """Replaces text on a specified line and updates the IDE"""
         try:
             # Store cursor
             origin = self.text.index(INSERT)
@@ -1381,7 +1517,7 @@ class workspace:
         return
 
     def get_all(self):
-        """ Returns all the text as a string """
+        """Returns all the text as a string"""
         return self.text.get("1.0", END).strip()
 
     def openhomepage(self):
@@ -1404,7 +1540,7 @@ class workspace:
         return
 
     def start_listening(self, **kwargs):
-        """ Manual starting of Renardo tempo server """
+        """Manual starting of Renardo tempo server"""
         # ToDo - take this out of the menu
         self.listening_for_connections.set(not self.listening_for_connections.get())
         self.allow_connections(**kwargs)
@@ -1425,7 +1561,7 @@ class workspace:
         return
 
     def show_popup(self, *args):
-        """ Shows the context menu when pressing right click """
+        """Shows the context menu when pressing right click"""
         # Show text popup
         self.popup.show(*args)
         # Hide console popup
@@ -1433,7 +1569,7 @@ class workspace:
         return
 
     def mouse_press(self, *args):
-        """ De-select etc when pressing mouse 1 """
+        """De-select etc when pressing mouse 1"""
         self.console.canvas.select_clear()  # Clear select on the console
         self.popup.hide(*args)
         self.console.popup.hide(*args)

@@ -11,7 +11,6 @@ from .base import ProcessStatus
 from .sclang_process import SclangProcess
 from .reaper_process import ReaperProcess
 from .renardo_process import RenardoRuntimeProcess
-from .flok_process import FlokServerProcess
 
 
 class ProcessType(Enum):
@@ -19,7 +18,6 @@ class ProcessType(Enum):
     SCLANG = "sclang"
     REAPER = "reaper"
     RENARDO_RUNTIME = "renardo_runtime"
-    FLOK_SERVER = "flok_server"
 
 
 class ProcessManager:
@@ -51,13 +49,12 @@ class ProcessManager:
         self._process_classes = {
             ProcessType.SCLANG: SclangProcess,
             ProcessType.REAPER: ReaperProcess,
-            ProcessType.RENARDO_RUNTIME: RenardoRuntimeProcess,
-            ProcessType.FLOK_SERVER: FlokServerProcess
+            ProcessType.RENARDO_RUNTIME: RenardoRuntimeProcess
         }
         
         self.logger.info("Process manager initialized")
     
-    def start_process(self, process_type: ProcessType, config: Dict[str, Any] = None, process_id: Optional[str] = None) -> Optional[str]:
+    def start_process(self, process_type: ProcessType, config: Optional[Dict[str, Any]] = None, process_id: Optional[str] = None) -> Optional[str]:
         """
         Start a new managed process.
         
