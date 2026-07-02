@@ -1,0 +1,52 @@
+name: Publish Electron Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to publish (e.g. v1.0.0a7)'
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Linux artifact
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: electron-build-linux.yml
+          name: renardo-linux-deb
+          path: release-artifacts/linux
+          workflow_conclusion: success
+
+      - name: Download Windows artifact
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: electron-build-windows.yml
+          name: renardo-windows
+          path: release-artifacts/windows
+          workflow_conclusion: success
+
+      - name: Download macOS artifact
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: electron-build-macos.yml
+          name: renardo-macos
+          path: release-artifacts/macos
+          workflow_conclusion: success
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag }}
+          name: ${{ github.event.inputs.tag }}
+          draft: false
+          prerelease: true
+          files: |
+            release-artifacts/linux/*.deb
+            release-artifacts/windows/*.exe
+            release-artifacts/macos/*.dmg
