@@ -1,6 +1,6 @@
 {
   "name": "Renardo",
-  "version": "1.0.0a21",
+  "version": "1.0.0a22",
   "type": "module",
   "private": true,
   "main": "electron/main.js",
