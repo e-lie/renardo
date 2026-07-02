@@ -128,18 +128,18 @@ def _download_task(download_samples: bool, download_sccode: bool, loop):
                 is_default_sccode_pack_initialized,
                 is_special_sccode_initialized,
                 download_sccode_pack,
-                download_special_sccode_pack,
+                provision_special_sccode_pack,
             )
             from ...settings_manager import settings as _settings
 
             if not is_special_sccode_initialized():
-                logger.info("Starting special SCCode download...")
-                result = download_special_sccode_pack(logger)
+                logger.info("Provisioning special SCCode...")
+                result = provision_special_sccode_pack(logger)
                 if not result:
-                    logger.error("Special SCCode download failed.")
+                    logger.error("Special SCCode provisioning failed.")
                     success = False
                 else:
-                    logger.info("Special SCCode downloaded successfully.")
+                    logger.info("Special SCCode provisioned successfully.")
             else:
                 logger.info("Special SCCode already initialized.")
 

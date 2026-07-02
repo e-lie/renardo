@@ -1,6 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 import os
+import shutil
 
 from renardo.settings_manager import settings
 from renardo.gatherer.collection_download import (
@@ -12,6 +13,11 @@ def _write_marker(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
     with open(path / 'downloaded_at.txt', mode='w') as f:
         f.write(str(datetime.now()))
+
+
+def _bundled_special_sccode_dir() -> Path:
+    """Special sccode files shipped with the renardo package (no network download needed)."""
+    return settings.get_path("RENARDO_ROOT_PATH") / "sc_backend" / "special_sccode"
 
 
 def is_default_sccode_pack_initialized():
@@ -30,21 +36,19 @@ def is_sccode_pack_initialized(pack_name):
 
 
 def verify_special_sccode_pack() -> bool:
-    """Verify all files from the special sccode collection index exist on disk.
+    """Verify all bundled special sccode files are present in the user dir.
 
-    Returns True if complete, False if any file is missing or the index is unreachable.
+    Returns True if complete, False if any file is missing.
     """
+    source_dir = _bundled_special_sccode_dir()
     special_sccode_dir = settings.get_path("SPECIAL_SCCODE_DIR")
-    if special_sccode_dir is None:
+    if special_sccode_dir is None or not source_dir.exists():
         return False
-    json_url = '{}/{}/collection_index.json'.format(
-        settings.get("core.COLLECTIONS_DOWNLOAD_SERVER"),
-        settings.get("sc_backend.SPECIAL_SCCODE_DIR_NAME"),
+    return all(
+        (special_sccode_dir / source_path.relative_to(source_dir)).exists()
+        for source_path in source_dir.rglob('*')
+        if source_path.is_file()
     )
-    expected = get_file_paths_from_json_index(json_url, special_sccode_dir.parent)
-    if expected is None:
-        return False
-    return all(p.exists() for p in expected)
 
 
 def verify_sccode_pack(pack_name) -> bool:
@@ -80,48 +84,27 @@ def backfill_sccode_markers() -> None:
             _write_marker(pack_dir)
 
 
-def download_special_sccode_pack(logger=None):
-    """Download the default SuperCollider code pack and special code files."""
-    success = True
-    
-    # Download special code files first
+def provision_special_sccode_pack(logger=None):
+    """Copy the special SuperCollider code files bundled with renardo into the user dir."""
+    source_dir = _bundled_special_sccode_dir()
+    destination_dir = settings.get_path("SPECIAL_SCCODE_DIR")
+
     if logger:
-        logger.info(
-            "Downloading core sccode from {}\n".format(
-                settings.get("core.COLLECTIONS_DOWNLOAD_SERVER")
-            )
-        )
-    
+        logger.info(f"Provisioning special sccode from {source_dir}\n")
+
     try:
-        success = download_files_from_json_index_concurrent(
-            json_url='{}/{}/collection_index.json'.format(
-                settings.get("core.COLLECTIONS_DOWNLOAD_SERVER"),
-                settings.get("sc_backend.SPECIAL_SCCODE_DIR_NAME"),
-            ),
-            download_dir=settings.get_path("SPECIAL_SCCODE_DIR").parent,
-            logger=logger
-        )
-        
-        if success:
-            # Create a downloaded_at file to mark this as initialized
-            download_path = settings.get_path("SPECIAL_SCCODE_DIR")
-            download_path.mkdir(exist_ok=True)
-            
-            from datetime import datetime
-            with open(download_path / 'downloaded_at.txt', mode="w") as file:
-                file.write(str(datetime.now()))
-                
-            if logger:
-                logger.info("Special SCLang code downloaded successfully!")
+        shutil.copytree(source_dir, destination_dir, dirs_exist_ok=True)
+        _write_marker(destination_dir)
+
+        if logger:
+            logger.info("Special SCLang code provisioned successfully!")
+        return True
     except Exception as e:
-        error_msg = f"Error downloading special sccode: {str(e)}"
+        error_msg = f"Error provisioning special sccode: {str(e)}"
         print(error_msg)
         if logger:
             logger.error(error_msg)
-        success = False
-    
-    # Return overall success
-    return success
+        return False
 
 
 def download_sccode_pack(pack_name, logger=None):

@@ -12,7 +12,7 @@ from renardo.gatherer.sample_management.default_samples import is_default_spack_
 from renardo.gatherer.sccode_management.default_sccode_pack import (
     is_default_sccode_pack_initialized,
     is_special_sccode_initialized,
-    download_special_sccode_pack,
+    provision_special_sccode_pack,
 )
 
 from renardo.gatherer.sccode_management import SCResourceLibrary, SCResourceFile, ensure_sccode_directories
