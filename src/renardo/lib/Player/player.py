@@ -298,7 +298,7 @@ class Player(Repeatable):
             name = self.alias.get(name, name)
             if name in self.attr and name not in self.__dict__:
                 # Return a Player key
-                self._update_player_key(name, self.now(name), 0)
+                self._update_player_key(name, self.attr_current_value(name), 0)
             item = self.__dict__[name]
 
             # If returning a player key, keep track of which are being accessed
@@ -330,34 +330,6 @@ class Player(Repeatable):
     def __iter__(self):
         for _, value in self.event.items():
             yield value
-
-    def __getattr__(self, name):
-        try:
-            # Legacy REAPER integration removed - functionality moved to reaside system
-            # if settings.get("reaper_backend.REAPER_BACKEND_ENABLED"):
-            #     if "reatrack" in self.attr.keys():
-            #         reatrack = self.attr["reatrack"][0]
-            #         if isinstance(reatrack, ReaTrack):
-            #             device, _ = get_reaper_object_and_param_name(reatrack, name, quiet=True)
-            #             if device is not None:
-            #                 return get_reaper_param(reatrack, name)
-
-            # This checks for aliases, not the actual keys
-            name = self.alias.get(name, name)
-            if name in self.attr and name not in self.__dict__:
-                # Return a Player key
-                self._update_player_key(name, self.attr_current_value(name), 0)
-            item = self.__dict__[name]
-
-            # If returning a player key, keep track of which are being accessed
-            if isinstance(item, PlayerKey) and name not in self.accessed_keys:
-                self.accessed_keys.append(name)
-            return item
-
-        except KeyError:
-            err = "Player Object has no attribute '{}'".format(name)
-            raise AttributeError(err)
-
 
     def assign_instrument(self, instrument: InstrumentProxy):
         """
