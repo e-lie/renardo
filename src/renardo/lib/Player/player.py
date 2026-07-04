@@ -261,38 +261,46 @@ class Player(Repeatable):
             pass
         return self.__dict__[name]
 
+    def is_ableton_backed(self):
+        """True if this player is bound to a live Ableton track (mixer/device params available)"""
+        if not settings.get("ableton_backend.ABLETON_BACKEND_ENABLED"):
+            return False
+        if "ableton_track" not in self.attr.keys() or "ableton_project_ref" not in self.attr.keys():
+            return False
+        ableton_track = self.attr["ableton_track"][0]
+        ableton_project = self.attr["ableton_project_ref"][0]
+        # Check if it's actually the objects (not 0 from reset)
+        return hasattr(ableton_project, 'get_parameter_info') and hasattr(ableton_track, 'name')
+
     def __getattr__(self, name):
         """Get attribute value, including from Ableton if enabled"""
         try:
             # ABLETON INTEGRATION HOOK for param get
             # Get the parameter value from ableton if it exists (only if backend is enabled)
-            if settings.get("ableton_backend.ABLETON_BACKEND_ENABLED"):
-                if "ableton_track" in self.attr.keys() and "ableton_project_ref" in self.attr.keys():
-                    ableton_track = self.attr["ableton_track"][0]
-                    ableton_project = self.attr["ableton_project_ref"][0]
-                    # Check if it's actually the objects (not 0 from reset)
-                    if hasattr(ableton_project, 'get_parameter_info') and hasattr(ableton_track, 'name'):
-                        # Get track name directly from track object and convert to snake_case
-                        from renardo.ableton_backend.ableton_project import make_snake_name
-                        track_name = make_snake_name(ableton_track.name)
+            if self.is_ableton_backed():
+                ableton_track = self.attr["ableton_track"][0]
+                ableton_project = self.attr["ableton_project_ref"][0]
+                # Get track name directly from track object and convert to snake_case
+                from renardo.ableton_backend.ableton_project import make_snake_name
+                track_name = make_snake_name(ableton_track.name)
 
-                        # Try to get parameter info from Ableton with track name for shortcuts
-                        param_info = ableton_project.get_parameter_info(name, track_name)
-                        if param_info is not None:
-                            parameter = param_info['parameter']
-                            # Get the value - pylive's query returns a list, we want the last element
-                            value_result = parameter.value
-                            if isinstance(value_result, (list, tuple)) and len(value_result) > 0:
-                                raw_value = value_result[-1]  # Last element is usually the actual value
-                            else:
-                                raw_value = value_result
+                # Try to get parameter info from Ableton with track name for shortcuts
+                param_info = ableton_project.get_parameter_info(name, track_name)
+                if param_info is not None:
+                    parameter = param_info['parameter']
+                    # Get the value - pylive's query returns a list, we want the last element
+                    value_result = parameter.value
+                    if isinstance(value_result, (list, tuple)) and len(value_result) > 0:
+                        raw_value = value_result[-1]  # Last element is usually the actual value
+                    else:
+                        raw_value = value_result
 
-                            # Normalize to 0-1 range
-                            param_range = parameter.max - parameter.min
-                            if param_range > 0:
-                                normalized = (raw_value - parameter.min) / param_range
-                                return max(0.0, min(1.0, normalized))
-                            return raw_value
+                    # Normalize to 0-1 range
+                    param_range = parameter.max - parameter.min
+                    if param_range > 0:
+                        normalized = (raw_value - parameter.min) / param_range
+                        return max(0.0, min(1.0, normalized))
+                    return raw_value
 
             # This checks for aliases, not the actual keys
             name = self.alias.get(name, name)
@@ -441,24 +449,21 @@ class Player(Repeatable):
 
                 # ABLETON INTEGRATION HOOK for param set
                 # Apply the parameter in ableton if it exists (only if backend is enabled)
-                if settings.get("ableton_backend.ABLETON_BACKEND_ENABLED"):
-                    if "ableton_track" in self.attr.keys() and "ableton_project_ref" in self.attr.keys():
-                        ableton_track = self.attr["ableton_track"][0]
-                        ableton_project = self.attr["ableton_project_ref"][0]
-                        # Check if it's actually the objects (not 0 from reset)
-                        if hasattr(ableton_project, 'get_parameter_info') and hasattr(ableton_track, 'name'):
-                            # Get track name directly from track object and convert to snake_case
-                            from renardo.ableton_backend.ableton_project import make_snake_name
-                            track_name = make_snake_name(ableton_track.name)
+                if self.is_ableton_backed():
+                    ableton_track = self.attr["ableton_track"][0]
+                    ableton_project = self.attr["ableton_project_ref"][0]
+                    # Get track name directly from track object and convert to snake_case
+                    from renardo.ableton_backend.ableton_project import make_snake_name
+                    track_name = make_snake_name(ableton_track.name)
 
-                            # Try to set parameter in Ableton with track name for shortcuts
-                            param_info = ableton_project.get_parameter_info(name, track_name)
-                            if param_info is not None:
-                                # Parameter exists in Ableton, set it
-                                ableton_project.set_parameter(name, value, track_name)
-                                # Return early - don't store in player attributes
-                                # This ensures reading the param always queries Ableton for current value
-                                return
+                    # Try to set parameter in Ableton with track name for shortcuts
+                    param_info = ableton_project.get_parameter_info(name, track_name)
+                    if param_info is not None:
+                        # Parameter exists in Ableton, set it
+                        ableton_project.set_parameter(name, value, track_name)
+                        # Return early - don't store in player attributes
+                        # This ensures reading the param always queries Ableton for current value
+                        return
 
                 # Get any alias
                 name = self.alias.get(name, name)
