@@ -19,6 +19,36 @@ def make_snake_name(name: str) -> str:
     return name.lower()
 
 
+# Map FoxDot/Renardo standard attribute names to the Ableton track mixer
+# parameter names scanned into `_parameter_map` (see `_scan` / `_scan_devices`)
+TRACK_PARAM_ALIASES = {
+    "vol": "volume",
+}
+
+
+class TrackMixerParameter:
+    """
+    Adapts a pylive Track's plain float mixer property (`volume`/`panning`,
+    each a 0..1 float over OSC) to the `.value`/`.min`/`.max` interface of
+    `live.Parameter`, so track-level mixer controls can share the same
+    get/set/TimeVar code path as device parameters.
+    """
+
+    def __init__(self, track, attr_name: str):
+        self._track = track
+        self._attr_name = attr_name
+        self.min = 0.0
+        self.max = 1.0
+
+    @property
+    def value(self):
+        return getattr(self._track, self._attr_name)
+
+    @value.setter
+    def value(self, val):
+        setattr(self._track, self._attr_name, val)
+
+
 class AbletonProject:
     """
     Wrapper class for pylive Set object with parameter mapping functionality
@@ -138,17 +168,11 @@ class AbletonProject:
 
             # Scan track-level mixer parameters (volume, pan, sends, etc.)
             try:
-                # Access track mixer parameters via mixer_device
-                # track.volume/panning return values, not Parameter objects
-                volume_param = None
-                pan_param = None
-
-                if hasattr(track, "mixer_device"):
-                    mixer = track.mixer_device
-                    if hasattr(mixer, "volume"):
-                        volume_param = mixer.volume
-                    if hasattr(mixer, "panning"):
-                        pan_param = mixer.panning
+                # pylive's Track exposes `volume`/`panning` as plain 0..1
+                # float properties (OSC round-trip), not Parameter objects,
+                # so wrap them to match the Parameter interface used below.
+                volume_param = TrackMixerParameter(track, "volume")
+                pan_param = TrackMixerParameter(track, "panning")
 
                 if volume_param is not None:
                     param_key = f"{track_name}_volume"
@@ -234,6 +258,8 @@ class AbletonProject:
         Returns:
             Dictionary with parameter info or None if not found
         """
+        param_fullname = TRACK_PARAM_ALIASES.get(param_fullname, param_fullname)
+
         # Try direct lookup first (full track_device_param format)
         result = self._parameter_map.get(param_fullname)
         if result:
