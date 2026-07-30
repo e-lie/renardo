@@ -185,9 +185,8 @@ async def clock_get_state():
 
 @app.get("/api/players/state")
 async def players_get_state():
-    """Get current list of active players from runtime (if loaded)"""
-    from .websocket.runtime_state import runtime_state
-    return await runtime_state.get_players_state()
+    """Get last known list of active players (pushed from the runtime subprocess via OSC)"""
+    return osc_server.get_last_players_state()
 
 
 # Music Examples endpoints

@@ -2,10 +2,11 @@
 Generic OSC server for the Renardo webserver.
 
 Listens on UDP port 57421. Any module can register handlers for OSC addresses.
-The clock is the first built-in handler (/clock/beat → WebSocket clock_update).
+Built-in handlers: /clock/beat → WebSocket clock_update, /players/update → WebSocket players_update.
 """
 
 import asyncio
+import json
 import threading
 from typing import Callable
 from pythonosc import dispatcher as osc_dispatcher
@@ -27,6 +28,7 @@ class OscServer:
         self._loop: asyncio.AbstractEventLoop | None = None
         self._dispatcher = osc_dispatcher.Dispatcher()
         self._started = False
+        self._last_players_state: list = []
 
     def init(self, loop: asyncio.AbstractEventLoop):
         self._loop = loop
@@ -79,9 +81,32 @@ class OscServer:
             self._loop,
         )
 
+    def _handle_players_update(self, address: str, players_json: str):
+        if not self._loop:
+            return
+        try:
+            players_data = json.loads(players_json)
+        except (TypeError, ValueError) as e:
+            logger.error(f"Failed to parse /players/update payload: {e}")
+            return
+
+        self._last_players_state = players_data
+        asyncio.run_coroutine_threadsafe(
+            websocket_manager.broadcast_message({
+                "type": MessageType.PLAYERS_UPDATE,
+                "data": players_data,
+            }),
+            self._loop,
+        )
+
+    def get_last_players_state(self) -> list:
+        """Last known active-players snapshot, for the REST fallback endpoint."""
+        return self._last_players_state
+
     def register_builtin_handlers(self):
         """Register all built-in OSC handlers."""
         self.register("/clock/beat", self._handle_clock_beat)
+        self.register("/players/update", self._handle_players_update)
 
 
 osc_server = OscServer()

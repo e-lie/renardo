@@ -146,10 +146,6 @@ class RuntimeState:
                 self._broadcast_beat_update(beat_in_measure, measure_size, bpm, ticking),
                 self.loop
             )
-            asyncio.run_coroutine_threadsafe(
-                self._broadcast_players_update(),
-                self.loop
-            )
 
     async def _broadcast_beat_update(self, beat: int, measure_size: int,
                                      bpm: float, ticking: bool):
@@ -188,38 +184,9 @@ class RuntimeState:
             beat_in_measure = ((beat - 1) % measure_size) + 1
 
             await self._broadcast_beat_update(beat_in_measure, measure_size, bpm, ticking)
-            await self._broadcast_players_update()
 
         except Exception as e:
             logger.error(f"Error broadcasting current state: {e}")
-
-    def _get_players_state(self) -> list:
-        """Build a JSON-serializable snapshot of Clock.playing (active Players)."""
-        if not self.clock_instance:
-            return []
-
-        players = []
-        for player in list(self.clock_instance.playing):
-            try:
-                players.append({
-                    "id": player.id,
-                    "instrument_name": str(player.instrument_name),
-                    "isplaying": bool(player.isplaying),
-                })
-            except Exception as e:
-                logger.error(f"Error serializing player state: {e}")
-        return players
-
-    async def _broadcast_players_update(self):
-        """Broadcast the current list of active Players to WebSocket clients."""
-        await websocket_manager.broadcast_message({
-            "type": MessageType.PLAYERS_UPDATE,
-            "data": self._get_players_state()
-        })
-
-    async def get_players_state(self):
-        """Get current active players list for the REST API endpoint."""
-        return self._get_players_state()
 
     async def get_state(self):
         """Get current clock state for API endpoint.
