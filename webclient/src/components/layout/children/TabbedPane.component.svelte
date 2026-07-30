@@ -11,6 +11,7 @@
   import { UserDirectoryExplorerTab } from '../../user-directory-explorer'
   import { CodeExecConsole } from '../../index'
   import ClockDisplay from '../../clock/ClockDisplay.component.svelte'
+  import ActivePlayersDisplay from '../../clock/ActivePlayersDisplay.component.svelte'
 
   let { position }: { position: PanePosition } = $props()
 
@@ -32,7 +33,8 @@
     'ProjectExplorerTab': ProjectExplorerTab,
     'UserDirectoryExplorerTab': UserDirectoryExplorerTab,
     'CodeExecConsole': CodeExecConsole,
-    'ClockDisplay': ClockDisplay
+    'ClockDisplay': ClockDisplay,
+    'ActivePlayersDisplay': ActivePlayersDisplay
   }
 
   function handleSwitchTab(tabId: string) {

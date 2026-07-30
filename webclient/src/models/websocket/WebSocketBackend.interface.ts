@@ -5,11 +5,18 @@ export interface ClockStateInterface {
   ticking: boolean
 }
 
+export interface ActivePlayerInterface {
+  id: string
+  instrument_name: string
+  isplaying: boolean
+}
+
 export interface WebSocketBackendStateInterface {
   connectionStatus: 'disconnected' | 'connecting' | 'connected' | 'error'
   consoleMessages: ConsoleMessageInterface[]
   error: string | null
   clockState: ClockStateInterface
+  activePlayers: ActivePlayerInterface[]
 }
 
 export interface WebSocketBackendStoreInterface {
@@ -30,6 +37,7 @@ export interface WebSocketBackendStoreGettersInterface {
   error: import('svelte/store').Readable<string | null>
   isConnected: import('svelte/store').Readable<boolean>
   clockState: import('svelte/store').Readable<ClockStateInterface>
+  activePlayers: import('svelte/store').Readable<ActivePlayerInterface[]>
 }
 
 export interface ConsoleMessageInterface {
@@ -42,7 +50,7 @@ export interface ConsoleMessageInterface {
 }
 
 export interface WebSocketMessageInterface {
-  type: 'console_message' | 'command_response' | 'error' | 'ping' | 'pong'
+  type: 'console_message' | 'command_response' | 'error' | 'ping' | 'pong' | 'clock_update' | 'players_update'
   data: any
   timestamp: string
 }
