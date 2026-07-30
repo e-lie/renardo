@@ -12,8 +12,13 @@
 
   const appStore = useAppStore()
   const { activePlayers } = appStore.webSocketBackendStore.getters
+  const { actions: editorActions } = appStore.editorStore
 
   const playingPlayers = $derived($activePlayers.filter((p: ActivePlayerInterface) => p.isplaying))
+
+  function stopPlayer(id: string) {
+    editorActions.executeCode(`${id}.stop()`)
+  }
 </script>
 
 <div class="h-full flex flex-col bg-surface-100 dark:bg-surface-900 overflow-y-auto p-2">
@@ -27,6 +32,13 @@
         <li class="flex items-center justify-between px-2 py-1 rounded bg-surface-200 dark:bg-surface-800">
           <span class="font-mono font-semibold text-primary-500">{player.id}</span>
           <span class="text-sm text-surface-500">{player.instrument_name}</span>
+          <button
+            class="btn btn-sm variant-filled-error px-2 py-0.5 text-xs"
+            onclick={() => stopPlayer(player.id)}
+            title={`Stop ${player.id}`}
+          >
+            ■ Stop
+          </button>
         </li>
       {/each}
     </ul>
