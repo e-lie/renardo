@@ -27,8 +27,8 @@ const initialState: LayoutStateInterface = {
       { id: 'tab-left-bottom-1', title: 'Scratch', componentType: 'TextArea', componentId: 'text-scratch', closable: true, active: true }
     ]],
     ['right-top', [
-      { id: 'tab-right-top-1', title: 'Clock', componentType: 'ClockDisplay', componentId: 'clock-1', closable: true, active: true },
-      { id: 'tab-right-top-2', title: 'Active Players', componentType: 'ActivePlayersDisplay', componentId: 'active-players-1', closable: true, active: false }
+      { id: 'tab-right-top-1', title: 'clock', componentType: 'ClockDisplay', componentId: 'clock-1', closable: true, active: true },
+      { id: 'tab-right-top-2', title: 'activePlayers', componentType: 'ActivePlayersDisplay', componentId: 'active-players-1', closable: true, active: false }
     ]],
     ['right-middle', [
       { id: 'tab-right-middle-4', title: 'tutorials', componentType: 'TutorialTab', componentId: 'tutorial-1', closable: true, active: false },
