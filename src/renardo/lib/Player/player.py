@@ -85,6 +85,8 @@ class Player(Repeatable):
     default_scale = Scale.default
     default_root = Root.default()  # TODO//remove callable
     default_oct = Oct.default
+    default_dur = Dur.default
+    default_sus = Sus.default
     default_pan = Pan.default
     default_rate = Rate.default
     default_sample = Sample.default
@@ -502,14 +504,6 @@ class Player(Repeatable):
         self.__dict__[name] = value
         return
 
-    def _default_dur(self):
-        """Live default `dur` cell for this player's instrument type (synth vs sampler)."""
-        return Dur.sampler_default if self.instrument_name == SamplePlayer else Dur.default
-
-    def _default_sus(self):
-        """Live default `sus` cell for this player's instrument type (synth vs sampler)."""
-        return Sus.sampler_default if self.instrument_name == SamplePlayer else Sus.default
-
     # --- Startup methods
     def reset(self):
         """Sets all Player attributes to 0 unless their default is specified by an effect. Also
@@ -561,13 +555,13 @@ class Player(Repeatable):
         # Set any non-zero values for FoxDot
 
         # Sustain & Legato
-        self.sus = self._default_sus()
+        self.sus = self.__class__.default_sus
         self.blur = 1
         # Amplitude
         self.amp = 1
         self.amplify = 1
         # Duration of notes
-        self.dur = self._default_dur()
+        self.dur = self.__class__.default_dur
         # Degree of scale / Characters of samples
         self.degree = " " if self.instrument_name is SamplePlayer else 0
         # Octave of the note
@@ -782,11 +776,11 @@ class Player(Repeatable):
                 self.sus = self.attr["dur"]
         else:
             if not PlayerDefaults.sticky_override:
-                self.dur = self._default_dur()
+                self.dur = self.__class__.default_dur
             if "sus" in kwargs:
                 setattr(self, "sus", kwargs["sus"])
             elif not PlayerDefaults.sticky_override:
-                self.sus = self._default_sus()
+                self.sus = self.__class__.default_sus
 
         # Set any other attributes
         for name, value in kwargs.items():

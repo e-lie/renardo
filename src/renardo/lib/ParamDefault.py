@@ -33,7 +33,7 @@ class ParamDefaultValue:
 
 
 class _SingleDefault:
-    """Default holder for params with a single default value (Oct, Pan, Rate, Sample)."""
+    """Default holder for a single global default value (Oct, Dur, Sus, Pan, Rate, Sample)."""
 
     def __init__(self, initial):
         self.default = ParamDefaultValue(initial)
@@ -41,33 +41,6 @@ class _SingleDefault:
     def __setattr__(self, key, value):
         if key == "default" and key in vars(self):
             self.default.set(value)
-        else:
-            self.__dict__[key] = value
-
-
-class _SplitDefault:
-    """Default holder for params with a synth/sampler split (Dur, Sus).
-
-    `link_sampler_default`, when True, makes `sampler_default` mirror `default`
-    for users who don't want the sample/synth distinction.
-    """
-
-    def __init__(self, default_value, sampler_value):
-        self.default = ParamDefaultValue(default_value)
-        self.sampler_default = ParamDefaultValue(sampler_value)
-        self.link_sampler_default = False
-
-    def __setattr__(self, key, value):
-        if key == "default" and key in vars(self):
-            self.default.set(value)
-            if self.__dict__.get("link_sampler_default"):
-                self.sampler_default.set(value)
-        elif key == "sampler_default" and key in vars(self):
-            self.sampler_default.set(value)
-        elif key == "link_sampler_default":
-            self.__dict__[key] = value
-            if value:
-                self.sampler_default.set(self.default.value)
         else:
             self.__dict__[key] = value
 
@@ -92,7 +65,7 @@ Pan = _SingleDefault(0)
 Rate = _SingleDefault(1)
 Sample = _SingleDefault(0)
 
-Dur = _SplitDefault(1, 0.5)
-Sus = _SplitDefault(1, 0.5)
+Dur = _SingleDefault(1)
+Sus = _SingleDefault(1)
 
 PlayerDefaults = _PlayerDefaultsSettings()
