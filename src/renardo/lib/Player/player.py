@@ -14,6 +14,9 @@ from renardo.lib.Patterns import (
 )
 from renardo.lib.Root import Root
 from renardo.lib.Scale import Scale, get_freq_and_midi
+from renardo.lib.ParamDefault import (
+    ParamDefaultValue, Oct, Dur, Sus, Pan, Rate, Sample, PlayerDefaults
+)
 from renardo.lib.TimeVar import TimeVar
 from renardo.lib.Code import WarningMsg
 from renardo.lib.Utils import get_first_item, get_expanded_len
@@ -81,6 +84,10 @@ class Player(Repeatable):
     main_event_clock = None
     default_scale = Scale.default
     default_root = Root.default()  # TODO//remove callable
+    default_oct = Oct.default
+    default_pan = Pan.default
+    default_rate = Rate.default
+    default_sample = Sample.default
     after_update_methods = ["stutter"]
 
     # Tkinter Window
@@ -495,6 +502,14 @@ class Player(Repeatable):
         self.__dict__[name] = value
         return
 
+    def _default_dur(self):
+        """Live default `dur` cell for this player's instrument type (synth vs sampler)."""
+        return Dur.sampler_default if self.instrument_name == SamplePlayer else Dur.default
+
+    def _default_sus(self):
+        """Live default `sus` cell for this player's instrument type (synth vs sampler)."""
+        return Sus.sampler_default if self.instrument_name == SamplePlayer else Sus.default
+
     # --- Startup methods
     def reset(self):
         """Sets all Player attributes to 0 unless their default is specified by an effect. Also
@@ -514,6 +529,9 @@ class Player(Repeatable):
                 "oct",
                 "bpm",
                 "vol",
+                "pan",
+                "rate",
+                "sample",
             ):
                 setattr(self, key, 0)
             reset.append(key)
@@ -543,17 +561,23 @@ class Player(Repeatable):
         # Set any non-zero values for FoxDot
 
         # Sustain & Legato
-        self.sus = 0.5 if self.instrument_name == SamplePlayer else 1
+        self.sus = self._default_sus()
         self.blur = 1
         # Amplitude
         self.amp = 1
         self.amplify = 1
         # Duration of notes
-        self.dur = 0.5 if self.instrument_name == SamplePlayer else 1
+        self.dur = self._default_dur()
         # Degree of scale / Characters of samples
         self.degree = " " if self.instrument_name is SamplePlayer else 0
         # Octave of the note
-        self.oct = 5
+        self.oct = self.__class__.default_oct
+        # Stereo pan
+        self.pan = self.__class__.default_pan
+        # Playback rate (LoopPlayer) / general rate attribute
+        self.rate = self.__class__.default_rate
+        # Sample bank variant index
+        self.sample = self.__class__.default_sample
         # Tempo
         self.bpm = None
          # Output (Elie's multiphonic setup WIP)
@@ -713,7 +737,7 @@ class Player(Repeatable):
             )
 
         # Update the attribute values
-        special_cases = ["scale", "root", "dur"]
+        special_cases = ["scale", "root", "oct", "dur", "sus", "pan", "rate", "sample"]
 
         # Set the degree
         if instrument_name == SamplePlayer:
@@ -733,12 +757,36 @@ class Player(Repeatable):
         self.scale = kwargs.get("scale", self.__class__.default_scale)
         self.root = kwargs.get("root", self.__class__.default_root)
 
-        # If only duration is specified, set sustain to that value also
+        # oct/pan/rate/sample: explicit kwarg wins; otherwise, in non-sticky mode
+        # (PlayerDefaults.sticky_override = False), revert to the live global
+        # default on every bare `>>`, like scale/root always do.
+        for name, live_default in (
+            ("oct", self.__class__.default_oct),
+            ("pan", self.__class__.default_pan),
+            ("rate", self.__class__.default_rate),
+            ("sample", self.__class__.default_sample),
+        ):
+            if name in kwargs:
+                setattr(self, name, kwargs[name])
+            elif not PlayerDefaults.sticky_override:
+                setattr(self, name, live_default)
+
+        # dur/sus: if only duration is specified, set sustain to that value also.
+        # Otherwise, in non-sticky mode, revert both to their live global default.
         if "dur" in kwargs:
             # If we use tuples / PGroups in setting duration, use it to modify delay using the PDur algorithm
             setattr(self, "dur", kwargs["dur"])
-            if "sus" not in kwargs:
+            if "sus" in kwargs:
+                setattr(self, "sus", kwargs["sus"])
+            else:
                 self.sus = self.attr["dur"]
+        else:
+            if not PlayerDefaults.sticky_override:
+                self.dur = self._default_dur()
+            if "sus" in kwargs:
+                setattr(self, "sus", kwargs["sus"])
+            elif not PlayerDefaults.sticky_override:
+                self.sus = self._default_sus()
 
         # Set any other attributes
         for name, value in kwargs.items():
@@ -949,6 +997,11 @@ class Player(Repeatable):
     # --- Methods for preparing and sending OSC messages to SuperCollider
     def unpack(self, item):
         """Converts a pgroup to floating point values and updates and time var or playerkey relations"""
+
+        if isinstance(item, ParamDefaultValue):
+            # Resolve a live global-default reference (Oct/Dur/Sus/Pan/Rate/Sample)
+            # to its current plain value.
+            item = item.value
 
         if isinstance(item, GeneratorPattern):
             # "pop" value from the generator
