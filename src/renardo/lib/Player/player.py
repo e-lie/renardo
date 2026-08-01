@@ -84,12 +84,6 @@ class Player(Repeatable):
     main_event_clock = None
     default_scale = Scale.default
     default_root = Root.default()  # TODO//remove callable
-    default_oct = Oct.default
-    default_dur = Dur.default
-    default_sus = Sus.default
-    default_pan = Pan.default
-    default_rate = Rate.default
-    default_sample = Sample.default
     after_update_methods = ["stutter"]
 
     # Tkinter Window
@@ -504,6 +498,12 @@ class Player(Repeatable):
         self.__dict__[name] = value
         return
 
+    @staticmethod
+    def _default_or(param, fallback):
+        """Live reference to `param.default`, unless disabled via `param.default = None`,
+        in which case `fallback` (the pre-ParamDefault legacy literal) is used instead."""
+        return param.default if param.default.enabled else fallback
+
     # --- Startup methods
     def reset(self):
         """Sets all Player attributes to 0 unless their default is specified by an effect. Also
@@ -555,23 +555,23 @@ class Player(Repeatable):
         # Set any non-zero values for FoxDot
 
         # Sustain & Legato
-        self.sus = self.__class__.default_sus
+        self.sus = self._default_or(Sus, 1)
         self.blur = 1
         # Amplitude
         self.amp = 1
         self.amplify = 1
         # Duration of notes
-        self.dur = self.__class__.default_dur
+        self.dur = self._default_or(Dur, 1)
         # Degree of scale / Characters of samples
         self.degree = " " if self.instrument_name is SamplePlayer else 0
         # Octave of the note
-        self.oct = self.__class__.default_oct
+        self.oct = self._default_or(Oct, 5)
         # Stereo pan
-        self.pan = self.__class__.default_pan
+        self.pan = self._default_or(Pan, 0)
         # Playback rate (LoopPlayer) / general rate attribute
-        self.rate = self.__class__.default_rate
+        self.rate = self._default_or(Rate, 1)
         # Sample bank variant index
-        self.sample = self.__class__.default_sample
+        self.sample = self._default_or(Sample, 0)
         # Tempo
         self.bpm = None
          # Output (Elie's multiphonic setup WIP)
@@ -753,20 +753,23 @@ class Player(Repeatable):
 
         # oct/pan/rate/sample: explicit kwarg wins; otherwise, in non-sticky mode
         # (PlayerDefaults.sticky_override = False), revert to the live global
-        # default on every bare `>>`, like scale/root always do.
-        for name, live_default in (
-            ("oct", self.__class__.default_oct),
-            ("pan", self.__class__.default_pan),
-            ("rate", self.__class__.default_rate),
-            ("sample", self.__class__.default_sample),
+        # default on every bare `>>`, like scale/root always do -- unless that
+        # default has been disabled (param.default = None), in which case we
+        # leave the attribute untouched.
+        for name, param in (
+            ("oct", Oct),
+            ("pan", Pan),
+            ("rate", Rate),
+            ("sample", Sample),
         ):
             if name in kwargs:
                 setattr(self, name, kwargs[name])
-            elif not PlayerDefaults.sticky_override:
-                setattr(self, name, live_default)
+            elif not PlayerDefaults.sticky_override and param.default.enabled:
+                setattr(self, name, param.default)
 
         # dur/sus: if only duration is specified, set sustain to that value also.
-        # Otherwise, in non-sticky mode, revert both to their live global default.
+        # Otherwise, in non-sticky mode, revert both to their live global default
+        # (unless disabled via Dur.default = None / Sus.default = None).
         if "dur" in kwargs:
             # If we use tuples / PGroups in setting duration, use it to modify delay using the PDur algorithm
             setattr(self, "dur", kwargs["dur"])
@@ -775,12 +778,12 @@ class Player(Repeatable):
             else:
                 self.sus = self.attr["dur"]
         else:
-            if not PlayerDefaults.sticky_override:
-                self.dur = self.__class__.default_dur
+            if not PlayerDefaults.sticky_override and Dur.default.enabled:
+                self.dur = Dur.default
             if "sus" in kwargs:
                 setattr(self, "sus", kwargs["sus"])
-            elif not PlayerDefaults.sticky_override:
-                self.sus = self.__class__.default_sus
+            elif not PlayerDefaults.sticky_override and Sus.default.enabled:
+                self.sus = Sus.default
 
         # Set any other attributes
         for name, value in kwargs.items():

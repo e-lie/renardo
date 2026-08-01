@@ -116,6 +116,7 @@ from renardo.lib.Player import (
     get_first_item, get_freq_and_midi, inf,
     rest,
 )
+from renardo.lib.ParamDefault import Seed
 from renardo.lib.InstrumentProxy import InstrumentProxy
 
 from renardo.lib.TimeVar import (
