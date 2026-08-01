@@ -83,7 +83,13 @@ class _PlayerDefaultsSettings:
 
 Oct = _SingleDefault(5)
 Pan = _SingleDefault(0)
-Rate = _SingleDefault(0)
+# 1 (not 0!) matches the pre-existing default from the "striate" effect
+# (renardo/runtime/python_defined_effect_synthdefs.py), which Player.reset()'s
+# fx_attributes loop applies to self.rate. For SamplePlayer/LoopPlayer, "rate"
+# is also the key parameter server_manager.get_init_node() sends to the
+# "startSound" node that triggers buffer playback — 0 silences all sample
+# playback outright.
+Rate = _SingleDefault(1)
 Sample = _SingleDefault(0)
 
 Dur = _SplitDefault(1, 0.5)
