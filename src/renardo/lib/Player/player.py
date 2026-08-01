@@ -996,6 +996,11 @@ class Player(Repeatable):
             # Resolve a live global-default reference (Oct/Dur/Sus/Pan/Rate/Sample)
             # to its current plain value.
             item = item.value
+            if isinstance(item, (Pattern, list, tuple)):
+                # Static multi-value pattern assigned to a `.default` (e.g.
+                # Oct.default = [4,5,7]) -- index it per-player like any other
+                # attribute pattern, instead of handing back the whole Pattern.
+                item = as_pattern(item)[self.event_n]
 
         if isinstance(item, GeneratorPattern):
             # "pop" value from the generator
