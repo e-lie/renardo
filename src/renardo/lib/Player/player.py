@@ -4,6 +4,7 @@ from renardo.sc_backend import (
     SamplePlayer, LoopPlayer
 )
 from renardo.lib.InstrumentProxy import InstrumentProxy
+from .player_variants import split_variant_kwargs
 
 from renardo.settings_manager import settings
 
@@ -179,6 +180,10 @@ class Player(Repeatable):
         #self.offset = 0
         self.following = None
 
+        # Automatically-generated variant players from the param_N=value
+        # compact syntax (see player_variants.py), keyed by variant number
+        self._variant_children = {}
+
         # List the internal variables we don't want to send to SuperCollider
         self.__vars = list(self.__dict__.keys())
         self.__init = True
@@ -348,8 +353,11 @@ class Player(Repeatable):
         """
         if not isinstance(instrument, InstrumentProxy):
             raise TypeError(f"{instrument} is an inappropriate argument type for PlayerObject")
+
+        degree, base_kwargs, variants = split_variant_kwargs(instrument.degree, instrument.kwargs)
+
         # Call the update method
-        self.update_args_and_start(instrument.name, instrument.degree, **instrument.kwargs)
+        self.update_args_and_start(instrument.name, degree, **base_kwargs)
 
         # self.update_pattern_root('sample' if self.synthdef == SamplePlayer else 'degree')
         # Call methods
@@ -360,7 +368,52 @@ class Player(Repeatable):
         # Add the modifier (check if not 0 to stop adding 0 to values)
         if (not isinstance(instrument.mod, (int, float))) or (instrument.mod != 0):
             self + instrument.mod
+
+        self._sync_variant_players(instrument, degree, base_kwargs, variants)
+
         return self
+
+    def _sync_variant_players(self, instrument, degree, base_kwargs, variants):
+        """Create/update/stop the automatically-generated `<name>_N` variant
+        players from the param_N=value compact syntax (see player_variants.py).
+
+        Reuses the same variant Player instance across re-executions of the
+        line (live-coding continuity); stops variants whose `_N` kwarg has
+        been removed since the last execution.
+        """
+        from renardo.lib.Code.main_lib import FoxDotCode
+
+        previous = self._variant_children
+        current = {}
+
+        for n, (degree_override, overrides) in variants.items():
+            name = "{}_{}".format(self.id, n)
+            variant_degree = degree_override if degree_override is not None else degree
+            variant_kwargs = {**base_kwargs, **overrides}
+
+            reused = previous.get(n)
+            if reused is not None and reused.id == name:
+                variant_player = reused
+            else:
+                existing = FoxDotCode.namespace.get(name)
+                if isinstance(existing, Player) and existing.isplaying:
+                    existing.stop()
+                variant_player = Player(name)
+                FoxDotCode.namespace[name] = variant_player
+
+            variant_proxy = InstrumentProxy(instrument.name, variant_degree, variant_kwargs)
+            variant_proxy.methods = list(instrument.methods)
+            variant_proxy.mod = instrument.mod
+            variant_player.assign_instrument(variant_proxy)
+
+            current[n] = variant_player
+
+        # Variants whose _N kwarg disappeared since the last execution of this line
+        for n, old_player in previous.items():
+            if n not in current:
+                old_player.stop()
+
+        self._variant_children = current
 
     # Overrides the >> operator to assign an instrument to the player
     def __rshift__(self, other: InstrumentProxy):
