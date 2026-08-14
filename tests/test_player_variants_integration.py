@@ -121,6 +121,22 @@ def test_degree_n_overrides_the_note_pattern():
     assert list(b1.attr["degree"]) == [0, 2, 4, 5]
 
 
+def test_explicit_degree_kwarg_does_not_collide_with_positional_degree():
+    # degree passed as `degree=...` lands in instrument.kwargs rather than
+    # instrument.degree (only the first positional argument does) -- must
+    # not be passed twice to update_args_and_start (regression test).
+    b1 = make_player("v4b")
+    proxy = InstrumentProxy(
+        "blip", None,
+        {"degree": [0, 2, 4, 5], "dur": .25, "oct": 5, "degree_2": [7, 9, 11, 12]},
+    )
+    b1.assign_instrument(proxy)
+
+    b1_2 = variant("v4b", 2)
+    assert list(b1.attr["degree"]) == [0, 2, 4, 5]
+    assert list(b1_2.attr["degree"]) == [7, 9, 11, 12]
+
+
 def test_live_update_reuses_the_same_variant_instance():
     b1 = make_player("v5")
     send(b1, "blip", [0, 2, 4, 5], dur=.25, oct=5, oct_2=6)

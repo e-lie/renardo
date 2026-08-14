@@ -354,7 +354,19 @@ class Player(Repeatable):
         if not isinstance(instrument, InstrumentProxy):
             raise TypeError(f"{instrument} is an inappropriate argument type for PlayerObject")
 
-        degree, base_kwargs, variants = split_variant_kwargs(instrument.degree, instrument.kwargs)
+        # `degree` can arrive either positionally (instrument.degree) or as
+        # an explicit `degree=...` kwarg (instrument.kwargs["degree"]) --
+        # the latter would otherwise collide with the positional `degree`
+        # parameter of update_args_and_start below.
+        kwargs = instrument.kwargs
+        instrument_degree = instrument.degree
+        if "degree" in kwargs:
+            kwargs = dict(kwargs)
+            kwarg_degree = kwargs.pop("degree")
+            if instrument_degree is None:
+                instrument_degree = kwarg_degree
+
+        degree, base_kwargs, variants = split_variant_kwargs(instrument_degree, kwargs)
 
         # Call the update method
         self.update_args_and_start(instrument.name, degree, **base_kwargs)
