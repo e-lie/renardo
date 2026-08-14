@@ -184,9 +184,21 @@ b1.stop()
 #     unrelated reason, the variant should take its place cleanly --
 #     without leaving the old sound running in the background ("ghost
 #     sound").
+#
+#     Unlike b1, b2, p1... "b1_2" is NOT one of the pre-declared 2-character
+#     player names, so it doesn't exist yet and you have to create it
+#     yourself. Do it through FoxDotCode.namespace (not a plain
+#     `b1_2 = Player()`): the variant-overwrite logic looks names up in
+#     FoxDotCode.namespace, and depending on how you're running this file
+#     (the Renardo editor vs. a plain Python/IPython shell), a bare
+#     top-level assignment may or may not end up in that same dict. Going
+#     through FoxDotCode.namespace directly reproduces the collision
+#     reliably either way.
 # --------------------------------------------------------------------------
 
 # We deliberately occupy the name b1_2 with an unrelated player:
+b1_2 = Player("b1_2")
+FoxDotCode.namespace["b1_2"] = b1_2
 b1_2 >> pluck([7], dur=1)
 
 # You should hear a low pluck alone here. Let it run a bit.
@@ -197,7 +209,9 @@ b1 >> blip([0, 2, 4, 5], dur=.25, oct=5, oct_2=6)
 # The low pluck should disappear completely, replaced by the blip at
 # octave 6. If you still hear the pluck together with the blip, that's a
 # ghost sound -- a bug to fix (the old player must be stopped before being
-# replaced).
+# replaced). Check FoxDotCode.namespace["b1_2"] if you want to confirm in
+# code rather than by ear -- it should now be the blip variant, not the
+# pluck.
 
 b1.stop()
 
