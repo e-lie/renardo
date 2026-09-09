@@ -77,7 +77,10 @@ export function useTutorialStore(): TutorialStoreInterface {
 
         if (response.ok) {
           const content = await response.text()
-          dispatchLoadFile(content, file.name.replace('.py', ''), file.path)
+          // Tutorials ship with the package sources, outside the user's project.
+          // Open them as unbound scratch buffers so autosave stays off and
+          // Ctrl+S offers "Save As" into the user's project.
+          dispatchLoadFile(content, file.name.replace('.py', ''))
         } else {
           throw new Error('Failed to load tutorial file')
         }
