@@ -619,6 +619,9 @@ class TempoClock(object):
         # All other scheduled items go here
         self.items   = []
 
+        # Collection for deferred scheduling when using PointInTime
+        self.to_be_scheduled = []
+
         # General set up
         self.bpm   = bpm
         self.meter = meter
@@ -1614,6 +1617,22 @@ class TempoClock(object):
         if self.ticking == False:
 
             self.start()
+
+        # Handle PointInTime instances: defer scheduling until the point is defined
+
+        if isinstance(beat, PointInTime):
+
+            schedulable = Schedulable(self, obj, args, kwargs, is_priority)
+
+            beat.add_schedulable(schedulable)
+
+            # Track undefined points so they can be cleared later
+
+            if not beat.is_defined:
+
+                self.to_be_scheduled.append(schedulable)
+
+            return
 
         # Default is next bar
 
