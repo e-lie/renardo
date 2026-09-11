@@ -8,6 +8,7 @@ import threading
 
 from .scheduling_queue import SchedulingQueue, SoloPlayer, History, ScheduleError, Wrapper
 from .point_in_time_registry import registry
+from .osc_trigger import OscTrigger, trig
 
 from renardo.lib.Player import Player
 from renardo.lib.TimeVar import TimeVar
@@ -1619,8 +1620,9 @@ class TempoClock(object):
             self.start()
 
         # Handle PointInTime instances: defer scheduling until the point is defined
+        # Handle OscTrigger instances: (re-)schedule every time an OSC message arrives
 
-        if isinstance(beat, PointInTime):
+        if isinstance(beat, (PointInTime, OscTrigger)):
 
             schedulable = Schedulable(self, obj, args, kwargs, is_priority)
 
@@ -1628,7 +1630,7 @@ class TempoClock(object):
 
             # Track undefined points so they can be cleared later
 
-            if not beat.is_defined:
+            if isinstance(beat, PointInTime) and not beat.is_defined:
 
                 self.to_be_scheduled.append(schedulable)
 
