@@ -6,7 +6,7 @@ export interface ClockStateInterface {
 }
 
 export interface ActivePlayerInterface {
-  id: string
+  id: string | null
   instrument_name: string
   isplaying: boolean
 }

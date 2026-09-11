@@ -14,7 +14,16 @@
   const { activePlayers } = appStore.webSocketBackendStore.getters
   const { actions: editorActions } = appStore.editorStore
 
-  const playingPlayers = $derived($activePlayers.filter((p: ActivePlayerInterface) => p.isplaying))
+  const playingPlayers = $derived(
+    $activePlayers
+      .filter((p: ActivePlayerInterface) => p.isplaying)
+      .map((p: ActivePlayerInterface, index: number) => ({
+        ...p,
+        // Players registered without a namespace name have a null id; build a
+        // stable, unique key so the keyed #each block does not collide on `null`.
+        key: p.id != null ? `id:${p.id}` : `idx:${index}`
+      }))
+  )
 
   function stopPlayer(id: string) {
     editorActions.executeCode(`${id}.stop()`)
@@ -28,17 +37,19 @@
     </div>
   {:else}
     <ul class="flex flex-col gap-1">
-      {#each playingPlayers as player (player.id)}
+      {#each playingPlayers as player (player.key)}
         <li class="flex items-center justify-between px-2 py-1 rounded bg-surface-200 dark:bg-surface-800">
-          <span class="font-mono font-semibold text-primary-500">{player.id}</span>
+          <span class="font-mono font-semibold text-primary-500">{player.id ?? '(unnamed)'}</span>
           <span class="text-sm text-surface-500">{player.instrument_name}</span>
-          <button
-            class="btn btn-sm variant-filled-error px-2 py-0.5 text-xs"
-            onclick={() => stopPlayer(player.id)}
-            title={`Stop ${player.id}`}
-          >
-            ■ Stop
-          </button>
+          {#if player.id != null}
+            <button
+              class="btn btn-sm variant-filled-error px-2 py-0.5 text-xs"
+              onclick={() => stopPlayer(player.id)}
+              title={`Stop ${player.id}`}
+            >
+              ■ Stop
+            </button>
+          {/if}
         </li>
       {/each}
     </ul>
