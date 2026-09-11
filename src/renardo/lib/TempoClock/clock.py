@@ -1209,8 +1209,16 @@ class TempoClock(object):
         self.beat += n
         return
 
+    def _kill_all_playing(self):
+        for player in list(self.playing):
+            player.kill()
+        self.playing = []
+
     def clear(self):
-        """ Remove players from clock """
+        """ Remove players from clock, keeping sticky players playing """
+        # Capture sticky players before wiping the queue: their next event
+        # is already scheduled in it and must be re-added after the clear
+        sticky_players = [p for p in self.playing if getattr(p, "sticky", False)]
 
         self.items = []
         self.scheduling_queue.clear()
@@ -1226,15 +1234,23 @@ class TempoClock(object):
             pass  # Silently ignore if Ableton integration is not available
 
         for player in list(self.playing):
-
+            if getattr(player, "sticky", False):
+                continue
             player.kill()
 
-        # for item in self.items:
+        # Re-schedule sticky players at their next event beat, the same way
+        # Player.__call__ does (player.py: `schedule(self, self.event_index)`)
+        for player in sticky_players:
+            self.schedule(player, player.event_index, kwargs={})
 
-        #     if hasattr(item, 'stop'):
+        return
 
-        #         item.stop()
+    def clear_sticky(self):
+        """ Remove all players from clock, including sticky players """
+        self.items = []
+        self.scheduling_queue.clear()
+        self.solo.reset()
 
-        self.playing = []
+        self._kill_all_playing()
 
         return

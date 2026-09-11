@@ -94,9 +94,9 @@ def reload(self: Player):
 
 @player_method
 def only(self: Player):
-    """ Stops all players except this one """
+    """ Stops all players except this one, sticky players are kept """
     for player in list(self.main_event_clock.playing):
-        if player is not self:
+        if player is not self and not getattr(player, "sticky", False):
             player.stop()
     return self
 
