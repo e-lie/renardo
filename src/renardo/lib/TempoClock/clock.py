@@ -8,6 +8,7 @@ import threading
 
 from .scheduling_queue import SchedulingQueue, SoloPlayer, History, ScheduleError, Wrapper
 from .point_in_time_registry import registry
+from . import osc_trigger
 from .osc_trigger import OscTrigger, trig
 
 from renardo.lib.Player import Player
@@ -597,6 +598,24 @@ class Schedulable:
 
 class TempoClock(object):
 
+    @property
+    def osc_trig_addr(self):
+        """Bind address of the OSC server used by `trig()` / OscTrigger."""
+        return osc_trigger.get_addr()
+
+    @osc_trig_addr.setter
+    def osc_trig_addr(self, value):
+        osc_trigger.configure(addr=value)
+
+    @property
+    def osc_trig_port(self):
+        """Bind port of the OSC server used by `trig()` / OscTrigger."""
+        return osc_trigger.get_port()
+
+    @osc_trig_port.setter
+    def osc_trig_port(self, value):
+        osc_trigger.configure(port=value)
+
     def __init__(self, bpm=120.0, meter=(4,4)):
 
         # Flag this when done init
@@ -1139,7 +1158,15 @@ class TempoClock(object):
             self.server.set_midi_nudge(value)
 
             object.__setattr__(self, "midi_nudge", value)
-                
+
+        elif attr == "osc_trig_addr":
+
+            osc_trigger.configure(addr=value)
+
+        elif attr == "osc_trig_port":
+
+            osc_trigger.configure(port=value)
+
         else:
 
             self.__dict__[attr] = value
