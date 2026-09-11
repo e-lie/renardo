@@ -12,9 +12,16 @@ is equivalent to:
 
     Clock.schedule(_macro_func, beat=trig("/myroute"))
 
-Every OSC message received on "/myroute" causes all callables scheduled
-against that trigger to run on the Clock, exactly like a recurring
-rendez-vous point. Message arguments are currently ignored.
+An OscTrigger *is* a `PersistentPointInTime` (see point_in_time.py): every
+OSC message received on its address just does `self.beat = Clock.now()`,
+exactly as if user code had done it by hand. That means it gets, for free,
+everything a PointInTime already supports:
+
+    # {trig("/route") + 8}    -- arithmetic: fire 8 beats after each message
+    p = PointInTime()
+    p.beat = trig("/route")   -- bind: `p` fires whenever the trigger does
+
+Message arguments are currently ignored.
 
 A single UDP server (python-osc) is shared by every OscTrigger in the
 process and is started lazily on first use.
@@ -26,6 +33,8 @@ from pythonosc import dispatcher as osc_dispatcher
 from pythonosc.osc_server import ThreadingOSCUDPServer
 
 from renardo.logger import get_logger
+
+from .point_in_time import PersistentPointInTime
 
 logger = get_logger('lib.TempoClock.osc_trigger')
 
@@ -101,29 +110,24 @@ def get_port():
     return _server.port
 
 
-class OscTrigger:
-    """Fires every callable scheduled against it whenever `address` receives an OSC message."""
+class OscTrigger(PersistentPointInTime):
+    """A PersistentPointInTime whose beat is set to Clock.now() whenever `address` receives an OSC message."""
 
     def __init__(self, address):
+        super().__init__()
         self.address = address
-        self._schedulables = []
         _server.register(address, self._on_message)
 
-    def add_schedulable(self, schedulable):
-        self._schedulables.append(schedulable)
-
     def _on_message(self, address, *osc_args):
-        for schedulable in self._schedulables:
-            schedulable.clock.schedule(
-                schedulable.callable_obj,
-                beat=schedulable.clock.now(),
-                args=schedulable.args,
-                kwargs=schedulable.kwargs,
-                is_priority=schedulable.is_priority,
-            )
+        # Deferred import: osc_trigger.py is imported by clock.py, so it
+        # can't import the Clock singleton at module load time.
+        from renardo.runtime import Clock
+        self.beat = Clock.now()
 
     def __repr__(self):
-        return f"OscTrigger({self.address!r}, {len(self._schedulables)} listeners)"
+        if self.is_defined:
+            return f"OscTrigger({self.address!r}, beat={self._beat})"
+        return f"OscTrigger({self.address!r}, {len(self._schedulables)} pending)"
 
 
 def trig(address):
