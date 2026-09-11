@@ -660,6 +660,7 @@ class TempoClock(object):
         self.reference_bpm = bpm  # Reference BPM used to calculate latency in seconds from beats
         self.nudge      = 0.0  # If you want to synchronise with something external, adjust the nudge
         self.hard_nudge = 0.0
+        self.scheduling_nudge = 0.0  # Constant anticipation (in seconds) subtracted from latency to compensate for scheduling/OSC delay
 
         self.bpm_start_time = time.time()
         self.bpm_start_beat = 0
@@ -1466,8 +1467,8 @@ class TempoClock(object):
         return (n + 1) * beat + t 
 
     def osc_message_time(self):
-        """ Returns the true time that an osc message should be run i.e. now + latency """
-        return time.time() + self.latency
+        """ Returns the true time that an osc message should be run i.e. now + latency, anticipated by scheduling_nudge """
+        return time.time() + self.latency - self.scheduling_nudge
         
     def start(self):
         """
@@ -1550,12 +1551,13 @@ class TempoClock(object):
         # that occur when trying to compensate for late block triggering
 
         now_real_time = time.time()
-        block.time = now_real_time + self.latency
+        block.time = now_real_time + self.latency - self.scheduling_nudge
 
         # Log block execution timing
         if self.debugging:
             print(f"[Block] Beat:{block.beat:.3f} | Now:{beat:.3f} | "
-                  f"BlockTime:{block.time:.6f} (now={now_real_time:.6f} + latency={self.latency:.3f}s)")
+                  f"BlockTime:{block.time:.6f} (now={now_real_time:.6f} + latency={self.latency:.3f}s "
+                  f"- nudge={self.scheduling_nudge:.3f}s)")
 
         # Log OSC timing for Link sync debug
         if self.debugging and self.link_enabled:

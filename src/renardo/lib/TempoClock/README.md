@@ -21,6 +21,12 @@ beat lengths, you can increase the latency by simply evaluating the following in
 
     Clock.latency = 0.5
 
+If instead you consistently hear scheduled events (including `#{...}` macros) trigger a
+little *after* the beat you asked for, you can anticipate them with `Clock.scheduling_nudge`,
+which is subtracted from `Clock.latency` when computing the actual OSC message time:
+
+    Clock.scheduling_nudge = 0.3
+
 To stop the clock from scheduling further events, use the `Clock.clear()` method, which is
 bound to the shortcut key, `Ctrl+.`. You can schedule non-player objects in the clock by
 using `Clock.schedule(func, beat, args, kwargs)`. By default `beat` is set to the next
