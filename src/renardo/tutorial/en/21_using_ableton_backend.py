@@ -52,4 +52,12 @@ b1 >> bass_synth([0, 3, 5], pan=0.5)
 
 # Clock.bpm changes ableton bpm and link clock bpm (see ableton link synchronisation)
 
+# Tonality sync: while the Ableton backend is active, Renardo's scale
+# (Scale.default) and root (Root.default) are mirrored into Live's "Scale
+# Awareness" view (one-way Renardo -> Live, dynamic Pvar/var changes included).
+#   Root.default = "F#"
+#   Scale.default = "phrygian"
+# Requirement: AbletonOSC must be up to date (>= the version exposing root_note /
+# scale_name on the Song). Disable with ABLETON_SYNC_SCALE_ROOT=false.
+
 Clock.clear()
