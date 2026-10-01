@@ -51,3 +51,41 @@ p1 >> pluck([0,1,2,3], amp=p1.degree.map({1:4, 2:1}))
 p1 >> pluck([0,1,2,3], amp=(p1.degree==1))
 
 p1 >> pluck([0,1,2,3], amp=(p1.degree>1))
+
+# --------------------------------------------------------------------------
+# Global defaults and "stickiness"
+# --------------------------------------------------------------------------
+
+# Just like Scale and Root (see Tutorial 8), the common attributes oct, dur,
+# sus, pan, rate and sample each have a global `.default` you can change:
+
+Oct.default = 6
+Dur.default = 1
+Sus.default = 1
+Pan.default = 0
+Rate.default = 1
+Sample.default = 0
+
+# Any player that has NOT set that attribute itself will pick up the new
+# value on its very next event -- you don't need to retrigger it with '>>':
+p1 >> pluck(pitches)
+Oct.default = 5  # p1 jumps down an octave immediately, still playing
+
+# But as soon as you set an attribute explicitly on a player, it "sticks":
+# the player keeps that value even if you change the global default
+# afterwards.
+p1 >> pluck(pitches, oct=4)
+Oct.default = 7
+# p1 is still at oct=4 here
+
+# If you'd rather have attributes behave exactly like scale/root -- always
+# reverting to the current global default whenever you retrigger the player
+# without that keyword, even if you gave it an explicit value before -- flip
+# this switch:
+PlayerDefaults.sticky_override = False
+
+p1 >> pluck(pitches)  # no 'oct' keyword here, so it picks up Oct.default (7)
+Oct.default = 5
+
+# Set it back to the default ("sticky") behaviour:
+PlayerDefaults.sticky_override = True

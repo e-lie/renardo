@@ -111,10 +111,12 @@ from renardo.lib.Player import (
     PlayerKey, PlayerKeyException,
     Repeatable, Root,
     SamplePlayer, Scale,
+    Oct, Dur, Sus, Pan, Rate, Sample, PlayerDefaults,
     copy,
     get_first_item, get_freq_and_midi, inf,
     rest,
 )
+from renardo.lib.ParamDefault import Seed
 from renardo.lib.InstrumentProxy import InstrumentProxy
 
 from renardo.lib.TimeVar import (

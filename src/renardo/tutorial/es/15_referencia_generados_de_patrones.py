@@ -89,6 +89,20 @@ print(PRand([1,2,3])[:5])
 # Puede suministrar una semilla
 print(PRand([1,2,3], seed=5)[:5])
 
+# O fijar una semilla por defecto global en lugar de pasar seed= cada vez.
+# Se aplica a cualquier generador aleatorio (PRand, PWhite, etc.) creado
+# después -- los generadores ya existentes conservan la aleatoriedad que ya tenían.
+Seed.default = 5
+
+print(PRand([1,2,3])[:5])
+print(PWhite()[:5])
+
+# Una seed= explícita en un generador concreto sigue teniendo prioridad sobre el valor por defecto global
+print(PRand([1,2,3], seed=99)[:5])
+
+# Vuelve a None para restaurar la aleatoriedad normal, sin semilla
+Seed.default = None
+
 # Sigue generando sintonía aleatoria
 p1 >> pluck(PRand(8))
 
