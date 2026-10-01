@@ -53,6 +53,12 @@ def stop(self: Player, N=0):
         )
     else:
         self.kill()
+
+    # Cascade to the param_N=value auto-generated variant players (see
+    # player_variants.py / Player._sync_variant_players)
+    for variant_player in self._variant_children.values():
+        variant_player.stop(N)
+
     return self
 
 @player_method
