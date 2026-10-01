@@ -152,6 +152,12 @@ def create_ableton_instruments(max_midi_tracks: int = 16, scan_audio_tracks: boo
     from renardo import runtime
     runtime.ableton_project = ableton_project
 
+    # Mirror renardo's tonality (Scale.default / Root.default) into Live's
+    # Scale Awareness view, one-way. Pushes the current state on the first tick.
+    from renardo.settings_manager import settings
+    if settings.get("ableton_backend.ABLETON_SYNC_SCALE_ROOT"):
+        ableton_project.start_scale_root_sync()
+
     # Get all scanned tracks from the track_map
     instruments = {}
     midi_channel_counter = 0

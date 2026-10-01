@@ -75,6 +75,12 @@ class AbletonProject:
         self._timevar_thread = None
         self._timevar_running = False
 
+        # Scale/root -> Live "Scale Awareness" sync (renardo is source of truth)
+        self._scale_sync_thread = None
+        self._scale_sync_running = False
+        self._last_scale_root = None  # (root, live_name_or_None, intervals)
+        self._warned_scales = set()
+
         if scan:
             self.scan_tracks()
 
@@ -596,6 +602,94 @@ class AbletonProject:
         if self._timevar_thread is not None:
             self._timevar_thread.join(timeout=1.0)
             self._timevar_thread = None
+        self.stop_scale_root_sync()
+
+    def push_scale_and_root(self, root, live_name):
+        """
+        Push the given root note (int 0-11) and, when resolved, scale name to
+        Live's Scale Awareness via AbletonOSC. Silent on any failure.
+        """
+        try:
+            self._set.live.cmd("/live/song/set/root_note", (int(root),))
+        except Exception:
+            pass
+        if live_name:
+            try:
+                self._set.live.cmd("/live/song/set/scale_name", (str(live_name),))
+            except Exception:
+                pass
+
+    def start_scale_root_sync(self):
+        """Start the scale/root -> Live sync thread (idempotent, ~20Hz)"""
+        if self._scale_sync_thread is not None:
+            return  # Already running
+
+        self._scale_sync_running = True
+        self._scale_sync_thread = threading.Thread(
+            target=self._scale_root_sync_loop, daemon=True
+        )
+        self._scale_sync_thread.start()
+
+    def stop_scale_root_sync(self):
+        """Stop the scale/root -> Live sync thread"""
+        self._scale_sync_running = False
+        if self._scale_sync_thread is not None:
+            self._scale_sync_thread.join(timeout=1.0)
+            self._scale_sync_thread = None
+
+    def _abletonosc_supports_scale(self):
+        """
+        Probe whether the installed AbletonOSC exposes the root_note/scale_name
+        Song properties (added on AbletonOSC master). Returns True/False; never
+        raises. A False result means the user needs to update AbletonOSC.
+        """
+        try:
+            self._set.live.query("/live/song/get/root_note", timeout=1.0)
+            return True
+        except Exception:
+            return False
+
+    def _scale_root_sync_loop(self):
+        """Poll renardo's tonality (~20Hz) and push changes to Live."""
+        from renardo.ableton_backend.scale_sync import (
+            resolve_scale_and_root,
+            live_scale_name,
+        )
+
+        if not self._abletonosc_supports_scale():
+            print(
+                "AbletonProject: installed AbletonOSC has no root_note/scale_name "
+                "handlers - scale/root sync disabled. Update AbletonOSC (master) "
+                "to mirror renardo's Scale.default / Root.default into Live."
+            )
+            self._scale_sync_running = False
+            return
+
+        while self._scale_sync_running:
+            try:
+                name, intervals, root = resolve_scale_and_root()
+                if root is not None:
+                    live_name = live_scale_name(name, intervals)
+                    current = (root, live_name, intervals)
+
+                    if current != self._last_scale_root:
+                        self.push_scale_and_root(root, live_name)
+                        self._last_scale_root = current
+
+                        if live_name is None and intervals is not None:
+                            key = tuple(intervals)
+                            if key not in self._warned_scales:
+                                self._warned_scales.add(key)
+                                print(
+                                    "AbletonProject: no Live scale matches renardo "
+                                    "scale {} {} - leaving Live's scale unchanged "
+                                    "(root still synced)".format(name, list(intervals))
+                                )
+            except Exception:
+                # Never let the sync loop die
+                pass
+
+            time.sleep(0.05)
 
     def _timevar_update_loop(self):
         """Update loop that runs at 300Hz to update TimeVar parameters and BPM"""
@@ -674,3 +768,4 @@ class AbletonProject:
     def __del__(self):
         """Cleanup when the object is destroyed"""
         self.stop_timevar_thread()
+        self.stop_scale_root_sync()
