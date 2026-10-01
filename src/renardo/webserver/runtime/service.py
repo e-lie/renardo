@@ -137,9 +137,14 @@ class RuntimeService:
             return {"success": False, "message": f"Failed to restart: {err}", **self.get_status()}
 
     def _inject_osc_clock_callback(self):
-        """Register a beat callback in the subprocess that sends OSC to the webserver."""
+        """Register beat callbacks in the subprocess that send Clock/Player state to the webserver via OSC.
+
+        The runtime (Clock, Players) lives in this subprocess, not in the webserver
+        process, so state has to be pushed out over OSC rather than read directly.
+        """
         from ..websocket.osc_clock_server import OSC_PORT
         code = f"""
+import json as _json
 import threading as _threading
 from pythonosc.udp_client import SimpleUDPClient as _OSCClient
 _osc_clock_client = _OSCClient("127.0.0.1", {OSC_PORT})
@@ -152,7 +157,18 @@ def __renardo_osc_beat_callback(beat, bpm, meter, ticking):
     except Exception:
         pass
 
+def __renardo_osc_players_callback(beat, bpm, meter, ticking):
+    try:
+        players_data = [
+            {{"id": p.id, "instrument_name": str(p.instrument_name), "isplaying": bool(p.isplaying)}}
+            for p in list(Clock.playing)
+        ]
+        _osc_clock_client.send_message("/players/update", _json.dumps(players_data))
+    except Exception:
+        pass
+
 Clock.register_beat_callback(__renardo_osc_beat_callback)
+Clock.register_beat_callback(__renardo_osc_players_callback)
 """
         self._process.execute_code(code)
 

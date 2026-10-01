@@ -9,7 +9,7 @@
   const i18n = useI18nStore()
   const { translate } = i18n.getters
 
-  type ComponentType = 'TextArea' | 'CodeEditor' | 'CodeExecConsole' | 'TutorialTab' | 'MusicExampleTab' | 'ProjectExplorerTab' | 'UserDirectoryExplorerTab' | 'ClockDisplay' | 'ColorPicker'
+  type ComponentType = 'TextArea' | 'CodeEditor' | 'CodeExecConsole' | 'TutorialTab' | 'MusicExampleTab' | 'ProjectExplorerTab' | 'UserDirectoryExplorerTab' | 'ClockDisplay' | 'ActivePlayersDisplay' | 'ColorPicker'
 
   const COMPONENT_META: Record<ComponentType, { icon: string; label: string; title: string }> = {
     TextArea:                 { icon: '📝', label: 'Text Area',        title: 'Text Area' },
@@ -19,7 +19,8 @@
     MusicExampleTab:          { icon: '🎵', label: 'Music Examples',   title: 'Music Examples' },
     ProjectExplorerTab:       { icon: '📁', label: 'Project Explorer', title: 'Project Explorer' },
     UserDirectoryExplorerTab: { icon: '🏠', label: 'User Directory',   title: 'User Directory' },
-    ClockDisplay:             { icon: '🕐', label: 'Clock',            title: 'Clock' },
+    ClockDisplay:             { icon: '🕐', label: 'Clock',            title: 'clock' },
+    ActivePlayersDisplay:     { icon: '🎹', label: 'Active Players',   title: 'activePlayers' },
     ColorPicker:              { icon: '🎨', label: 'Color Picker',     title: 'Color Picker' },
   }
 
@@ -27,17 +28,17 @@
     {
       label: 'Left Column',
       positions: ['left-top', 'left-middle', 'left-bottom'],
-      components: ['TextArea', 'CodeEditor', 'CodeExecConsole', 'TutorialTab', 'MusicExampleTab', 'ProjectExplorerTab', 'UserDirectoryExplorerTab', 'ClockDisplay'],
+      components: ['TextArea', 'CodeEditor', 'CodeExecConsole', 'TutorialTab', 'MusicExampleTab', 'ProjectExplorerTab', 'UserDirectoryExplorerTab', 'ClockDisplay', 'ActivePlayersDisplay'],
     },
     {
       label: 'Right Column',
       positions: ['right-top', 'right-middle', 'right-bottom'],
-      components: ['TextArea', 'CodeEditor', 'CodeExecConsole', 'TutorialTab', 'MusicExampleTab', 'ProjectExplorerTab', 'UserDirectoryExplorerTab', 'ClockDisplay'],
+      components: ['TextArea', 'CodeEditor', 'CodeExecConsole', 'TutorialTab', 'MusicExampleTab', 'ProjectExplorerTab', 'UserDirectoryExplorerTab', 'ClockDisplay', 'ActivePlayersDisplay'],
     },
     {
       label: 'Bottom Area',
       positions: ['bottom-left', 'bottom-right'],
-      components: ['TextArea', 'CodeEditor', 'CodeExecConsole', 'TutorialTab', 'MusicExampleTab', 'ProjectExplorerTab', 'UserDirectoryExplorerTab', 'ClockDisplay', 'ColorPicker'],
+      components: ['TextArea', 'CodeEditor', 'CodeExecConsole', 'TutorialTab', 'MusicExampleTab', 'ProjectExplorerTab', 'UserDirectoryExplorerTab', 'ClockDisplay', 'ActivePlayersDisplay', 'ColorPicker'],
     },
   ]
 

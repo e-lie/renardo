@@ -101,6 +101,20 @@ print(PRand([1,2,3])[:5])
 # You can supply a seed
 print(PRand([1,2,3], seed=5)[:5])
 
+# Or set a global default seed instead of passing seed= every time.
+# It applies to any random generator (PRand, PWhite, etc.) created
+# afterwards -- existing generators keep whatever randomness they already had.
+Seed.default = 5
+
+print(PRand([1,2,3])[:5])
+print(PWhite()[:5])
+
+# An explicit seed= on a specific generator still overrides the global default
+print(PRand([1,2,3], seed=99)[:5])
+
+# Set it back to None to restore normal, unseeded randomness
+Seed.default = None
+
 # Keeps generating random tune
 p1 >> pluck(PRand(8))
 

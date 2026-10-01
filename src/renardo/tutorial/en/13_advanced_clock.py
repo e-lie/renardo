@@ -6,6 +6,10 @@ print(Clock)
 # To see what the latency is
 print(Clock.latency)
 
+# If scheduled events (including #{...} macros) consistently trigger a bit late,
+# anticipate them with a scheduling nudge (in seconds), subtracted from latency:
+Clock.scheduling_nudge = 0.3
+
 # The clock can schedule anything with a __call__ method using
 # It takes an absolute time clue to schedule a functions
 # Clock.schedule needs to know the beat to call something on

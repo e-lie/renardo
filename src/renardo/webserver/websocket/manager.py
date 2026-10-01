@@ -13,6 +13,7 @@ class MessageType(str, Enum):
     PING = "ping"
     PONG = "pong"
     CLOCK_UPDATE = "clock_update"
+    PLAYERS_UPDATE = "players_update"
 
 
 class WebSocketManager:

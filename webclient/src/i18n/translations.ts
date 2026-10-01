@@ -70,6 +70,8 @@ export const translations = {
     scratch: 'Scratch',
     workspace: 'Workspace',
     draft: 'Draft',
+    clock: 'Clock',
+    activePlayers: 'Active Players',
 
     // Init - User Dir Picker
     initUserDirTitle: 'Choose Your User Directory',
@@ -158,6 +160,8 @@ export const translations = {
     scratch: 'Brouillon',
     workspace: 'Espace de travail',
     draft: 'Ébauche',
+    clock: 'Horloge',
+    activePlayers: 'Players actifs',
 
     // Init - User Dir Picker
     initUserDirTitle: 'Choisissez votre répertoire utilisateur',
@@ -246,6 +250,8 @@ export const translations = {
     scratch: 'Borrador',
     workspace: 'Espacio de trabajo',
     draft: 'Borrador',
+    clock: 'Reloj',
+    activePlayers: 'Reproductores activos',
 
     // Init - User Dir Picker
     initUserDirTitle: 'Elige tu directorio de usuario',
@@ -334,6 +340,8 @@ export const translations = {
     scratch: 'Entwurf',
     workspace: 'Arbeitsbereich',
     draft: 'Entwurf',
+    clock: 'Uhr',
+    activePlayers: 'Aktive Player',
 
     // Init - User Dir Picker
     initUserDirTitle: 'Benutzerverzeichnis wählen',

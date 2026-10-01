@@ -4,6 +4,7 @@ from renardo.sc_backend import (
     SamplePlayer, LoopPlayer
 )
 from renardo.lib.InstrumentProxy import InstrumentProxy
+from .player_variants import split_variant_kwargs
 
 from renardo.settings_manager import settings
 
@@ -14,6 +15,9 @@ from renardo.lib.Patterns import (
 )
 from renardo.lib.Root import Root
 from renardo.lib.Scale import Scale, get_freq_and_midi
+from renardo.lib.ParamDefault import (
+    ParamDefaultValue, Oct, Dur, Sus, Pan, Rate, Sample, PlayerDefaults
+)
 from renardo.lib.TimeVar import TimeVar
 from renardo.lib.Code import WarningMsg
 from renardo.lib.Utils import get_first_item, get_expanded_len
@@ -140,6 +144,9 @@ class Player(Repeatable):
         self.old_dur = None
 
         self.isplaying = False
+
+        # Sticky players are excluded from Clock.clear(), only() and solo()
+        self.sticky = False
         #self.isAlive = True
 
         # These dicts contain the attribute and modifier values that are sent to SuperCollider     
@@ -175,6 +182,10 @@ class Player(Repeatable):
         self.scale = None
         #self.offset = 0
         self.following = None
+
+        # Automatically-generated variant players from the param_N=value
+        # compact syntax (see player_variants.py), keyed by variant number
+        self._variant_children = {}
 
         # List the internal variables we don't want to send to SuperCollider
         self.__vars = list(self.__dict__.keys())
@@ -261,44 +272,52 @@ class Player(Repeatable):
             pass
         return self.__dict__[name]
 
+    def is_ableton_backed(self):
+        """True if this player is bound to a live Ableton track (mixer/device params available)"""
+        if not settings.get("ableton_backend.ABLETON_BACKEND_ENABLED"):
+            return False
+        if "ableton_track" not in self.attr.keys() or "ableton_project_ref" not in self.attr.keys():
+            return False
+        ableton_track = self.attr["ableton_track"][0]
+        ableton_project = self.attr["ableton_project_ref"][0]
+        # Check if it's actually the objects (not 0 from reset)
+        return hasattr(ableton_project, 'get_parameter_info') and hasattr(ableton_track, 'name')
+
     def __getattr__(self, name):
         """Get attribute value, including from Ableton if enabled"""
         try:
             # ABLETON INTEGRATION HOOK for param get
             # Get the parameter value from ableton if it exists (only if backend is enabled)
-            if settings.get("ableton_backend.ABLETON_BACKEND_ENABLED"):
-                if "ableton_track" in self.attr.keys() and "ableton_project_ref" in self.attr.keys():
-                    ableton_track = self.attr["ableton_track"][0]
-                    ableton_project = self.attr["ableton_project_ref"][0]
-                    # Check if it's actually the objects (not 0 from reset)
-                    if hasattr(ableton_project, 'get_parameter_info') and hasattr(ableton_track, 'name'):
-                        # Get track name directly from track object and convert to snake_case
-                        from renardo.ableton_backend.ableton_project import make_snake_name
-                        track_name = make_snake_name(ableton_track.name)
+            if self.is_ableton_backed():
+                ableton_track = self.attr["ableton_track"][0]
+                ableton_project = self.attr["ableton_project_ref"][0]
+                # Get track name directly from track object and convert to snake_case
+                from renardo.ableton_backend.ableton_project import make_snake_name
+                track_name = make_snake_name(ableton_track.name)
 
-                        # Try to get parameter info from Ableton with track name for shortcuts
-                        param_info = ableton_project.get_parameter_info(name, track_name)
-                        if param_info is not None:
-                            parameter = param_info['parameter']
-                            # Get the value - pylive's query returns a list, we want the last element
-                            value_result = parameter.value
-                            if isinstance(value_result, (list, tuple)) and len(value_result) > 0:
-                                raw_value = value_result[-1]  # Last element is usually the actual value
-                            else:
-                                raw_value = value_result
+                # Try to get parameter info from Ableton with track name for shortcuts
+                param_info = ableton_project.get_parameter_info(name, track_name)
+                if param_info is not None:
+                    parameter = param_info['parameter']
+                    # Get the value - pylive's query returns a list, we want the last element
+                    value_result = parameter.value
+                    if isinstance(value_result, (list, tuple)) and len(value_result) > 0:
+                        raw_value = value_result[-1]  # Last element is usually the actual value
+                    else:
+                        raw_value = value_result
 
-                            # Normalize to 0-1 range
-                            param_range = parameter.max - parameter.min
-                            if param_range > 0:
-                                normalized = (raw_value - parameter.min) / param_range
-                                return max(0.0, min(1.0, normalized))
-                            return raw_value
+                    # Normalize to 0-1 range
+                    param_range = parameter.max - parameter.min
+                    if param_range > 0:
+                        normalized = (raw_value - parameter.min) / param_range
+                        return max(0.0, min(1.0, normalized))
+                    return raw_value
 
             # This checks for aliases, not the actual keys
             name = self.alias.get(name, name)
             if name in self.attr and name not in self.__dict__:
                 # Return a Player key
-                self._update_player_key(name, self.now(name), 0)
+                self._update_player_key(name, self.attr_current_value(name), 0)
             item = self.__dict__[name]
 
             # If returning a player key, keep track of which are being accessed
@@ -331,42 +350,29 @@ class Player(Repeatable):
         for _, value in self.event.items():
             yield value
 
-    def __getattr__(self, name):
-        try:
-            # Legacy REAPER integration removed - functionality moved to reaside system
-            # if settings.get("reaper_backend.REAPER_BACKEND_ENABLED"):
-            #     if "reatrack" in self.attr.keys():
-            #         reatrack = self.attr["reatrack"][0]
-            #         if isinstance(reatrack, ReaTrack):
-            #             device, _ = get_reaper_object_and_param_name(reatrack, name, quiet=True)
-            #             if device is not None:
-            #                 return get_reaper_param(reatrack, name)
-
-            # This checks for aliases, not the actual keys
-            name = self.alias.get(name, name)
-            if name in self.attr and name not in self.__dict__:
-                # Return a Player key
-                self._update_player_key(name, self.attr_current_value(name), 0)
-            item = self.__dict__[name]
-
-            # If returning a player key, keep track of which are being accessed
-            if isinstance(item, PlayerKey) and name not in self.accessed_keys:
-                self.accessed_keys.append(name)
-            return item
-
-        except KeyError:
-            err = "Player Object has no attribute '{}'".format(name)
-            raise AttributeError(err)
-
-
     def assign_instrument(self, instrument: InstrumentProxy):
         """
         Handles the allocation of instrument (Proxy)
         """
         if not isinstance(instrument, InstrumentProxy):
             raise TypeError(f"{instrument} is an inappropriate argument type for PlayerObject")
+
+        # `degree` can arrive either positionally (instrument.degree) or as
+        # an explicit `degree=...` kwarg (instrument.kwargs["degree"]) --
+        # the latter would otherwise collide with the positional `degree`
+        # parameter of update_args_and_start below.
+        kwargs = instrument.kwargs
+        instrument_degree = instrument.degree
+        if "degree" in kwargs:
+            kwargs = dict(kwargs)
+            kwarg_degree = kwargs.pop("degree")
+            if instrument_degree is None:
+                instrument_degree = kwarg_degree
+
+        degree, base_kwargs, variants = split_variant_kwargs(instrument_degree, kwargs)
+
         # Call the update method
-        self.update_args_and_start(instrument.name, instrument.degree, **instrument.kwargs)
+        self.update_args_and_start(instrument.name, degree, **base_kwargs)
 
         # self.update_pattern_root('sample' if self.synthdef == SamplePlayer else 'degree')
         # Call methods
@@ -377,7 +383,52 @@ class Player(Repeatable):
         # Add the modifier (check if not 0 to stop adding 0 to values)
         if (not isinstance(instrument.mod, (int, float))) or (instrument.mod != 0):
             self + instrument.mod
+
+        self._sync_variant_players(instrument, degree, base_kwargs, variants)
+
         return self
+
+    def _sync_variant_players(self, instrument, degree, base_kwargs, variants):
+        """Create/update/stop the automatically-generated `<name>_N` variant
+        players from the param_N=value compact syntax (see player_variants.py).
+
+        Reuses the same variant Player instance across re-executions of the
+        line (live-coding continuity); stops variants whose `_N` kwarg has
+        been removed since the last execution.
+        """
+        from renardo.lib.Code.main_lib import FoxDotCode
+
+        previous = self._variant_children
+        current = {}
+
+        for n, (degree_override, overrides) in variants.items():
+            name = "{}_{}".format(self.id, n)
+            variant_degree = degree_override if degree_override is not None else degree
+            variant_kwargs = {**base_kwargs, **overrides}
+
+            reused = previous.get(n)
+            if reused is not None and reused.id == name:
+                variant_player = reused
+            else:
+                existing = FoxDotCode.namespace.get(name)
+                if isinstance(existing, Player) and existing.isplaying:
+                    existing.stop()
+                variant_player = Player(name)
+                FoxDotCode.namespace[name] = variant_player
+
+            variant_proxy = InstrumentProxy(instrument.name, variant_degree, variant_kwargs)
+            variant_proxy.methods = list(instrument.methods)
+            variant_proxy.mod = instrument.mod
+            variant_player.assign_instrument(variant_proxy)
+
+            current[n] = variant_player
+
+        # Variants whose _N kwarg disappeared since the last execution of this line
+        for n, old_player in previous.items():
+            if n not in current:
+                old_player.stop()
+
+        self._variant_children = current
 
     # Overrides the >> operator to assign an instrument to the player
     def __rshift__(self, other: InstrumentProxy):
@@ -469,24 +520,21 @@ class Player(Repeatable):
 
                 # ABLETON INTEGRATION HOOK for param set
                 # Apply the parameter in ableton if it exists (only if backend is enabled)
-                if settings.get("ableton_backend.ABLETON_BACKEND_ENABLED"):
-                    if "ableton_track" in self.attr.keys() and "ableton_project_ref" in self.attr.keys():
-                        ableton_track = self.attr["ableton_track"][0]
-                        ableton_project = self.attr["ableton_project_ref"][0]
-                        # Check if it's actually the objects (not 0 from reset)
-                        if hasattr(ableton_project, 'get_parameter_info') and hasattr(ableton_track, 'name'):
-                            # Get track name directly from track object and convert to snake_case
-                            from renardo.ableton_backend.ableton_project import make_snake_name
-                            track_name = make_snake_name(ableton_track.name)
+                if self.is_ableton_backed():
+                    ableton_track = self.attr["ableton_track"][0]
+                    ableton_project = self.attr["ableton_project_ref"][0]
+                    # Get track name directly from track object and convert to snake_case
+                    from renardo.ableton_backend.ableton_project import make_snake_name
+                    track_name = make_snake_name(ableton_track.name)
 
-                            # Try to set parameter in Ableton with track name for shortcuts
-                            param_info = ableton_project.get_parameter_info(name, track_name)
-                            if param_info is not None:
-                                # Parameter exists in Ableton, set it
-                                ableton_project.set_parameter(name, value, track_name)
-                                # Return early - don't store in player attributes
-                                # This ensures reading the param always queries Ableton for current value
-                                return
+                    # Try to set parameter in Ableton with track name for shortcuts
+                    param_info = ableton_project.get_parameter_info(name, track_name)
+                    if param_info is not None:
+                        # Parameter exists in Ableton, set it
+                        ableton_project.set_parameter(name, value, track_name)
+                        # Return early - don't store in player attributes
+                        # This ensures reading the param always queries Ableton for current value
+                        return
 
                 # Get any alias
                 name = self.alias.get(name, name)
@@ -518,6 +566,12 @@ class Player(Repeatable):
         self.__dict__[name] = value
         return
 
+    @staticmethod
+    def _default_or(param, fallback):
+        """Live reference to `param.default`, unless disabled via `param.default = None`,
+        in which case `fallback` (the pre-ParamDefault legacy literal) is used instead."""
+        return param.default if param.default.enabled else fallback
+
     # --- Startup methods
     def reset(self):
         """Sets all Player attributes to 0 unless their default is specified by an effect. Also
@@ -537,6 +591,9 @@ class Player(Repeatable):
                 "oct",
                 "bpm",
                 "vol",
+                "pan",
+                "rate",
+                "sample",
             ):
                 setattr(self, key, 0)
             reset.append(key)
@@ -566,17 +623,23 @@ class Player(Repeatable):
         # Set any non-zero values for FoxDot
 
         # Sustain & Legato
-        self.sus = 0.5 if self.instrument_name == SamplePlayer else 1
+        self.sus = self._default_or(Sus, 1)
         self.blur = 1
         # Amplitude
         self.amp = 1
         self.amplify = 1
         # Duration of notes
-        self.dur = 0.5 if self.instrument_name == SamplePlayer else 1
+        self.dur = self._default_or(Dur, 1)
         # Degree of scale / Characters of samples
         self.degree = " " if self.instrument_name is SamplePlayer else 0
         # Octave of the note
-        self.oct = 5
+        self.oct = self._default_or(Oct, 5)
+        # Stereo pan
+        self.pan = self._default_or(Pan, 0)
+        # Playback rate (LoopPlayer) / general rate attribute
+        self.rate = self._default_or(Rate, 1)
+        # Sample bank variant index
+        self.sample = self._default_or(Sample, 0)
         # Tempo
         self.bpm = None
          # Output (Elie's multiphonic setup WIP)
@@ -621,7 +684,7 @@ class Player(Repeatable):
         if not isinstance(self.event["dur"], rest):
             #try:
             self._send_osc_messages_to_server(
-                verbose=(self.main_event_clock.solo == self and kwargs.get("verbose", True))
+                verbose=(self.sticky or (self.main_event_clock.solo == self and kwargs.get("verbose", True)))
             )
 
             #except Exception as err:
@@ -730,13 +793,14 @@ class Player(Repeatable):
             self.reset()
 
         # If there is a designated solo player when updating, add this at next bar
-        if self.main_event_clock.solo.active() and self.main_event_clock.solo != self:
+        # Sticky players are never muted by a solo
+        if not self.sticky and self.main_event_clock.solo.active() and self.main_event_clock.solo != self:
             self.main_event_clock.schedule(
                 lambda *args, **kwargs: self.main_event_clock.solo.add(self), self.main_event_clock.next_bar()
             )
 
         # Update the attribute values
-        special_cases = ["scale", "root", "dur"]
+        special_cases = ["scale", "root", "oct", "dur", "sus", "pan", "rate", "sample"]
 
         # Set the degree
         if instrument_name == SamplePlayer:
@@ -756,12 +820,39 @@ class Player(Repeatable):
         self.scale = kwargs.get("scale", self.__class__.default_scale)
         self.root = kwargs.get("root", self.__class__.default_root)
 
-        # If only duration is specified, set sustain to that value also
+        # oct/pan/rate/sample: explicit kwarg wins; otherwise, in non-sticky mode
+        # (PlayerDefaults.sticky_override = False), revert to the live global
+        # default on every bare `>>`, like scale/root always do -- unless that
+        # default has been disabled (param.default = None), in which case we
+        # leave the attribute untouched.
+        for name, param in (
+            ("oct", Oct),
+            ("pan", Pan),
+            ("rate", Rate),
+            ("sample", Sample),
+        ):
+            if name in kwargs:
+                setattr(self, name, kwargs[name])
+            elif not PlayerDefaults.sticky_override and param.default.enabled:
+                setattr(self, name, param.default)
+
+        # dur/sus: if only duration is specified, set sustain to that value also.
+        # Otherwise, in non-sticky mode, revert both to their live global default
+        # (unless disabled via Dur.default = None / Sus.default = None).
         if "dur" in kwargs:
             # If we use tuples / PGroups in setting duration, use it to modify delay using the PDur algorithm
             setattr(self, "dur", kwargs["dur"])
-            if "sus" not in kwargs:
+            if "sus" in kwargs:
+                setattr(self, "sus", kwargs["sus"])
+            else:
                 self.sus = self.attr["dur"]
+        else:
+            if not PlayerDefaults.sticky_override and Dur.default.enabled:
+                self.dur = Dur.default
+            if "sus" in kwargs:
+                setattr(self, "sus", kwargs["sus"])
+            elif not PlayerDefaults.sticky_override and Sus.default.enabled:
+                self.sus = Sus.default
 
         # Set any other attributes
         for name, value in kwargs.items():
@@ -972,6 +1063,16 @@ class Player(Repeatable):
     # --- Methods for preparing and sending OSC messages to SuperCollider
     def unpack(self, item):
         """Converts a pgroup to floating point values and updates and time var or playerkey relations"""
+
+        if isinstance(item, ParamDefaultValue):
+            # Resolve a live global-default reference (Oct/Dur/Sus/Pan/Rate/Sample)
+            # to its current plain value.
+            item = item.value
+            if isinstance(item, (Pattern, list, tuple)):
+                # Static multi-value pattern assigned to a `.default` (e.g.
+                # Oct.default = [4,5,7]) -- index it per-player like any other
+                # attribute pattern, instead of handing back the whole Pattern.
+                item = as_pattern(item)[self.event_n]
 
         if isinstance(item, GeneratorPattern):
             # "pop" value from the generator

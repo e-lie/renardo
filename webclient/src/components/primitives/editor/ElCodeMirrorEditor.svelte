@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { EditorView, keymap, placeholder as cmPlaceholder, lineNumbers, Decoration, type DecorationSet } from '@codemirror/view';
-  import { EditorState, Compartment, StateEffect, StateField, Transaction } from '@codemirror/state';
+  import { EditorState, Compartment, StateEffect, StateField, Transaction, Annotation } from '@codemirror/state';
   import { defaultKeymap, indentWithTab, standardKeymap, insertTab, history } from '@codemirror/commands';
   import { python } from '@codemirror/lang-python';
   import { javascript } from '@codemirror/lang-javascript';
@@ -45,6 +45,10 @@
   let containerElement: HTMLDivElement;
   let editorView: EditorView | null = null;
   let localContent = $state(content);
+
+  // Marks transactions that come from a programmatic content sync (buffer load,
+  // tab switch) so the update listener does not report them as user edits.
+  const ExternalSync = Annotation.define<boolean>();
 
   // Theme compartment for dynamic reconfiguration
   const themeCompartment = new Compartment();
@@ -99,10 +103,11 @@
       if (currentDoc !== content) {
         // 1. Reset history (fresh instance, clears undo stack)
         editorView.dispatch({ effects: historyCompartment.reconfigure(history()) });
-        // 2. Load content without recording it in the new history
+        // 2. Load content without recording it in the new history, and flag it
+        //    as an external sync so it is not treated as a user edit.
         editorView.dispatch({
           changes: { from: 0, to: editorView.state.doc.length, insert: content },
-          annotations: Transaction.addToHistory.of(false),
+          annotations: [Transaction.addToHistory.of(false), ExternalSync.of(true)],
         });
         localContent = content;
       }
@@ -440,7 +445,10 @@
           if (update.docChanged) {
             const newContent = update.state.doc.toString();
             localContent = newContent;
-            onchange?.(newContent);
+            const isExternalSync = update.transactions.some(tr => tr.annotation(ExternalSync));
+            if (!isExternalSync) {
+              onchange?.(newContent);
+            }
           }
           if (update.focusChanged && !update.view.hasFocus) {
             onblur?.();

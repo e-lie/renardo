@@ -65,7 +65,8 @@ Player.set_buffer_manager(buffer_manager)
 from renardo.lib.TempoClock import (
     History,
     SchedulingQueue, QueueBlock, QueueObj, ScheduleError,
-    SoloPlayer, TempoClock, Wrapper, PointInTime, PersistentPointInTime, RecurringPointInTime
+    SoloPlayer, TempoClock, Wrapper, PointInTime, PersistentPointInTime, RecurringPointInTime,
+    OscTrigger, trig
 )
 
 from renardo.sc_backend import TempoClient, ServerManager, RequestTimeout
@@ -111,10 +112,12 @@ from renardo.lib.Player import (
     PlayerKey, PlayerKeyException,
     Repeatable, Root,
     SamplePlayer, Scale,
+    Oct, Dur, Sus, Pan, Rate, Sample, PlayerDefaults,
     copy,
     get_first_item, get_freq_and_midi, inf,
     rest,
 )
+from renardo.lib.ParamDefault import Seed
 from renardo.lib.InstrumentProxy import InstrumentProxy
 
 from renardo.lib.TimeVar import (
