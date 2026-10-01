@@ -17,6 +17,7 @@ import traceback
 
 # --- Bootstrap : importer tout le runtime renardo dans ce namespace ---
 from renardo.runtime import *  # noqa: F401, F403
+from renardo.lib.Code.main_lib import execute as _execute
 
 # Snapshot du namespace AVANT les variables de contrôle de boucle.
 # dict() crée une copie superficielle : les objets mutables (Clock, Server…)
@@ -38,6 +39,10 @@ for _ln in sys.stdin:
         _buf = []
         if _code.strip():
             try:
+                # Expand `# {beat_expression}` scheduling macros into
+                # Clock.schedule(...) calls before compiling/exec'ing,
+                # same as the legacy FoxDotCode.__call__ used to do.
+                _code = _execute.transform_macros(_code)
                 exec(compile(_code, "<renardo>", "exec"), _exec_ns)
             except SystemExit:
                 pass  # ne pas laisser sys.exit() tuer la boucle
