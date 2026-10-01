@@ -91,3 +91,11 @@ k2.amplify = 0
 Clock.clear()
 
 pit3.beat = now() + 64
+
+## Remarque : si les événements programmés via les macros #{...} (ou directement
+# via Clock.schedule) se déclenchent systématiquement un peu en retard à votre goût,
+# n'essayez pas de compenser en écrivant des choses comme #{Clock.mod(4)-.3} —
+# réglez plutôt une fois pour toutes un nudge de planification, qui anticipe
+# chaque message OSC programmé de ce nombre de secondes :
+
+Clock.scheduling_nudge = 0.3

@@ -6,6 +6,11 @@ print(Clock)
 # Pour voir quelle est la latence
 print(Clock.latency)
 
+# Si les événements programmés (y compris les macros #{...}) se déclenchent
+# systématiquement un peu en retard, on peut les anticiper avec un nudge
+# de planification (en secondes), soustrait de la latence :
+Clock.scheduling_nudge = 0.3
+
 # Le Clock peut programmer tout objet possédant une méthode __call__ en utilisant
 # Il prend un repère de temps absolu pour programmer une fonction
 # Clock.schedule a besoin de savoir à quel temps appeler quelque chose
