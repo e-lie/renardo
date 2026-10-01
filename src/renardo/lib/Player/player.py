@@ -144,6 +144,9 @@ class Player(Repeatable):
         self.old_dur = None
 
         self.isplaying = False
+
+        # Sticky players are excluded from Clock.clear(), only() and solo()
+        self.sticky = False
         #self.isAlive = True
 
         # These dicts contain the attribute and modifier values that are sent to SuperCollider     
@@ -681,7 +684,7 @@ class Player(Repeatable):
         if not isinstance(self.event["dur"], rest):
             #try:
             self._send_osc_messages_to_server(
-                verbose=(self.main_event_clock.solo == self and kwargs.get("verbose", True))
+                verbose=(self.sticky or (self.main_event_clock.solo == self and kwargs.get("verbose", True)))
             )
 
             #except Exception as err:
@@ -790,7 +793,8 @@ class Player(Repeatable):
             self.reset()
 
         # If there is a designated solo player when updating, add this at next bar
-        if self.main_event_clock.solo.active() and self.main_event_clock.solo != self:
+        # Sticky players are never muted by a solo
+        if not self.sticky and self.main_event_clock.solo.active() and self.main_event_clock.solo != self:
             self.main_event_clock.schedule(
                 lambda *args, **kwargs: self.main_event_clock.solo.add(self), self.main_event_clock.next_bar()
             )
