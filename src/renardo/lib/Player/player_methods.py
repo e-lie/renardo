@@ -467,14 +467,16 @@ def bang(self: Player, **kwargs):
 
 @player_method
 def fade(self: Player, dur=8, fvol=1, ivol=None, autostop=True):
+    # Ableton instruments have no per-note 'amplify': fade the track volume instead
+    vol_attr = "vol" if self.is_ableton_backed() else "amplify"
     if ivol is None:
-        ivol = float(self.amplify)
-    self.amplify = linvar([ivol, fvol], [dur, inf], start=self.main_event_clock.mod(4))
+        ivol = float(getattr(self, vol_attr))
+    setattr(self, vol_attr, linvar([ivol, fvol], [dur, inf], start=self.main_event_clock.mod(4)))
     def static_final_value():
         if fvol == 0 and autostop:
             self.stop()
         else:
-            self.amplify = fvol
+            setattr(self, vol_attr, fvol)
     self.main_event_clock.schedule(static_final_value, self.main_event_clock.next_bar() + dur + 1)
     return self
 
