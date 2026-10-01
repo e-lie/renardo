@@ -131,11 +131,12 @@
       const { content, title, filePath } = event.detail
       logger.debug('CodeEditorWrapper', 'Received loadFile event', { title, filePath })
 
-      // Check if file already open
+      // Check if file already open. File-backed tabs are matched by path;
+      // unbound tabs (tutorials, music examples) are matched by title.
       const tabs = $localTabs || []
       const existingTab = tabs.find(t => {
         const buf = $buffers.find(b => b.id === t.bufferId)
-        return buf?.filePath === filePath
+        return filePath ? buf?.filePath === filePath : (!buf?.filePath && t.title === title)
       })
 
       if (existingTab) {
