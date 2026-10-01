@@ -1,4 +1,4 @@
-export type PaneComponentType = 'ColorPicker' | 'TextArea' | 'CodeEditor' | 'TopMenu' | 'ClockDisplay' | 'ProjectExplorerTab' | 'TutorialTab'
+export type PaneComponentType = 'ColorPicker' | 'TextArea' | 'CodeEditor' | 'TopMenu' | 'ClockDisplay' | 'ActivePlayersDisplay' | 'ProjectExplorerTab' | 'TutorialTab'
 
 export interface PaneTabInterface {
   id: string

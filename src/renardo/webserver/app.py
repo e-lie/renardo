@@ -183,6 +183,12 @@ async def clock_get_state():
     return await runtime_state.get_state()
 
 
+@app.get("/api/players/state")
+async def players_get_state():
+    """Get last known list of active players (pushed from the runtime subprocess via OSC)"""
+    return osc_server.get_last_players_state()
+
+
 # Music Examples endpoints
 @app.get("/api/music-examples/files")
 async def get_music_example_files():
