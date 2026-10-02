@@ -2,6 +2,8 @@ name: Build Tauri
 
 on:
   push:
+    branches:
+      - tauri
     tags:
       - 'v*'
   workflow_dispatch:
