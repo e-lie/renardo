@@ -1,0 +1,114 @@
+name: Build Tauri
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: webclient/package-lock.json
+
+      - uses: astral-sh/setup-uv@v5
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libayatana-appindicator3-dev patchelf xvfb
+
+      - name: Install web client dependencies
+        working-directory: webclient
+        run: npm ci
+
+      - name: Prepare bundle resources
+        run: python3 src-tauri/scripts/prepare_resources.py
+
+      - name: Build deb and AppImage
+        working-directory: webclient
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: '1'
+          NO_STRIP: 'true'
+        run: npx tauri build --bundles deb appimage
+
+      - name: Install the deb
+        run: sudo apt-get install -y ./src-tauri/target/release/bundle/deb/*.deb
+
+      - name: Smoke test (no network)
+        run: |
+          uv venv /tmp/smoke-venv
+          uv pip install --python /tmp/smoke-venv/bin/python psutil
+          sudo unshare -n sh -c "ip link set lo up && exec setpriv --reuid=$(id -u) --regid=$(id -g) --clear-groups env HOME=$HOME xvfb-run -a /tmp/smoke-venv/bin/python tests/bundle_smoke.py /usr/bin/renardo"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: renardo-linux-deb
+          path: src-tauri/target/release/bundle/deb/*.deb
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: renardo-linux-appimage
+          path: src-tauri/target/release/bundle/appimage/*.AppImage
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: webclient/package-lock.json
+
+      - uses: astral-sh/setup-uv@v5
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install web client dependencies
+        working-directory: webclient
+        run: npm ci
+
+      - name: Prepare bundle resources
+        run: python src-tauri/scripts/prepare_resources.py
+
+      - name: Build installer
+        working-directory: webclient
+        run: npx tauri build --bundles nsis
+
+      - name: Install silently
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem src-tauri/target/release/bundle/nsis/*-setup.exe | Select-Object -First 1
+          Start-Process -FilePath $installer.FullName -ArgumentList '/S', '/D=C:\renardo-install' -Wait
+
+      - name: Smoke test
+        shell: pwsh
+        run: |
+          uv venv $env:RUNNER_TEMP\smoke-venv
+          uv pip install --python $env:RUNNER_TEMP\smoke-venv\Scripts\python.exe psutil
+          & $env:RUNNER_TEMP\smoke-venv\Scripts\python.exe tests/bundle_smoke.py C:\renardo-install\renardo.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: renardo-windows
+          path: src-tauri/target/release/bundle/nsis/*-setup.exe
