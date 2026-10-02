@@ -10,7 +10,9 @@ from typing import Optional, Dict
 
 
 def _get_log_dir() -> Path:
-    if os.environ.get("RENARDO_WEB_MODE") == "electron":
+    if os.environ.get("RENARDO_USER_DIR"):
+        log_dir = Path(os.environ["RENARDO_USER_DIR"]) / "logs"
+    elif os.environ.get("RENARDO_WEB_MODE") == "electron":
         import tempfile
         log_dir = Path(tempfile.gettempdir()) / "renardo-logs"
     else:

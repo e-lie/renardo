@@ -245,6 +245,13 @@ class SettingsManager:
         return SettingsManager.get_standard_config_dir() / 'renardo'
 
     @staticmethod
+    def get_internal_settings_file():
+        # with RENARDO_USER_DIR (set by the app shell) everything stays in that dir
+        if os.environ.get("RENARDO_USER_DIR"):
+            return SettingsManager.get_renardo_user_dir() / "internal_settings.toml"
+        return SettingsManager.get_standard_user_dir() / "internal_settings.toml"
+
+    @staticmethod
     def set_user_dir_path(path: Path) -> bool:
         """
         Create or update user_dir.toml with a custom user directory path.
@@ -300,7 +307,7 @@ class SettingsManager:
         if path_name == "PUBLIC_SETTINGS_FILE":
             return self.get_renardo_user_dir() / "settings.toml"
         elif path_name == "INTERNAL_SETTINGS_FILE":
-            return self.get_standard_user_dir() / "internal_settings.toml"
+            return self.get_internal_settings_file()
         elif path_name == "SAMPLES_DIR":
             return self.get_renardo_user_dir() / self.get("samples.SAMPLES_DIR_NAME")
         elif path_name == "RECORDING_DIR":
@@ -357,7 +364,7 @@ internal_defaults = {
 
 settings = SettingsManager(
     SettingsManager.get_renardo_user_dir() / "settings.toml",
-    SettingsManager.get_standard_user_dir() / "internal_settings.toml",
+    SettingsManager.get_internal_settings_file(),
     public_defaults,
     internal_defaults
 )
