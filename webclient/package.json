@@ -23,7 +23,9 @@
     "dev:electron": "concurrently \"npm run dev\" \"electron .\"",
     "build:electron": "vite build && electron-builder",
     "dist": "vite build && electron-builder --publish=never",
-    "dist:appimage": "vite build && electron-builder --linux AppImage --publish=never"
+    "dist:appimage": "vite build && electron-builder --linux AppImage --publish=never",
+    "tauri": "tauri",
+    "prepare:tauri": "python ../src-tauri/scripts/prepare_resources.py"
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "^11.12.0",
@@ -31,6 +33,7 @@
     "@skeletonlabs/skeleton-svelte": "^4.8.0",
     "@sveltejs/vite-plugin-svelte": "^4.0.4",
     "@tailwindcss/vite": "^4.1.18",
+    "@tauri-apps/cli": "^2.12.1",
     "@tsconfig/svelte": "^5.0.2",
     "@typescript-eslint/eslint-plugin": "^6.19.1",
     "@typescript-eslint/parser": "^6.19.1",

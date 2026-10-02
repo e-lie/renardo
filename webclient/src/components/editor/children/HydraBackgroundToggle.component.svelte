@@ -1,5 +1,6 @@
 <script lang="ts">
   import { useEditorStore } from '../../../store/editor/Editor.store';
+  import { isHydraAvailable } from '../../../background-canvas';
   import { useI18nStore } from '../../../store/i18n/I18n.store';
 
   const { getters, actions } = useEditorStore();
@@ -7,7 +8,8 @@
   const { translate } = i18nGetters;
   const { settings } = getters;
 
-  const hydraBackground = $derived($settings.hydraBackground);
+  const hydraAvailable = isHydraAvailable();
+  const hydraBackground = $derived(hydraAvailable && $settings.hydraBackground);
 
   function toggleHydraBackground() {
     actions.updateSettings({ hydraBackground: !hydraBackground });
@@ -23,6 +25,7 @@
       type="checkbox"
       class="toggle"
       checked={hydraBackground}
+      disabled={!hydraAvailable}
       onchange={toggleHydraBackground}
     />
   </label>

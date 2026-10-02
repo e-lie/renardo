@@ -3,6 +3,11 @@ import logger from './services/logger.service'
 
 let hydraInstance: { canvas: HTMLCanvasElement; hydra: InstanceType<typeof Hydra> } | null = null
 let hydraEnabled = true
+let hydraAvailable = false
+
+export function isHydraAvailable(): boolean {
+  return hydraAvailable
+}
 
 const INITIAL_PATTERN = () => {
   const h = hydraInstance!.hydra.synth
@@ -16,6 +21,11 @@ export function initBackgroundCanvas() {
     return
   }
 
+  if (!document.createElement('canvas').getContext('webgl')) {
+    logger.warn('initBackgroundCanvas', 'WebGL unavailable, Hydra background disabled')
+    return
+  }
+
   // Create canvas element
   const canvas = document.createElement('canvas')
   canvas.id = 'background-canvas'
@@ -26,11 +36,21 @@ export function initBackgroundCanvas() {
   canvas.height = window.innerHeight
 
   // Initialize Hydra
-  const hydra = new Hydra({
-    canvas,
-    detectAudio: false,
-    enableStreamCapture: false,
-  })
+  let hydra: InstanceType<typeof Hydra>
+  try {
+    hydra = new Hydra({
+      canvas,
+      detectAudio: false,
+      enableStreamCapture: false,
+    })
+  } catch (e) {
+    logger.warn('initBackgroundCanvas', 'Hydra initialization failed, background disabled', {
+      error: e instanceof Error ? e.message : String(e),
+    })
+    canvas.remove()
+    return
+  }
+  hydraAvailable = true
 
   hydraInstance = { canvas, hydra }
 
