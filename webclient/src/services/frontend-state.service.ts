@@ -3,7 +3,7 @@ import { useEditorStore } from '../store/editor/Editor.store'
 import { useI18nStore } from '../store/i18n/I18n.store'
 import { useProjectStore } from '../store/project'
 
-const API_URL = 'http://localhost:8000'
+const API_URL = ''
 const DEBOUNCE_MS = 2000
 
 const PERSISTENCE_KEYS = [

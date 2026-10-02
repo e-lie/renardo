@@ -467,7 +467,7 @@ export function useEditorStore(): EditorStoreInterface {
                     }
 
                     // Call API to save file to project
-                    fetch('http://localhost:8000/api/project/save-file', {
+                    fetch('/api/project/save-file', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'

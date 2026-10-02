@@ -22,7 +22,7 @@ export function useProjectStore(): ProjectStoreInterface {
     const actions: ProjectStoreActionsInterface = {
         openProject: async (rootPath: string): Promise<void> => {
             try {
-                const response = await fetch('http://localhost:8000/api/project/open', {
+                const response = await fetch('/api/project/open', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -69,7 +69,7 @@ export function useProjectStore(): ProjectStoreInterface {
 
         writeFile: async (filePath: string, content: string): Promise<void> => {
             try {
-                const response = await fetch('http://localhost:8000/api/project/save-file', {
+                const response = await fetch('/api/project/save-file', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
