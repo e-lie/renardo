@@ -35,6 +35,9 @@ impl Server {
             cmd = Command::new(exe);
             cmd.args(["-m", "uvicorn"]);
             cmd.env("PYTHONNOUSERSITE", "1");
+            // The AppImage runtime exports PYTHONHOME/PYTHONPATH for its own
+            // bundle; they would break the embedded interpreter.
+            cmd.env_remove("PYTHONHOME").env_remove("PYTHONPATH");
         }
         cmd.args([
             "renardo.webserver.app:app",

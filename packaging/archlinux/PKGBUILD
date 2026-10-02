@@ -1,20 +1,20 @@
 # Maintainer: renardo team
 pkgname=renardo
-pkgver=1.0.0a22
+pkgver=1.0.0a20
 pkgrel=1
 pkgdesc="Renardo livecoding musical editor"
 arch=('x86_64')
 url="https://github.com/e-lie/renardo"
 license=('GPL3')
-depends=('alsa-lib' 'nss' 'libxtst' 'libxss' 'gtk3' 'libnotify' 'util-linux-libs')
+depends=('webkit2gtk-4.1' 'gtk3' 'supercollider')
 options=('!strip')
 
-_debver=$(echo "$pkgver" | sed 's/\([0-9]\)\([a-z]\)/\1-\2/')
-source=("${pkgname}-webclient-fresh_${_debver}_amd64.deb::https://github.com/e-lie/renardo/releases/download/v${pkgver}/Renardo_${_debver}_amd64.deb")
+_debver="${pkgver/a/-alpha.}"
+source=("${pkgname}-${pkgver}.deb::https://github.com/e-lie/renardo/releases/download/v${pkgver}/Renardo_${_debver}_amd64.deb")
 sha256sums=('SKIP')
 
 package() {
     cd "$srcdir"
-    ar x "${pkgname}-webclient-fresh_${_debver}_amd64.deb"
-    tar -xf data.tar.* -C "$pkgdir/"
+    bsdtar -xf "${pkgname}-${pkgver}.deb" data.tar.gz
+    bsdtar -xf data.tar.gz -C "$pkgdir/"
 }

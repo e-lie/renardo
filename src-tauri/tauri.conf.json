@@ -16,8 +16,9 @@
     "resources": {
       "resources/python": "python"
     },
+    "shortDescription": "Renardo live coding environment",
     "linux": {
-      "deb": { "depends": ["libwebkit2gtk-4.1-0", "supercollider"] }
+      "deb": { "depends": ["libwebkit2gtk-4.1-0", "libgtk-3-0", "supercollider"] }
     }
   }
 }
