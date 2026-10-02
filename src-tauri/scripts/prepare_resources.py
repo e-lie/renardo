@@ -23,9 +23,11 @@ def run(*cmd, **kw):
 
 
 def find_python(install_dir: Path) -> Path:
-    for root in install_dir.glob("cpython-*"):
+    for link in install_dir.glob("cpython-*"):
+        # uv also creates a minor-version symlink (a junction on Windows): use the real directory
+        root = link.resolve()
         exe = root / "python.exe" if sys.platform == "win32" else root / "bin" / "python3"
-        if not root.is_symlink() and exe.exists():
+        if exe.exists():
             return root
     raise RuntimeError(f"no python found in {install_dir}")
 
