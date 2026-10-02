@@ -49,6 +49,21 @@ def get(port, path):
         return r.status, r.read().decode("utf-8", "replace")
 
 
+def listening_ips(server):
+    """Addresses the server listens on; falls back to lsof where psutil is denied (macOS)."""
+    try:
+        ips = [c.laddr.ip for c in server.net_connections(kind="inet") if c.status == psutil.CONN_LISTEN]
+    except psutil.AccessDenied:
+        out = subprocess.run(
+            ["lsof", "-nP", "-a", "-p", str(server.pid), "-iTCP", "-sTCP:LISTEN", "-Fn"],
+            capture_output=True, text=True,
+        ).stdout
+        ips = [line[1:].rsplit(":", 1)[0] for line in out.splitlines() if line.startswith("n")]
+    if not ips:
+        fail("server is not listening")
+    return ips
+
+
 def wait_healthy(app):
     deadline = time.time() + STARTUP_TIMEOUT
     while time.time() < deadline:
@@ -88,12 +103,9 @@ def main():
         fail("front page not served")
     log("front page served")
 
-    listening = [c.laddr for c in server.net_connections(kind="inet") if c.status == psutil.CONN_LISTEN]
-    if not listening:
-        fail("server is not listening")
-    for addr in listening:
-        if addr.ip != "127.0.0.1":
-            fail(f"server bound on {addr.ip}, expected 127.0.0.1")
+    for ip in listening_ips(server):
+        if ip != "127.0.0.1":
+            fail(f"server bound on {ip}, expected 127.0.0.1")
     log("bound on 127.0.0.1 only")
 
     close_app(app)

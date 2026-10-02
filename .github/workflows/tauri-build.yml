@@ -112,3 +112,66 @@ jobs:
         with:
           name: renardo-windows
           path: src-tauri/target/release/bundle/nsis/*-setup.exe
+
+  macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: macos-15-intel
+          - arch: arm64
+            runner: macos-latest
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: webclient/package-lock.json
+
+      - uses: astral-sh/setup-uv@v5
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install web client dependencies
+        working-directory: webclient
+        run: npm ci
+
+      - name: Prepare bundle resources
+        run: python3 src-tauri/scripts/prepare_resources.py
+
+      - name: Check the embedded Python architecture
+        run: file src-tauri/resources/python/bin/python3.12 | grep -q "${{ matrix.arch }}"
+
+      - name: Build dmg
+        run: npx --prefix webclient tauri build --bundles dmg
+
+      - name: Install the app
+        run: |
+          hdiutil attach -nobrowse -mountpoint /tmp/renardo-dmg src-tauri/target/release/bundle/dmg/*.dmg
+          cp -R /tmp/renardo-dmg/Renardo.app /Applications/
+          hdiutil detach /tmp/renardo-dmg
+
+      - name: Smoke test
+        run: |
+          uv venv /tmp/smoke-venv
+          uv pip install --python /tmp/smoke-venv/bin/python psutil
+          /tmp/smoke-venv/bin/python tests/bundle_smoke.py /Applications/Renardo.app/Contents/MacOS/renardo
+
+      - name: Name the dmg after its architecture
+        run: |
+          for f in src-tauri/target/release/bundle/dmg/*.dmg; do
+            case "$f" in *"${{ matrix.arch }}"*) ;; *) mv "$f" "${f%.dmg}_${{ matrix.arch }}.dmg" ;; esac
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: renardo-macos-${{ matrix.arch }}
+          path: src-tauri/target/release/bundle/dmg/*.dmg
