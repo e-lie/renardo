@@ -41,11 +41,10 @@ jobs:
         run: python3 src-tauri/scripts/prepare_resources.py
 
       - name: Build deb and AppImage
-        working-directory: webclient
         env:
           APPIMAGE_EXTRACT_AND_RUN: '1'
           NO_STRIP: 'true'
-        run: npx tauri build --bundles deb appimage
+        run: npx --prefix webclient tauri build --bundles deb appimage
 
       - name: Install the deb
         run: sudo apt-get install -y ./src-tauri/target/release/bundle/deb/*.deb
@@ -93,8 +92,7 @@ jobs:
         run: python src-tauri/scripts/prepare_resources.py
 
       - name: Build installer
-        working-directory: webclient
-        run: npx tauri build --bundles nsis
+        run: npx --prefix webclient tauri build --bundles nsis
 
       - name: Install silently
         shell: pwsh
