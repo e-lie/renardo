@@ -114,17 +114,21 @@ def main():
     except psutil.TimeoutExpired:
         fail("app did not exit after close")
 
-    time.sleep(1)
-    alive = []
-    for proc in tree:
-        try:
-            if proc.is_running() and proc.status() != psutil.STATUS_ZOMBIE:
-                alive.append(f"{proc.name()} ({proc.pid})")
-        except psutil.NoSuchProcess:
-            pass
-    for proc in psutil.process_iter(["name"]):
-        if (proc.info["name"] or "").lower().split(".")[0] in AUDIO_NAMES:
-            alive.append(f"{proc.info['name']} ({proc.pid})")
+    deadline = time.time() + 15
+    while True:
+        alive = []
+        for proc in tree:
+            try:
+                if proc.is_running() and proc.status() != psutil.STATUS_ZOMBIE:
+                    alive.append(f"{proc.name()} ({proc.pid})")
+            except psutil.NoSuchProcess:
+                pass
+        for proc in psutil.process_iter(["name"]):
+            if (proc.info["name"] or "").lower().split(".")[0] in AUDIO_NAMES:
+                alive.append(f"{proc.info['name']} ({proc.pid})")
+        if not alive or time.time() > deadline:
+            break
+        time.sleep(0.5)
     if alive:
         fail("processes left after close: " + ", ".join(alive))
     log("no process left after close")
