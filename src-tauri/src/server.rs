@@ -60,6 +60,11 @@ impl Server {
         Ok(Server { child, port })
     }
 
+    /// Exit status if the server process has died on its own.
+    pub fn exited(&mut self) -> Option<std::process::ExitStatus> {
+        self.child.try_wait().ok().flatten()
+    }
+
     /// Kill the server and all its descendants (scsynth, sclang...).
     pub fn stop(&mut self) {
         let pid = self.child.id();
