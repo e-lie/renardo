@@ -609,7 +609,7 @@ L'application utilise **@urql/svelte** pour communiquer avec une API GraphQL.
   import { setContextClient, createClient, fetchExchange } from '@urql/svelte'
 
   const client = createClient({
-    url: 'http://localhost:8000/graphql',
+    url: 'http://localhost:47813/graphql',
     exchanges: [fetchExchange]
   })
 

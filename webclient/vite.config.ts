@@ -12,10 +12,10 @@ export default defineConfig({
     port: 54321,
     // same-origin API in dev: forward backend routes to the uvicorn server
     proxy: {
-      '/api': 'http://127.0.0.1:8000',
-      '/execute': 'http://127.0.0.1:8000',
-      '/health': 'http://127.0.0.1:8000',
-      '/ws': { target: 'ws://127.0.0.1:8000', ws: true }
+      '/api': 'http://127.0.0.1:47813',
+      '/execute': 'http://127.0.0.1:47813',
+      '/health': 'http://127.0.0.1:47813',
+      '/ws': { target: 'ws://127.0.0.1:47813', ws: true }
     }
   },
   build: {
