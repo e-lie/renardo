@@ -1,4 +1,4 @@
-.PHONY: tauri_build format publish_beta publish_electron_release download_artifacts update_pkgbuild logs install_archlinux install_macos uninstall_macos
+.PHONY: tauri_run_deb_archlinux tauri_build format publish_beta publish_electron_release download_artifacts update_pkgbuild logs install_archlinux install_macos uninstall_macos
 
 VERSION_FILE := VERSION
 CURRENT_VERSION := $(shell cat $(VERSION_FILE))
@@ -75,3 +75,8 @@ tauri_build:
 	python3 src-tauri/scripts/prepare_resources.py
 	rm -rf src-tauri/target/release/bundle src-tauri/target/release/python
 	APPIMAGE_EXTRACT_AND_RUN=1 NO_STRIP=true npx --prefix webclient tauri build --bundles deb appimage
+
+tauri_run_deb_archlinux:
+	rm -rf src-tauri/target/deb_extract && mkdir -p src-tauri/target/deb_extract
+	cd src-tauri/target/deb_extract && bsdtar xf ../release/bundle/deb/*.deb && bsdtar xf data.tar.*
+	src-tauri/target/deb_extract/usr/bin/renardo
