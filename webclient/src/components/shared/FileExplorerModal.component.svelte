@@ -31,7 +31,7 @@
     loading = true
     error = null
     try {
-      const response = await fetch(`http://localhost:8000/api/file-explorer/list?path=${encodeURIComponent(path)}`)
+      const response = await fetch(`/api/file-explorer/list?path=${encodeURIComponent(path)}`)
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.detail || 'Failed to load directory')
@@ -57,7 +57,7 @@
 
         // Otherwise use home directory
         try {
-          const response = await fetch('http://localhost:8000/api/file-explorer/home')
+          const response = await fetch('/api/file-explorer/home')
           if (response.ok) {
             const data = await response.json()
             loadDirectory(data.path)
@@ -84,7 +84,7 @@
 
   async function handleGoUp() {
     try {
-      const response = await fetch(`http://localhost:8000/api/file-explorer/parent?path=${encodeURIComponent(currentPath)}`)
+      const response = await fetch(`/api/file-explorer/parent?path=${encodeURIComponent(currentPath)}`)
       if (response.ok) {
         const data = await response.json()
         loadDirectory(data.path)

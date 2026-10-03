@@ -15,7 +15,7 @@
   // Actions
   async function setMeasureSize(size: number) {
     try {
-      await fetch(`http://localhost:8000/api/clock/set-measure-size?size=${size}`, { method: 'POST' })
+      await fetch(`/api/clock/set-measure-size?size=${size}`, { method: 'POST' })
     } catch (e) {
       console.error('Failed to set measure size:', e)
     }
@@ -23,7 +23,7 @@
 
   async function reset() {
     try {
-      await fetch('http://localhost:8000/api/clock/reset', { method: 'POST' })
+      await fetch('/api/clock/reset', { method: 'POST' })
     } catch (e) {
       console.error('Failed to reset:', e)
     }

@@ -50,7 +50,7 @@ function connectWebSocket() {
   writableWebSocketStore.update(state => ({ ...state, connectionStatus: 'connecting' }))
 
   try {
-    const wsUrl = `ws://localhost:8000/ws/ws`
+    const wsUrl = `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws/ws`
     ws = new WebSocket(wsUrl)
 
     ws.onopen = () => {

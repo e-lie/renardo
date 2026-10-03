@@ -52,7 +52,7 @@ export function useMusicExampleStore(): MusicExampleStoreInterface {
 
     selectMusicExampleFile: async (file: MusicExampleFileInterface) => {
       try {
-        const response = await fetch(`http://localhost:8000${file.url}`)
+        const response = await fetch(`${file.url}`)
 
         if (response.ok) {
           const content = await response.text()

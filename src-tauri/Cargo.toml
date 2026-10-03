@@ -1,0 +1,18 @@
+[package]
+name = "renardo"
+version = "1.0.0-alpha.20"
+description = "Renardo live coding environment"
+authors = ["Elie Gavoty"]
+license = "GPL-3.0"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+signal-hook = "0.3"

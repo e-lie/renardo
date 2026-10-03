@@ -1,0 +1,205 @@
+name: Build Tauri
+
+on:
+  push:
+    branches:
+      - tauri
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: webclient/package-lock.json
+
+      - uses: astral-sh/setup-uv@v5
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libayatana-appindicator3-dev patchelf xvfb
+
+      - name: Install web client dependencies
+        working-directory: webclient
+        run: npm ci
+
+      - name: Prepare bundle resources
+        run: python3 src-tauri/scripts/prepare_resources.py
+
+      - name: Build deb and AppImage
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: '1'
+          NO_STRIP: 'true'
+        run: npx --prefix webclient tauri build --bundles deb appimage
+
+      - name: Install the deb
+        run: sudo apt-get install -y ./src-tauri/target/release/bundle/deb/*.deb
+
+      - name: Smoke test (no network)
+        run: |
+          uv venv /tmp/smoke-venv
+          uv pip install --python /tmp/smoke-venv/bin/python psutil
+          sudo unshare -n sh -c "ip link set lo up && exec setpriv --reuid=$(id -u) --regid=$(id -g) --clear-groups env HOME=$HOME xvfb-run -a /tmp/smoke-venv/bin/python tests/bundle_smoke.py /usr/bin/renardo"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: renardo-linux-deb
+          path: src-tauri/target/release/bundle/deb/*.deb
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: renardo-linux-appimage
+          path: src-tauri/target/release/bundle/appimage/*.AppImage
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: webclient/package-lock.json
+
+      - uses: astral-sh/setup-uv@v5
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install web client dependencies
+        working-directory: webclient
+        run: npm ci
+
+      - name: Prepare bundle resources
+        run: python src-tauri/scripts/prepare_resources.py
+
+      - name: Build installer
+        run: npx --prefix webclient tauri build --bundles nsis
+
+      - name: Install silently
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem src-tauri/target/release/bundle/nsis/*-setup.exe | Select-Object -First 1
+          Start-Process -FilePath $installer.FullName -ArgumentList '/S', '/D=C:\renardo-install' -Wait
+
+      - name: Smoke test
+        shell: pwsh
+        run: |
+          uv venv $env:RUNNER_TEMP\smoke-venv
+          uv pip install --python $env:RUNNER_TEMP\smoke-venv\Scripts\python.exe psutil
+          & $env:RUNNER_TEMP\smoke-venv\Scripts\python.exe tests/bundle_smoke.py C:\renardo-install\renardo.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: renardo-windows
+          path: src-tauri/target/release/bundle/nsis/*-setup.exe
+
+  macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: macos-15-intel
+          - arch: arm64
+            runner: macos-latest
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: webclient/package-lock.json
+
+      - uses: astral-sh/setup-uv@v5
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install web client dependencies
+        working-directory: webclient
+        run: npm ci
+
+      - name: Prepare bundle resources
+        run: python3 src-tauri/scripts/prepare_resources.py
+
+      - name: Check the embedded Python architecture
+        run: file src-tauri/resources/python/bin/python3.12 | grep -q "${{ matrix.arch }}"
+
+      - name: Build dmg
+        run: npx --prefix webclient tauri build --bundles dmg
+
+      - name: Install the app
+        run: |
+          hdiutil attach -nobrowse -mountpoint /tmp/renardo-dmg src-tauri/target/release/bundle/dmg/*.dmg
+          cp -R /tmp/renardo-dmg/Renardo.app /Applications/
+          hdiutil detach /tmp/renardo-dmg
+
+      - name: Smoke test
+        run: |
+          uv venv /tmp/smoke-venv
+          uv pip install --python /tmp/smoke-venv/bin/python psutil
+          /tmp/smoke-venv/bin/python tests/bundle_smoke.py /Applications/Renardo.app/Contents/MacOS/renardo
+
+      - name: Name the dmg after its architecture
+        run: |
+          for f in src-tauri/target/release/bundle/dmg/*.dmg; do
+            case "$f" in *"${{ matrix.arch }}"*) ;; *) mv "$f" "${f%.dmg}_${{ matrix.arch }}.dmg" ;; esac
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: renardo-macos-${{ matrix.arch }}
+          path: src-tauri/target/release/bundle/dmg/*.dmg
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [linux, windows, macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+          merge-multiple: true
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          draft: false
+          prerelease: true
+          body_path: packaging/RELEASE_NOTES.md
+          files: |
+            release-artifacts/*.deb
+            release-artifacts/*.AppImage
+            release-artifacts/*.dmg
+            release-artifacts/*-setup.exe
+            packaging/archlinux/PKGBUILD

@@ -54,7 +54,7 @@
 
   async function loadFileInEditor(filePath: string, fileName: string) {
     try {
-      const response = await fetch(`http://localhost:8000/api/file-explorer/read?path=${encodeURIComponent(filePath)}`);
+      const response = await fetch(`/api/file-explorer/read?path=${encodeURIComponent(filePath)}`);
 
       if (response.ok) {
         const data = await response.json();

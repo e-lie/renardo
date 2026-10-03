@@ -34,7 +34,7 @@ class SclangProcess(ManagedProcess):
         # Check if path is provided in config
         if 'sclang_path' in self.config:
             self.sclang_exec = [self.config['sclang_path'], '-i', 'scqt']
-            self.check_exec = [self.config['sclang_path'], '-version']
+            self.check_exec = [self.config['sclang_path'], '-v']
             return
 
         # Auto-detect based on platform
@@ -45,11 +45,11 @@ class SclangProcess(ManagedProcess):
                 os.environ["PATH"] += f"{sc_dir};"
                 sclang_path = sc_dir / "sclang.exe"
                 self.sclang_exec = [str(sclang_path), '-i', 'scqt']
-                self.check_exec = [str(sclang_path), '-version']
+                self.check_exec = [str(sclang_path), '-v']
             else:
                 self.logger.warning("SuperCollider not found in standard Windows location")
                 self.sclang_exec = ["sclang", '-i', 'scqt']
-                self.check_exec = ["sclang", '-version']
+                self.check_exec = ["sclang", '-v']
 
         elif platform == "darwin":  # macOS
             # Standard macOS application paths
@@ -64,17 +64,17 @@ class SclangProcess(ManagedProcess):
                     sclang_path = os.path.join(path, "Contents/MacOS/sclang")
                     if os.path.exists(sclang_path):
                         self.sclang_exec = [sclang_path, '-i', 'scqt']
-                        self.check_exec = [sclang_path, '-version']
+                        self.check_exec = [sclang_path, '-v']
                         sclang_found = True
                         break
 
             if not sclang_found:
                 self.sclang_exec = ["sclang", '-i', 'scqt']
-                self.check_exec = ["sclang", '-version']
+                self.check_exec = ["sclang", '-v']
 
         else:  # Linux
             self.sclang_exec = ["sclang", '-i', 'scqt']
-            self.check_exec = ["sclang", '-version']
+            self.check_exec = ["sclang", '-v']
     
     def _build_command(self) -> list:
         """Build the sclang command line."""

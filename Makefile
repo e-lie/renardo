@@ -1,4 +1,4 @@
-.PHONY: format publish_beta publish_electron_release download_artifacts update_pkgbuild logs install_archlinux install_macos uninstall_macos
+.PHONY: tauri_run_deb_archlinux tauri_build format publish_beta download_artifacts update_pkgbuild logs install_archlinux install_macos uninstall_macos
 
 VERSION_FILE := VERSION
 CURRENT_VERSION := $(shell cat $(VERSION_FILE))
@@ -41,10 +41,6 @@ install_archlinux:
 update_pkgbuild:
 	awk '/^pkgver=/{sub(/pkgver=.*/, "pkgver=$(CURRENT_VERSION)")}1' packaging/archlinux/PKGBUILD > packaging/archlinux/PKGBUILD.tmp && mv packaging/archlinux/PKGBUILD.tmp packaging/archlinux/PKGBUILD
 
-publish_electron:
-	@echo "Triggering electron release for v$(CURRENT_VERSION)"
-	gh workflow run publish-electron-release.yml --ref $(shell git rev-parse --abbrev-ref HEAD) --field tag=v$(CURRENT_VERSION)
-
 GITHUB_RELEASE_API := https://api.github.com/repos/$(GITHUB_REPO)/releases/tags/v$(CURRENT_VERSION)
 
 install_macos:
@@ -70,3 +66,13 @@ uninstall_macos:
 	@echo "Uninstalling Renardo..."
 	@rm -rf /Applications/Renardo.app
 	@echo "Renardo removed from /Applications."
+
+tauri_build:
+	python3 src-tauri/scripts/prepare_resources.py
+	rm -rf src-tauri/target/release/bundle src-tauri/target/release/python
+	APPIMAGE_EXTRACT_AND_RUN=1 NO_STRIP=true npx --prefix webclient tauri build --bundles deb appimage
+
+tauri_run_deb_archlinux:
+	rm -rf src-tauri/target/deb_extract && mkdir -p src-tauri/target/deb_extract
+	cd src-tauri/target/deb_extract && bsdtar xf ../release/bundle/deb/*.deb && bsdtar xf data.tar.*
+	src-tauri/target/deb_extract/usr/bin/renardo

@@ -42,7 +42,7 @@ class LoggerService {
 
     private sendToBackend(entry: LogEntry) {
         // Send log to backend without blocking or throwing errors
-        fetch('http://localhost:8000/api/frontend_logs', {
+        fetch('/api/frontend_logs', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

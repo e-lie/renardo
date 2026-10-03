@@ -131,11 +131,6 @@ src/renardo/reaper_backend/reaside/rust_extension/Cargo.lock
 src/renardo/reaper_backend_fresh/rust_extension/target/
 src/renardo/reaper_backend_fresh/rust_extension/Cargo.lock
 
-# Electron setup
-webclient/python
-webclient_fresh/python
-dist-electron
-
 # Vite
 .vite
 

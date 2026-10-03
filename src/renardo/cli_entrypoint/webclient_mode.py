@@ -104,7 +104,7 @@ def start_backend_server(config: Dict[str, Any]) -> Optional[subprocess.Popen]:
             "uv", "run", "uvicorn",
             "renardo.webserver.app:app",
             "--host", "0.0.0.0",
-            "--port", "8000",
+            "--port", "47813",
             "--reload"
         ]
 

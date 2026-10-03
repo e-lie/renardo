@@ -69,7 +69,7 @@
     for (const saved of savedTabs) {
       try {
         const response = await fetch(
-          `http://localhost:8000/api/file-explorer/read?path=${encodeURIComponent(saved.filePath)}`
+          `/api/file-explorer/read?path=${encodeURIComponent(saved.filePath)}`
         );
         if (!response.ok) continue;
         const data = await response.json();

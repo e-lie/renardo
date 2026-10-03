@@ -30,7 +30,7 @@ class SupercolliderInstance:
                 sclang_path = sc_dir / "sclang.exe"
                 #self.sclang_exec = [str(sclang_path), str(SC_USER_CONFIG_DIR / 'start_renardo.scd')]
                 self.sclang_exec = [str(sclang_path), '-i', 'scqt']
-                self.check_exec = [str(sclang_path), '-version']
+                self.check_exec = [str(sclang_path), '-v']
                 
                 # Path to the SuperCollider IDE application on Windows
                 self.sc_app_path = sc_dir / "scide.exe"
@@ -50,18 +50,18 @@ class SupercolliderInstance:
                     sclang_path = os.path.join(path, "Contents/MacOS/sclang")
                     if os.path.exists(sclang_path):
                         self.sclang_exec = [sclang_path, '-i', 'scqt']
-                        self.check_exec = [sclang_path, '-version']
+                        self.check_exec = [sclang_path, '-v']
                         sclang_found = True
                         break
             
             # Fallback to system sclang if not found in standard paths
             if not sclang_found:
                 self.sclang_exec = ["sclang", '-i', 'scqt']
-                self.check_exec = ["sclang", '-version']
+                self.check_exec = ["sclang", '-v']
         
         else:  # Linux
             self.sclang_exec = ["sclang", '-i', 'scqt']
-            self.check_exec = ["sclang", '-version']
+            self.check_exec = ["sclang", '-v']
             
             # On Linux, the IDE might be accessible via various commands
             try:
