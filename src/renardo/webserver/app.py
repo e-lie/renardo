@@ -62,17 +62,6 @@ def get_static_folder() -> Path:
     """Find the static folder for serving frontend files."""
     logger = get_main_logger()
 
-    # Check for RENARDO_STATIC_FOLDER env var (set by Electron)
-    env_static = os.environ.get("RENARDO_STATIC_FOLDER")
-    logger.info(f"RENARDO_STATIC_FOLDER env: {env_static}")
-    if env_static:
-        env_path = Path(env_static)
-        if env_path.exists() and (env_path / "index.html").exists():
-            logger.info(f"Using static folder from env: {env_path}")
-            return env_path
-        else:
-            logger.warning(f"Static folder from env does not exist or missing index.html: {env_path}")
-
     # Try to find webclient/dist relative to this file
     current_file = Path(__file__).resolve()
     logger.info(f"Current file: {current_file}")

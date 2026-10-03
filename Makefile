@@ -1,4 +1,4 @@
-.PHONY: tauri_run_deb_archlinux tauri_build format publish_beta publish_electron_release download_artifacts update_pkgbuild logs install_archlinux install_macos uninstall_macos
+.PHONY: tauri_run_deb_archlinux tauri_build format publish_beta download_artifacts update_pkgbuild logs install_archlinux install_macos uninstall_macos
 
 VERSION_FILE := VERSION
 CURRENT_VERSION := $(shell cat $(VERSION_FILE))
@@ -40,10 +40,6 @@ install_archlinux:
 
 update_pkgbuild:
 	awk '/^pkgver=/{sub(/pkgver=.*/, "pkgver=$(CURRENT_VERSION)")}1' packaging/archlinux/PKGBUILD > packaging/archlinux/PKGBUILD.tmp && mv packaging/archlinux/PKGBUILD.tmp packaging/archlinux/PKGBUILD
-
-publish_electron:
-	@echo "Triggering electron release for v$(CURRENT_VERSION)"
-	gh workflow run publish-electron-release.yml --ref $(shell git rev-parse --abbrev-ref HEAD) --field tag=v$(CURRENT_VERSION)
 
 GITHUB_RELEASE_API := https://api.github.com/repos/$(GITHUB_REPO)/releases/tags/v$(CURRENT_VERSION)
 

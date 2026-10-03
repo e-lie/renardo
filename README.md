@@ -14,7 +14,7 @@ Renardo is currently going through a wide and deep refactoring toward version 1.
   - Ableton Live backend with Link synchronization
   - MIDI output support
 - **Web-based Interface**: Modern, responsive web client built with Svelte
-- **Desktop Application**: Optional Electron-based desktop app
+- **Desktop Application**: Tauri-based desktop app
 - **Interactive Tutorials**: Built-in tutorials in multiple languages (English, Spanish)
 - **Extensible**: Plugin system for custom instruments and effects
 - **Resource Management**: Library system for managing samples, FX chains, and instruments
@@ -123,7 +123,6 @@ renardo/
 
 webclient/
 ├── src/              # Svelte web interface
-├── electron/         # Electron desktop app wrapper
 └── dist/             # Built web assets
 ```
 
@@ -309,9 +308,6 @@ npm run dev
 
 # Build for production
 npm run build
-
-# Build Electron app
-npm run build:electron
 ```
 
 ## License
